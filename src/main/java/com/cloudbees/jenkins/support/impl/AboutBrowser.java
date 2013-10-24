@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import net.sf.uadetector.OperatingSystem;
+import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -43,7 +44,7 @@ public class AboutBrowser extends Component {
                     out.println("  * Screen size: " + Functions.getScreenResolution().toString());
                     UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
                     String userAgent = currentRequest.getHeader("User-Agent");
-                    UserAgent agent = parser.parse(userAgent);
+                    ReadableUserAgent agent = parser.parse(userAgent);
                     OperatingSystem operatingSystem = agent.getOperatingSystem();
                     out.println("  * User Agent");
                     out.println("      - Type:     " + agent.getType().getName());
