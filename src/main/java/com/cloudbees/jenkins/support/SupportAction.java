@@ -147,13 +147,18 @@ public class SupportAction implements RootAction {
         rsp.addHeader("Content-Disposition", "inline; filename=" + filename + ".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
-            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
             try {
-                SupportPlugin.writeBundle(servletOutputStream, components);
-            } catch (IOException e) {
-                logger.log(Level.WARNING, e.getMessage(), e);
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    SupportPlugin.writeBundle(servletOutputStream, components);
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
             } finally {
-                SecurityContextHolder.setContext(old);
+                SupportPlugin.clearRequesterAuthentication();
             }
         } finally {
             servletOutputStream.close();

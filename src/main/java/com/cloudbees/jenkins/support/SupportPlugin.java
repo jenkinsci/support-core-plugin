@@ -66,6 +66,7 @@ import hudson.util.TimeUnit2;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
@@ -115,6 +116,8 @@ public class SupportPlugin extends Plugin {
             new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
                     Jenkins.ADMINISTER, PermissionScope.JENKINS);
 
+    private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal
+            <Authentication>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
@@ -160,6 +163,18 @@ public class SupportPlugin extends Plugin {
             }
         }
         return supportProvider;
+    }
+
+    public static Authentication getRequesterAuthentication() {
+        return requesterAuthentication.get();
+    }
+
+    public static void setRequesterAuthentication(Authentication authentication) {
+        requesterAuthentication.set(authentication);
+    }
+
+    public static void clearRequesterAuthentication() {
+        requesterAuthentication.remove();
     }
 
     public void setSupportProvider(SupportProvider supportProvider) throws IOException {
@@ -702,6 +717,7 @@ public class SupportPlugin extends Plugin {
                         )
                         public void run() {
                             nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(1));
+                            clearRequesterAuthentication();
                             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                             try {
                                 File bundleDir = new File(Jenkins.getInstance().getRootDir(), "support");
