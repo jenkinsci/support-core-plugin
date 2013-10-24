@@ -148,33 +148,23 @@ public class SupportAction implements RootAction {
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         try {
-            Thread sudo = new Thread("Sudo for " + Thread.currentThread().getName()) {
-                @Override
-                public void run() {
-                    if (supportPlugin != null && currentRequest != null) {
-                        supportPlugin.setStaplerRequest(currentRequest);
-                    }
-                    try {
-                        SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                        try {
-                            SupportPlugin.writeBundle(servletOutputStream, components);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, e.getMessage(), e);
-                        } finally {
-                            SecurityContextHolder.setContext(old);
-                        }
-                    } finally {
-                        if (supportPlugin != null) {
-                            supportPlugin.clearStaplerRequest();
-                        }
-                    }
+            if (supportPlugin != null && currentRequest != null) {
+                supportPlugin.setStaplerRequest(currentRequest);
+            }
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    SupportPlugin.writeBundle(servletOutputStream, components);
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, e.getMessage(), e);
+                } finally {
+                    SecurityContextHolder.setContext(old);
                 }
-            };
-            sudo.start();
-            sudo.join();
-        } catch (InterruptedException e) {
-            logger.log(Level.WARNING, e.getMessage(), e);
-            rsp.sendError(500);
+            } finally {
+                if (supportPlugin != null) {
+                    supportPlugin.clearStaplerRequest();
+                }
+            }
         } finally {
             servletOutputStream.close();
             logger.fine("Response completed");
