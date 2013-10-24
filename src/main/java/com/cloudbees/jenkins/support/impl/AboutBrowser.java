@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
@@ -31,7 +32,7 @@ public class AboutBrowser extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        final StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        final StaplerRequest currentRequest = SupportPlugin.staplerRequest();
         if (currentRequest != null) {
             result.add(new PrintedContent("browser.md") {
                 @Override

@@ -36,6 +36,7 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -135,7 +136,7 @@ public class SupportAction implements RootAction {
         rsp.setContentType("application/zip");
 
         String filename = "support"; // default bundle filename
-        SupportPlugin supportPlugin = SupportPlugin.getInstance();
+        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
             SupportProvider supportProvider = supportPlugin.getSupportProvider();
             if (supportProvider != null) {
@@ -145,17 +146,27 @@ public class SupportAction implements RootAction {
         }
         rsp.addHeader("Content-Disposition", "inline; filename=" + filename + ".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         try {
             Thread sudo = new Thread("Sudo for " + Thread.currentThread().getName()) {
                 @Override
                 public void run() {
-                    SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                    if (supportPlugin != null && currentRequest != null) {
+                        supportPlugin.setStaplerRequest(currentRequest);
+                    }
                     try {
-                        SupportPlugin.writeBundle(servletOutputStream, components);
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, e.getMessage(), e);
+                        SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                        try {
+                            SupportPlugin.writeBundle(servletOutputStream, components);
+                        } catch (IOException e) {
+                            logger.log(Level.WARNING, e.getMessage(), e);
+                        } finally {
+                            SecurityContextHolder.setContext(old);
+                        }
                     } finally {
-                        SecurityContextHolder.setContext(old);
+                        if (supportPlugin != null) {
+                            supportPlugin.clearStaplerRequest();
+                        }
                     }
                 }
             };
