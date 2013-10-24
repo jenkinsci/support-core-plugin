@@ -146,24 +146,14 @@ public class SupportAction implements RootAction {
         }
         rsp.addHeader("Content-Disposition", "inline; filename=" + filename + ".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
-        final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         try {
-            if (supportPlugin != null && currentRequest != null) {
-                supportPlugin.setStaplerRequest(currentRequest);
-            }
+            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
-                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                try {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, e.getMessage(), e);
-                } finally {
-                    SecurityContextHolder.setContext(old);
-                }
+                SupportPlugin.writeBundle(servletOutputStream, components);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, e.getMessage(), e);
             } finally {
-                if (supportPlugin != null) {
-                    supportPlugin.clearStaplerRequest();
-                }
+                SecurityContextHolder.setContext(old);
             }
         } finally {
             servletOutputStream.close();

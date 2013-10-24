@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
@@ -30,7 +29,7 @@ public class AboutUser extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        final StaplerRequest currentRequest = SupportPlugin.staplerRequest();
+        final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         if (currentRequest != null) {
             final Authentication authentication = Jenkins.getAuthentication();
             result.add(new PrintedContent("user.md") {

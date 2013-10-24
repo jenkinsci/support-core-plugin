@@ -115,8 +115,6 @@ public class SupportPlugin extends Plugin {
             new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
                     Jenkins.ADMINISTER, PermissionScope.JENKINS);
 
-    private transient final ThreadLocal<StaplerRequest> currentStaplerRequest = new ThreadLocal<StaplerRequest>();
-
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
@@ -218,21 +216,6 @@ public class SupportPlugin extends Plugin {
 
     public static SupportPlugin getInstance() {
         return Jenkins.getInstance().getPlugin(SupportPlugin.class);
-    }
-
-    public static StaplerRequest staplerRequest() {
-        StaplerRequest req = Stapler.getCurrentRequest();
-        if (req != null) return req;
-        SupportPlugin plugin = getInstance();
-        return plugin == null ? null : plugin.currentStaplerRequest.get();
-    }
-
-    public void setStaplerRequest(StaplerRequest request) {
-        currentStaplerRequest.set(request);
-    }
-
-    public void clearStaplerRequest() {
-        currentStaplerRequest.remove();
     }
 
     public static ExtensionList<Component> getComponents() {
@@ -719,7 +702,6 @@ public class SupportPlugin extends Plugin {
                         )
                         public void run() {
                             nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(1));
-                            plugin.clearStaplerRequest();
                             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                             try {
                                 File bundleDir = new File(Jenkins.getInstance().getRootDir(), "support");
