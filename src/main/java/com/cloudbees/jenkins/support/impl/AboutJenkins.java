@@ -177,11 +177,13 @@ public class AboutJenkins extends Component {
                     File[] buildDirs = buildDir.listFiles();
                     if (buildDirs != null) {
                         for (File d : buildDirs) {
-                            if (d.isDirectory() && mayBeDate(d.getName())) {
+                            if (mayBeDate(d.getName())) {
                                 // check for real
                                 try {
                                     BUILD_FORMAT.parse(d.getName());
-                                    builds++;
+                                    if (d.isDirectory()) {
+                                        builds++;
+                                    }
                                 } catch (ParseException x) {
                                     // symlink etc., ignore
                                 }
@@ -422,6 +424,7 @@ public class AboutJenkins extends Component {
 
     /**
      * A pre-check to see if a string is a build timestamp formatted date.
+     *
      * @param s the string.
      * @return {@code true} if it is likely that the string will parse as a build timestamp formatted date.
      */
