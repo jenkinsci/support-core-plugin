@@ -314,7 +314,7 @@ public class AboutJenkins extends Component {
                 List<PluginWrapper> plugins = pluginManager.getPlugins();
                 Collections.sort(plugins);
                 for (PluginWrapper w : plugins) {
-                    if (!w.isEnabled()) {
+                    if (!w.isActive()) {
                         out.println(w.getShortName() + ":" + w.getVersion());
                     }
                 }
