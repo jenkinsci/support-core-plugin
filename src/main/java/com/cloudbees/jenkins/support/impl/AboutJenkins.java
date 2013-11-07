@@ -285,9 +285,9 @@ public class AboutJenkins extends Component {
                         try {
                             out.print(channel.call(new GetJavaInfo("      -", "          +")));
                         } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not get java info for " + node.getDisplayName(), e);
+                            logger.log(Level.WARNING, "Could not get Java info for " + node.getDisplayName(), e);
                         } catch (InterruptedException e) {
-                            logger.log(Level.WARNING, "Could not get java info for " + node.getDisplayName(), e);
+                            logger.log(Level.WARNING, "Could not get Java info for " + node.getDisplayName(), e);
                         }
                     }
                     out.println();
