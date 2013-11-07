@@ -129,11 +129,7 @@ public class AboutJenkins extends Component {
                 out.println();
                 PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
                 List<PluginWrapper> plugins = new ArrayList<PluginWrapper>(pluginManager.getPlugins());
-                Collections.sort(plugins, new Comparator<PluginWrapper>() {
-                    public int compare(PluginWrapper o1, PluginWrapper o2) {
-                        return o1.getShortName().compareTo(o2.getShortName());
-                    }
-                });
+                Collections.sort(plugins);
                 for (PluginWrapper w : plugins) {
                     if (w.isActive()) {
                         out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
@@ -303,6 +299,7 @@ public class AboutJenkins extends Component {
             protected void printTo(PrintWriter out) throws IOException {
                 PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
                 List<PluginWrapper> plugins = pluginManager.getPlugins();
+                Collections.sort(plugins);
                 for (PluginWrapper w : plugins) {
                     if (w.isActive()) {
                         out.println(w.getShortName() + ":" + w.getVersion());
@@ -315,6 +312,7 @@ public class AboutJenkins extends Component {
             protected void printTo(PrintWriter out) throws IOException {
                 PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
                 List<PluginWrapper> plugins = pluginManager.getPlugins();
+                Collections.sort(plugins);
                 for (PluginWrapper w : plugins) {
                     if (!w.isEnabled()) {
                         out.println(w.getShortName() + ":" + w.getVersion());
@@ -327,6 +325,7 @@ public class AboutJenkins extends Component {
             protected void printTo(PrintWriter out) throws IOException {
                 PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
                 List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
+                // no need to sort
                 for (PluginManager.FailedPlugin w : plugins) {
                     out.println(w.name + " -> " + w.cause);
                 }
