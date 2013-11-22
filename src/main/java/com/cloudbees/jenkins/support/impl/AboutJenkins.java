@@ -243,6 +243,10 @@ public class AboutJenkins extends Component {
             }
         });
         container.add(new PrintedContent("nodes.md") {
+            private String getLabelString(Node n) {
+                String r = n.getLabelString();
+                return r.isEmpty() ? "(none)" : r;
+            }
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 out.println("Build Nodes");
@@ -254,7 +258,7 @@ public class AboutJenkins extends Component {
                 out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
                 out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
                         .replaceAll("`", "&#96;") + "`");
-                out.println("      - Labels:         " + Jenkins.getInstance().getLabelString());
+                out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
                 out.println("      - Usage:          " + Jenkins.getInstance().getMode().getDescription());
                 out.print(new GetJavaInfo("      -", "          +").call());
                 out.println();
@@ -270,7 +274,7 @@ public class AboutJenkins extends Component {
                         out.println("      - Remote FS root: `" + Slave.class.cast(node).getRemoteFS()
                                 .replaceAll("`", "&#96;") + "`");
                     }
-                    out.println("      - Labels:         " + node.getLabelString());
+                    out.println("      - Labels:         " + getLabelString(node));
                     out.println("      - Usage:          " + node.getMode().getDescription());
                     if (node instanceof Slave) {
                         Slave slave = (Slave) node;
