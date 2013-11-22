@@ -72,7 +72,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
@@ -142,6 +141,9 @@ public class SupportPlugin extends Plugin {
     private transient Logger rootLogger;
 
     private SupportProvider supportProvider;
+    
+    /** class names of {@link Component} */
+    private Set<String> excludedComponents;
 
     public SupportPlugin() {
         super();
@@ -182,6 +184,15 @@ public class SupportPlugin extends Plugin {
             this.supportProvider = supportProvider;
             save();
         }
+    }
+
+    public Set<String> getExcludedComponents() {
+        return excludedComponents != null ? excludedComponents : Collections.<String>emptySet();
+    }
+
+    public void setExcludedComponents(Set<String> excludedComponents) throws IOException {
+        this.excludedComponents = excludedComponents;
+        save();
     }
 
     public Histogram getJenkinsExecutorTotalCount() {

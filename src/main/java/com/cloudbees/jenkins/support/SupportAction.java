@@ -132,11 +132,14 @@ public class SupportAction implements RootAction {
                 iterator.remove();
             }
         }
+        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
+        if (supportPlugin != null) {
+            supportPlugin.setExcludedComponents(remove);
+        }
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
 
         String filename = "support"; // default bundle filename
-        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
             SupportProvider supportProvider = supportPlugin.getSupportProvider();
             if (supportProvider != null) {
@@ -164,6 +167,11 @@ public class SupportAction implements RootAction {
             servletOutputStream.close();
             logger.fine("Response completed");
         }
+    }
+
+    public boolean selectedByDefault(Component c) {
+        SupportPlugin supportPlugin = SupportPlugin.getInstance();
+        return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getClass().getName()));
     }
 
     public static class Selection {

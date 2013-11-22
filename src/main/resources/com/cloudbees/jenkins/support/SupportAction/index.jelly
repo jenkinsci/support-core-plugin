@@ -43,7 +43,7 @@
             <div name="components">
               <j:if test="${component.enabled}">
                 <div>
-                  <f:checkbox name="selected" checked="${component.selectedByDefault}"
+                  <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
                               title="${component.displayName}"/>
                   <input style="display:none" name="name" value="${component.class.name}"/>
                 </div>
