@@ -240,9 +240,13 @@ public class AboutJenkins extends Component {
                     out.println("      - Number of containers: " + entry.getValue().n());
                     out.println("      - Number of items per container: " + entry.getValue());
                 }
-                out.println();
+            }
+        });
+        container.add(new PrintedContent("nodes.md") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
                 out.println("Build Nodes");
-                out.println("------------");
+                out.println("===========");
                 out.println();
                 out.println("  * master (Jenkins)");
                 out.println("      - Description:    `" + Jenkins.getInstance().getNodeDescription()
