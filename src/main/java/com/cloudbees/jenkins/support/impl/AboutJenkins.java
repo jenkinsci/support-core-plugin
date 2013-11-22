@@ -48,7 +48,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +123,14 @@ public class AboutJenkins extends Component {
                         }
                     }
                 }
+                out.println();
+                out.println("Important configuration");
+                out.println("---------------");
+                out.println();
+                Descriptor<?> descriptor = Jenkins.getInstance().getSecurityRealm().getDescriptor();
+                out.println("  * Security realm: " + (descriptor != null ? descriptor.getDisplayName() : "(none)"));
+                out.println("  * Authorization strategy: " + Jenkins.getInstance().getAuthorizationStrategy().getDescriptor().getDisplayName());
+                out.println();
                 out.println("Active Plugins");
                 out.println("--------------");
                 out.println();
