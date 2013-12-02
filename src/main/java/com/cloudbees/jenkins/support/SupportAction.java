@@ -36,7 +36,6 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -128,7 +127,7 @@ public class SupportAction implements RootAction {
         final List<Component> components = new ArrayList<Component>(getComponents());
         for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
             Component c = iterator.next();
-            if (remove.contains(c.getId())) {
+            if (remove.contains(c.getId()) || !c.isEnabled()) {
                 iterator.remove();
             }
         }
