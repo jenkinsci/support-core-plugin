@@ -6,9 +6,9 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
+import hudson.util.Area;
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
-import net.sf.uadetector.UserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.kohsuke.stapler.Stapler;
@@ -41,7 +41,10 @@ public class AboutBrowser extends Component {
                     out.println("=======");
                     out.println();
 
-                    out.println("  * Screen size: " + Functions.getScreenResolution().toString());
+                    Area screenResolution = Functions.getScreenResolution();
+                    if (screenResolution != null) {
+                        out.println("  * Screen size: " + screenResolution.toString());
+                    }
                     UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
                     String userAgent = currentRequest.getHeader("User-Agent");
                     ReadableUserAgent agent = parser.parse(userAgent);
