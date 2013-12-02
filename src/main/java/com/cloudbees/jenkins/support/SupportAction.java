@@ -128,7 +128,7 @@ public class SupportAction implements RootAction {
         final List<Component> components = new ArrayList<Component>(getComponents());
         for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
             Component c = iterator.next();
-            if (remove.contains(c.getClass().getName())) {
+            if (remove.contains(c.getId())) {
                 iterator.remove();
             }
         }
@@ -171,10 +171,11 @@ public class SupportAction implements RootAction {
 
     public boolean selectedByDefault(Component c) {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
-        return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getClass().getName()));
+        return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getId()));
     }
 
     public static class Selection {
+        /** @see Component#getId */
         private final String name;
         private final boolean selected;
 

@@ -95,6 +95,11 @@ public abstract class Component extends ExtensionPoint {
     @NonNull
     public abstract String getDisplayName();
 
+    /** By default, the {@link Class#getSimpleName} of the component implementation. */
+    @NonNull public String getId() {
+        return getClass().getSimpleName();
+    }
+
     public abstract void addContents(@NonNull Container container);
 
     public void start(@NonNull SupportContext context) {

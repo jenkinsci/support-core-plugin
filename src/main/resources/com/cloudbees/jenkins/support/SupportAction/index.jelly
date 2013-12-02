@@ -45,7 +45,7 @@
                 <div>
                   <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
                               title="${component.displayName}"/>
-                  <input style="display:none" name="name" value="${component.class.name}"/>
+                  <input style="display:none" name="name" value="${component.id}"/>
                 </div>
               </j:if>
               <j:if test="${!component.enabled}">
@@ -57,7 +57,7 @@
                   <label class="attach-previous" style="text-decoration: line-through;"
                          title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
                   </label>
-                  <input style="display:none" name="name" value="${component.class.name}"/>
+                  <input style="display:none" name="name" value="${component.id}"/>
                 </div>
               </j:if>
             </div>

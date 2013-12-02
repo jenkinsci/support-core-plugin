@@ -190,6 +190,7 @@ public class SupportPlugin extends Plugin {
         return excludedComponents != null ? excludedComponents : Collections.<String>emptySet();
     }
 
+    /** @see Component#getId */
     public void setExcludedComponents(Set<String> excludedComponents) throws IOException {
         this.excludedComponents = excludedComponents;
         save();
@@ -253,7 +254,7 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
-        Logger logger = Logger.getLogger(SupportPlugin.class.getName());
+        Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
         final Set<String> names = new TreeSet<String>();
         Container container = new Container() {
