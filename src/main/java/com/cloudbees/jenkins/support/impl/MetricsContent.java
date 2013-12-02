@@ -184,7 +184,7 @@ public class MetricsContent extends Content implements MetricProcessor<JsonGener
                             LogRecord logRecord = new LogRecord(Level.WARNING, "Error writing out {0}");
                             logRecord.setThrown(e);
                             logRecord.setParameters(new Object[]{subEntry.getKey()});
-                            Logger.getLogger(MetricsComponent.class.getName()).log(logRecord);
+                            Logger.getLogger(Metrics.class.getName()).log(logRecord);
                         }
                     }
                 }
@@ -264,7 +264,7 @@ public class MetricsContent extends Content implements MetricProcessor<JsonGener
         } catch (RuntimeException e) {
             LogRecord logRecord = new LogRecord(Level.WARNING, "Error evaluating guage");
             logRecord.setThrown(e);
-            Logger.getLogger(MetricsComponent.class.getName()).log(logRecord);
+            Logger.getLogger(Metrics.class.getName()).log(logRecord);
             return "error reading gauge: " + e.getMessage();
         }
     }

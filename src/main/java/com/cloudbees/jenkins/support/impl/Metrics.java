@@ -23,7 +23,7 @@ import java.io.OutputStream;
  * @author Stephen Connolly
  */
 @Extension
-public class MetricsComponent extends Component {
+public class Metrics extends Component {
 
     private MetricsRegistry metricsRegistry;
 
