@@ -16,6 +16,7 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
+import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import hudson.util.RingBufferLogHandler;
 import jenkins.model.Jenkins;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 import java.util.regex.Pattern;
@@ -41,6 +43,13 @@ import java.util.regex.Pattern;
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
+
+    @NonNull
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.singleton(Jenkins.ADMINISTER);
+    }
+
     @NonNull
     @Override
     public String getDisplayName() {
