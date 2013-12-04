@@ -105,7 +105,7 @@ public class SupportLogHandler extends Handler {
             int maxCount = records.length;
             records[(position + count) % maxCount] = record;
             if (count == maxCount) {
-                position++;
+                position = (position + 1) % maxCount;
             } else {
                 count++;
             }
