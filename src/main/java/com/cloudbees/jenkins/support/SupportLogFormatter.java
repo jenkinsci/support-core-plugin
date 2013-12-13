@@ -47,7 +47,7 @@ public class SupportLogFormatter extends Formatter {
             value = {"DE_MIGHT_IGNORE"},
             justification = "The exception wasn't thrown on our stack frame"
     )
-    public String format(LogRecord record) {
+    public synchronized String format(LogRecord record) {
         date.setTime(record.getMillis());
         args[0] = date;
         args[1] = "[id=" + record.getThreadID() + "]";
