@@ -9,6 +9,7 @@ import com.cloudbees.jenkins.support.api.FilePathContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.logging.LogRecorder;
@@ -19,8 +20,8 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import hudson.util.RingBufferLogHandler;
-import jenkins.model.Jenkins;
-
+import hudson.util.io.ReopenableFileOutputStream;
+import hudson.util.io.ReopenableRotatingFileOutputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -28,21 +29,29 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
+import jenkins.model.Jenkins;
 
 /**
  * Log files from the different nodes
- *
- * @author Stephen Connolly
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
+
+    private final Formatter formatter = new SupportLogFormatter();
+    private final Map<String,LogRecorder> logRecorders = Jenkins.getInstance().getLog().logRecorders;
+    private final File customLogs = new File(new File(Jenkins.getInstance().getRootDir(), "logs"), "custom");
 
     @NonNull
     @Override
@@ -58,12 +67,11 @@ public class JenkinsLogs extends Component {
 
     @Override
     public void start(@NonNull SupportContext context) {
-        super.start(context);    //To change body of overridden methods use File | Settings | File Templates.
+        Logger.getLogger("").addHandler(new CustomHandler());
     }
 
     @Override
     public void addContents(@NonNull Container result) {
-        final Formatter formatter = new SupportLogFormatter();
         result.add(new PrintedContent("nodes/master/logs/jenkins.log") {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
@@ -102,18 +110,25 @@ public class JenkinsLogs extends Component {
                 })) {
             result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
         }
-        for (Map.Entry<String, LogRecorder> entry : Jenkins.getInstance().getLog().logRecorders.entrySet()) {
+        for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
             String name = entry.getKey();
-            final LogRecorder recorder = entry.getValue();
-            result.add(new PrintedContent("nodes/master/logs/custom/" + name + ".log") {
-                @Override
-                protected void printTo(PrintWriter out) throws IOException {
-                    for (LogRecord logRecord : recorder.getLogRecords()) {
-                        out.print(formatter.format(logRecord));
+            String entryName = "nodes/master/logs/custom/" + name + ".log";
+            File storedFile = new File(customLogs, name + ".log");
+            if (storedFile.isFile()) {
+                result.add(new FileContent(entryName, storedFile));
+            } else {
+                // Was not stored for some reason; fine, just load the memory buffer.
+                final LogRecorder recorder = entry.getValue();
+                result.add(new PrintedContent(entryName) {
+                    @Override
+                    protected void printTo(PrintWriter out) throws IOException {
+                        for (LogRecord logRecord : recorder.getLogRecords()) {
+                            out.print(formatter.format(logRecord));
+                        }
+                        out.flush();
                     }
-                    out.flush();
-                }
-            });
+                });
+            }
         }
 
         final boolean needHack = SlaveLogFetcher.isRequired();
@@ -246,4 +261,63 @@ public class JenkinsLogs extends Component {
             }
         }
     }
+
+    @SuppressWarnings(value="SIC_INNER_SHOULD_BE_STATIC_NEEDS_THIS", justification="customLogs is not static, so this is a bug in FB")
+    private final class LogFile {
+        private final ReopenableFileOutputStream stream;
+        private final Handler handler;
+        private int count;
+        @SuppressWarnings(value="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification="if mkdirs fails, will just get a stack trace later")
+        LogFile(String name) throws IOException {
+            customLogs.mkdirs();
+            stream = new ReopenableRotatingFileOutputStream(new File(customLogs, name + ".log"), 9);
+            // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just truncated
+            stream.rewind();
+            handler = new StreamHandler(stream, formatter);
+            handler.setLevel(Level.ALL);
+            count = 0;
+        }
+        synchronized void publish(LogRecord record) throws IOException {
+            if (count++ > 9999) { // make sure it does not get enormous during a single session
+                stream.rewind();
+                count = 0;
+            }
+            handler.publish(record);
+            handler.flush();
+        }
+    }
+
+    private final class CustomHandler extends Handler {
+
+        private final Map<String,LogFile> logFiles = new HashMap<String,LogFile>();
+
+        @Override public void publish(LogRecord record) {
+            for (Map.Entry<String,LogRecorder> entry : logRecorders.entrySet()) {
+                for (LogRecorder.Target target : entry.getValue().targets) {
+                    if (target.includes(record)) {
+                        try {
+                            String name = entry.getKey();
+                            LogFile logFile;
+                            synchronized (logFiles) {
+                                logFile = logFiles.get(name);
+                                if (logFile == null) {
+                                    logFile = new LogFile(name);
+                                    logFiles.put(name, logFile);
+                                }
+                            }
+                            logFile.publish(record);
+                        } catch (IOException x) {
+                            x.printStackTrace(); // TODO probably unsafe to log this
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override public void flush() {}
+
+        @Override public void close() throws SecurityException {}
+
+    }
+
 }
