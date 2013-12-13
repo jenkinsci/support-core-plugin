@@ -547,7 +547,7 @@ public class SupportPlugin extends Plugin {
             try {
                 component.start(getContext());
             } catch (Throwable t) {
-                LogRecord logRecord = new LogRecord(Level.WARNING, "Exception propagated from component '{0}'");
+                LogRecord logRecord = new LogRecord(Level.WARNING, "Exception propagated from component: {0}");
                 logRecord.setThrown(t);
                 logRecord.setParameters(new Object[]{component.getDisplayName()});
                 logger.log(logRecord);
