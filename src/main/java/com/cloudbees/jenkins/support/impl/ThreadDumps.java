@@ -156,15 +156,19 @@ public class ThreadDumps extends Component {
         ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         final ThreadInfo[] threads =
                 mbean.dumpAllThreads(mbean.isObjectMonitorUsageSupported(), mbean.isSynchronizerUsageSupported());
+
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
 
         for (int ti = threads.length - 1; ti >= 0; ti--) {
             final ThreadInfo t = threads[ti];
-            writer.printf("%s id=%d (0x%x) state=%s",
+            final long cpuPercentage = (mbean.getThreadCpuTime(t.getThreadId()) == 0) ? 0:
+                        mbean.getThreadUserTime(t.getThreadId()) / mbean.getThreadCpuTime(t.getThreadId());
+            writer.printf("%s id=%d (0x%x) state=%s cpu=%d%%",
                     t.getThreadName(),
                     t.getThreadId(),
                     t.getThreadId(),
-                    t.getThreadState());
+                    t.getThreadState(),
+                    cpuPercentage);
             final LockInfo lock = t.getLockInfo();
             if (lock != null && t.getThreadState() != Thread.State.BLOCKED) {
                 writer.printf("\n    - waiting on <0x%08x> (a %s)",
