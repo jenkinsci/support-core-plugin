@@ -222,6 +222,17 @@ public class ThreadDumps extends Component {
             }
         }
 
+        // Print any information about deadlocks.
+        long[] deadLocks = mbean.findDeadlockedThreads();
+        if (deadLocks != null && deadLocks.length != 0) {
+            writer.println(" Deadlock Found ");
+            ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
+
+            for (ThreadInfo threadInfo : deadLockThreads) {
+                writer.println(threadInfo.getStackTrace());
+            }
+        }
+
         writer.println();
         writer.flush();
     }
