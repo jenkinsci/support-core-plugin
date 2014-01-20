@@ -161,8 +161,9 @@ public class ThreadDumps extends Component {
 
         for (int ti = threads.length - 1; ti >= 0; ti--) {
             final ThreadInfo t = threads[ti];
-            final long cpuPercentage = (mbean.getThreadCpuTime(t.getThreadId()) == 0) ? 0:
-                        mbean.getThreadUserTime(t.getThreadId()) / mbean.getThreadCpuTime(t.getThreadId());
+            long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
+            long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
+            final long cpuPercentage = (cpuTime == 0) ? 0: threadUserTime / cpuTime;
             writer.printf("%s id=%d (0x%x) state=%s cpu=%d%%",
                     t.getThreadName(),
                     t.getThreadId(),
