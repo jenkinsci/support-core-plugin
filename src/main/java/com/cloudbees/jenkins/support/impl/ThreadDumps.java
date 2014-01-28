@@ -13,18 +13,8 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.lang.management.LockInfo;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MonitorInfo;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.io.*;
+import java.lang.management.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -227,9 +217,11 @@ public class ThreadDumps extends Component {
         if (deadLocks != null && deadLocks.length != 0) {
             writer.println(" Deadlock Found ");
             ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
-
             for (ThreadInfo threadInfo : deadLockThreads) {
-                writer.println(threadInfo.getStackTrace());
+                StackTraceElement[] elements = threadInfo.getStackTrace();
+                for (StackTraceElement element : elements) {
+                    writer.println(element.toString());
+                }
             }
         }
 
