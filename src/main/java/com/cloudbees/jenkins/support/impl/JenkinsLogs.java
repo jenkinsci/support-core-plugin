@@ -15,6 +15,7 @@ import hudson.FilePath;
 import hudson.logging.LogRecorder;
 import hudson.model.Computer;
 import hudson.model.Node;
+import hudson.model.PeriodicWork;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
@@ -30,6 +31,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -283,7 +285,7 @@ public class JenkinsLogs extends Component {
                 count = 0;
             }
             handler.publish(record);
-            handler.flush();
+            LogFlusher.scheduleFlush(handler);
         }
     }
 
@@ -317,6 +319,31 @@ public class JenkinsLogs extends Component {
         @Override public void flush() {}
 
         @Override public void close() throws SecurityException {}
+
+    }
+
+    @Extension public static final class LogFlusher extends PeriodicWork {
+
+        private static final Set<Handler> unflushedHandlers = new HashSet<Handler>();
+
+        static synchronized void scheduleFlush(Handler h) {
+            unflushedHandlers.add(h);
+        }
+
+        @Override public long getRecurrencePeriod() {
+            return 3000; // 3s
+        }
+
+        @Override protected void doRun() throws Exception {
+            Handler[] handlers;
+            synchronized (LogFlusher.class) {
+                handlers = unflushedHandlers.toArray(new Handler[unflushedHandlers.size()]);
+                unflushedHandlers.clear();
+            }
+            for (Handler h : handlers) {
+                h.flush();
+            }
+        }
 
     }
 
