@@ -13,6 +13,7 @@ import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.yammer.metrics.core.Histogram;
 import com.yammer.metrics.stats.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.PluginManager;
@@ -68,7 +69,7 @@ import java.util.regex.Pattern;
 @Extension
 public class AboutJenkins extends Component {
 
-    private final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
+    private static final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
 
     @NonNull
     @Override
@@ -633,6 +634,7 @@ public class AboutJenkins extends Component {
             this.min = minorBullet;
         }
 
+        @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
         public String call() throws RuntimeException {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
@@ -670,6 +672,22 @@ public class AboutJenkins extends Component {
             result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
             result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
             result.append(min).append(" Version:      ").append(System.getProperty("os.version")).append("\n");
+            File lsb_release = new File("/usr/bin/lsb_release");
+            if (lsb_release.canExecute()) {
+                try {
+                    Process proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--description", "--short").start();
+                    String distro = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
+                    if (proc.waitFor() == 0) {
+                        result.append(min).append(" Distribution: ").append(distro).append("\n");
+                    } else {
+                        logger.warning("lsb_release had a nonzero exit status");
+                    }
+                } catch (IOException x) {
+                    logger.log(Level.WARNING, "lsb_release exists but could not run it", x);
+                } catch (InterruptedException x) {
+                    logger.log(Level.WARNING, "lsb_release hung", x);
+                }
+            }
             RuntimeMXBean mBean = ManagementFactory.getRuntimeMXBean();
             String process = mBean.getName();
             Matcher processMatcher = Pattern.compile("^(-?[0-9]+)@.*$").matcher(process);
