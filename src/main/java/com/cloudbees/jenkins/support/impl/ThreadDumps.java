@@ -143,17 +143,28 @@ public class ThreadDumps extends Component {
             justification = "We don't want platform specific"
     )
     public static void threadDumpModern(OutputStream out) throws UnsupportedEncodingException {
-        ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
-        final ThreadInfo[] threads =
-                mbean.dumpAllThreads(mbean.isObjectMonitorUsageSupported(), mbean.isSynchronizerUsageSupported());
-
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
+
+        ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
+        ThreadInfo[] threads;
+        try {
+            threads = mbean.dumpAllThreads(mbean.isObjectMonitorUsageSupported(), mbean.isSynchronizerUsageSupported());
+        } catch (UnsupportedOperationException x) {
+            x.printStackTrace(writer);
+            threads = new ThreadInfo[0];
+        }
 
         for (int ti = threads.length - 1; ti >= 0; ti--) {
             final ThreadInfo t = threads[ti];
-            long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
-            long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
-            final long cpuPercentage = (cpuTime == 0) ? 0: 100 * threadUserTime / cpuTime;
+            long cpuPercentage;
+            try {
+                long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
+                long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
+                cpuPercentage = (cpuTime == 0) ? 0: 100 * threadUserTime / cpuTime;
+            } catch (UnsupportedOperationException x) {
+                x.printStackTrace(writer);
+                cpuPercentage = 0;
+            }
             writer.printf("%s id=%d (0x%x) state=%s cpu=%d%%",
                     t.getThreadName(),
                     t.getThreadId(),
@@ -213,7 +224,13 @@ public class ThreadDumps extends Component {
         }
 
         // Print any information about deadlocks.
-        long[] deadLocks = mbean.findDeadlockedThreads();
+        long[] deadLocks;
+        try {
+            deadLocks = mbean.findDeadlockedThreads();
+        } catch (UnsupportedOperationException x) {
+            x.printStackTrace(writer);
+            deadLocks = null;
+        }
         if (deadLocks != null && deadLocks.length != 0) {
             writer.println(" Deadlock Found ");
             ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
