@@ -13,18 +13,8 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.lang.management.LockInfo;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MonitorInfo;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.io.*;
+import java.lang.management.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -161,8 +151,9 @@ public class ThreadDumps extends Component {
 
         for (int ti = threads.length - 1; ti >= 0; ti--) {
             final ThreadInfo t = threads[ti];
-            final long cpuPercentage = (mbean.getThreadCpuTime(t.getThreadId()) == 0) ? 0:
-                        mbean.getThreadUserTime(t.getThreadId()) / mbean.getThreadCpuTime(t.getThreadId());
+            long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
+            long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
+            final long cpuPercentage = (cpuTime == 0) ? 0: threadUserTime / cpuTime;
             writer.printf("%s id=%d (0x%x) state=%s cpu=%d%%",
                     t.getThreadName(),
                     t.getThreadId(),
@@ -218,6 +209,19 @@ public class ThreadDumps extends Component {
                     writer.printf("      - %s\n", l);
                 }
                 writer.println();
+            }
+        }
+
+        // Print any information about deadlocks.
+        long[] deadLocks = mbean.findDeadlockedThreads();
+        if (deadLocks != null && deadLocks.length != 0) {
+            writer.println(" Deadlock Found ");
+            ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
+            for (ThreadInfo threadInfo : deadLockThreads) {
+                StackTraceElement[] elements = threadInfo.getStackTrace();
+                for (StackTraceElement element : elements) {
+                    writer.println(element.toString());
+                }
             }
         }
 
