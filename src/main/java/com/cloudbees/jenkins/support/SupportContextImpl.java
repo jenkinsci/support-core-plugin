@@ -25,8 +25,8 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.SupportContext;
-import com.yammer.metrics.core.HealthCheckRegistry;
-import com.yammer.metrics.core.MetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 
 /**
  * The implementation of {@link SupportContext}
@@ -35,16 +35,16 @@ import com.yammer.metrics.core.MetricsRegistry;
  */
 public class SupportContextImpl implements SupportContext {
 
-    private final MetricsRegistry metricsRegistry;
+    private final MetricRegistry metricsRegistry;
 
     private final HealthCheckRegistry healthCheckRegistry;
 
     public SupportContextImpl() {
-        this.metricsRegistry = new MetricsRegistry();
+        this.metricsRegistry = new MetricRegistry();
         this.healthCheckRegistry = new HealthCheckRegistry();
     }
 
-    public MetricsRegistry getMetricsRegistry() {
+    public MetricRegistry getMetricsRegistry() {
         return metricsRegistry;
     }
 
@@ -53,6 +53,6 @@ public class SupportContextImpl implements SupportContext {
     }
 
     public void shutdown() {
-        metricsRegistry.shutdown();
+        // TODO find equivalent of metricsRegistry.shutdown();
     }
 }

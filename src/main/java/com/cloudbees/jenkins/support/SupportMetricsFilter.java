@@ -24,11 +24,10 @@
 
 package com.cloudbees.jenkins.support;
 
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -44,7 +43,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The metrics filter.
@@ -64,26 +62,22 @@ public class SupportMetricsFilter implements Filter {
      *                               interested in.
      * @param otherMetricName        The name used for the catch-all meter.
      */
-    public SupportMetricsFilter(MetricsRegistry registry, Map<Integer, String> meterNamesByStatusCode,
+    public SupportMetricsFilter(MetricRegistry registry, Map<Integer, String> meterNamesByStatusCode,
                                 String otherMetricName) {
         this.metersByStatusCode = new ConcurrentHashMap<Integer, Meter>(meterNamesByStatusCode
                 .size());
         for (Map.Entry<Integer, String> entry : meterNamesByStatusCode.entrySet()) {
             metersByStatusCode.put(entry.getKey(),
-                    registry.newMeter(HttpServlet.class,
+                    registry.meter(MetricRegistry.name(HttpServlet.class,
                             entry.getValue(),
-                            "responses",
-                            TimeUnit.SECONDS));
+                            "responses")));
         }
-        this.otherMeter = registry.newMeter(HttpServlet.class,
+        this.otherMeter = registry.meter(MetricRegistry.name(HttpServlet.class,
                 otherMetricName,
-                "responses",
-                TimeUnit.SECONDS);
-        this.activeRequests = registry.newCounter(HttpServlet.class, "activeRequests");
-        this.requestTimer = registry.newTimer(HttpServlet.class,
-                "requests",
-                TimeUnit.MILLISECONDS,
-                TimeUnit.SECONDS);
+                "responses"));
+        this.activeRequests = registry.counter(MetricRegistry.name(HttpServlet.class, "activeRequests"));
+        this.requestTimer = registry.timer(MetricRegistry.name(HttpServlet.class,
+                "requests"));
 
     }
 
@@ -100,7 +94,7 @@ public class SupportMetricsFilter implements Filter {
             final StatusExposingServletResponse wrappedResponse =
                     new StatusExposingServletResponse((HttpServletResponse) response);
             activeRequests.inc();
-            final TimerContext context = requestTimer.time();
+            final Timer.Context context = requestTimer.time();
             try {
                 chain.doFilter(request, wrappedResponse);
             } finally {

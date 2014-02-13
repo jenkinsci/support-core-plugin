@@ -30,12 +30,14 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
-import com.yammer.metrics.core.Gauge;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
-import com.yammer.metrics.core.VirtualMachineMetrics;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.jvm.BufferPoolMetricSet;
+import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -102,6 +104,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 /**
  * Main entry point for the support plugin.
  *
@@ -121,16 +125,8 @@ public class SupportPlugin extends Plugin {
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
 
-    private transient final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
     private transient SupportContextImpl context = null;
     private transient DefaultSupportMetricsFilter filter;
-    private transient Histogram jvmMemoryTotalUsed;
-    private transient Histogram jvmMemoryTotalCommitted;
-    private transient Histogram jvmMemoryHeapUsed;
-    private transient Histogram jvmMemoryHeapCommitted;
-    private transient Histogram jvmThreadTotalCount;
-    private transient Histogram jvmThreadDaemonCount;
-    private transient Histogram jvmThreadDeadlockedCount;
     private transient Histogram jenkinsQueueLength;
     private transient Histogram jenkinsNodeTotalCount;
     private transient Histogram jenkinsNodeOnlineCount;
@@ -383,90 +379,26 @@ public class SupportPlugin extends Plugin {
         rootLogger = Logger.getLogger("");
         rootLogger.addHandler(handler);
         context = new SupportContextImpl();
-        MetricsRegistry registry = context.getMetricsRegistry();
+        MetricRegistry registry = context.getMetricsRegistry();
 
         // add the webapp filter
         filter = new DefaultSupportMetricsFilter(registry);
         PluginServletFilter.addFilter(filter);
 
+        registry.registerAll(new MemoryUsageGaugeSet());
+        registry.registerAll(new GarbageCollectorMetricSet());
+        registry.register("file.descriptor.ratio", new FileDescriptorRatioGauge());
+        registry.registerAll(new ThreadStatesGaugeSet());
         // add jvm metrics
-        jvmMemoryTotalUsed = registry.newHistogram(Runtime.class, "memory-total-used");
-        jvmMemoryTotalCommitted = registry.newHistogram(Runtime.class, "memory-total-committed");
-        registry.newGauge(Runtime.class, "memory-total-max", new Gauge<Double>() {
-            private final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
-
-            @Override
-            public Double value() {
-                return vmm.totalMax();
-            }
-        });
-        jvmMemoryHeapUsed = registry.newHistogram(Runtime.class, "memory-heap-used");
-        jvmMemoryHeapCommitted = registry.newHistogram(Runtime.class, "memory-heap-committed");
-        registry.newGauge(Runtime.class, "memory-heap-max", new Gauge<Double>() {
-            private final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
-
-            @Override
-            public Double value() {
-                return vmm.heapMax();
-            }
-        });
-        registry.newGauge(Runtime.class, "memory-heap-usage", new Gauge<Double>() {
-            private final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
-
-            @Override
-            public Double value() {
-                return vmm.heapUsage();
-            }
-        });
-        registry.newGauge(Runtime.class, "memory-nonheap-usage", new Gauge<Double>() {
-            private final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
-
-            @Override
-            public Double value() {
-                return vmm.nonHeapUsage();
-            }
-        });
-        registry.newGauge(Runtime.class, "file-descriptor-usage", new Gauge<Double>() {
-            private final VirtualMachineMetrics vmm = VirtualMachineMetrics.getInstance();
-
-            @Override
-            public Double value() {
-                return vmm.fileDescriptorUsage();
-            }
-        });
-        jvmThreadTotalCount = registry.newHistogram(Runtime.class, "threads-total");
-        jvmThreadDaemonCount = registry.newHistogram(Runtime.class, "threads-daemon");
-        jvmThreadDeadlockedCount = registry.newHistogram(Runtime.class, "threads-deadlocked", true);
-        jenkinsQueueLength = registry.newHistogram(Queue.class, "size", true);
-        jenkinsNodeTotalCount = registry.newHistogram(Node.class, "count", true);
-        jenkinsNodeOnlineCount = registry.newHistogram(Node.class, "online", true);
-        jenkinsExecutorTotalCount = registry.newHistogram(Executor.class, "count", true);
-        jenkinsExecutorUsedCount = registry.newHistogram(Executor.class, "in-use", true);
-        jenkinsBuildDuration = registry.newTimer(Jenkins.class, "builds", TimeUnit.SECONDS, TimeUnit.SECONDS);
+        jenkinsQueueLength = registry.histogram(name(Queue.class, "size"));
+        jenkinsNodeTotalCount = registry.histogram(name(Node.class, "count"));
+        jenkinsNodeOnlineCount = registry.histogram(name(Node.class, "online"));
+        jenkinsExecutorTotalCount = registry.histogram(name(Executor.class, "count"));
+        jenkinsExecutorUsedCount = registry.histogram(name(Executor.class, "in-use"));
+        jenkinsBuildDuration = registry.timer(name(Jenkins.class, "builds"));
     }
 
     private synchronized void updateMetrics() {
-        if (jvmMemoryTotalUsed != null) {
-            jvmMemoryTotalUsed.update((long) vmm.totalUsed());
-        }
-        if (jvmMemoryTotalCommitted != null) {
-            jvmMemoryTotalCommitted.update((long) vmm.totalCommitted());
-        }
-        if (jvmMemoryHeapUsed != null) {
-            jvmMemoryHeapUsed.update((long) vmm.heapUsed());
-        }
-        if (jvmMemoryHeapCommitted != null) {
-            jvmMemoryHeapCommitted.update((long) vmm.heapCommitted());
-        }
-        if (jvmThreadTotalCount != null) {
-            jvmThreadTotalCount.update(vmm.threadCount());
-        }
-        if (jvmThreadDaemonCount != null) {
-            jvmThreadDaemonCount.update(vmm.daemonThreadCount());
-        }
-        if (jvmThreadDeadlockedCount != null) {
-            jvmThreadDeadlockedCount.update(vmm.deadlockedThreads().size());
-        }
         final Jenkins jenkins = Jenkins.getInstance();
         if (jenkinsQueueLength != null) {
             jenkinsQueueLength.update(jenkins.getQueue().getBuildableItems().size());
@@ -516,7 +448,7 @@ public class SupportPlugin extends Plugin {
                     continue;
                 }
                 // purge dead nodes
-                getContext().getMetricsRegistry().removeMetric(Node.class, "builds", entry.getKey().getName());
+                getContext().getMetricsRegistry().remove(name(Node.class, "builds", entry.getKey().getName()));
             }
             computerBuildDurations.keySet().retainAll(forRetention);
             if (jenkinsNodeTotalCount != null) {
@@ -566,13 +498,6 @@ public class SupportPlugin extends Plugin {
             PluginServletFilter.removeFilter(filter);
         }
         context.shutdown();
-        jvmMemoryTotalUsed = null;
-        jvmMemoryTotalCommitted = null;
-        jvmMemoryHeapUsed = null;
-        jvmMemoryHeapCommitted = null;
-        jvmThreadTotalCount = null;
-        jvmThreadDaemonCount = null;
-        jvmThreadDeadlockedCount = null;
         jenkinsQueueLength = null;
         jenkinsNodeTotalCount = null;
         jenkinsNodeOnlineCount = null;
@@ -601,7 +526,7 @@ public class SupportPlugin extends Plugin {
         Timer timer = computerBuildDurations.get(computer);
         if (timer == null) {
             timer = getInstance().getContext().getMetricsRegistry()
-                    .newTimer(Node.class, "builds", computer.getName(), TimeUnit.SECONDS, TimeUnit.SECONDS);
+                    .timer(name(Node.class, "builds", computer.getName()));
             computerBuildDurations.put(computer, timer);
         }
         return timer;
@@ -791,11 +716,11 @@ public class SupportPlugin extends Plugin {
 
     @Extension
     public static class RunListenerImpl extends RunListener<Run> {
-        private Map<Run, List<TimerContext>> contexts = new HashMap<Run, List<TimerContext>>();
+        private Map<Run, List<Timer.Context>> contexts = new HashMap<Run, List<Timer.Context>>();
 
         @Override
         public synchronized void onStarted(Run run, TaskListener listener) {
-            List<TimerContext> contextList = new ArrayList<TimerContext>();
+            List<Timer.Context> contextList = new ArrayList<Timer.Context>();
             contextList.add(getInstance().jenkinsBuildDuration.time());
             Executor executor = run.getExecutor();
             if (executor != null) {
@@ -808,9 +733,9 @@ public class SupportPlugin extends Plugin {
 
         @Override
         public synchronized void onCompleted(Run run, TaskListener listener) {
-            List<TimerContext> contextList = contexts.remove(run);
+            List<Timer.Context> contextList = contexts.remove(run);
             if (contextList != null) {
-                for (TimerContext context : contextList) {
+                for (Timer.Context context : contextList) {
                     context.stop();
                 }
             }

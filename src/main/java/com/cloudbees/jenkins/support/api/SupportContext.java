@@ -24,8 +24,9 @@
 
 package com.cloudbees.jenkins.support.api;
 
-import com.yammer.metrics.core.HealthCheckRegistry;
-import com.yammer.metrics.core.MetricsRegistry;
+
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 
 /**
  * The context that a {@link Component} is being instantiated in.
@@ -33,7 +34,7 @@ import com.yammer.metrics.core.MetricsRegistry;
  * @author Stephen Connolly
  */
 public interface SupportContext {
-    MetricsRegistry getMetricsRegistry();
+    MetricRegistry getMetricsRegistry();
 
     HealthCheckRegistry getHealthCheckRegistry();
 }

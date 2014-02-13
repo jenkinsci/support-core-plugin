@@ -10,8 +10,8 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.stats.Snapshot;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
@@ -551,12 +551,13 @@ public class AboutJenkins extends Component {
     }
 
     private void printHistogram(PrintWriter out, Histogram histogram) {
-        out.println("      - Sample size:        " + histogram.count());
-        out.println("      - Average:            " + histogram.mean());
-        out.println("      - Standard deviation: " + histogram.stdDev());
-        out.println("      - Minimum:            " + histogram.min());
-        out.println("      - Maximum:            " + histogram.max());
+        out.println("      - Sample size:        " + histogram.getCount());
         Snapshot snapshot = histogram.getSnapshot();
+        out.println("      - Average (mean):     " + snapshot.getMean());
+        out.println("      - Average (median):   " + snapshot.getMedian());
+        out.println("      - Standard deviation: " + snapshot.getStdDev());
+        out.println("      - Minimum:            " + snapshot.getMin());
+        out.println("      - Maximum:            " + snapshot.getMax());
         out.println("      - 95th percentile:    " + snapshot.get95thPercentile());
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }

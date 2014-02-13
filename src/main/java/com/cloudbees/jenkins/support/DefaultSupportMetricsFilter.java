@@ -24,7 +24,7 @@
 
 package com.cloudbees.jenkins.support;
 
-import com.yammer.metrics.core.MetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class DefaultSupportMetricsFilter extends SupportMetricsFilter {
      *
      * @param registry
      */
-    public DefaultSupportMetricsFilter(MetricsRegistry registry) {
+    public DefaultSupportMetricsFilter(MetricRegistry registry) {
         super(registry, createMeterNamesByStatusCode(), NAME_PREFIX + "other");
     }
 

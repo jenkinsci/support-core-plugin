@@ -4,7 +4,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.SupportContext;
-import com.yammer.metrics.core.MetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -25,7 +25,7 @@ import java.io.OutputStream;
 @Extension
 public class Metrics extends Component {
 
-    private MetricsRegistry metricsRegistry;
+    private MetricRegistry metricsRegistry;
 
     @Override
     @NonNull
