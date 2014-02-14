@@ -33,7 +33,7 @@ public class MetricsContent extends Content {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        objectMapper.writer().writeValue(os, registry.getMetrics());
+        objectMapper.writer().writeValue(os, registry);
     }
 
 }
