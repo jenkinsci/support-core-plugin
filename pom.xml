@@ -68,7 +68,6 @@
   </scm>
 
   <properties>
-    <metrics.version>3.0.1</metrics.version>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -107,42 +106,7 @@
     </dependency>
     <!-- regular dependencies -->
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-servlet</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-healthchecks</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-jvm</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-json</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-    <dependency>
-        <groupId>net.sf.uadetector</groupId>
+      <groupId>net.sf.uadetector</groupId>
       <artifactId>uadetector-resources</artifactId>
       <version>2013.09</version>
     </dependency>
@@ -152,6 +116,11 @@
       <version>1.9</version>
     </dependency>
     <!-- plugin dependencies -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>codahale-metrics</artifactId>
+      <version>3.0.1-1-SNAPSHOT</version>
+    </dependency>
     <!-- jenkins dependencies -->
     <!-- test dependencies -->
     <dependency>

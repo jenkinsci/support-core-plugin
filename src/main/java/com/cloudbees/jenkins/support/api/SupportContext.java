@@ -34,7 +34,15 @@ import com.codahale.metrics.health.HealthCheckRegistry;
  * @author Stephen Connolly
  */
 public interface SupportContext {
+    /**
+     * @deprecated use {@link com.codahale.metrics.jenkins.Metrics#metricRegistry()}
+     */
+    @Deprecated
     MetricRegistry getMetricsRegistry();
 
+    /**
+     * @deprecated use {@link com.codahale.metrics.jenkins.Metrics#healthCheckRegistry()}
+     */
+    @Deprecated
     HealthCheckRegistry getHealthCheckRegistry();
 }

@@ -25,8 +25,6 @@ import java.io.OutputStream;
 @Extension
 public class Metrics extends Component {
 
-    private MetricRegistry metricsRegistry;
-
     @Override
     @NonNull
     public String getDisplayName() {
@@ -35,16 +33,10 @@ public class Metrics extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(new MetricsContent("nodes/master/metrics.json", metricsRegistry));
+        result.add(new MetricsContent("nodes/master/metrics.json", com.codahale.metrics.jenkins.Metrics.metricRegistry()));
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getDisplayName() + "/metrics.json", node));
         }
-    }
-
-    @Override
-    public void start(@NonNull SupportContext context) {
-        super.start(context);
-        metricsRegistry = context.getMetricsRegistry();
     }
 
     private static class RemoteMetricsContent extends Content {

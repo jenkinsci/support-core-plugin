@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
+import com.codahale.metrics.jenkins.Metrics;
 
 /**
  * The implementation of {@link SupportContext}
@@ -35,24 +36,27 @@ import com.codahale.metrics.health.HealthCheckRegistry;
  */
 public class SupportContextImpl implements SupportContext {
 
-    private final MetricRegistry metricsRegistry;
-
-    private final HealthCheckRegistry healthCheckRegistry;
-
     public SupportContextImpl() {
-        this.metricsRegistry = new MetricRegistry();
-        this.healthCheckRegistry = new HealthCheckRegistry();
     }
 
+    /**
+     * {@inheritDoc}
+     * @deprecated
+     */
+    @Deprecated
     public MetricRegistry getMetricsRegistry() {
-        return metricsRegistry;
+        return Metrics.metricRegistry();
     }
 
+    /**
+     * {@inheritDoc}
+     * @deprecated
+     */
+    @Deprecated
     public HealthCheckRegistry getHealthCheckRegistry() {
-        return healthCheckRegistry;
+        return Metrics.healthCheckRegistry();
     }
 
     public void shutdown() {
-        // TODO find equivalent of metricsRegistry.shutdown();
     }
 }

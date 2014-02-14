@@ -33,6 +33,7 @@ import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.jenkins.impl.JenkinsMetricProviderImpl;
 import com.codahale.metrics.jvm.BufferPoolMetricSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
@@ -126,14 +127,6 @@ public class SupportPlugin extends Plugin {
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
 
     private transient SupportContextImpl context = null;
-    private transient DefaultSupportMetricsFilter filter;
-    private transient Histogram jenkinsQueueLength;
-    private transient Histogram jenkinsNodeTotalCount;
-    private transient Histogram jenkinsNodeOnlineCount;
-    private transient Histogram jenkinsExecutorTotalCount;
-    private transient Histogram jenkinsExecutorUsedCount;
-    private transient Timer jenkinsBuildDuration;
-    private transient Map<Computer, Timer> computerBuildDurations = new HashMap<Computer, Timer>();
     private transient Logger rootLogger;
 
     private SupportProvider supportProvider;
@@ -193,19 +186,19 @@ public class SupportPlugin extends Plugin {
     }
 
     public Histogram getJenkinsExecutorTotalCount() {
-        return jenkinsExecutorTotalCount;
+        return JenkinsMetricProviderImpl.instance().getJenkinsExecutorTotalCount();
     }
 
     public Histogram getJenkinsExecutorUsedCount() {
-        return jenkinsExecutorUsedCount;
+        return JenkinsMetricProviderImpl.instance().getJenkinsExecutorUsedCount();
     }
 
     public Histogram getJenkinsNodeOnlineCount() {
-        return jenkinsNodeOnlineCount;
+        return JenkinsMetricProviderImpl.instance().getJenkinsNodeOnlineCount();
     }
 
     public Histogram getJenkinsNodeTotalCount() {
-        return jenkinsNodeTotalCount;
+        return JenkinsMetricProviderImpl.instance().getJenkinsNodeTotalCount();
     }
 
     private static Level getLogLevel() {
@@ -379,92 +372,6 @@ public class SupportPlugin extends Plugin {
         rootLogger = Logger.getLogger("");
         rootLogger.addHandler(handler);
         context = new SupportContextImpl();
-        MetricRegistry registry = context.getMetricsRegistry();
-
-        // add the webapp filter
-        filter = new DefaultSupportMetricsFilter(registry);
-        PluginServletFilter.addFilter(filter);
-
-        registry.registerAll(new MemoryUsageGaugeSet());
-        registry.registerAll(new GarbageCollectorMetricSet());
-        registry.register("file.descriptor.ratio", new FileDescriptorRatioGauge());
-        registry.registerAll(new ThreadStatesGaugeSet());
-        // add jvm metrics
-        jenkinsQueueLength = registry.histogram(name(Queue.class, "size"));
-        jenkinsNodeTotalCount = registry.histogram(name(Node.class, "count"));
-        jenkinsNodeOnlineCount = registry.histogram(name(Node.class, "online"));
-        jenkinsExecutorTotalCount = registry.histogram(name(Executor.class, "count"));
-        jenkinsExecutorUsedCount = registry.histogram(name(Executor.class, "in-use"));
-        jenkinsBuildDuration = registry.timer(name(Jenkins.class, "builds"));
-    }
-
-    private synchronized void updateMetrics() {
-        final Jenkins jenkins = Jenkins.getInstance();
-        if (jenkinsQueueLength != null) {
-            jenkinsQueueLength.update(jenkins.getQueue().getBuildableItems().size());
-        }
-        if (jenkinsNodeTotalCount != null || jenkinsNodeOnlineCount != null || jenkinsExecutorTotalCount != null
-                || jenkinsExecutorUsedCount != null) {
-            int nodeTotal = 0;
-            int nodeOnline = 0;
-            int executorTotal = 0;
-            int executorUsed = 0;
-            if (jenkins.getNumExecutors() > 0) {
-                nodeTotal++;
-                Computer computer = jenkins.toComputer();
-                if (computer != null) {
-                    if (!computer.isOffline()) {
-                        nodeOnline++;
-                        for (Executor e : computer.getExecutors()) {
-                            executorTotal++;
-                            if (!e.isIdle()) {
-                                executorUsed++;
-                            }
-                        }
-                    }
-                }
-            }
-            Set<Computer> forRetention = new HashSet<Computer>();
-            for (Node node : jenkins.getNodes()) {
-                nodeTotal++;
-                Computer computer = node.toComputer();
-                if (computer == null) {
-                    continue;
-                }
-                if (!computer.isOffline()) {
-                    nodeOnline++;
-                    for (Executor e : computer.getExecutors()) {
-                        executorTotal++;
-                        if (!e.isIdle()) {
-                            executorUsed++;
-                        }
-                    }
-                }
-                forRetention.add(computer);
-                getOrCreateTimer(computer);
-            }
-            for (Map.Entry<Computer, Timer> entry : computerBuildDurations.entrySet()) {
-                if (forRetention.contains(entry.getKey())) {
-                    continue;
-                }
-                // purge dead nodes
-                getContext().getMetricsRegistry().remove(name(Node.class, "builds", entry.getKey().getName()));
-            }
-            computerBuildDurations.keySet().retainAll(forRetention);
-            if (jenkinsNodeTotalCount != null) {
-                jenkinsNodeTotalCount.update(nodeTotal);
-            }
-            if (jenkinsNodeOnlineCount != null) {
-                jenkinsNodeOnlineCount.update(nodeOnline);
-            }
-            if (jenkinsExecutorTotalCount != null) {
-                jenkinsExecutorTotalCount.update(executorTotal);
-            }
-            if (jenkinsExecutorUsedCount != null) {
-                jenkinsExecutorUsedCount.update(executorUsed);
-            }
-        }
-
     }
 
     @NonNull
@@ -494,20 +401,7 @@ public class SupportPlugin extends Plugin {
             rootLogger = null;
             handler.close();
         }
-        if (filter != null) {
-            PluginServletFilter.removeFilter(filter);
-        }
         context.shutdown();
-        jenkinsQueueLength = null;
-        jenkinsNodeTotalCount = null;
-        jenkinsNodeOnlineCount = null;
-        jenkinsExecutorTotalCount = null;
-        jenkinsExecutorUsedCount = null;
-        jenkinsBuildDuration = null;
-        if (computerBuildDurations != null) {
-            computerBuildDurations.clear();
-        }
-        computerBuildDurations = null;
 
         super.stop();
     }
@@ -520,16 +414,6 @@ public class SupportPlugin extends Plugin {
             }
         }
         return Collections.emptyList();
-    }
-
-    private synchronized Timer getOrCreateTimer(Computer computer) {
-        Timer timer = computerBuildDurations.get(computer);
-        if (timer == null) {
-            timer = getInstance().getContext().getMetricsRegistry()
-                    .timer(name(Node.class, "builds", computer.getName()));
-            computerBuildDurations.put(computer, timer);
-        }
-        return timer;
     }
 
     public static class LogHolder {
@@ -640,7 +524,6 @@ public class SupportPlugin extends Plugin {
             if (plugin == null) {
                 return;
             }
-            plugin.updateMetrics();
             if (nextBundleWrite.get() < System.currentTimeMillis()) {
                 if (thread != null && thread.isAlive()) {
                     logger.log(Level.INFO, "Periodic bundle generating thread is still running. Execution aborted.");
@@ -712,34 +595,6 @@ public class SupportPlugin extends Plugin {
             }
         }
 
-    }
-
-    @Extension
-    public static class RunListenerImpl extends RunListener<Run> {
-        private Map<Run, List<Timer.Context>> contexts = new HashMap<Run, List<Timer.Context>>();
-
-        @Override
-        public synchronized void onStarted(Run run, TaskListener listener) {
-            List<Timer.Context> contextList = new ArrayList<Timer.Context>();
-            contextList.add(getInstance().jenkinsBuildDuration.time());
-            Executor executor = run.getExecutor();
-            if (executor != null) {
-                Computer computer = executor.getOwner();
-                Timer timer = getInstance().getOrCreateTimer(computer);
-                contextList.add(timer.time());
-            }
-            contexts.put(run, contextList);
-        }
-
-        @Override
-        public synchronized void onCompleted(Run run, TaskListener listener) {
-            List<Timer.Context> contextList = contexts.remove(run);
-            if (contextList != null) {
-                for (Timer.Context context : contextList) {
-                    context.stop();
-                }
-            }
-        }
     }
 
     @Extension
