@@ -28,6 +28,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -197,18 +199,42 @@ public class JenkinsLogs extends Component {
                     out.flush();
                 }
             });
-            result.add(
-                    new PrintedContent("nodes/slave/" + node.getDisplayName() + "/launch.log") {
-                        @Override
-                        protected void printTo(PrintWriter out) throws IOException {
-                            Computer computer = node.toComputer();
-                            if (computer != null) {
-                                out.println(computer.getLog());
-                            }
-                            out.flush();
-                        }
+            final Computer computer = node.toComputer();
+            if (computer != null) {
+                boolean haveLogFile;
+                try {
+                    Method getLogFile = computer.getClass().getMethod("getLogFile");
+                    getLogFile.setAccessible(true);
+                    File logFile = (File) getLogFile.invoke(computer);
+                    if (logFile != null && logFile.isFile()) {
+                        result.add(new FileContent("nodes/slave/" + node.getDisplayName() + "/launch.log", logFile));
+                        haveLogFile = true;
+                    } else {
+                        haveLogFile = false;
                     }
-            );
+                } catch (ClassCastException e) {
+                    haveLogFile = false;
+                } catch (InvocationTargetException e) {
+                    haveLogFile = false;
+                } catch (NoSuchMethodException e) {
+                    haveLogFile = false;
+                } catch (IllegalAccessException e) {
+                    haveLogFile = false;
+                }
+                if (!haveLogFile) {
+                    // fall back to surefire method... even if potential memory hog
+                    result.add(
+                            new PrintedContent("nodes/slave/" + node.getDisplayName() + "/launch.log") {
+                                @Override
+                                protected void printTo(PrintWriter out) throws IOException {
+                                    out.println(computer.getLog());
+                                    out.flush();
+                                }
+                            }
+                    );
+
+                }
+            }
         }
 
     }
