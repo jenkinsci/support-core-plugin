@@ -27,7 +27,7 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.codahale.metrics.jenkins.Metrics;
+import jenkins.metrics.api.Metrics;
 
 /**
  * The implementation of {@link SupportContext}

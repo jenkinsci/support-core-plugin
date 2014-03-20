@@ -33,7 +33,7 @@ public class Metrics extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(new MetricsContent("nodes/master/metrics.json", com.codahale.metrics.jenkins.Metrics.metricRegistry()));
+        result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getDisplayName() + "/metrics.json", node));
         }
