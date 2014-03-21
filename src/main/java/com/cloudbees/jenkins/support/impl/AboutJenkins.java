@@ -20,6 +20,7 @@ import hudson.PluginManager;
 import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.lifecycle.Lifecycle;
+import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -31,10 +32,6 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.IOUtils;
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.Stapler;
-
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -60,6 +57,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
+import javax.servlet.ServletContext;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.Stapler;
 
 /**
  * Contributes basic information about Jenkins.
@@ -128,9 +129,8 @@ public class AboutJenkins extends Component {
                 out.println("Important configuration");
                 out.println("---------------");
                 out.println();
-                Descriptor<?> descriptor = Jenkins.getInstance().getSecurityRealm().getDescriptor();
-                out.println("  * Security realm: " + (descriptor != null ? descriptor.getDisplayName() : "(none)"));
-                out.println("  * Authorization strategy: " + Jenkins.getInstance().getAuthorizationStrategy().getDescriptor().getDisplayName());
+                out.println("  * Security realm: " + getDescriptorDisplayName(Jenkins.getInstance().getSecurityRealm()));
+                out.println("  * Authorization strategy: " + getDescriptorDisplayName(Jenkins.getInstance().getAuthorizationStrategy()));
                 out.println();
                 out.println("Active Plugins");
                 out.println("--------------");
@@ -264,7 +264,7 @@ public class AboutJenkins extends Component {
                 out.print(new GetJavaInfo("      -", "          +").call());
                 out.println();
                 for (Node node : Jenkins.getInstance().getNodes()) {
-                    out.println("  * " + node.getDisplayName() + " (" + node.getDescriptor().getDisplayName() + ")");
+                    out.println("  * " + node.getDisplayName() + " (" + getDescriptorDisplayName(node) + ")");
                     out.println("      - Description:    `" + node.getNodeDescription().replaceAll("`", "&#96;") + "`");
                     out.println("      - Executors:      " + node.getNumExecutors());
                     FilePath rootPath = node.getRootPath();
@@ -279,10 +279,8 @@ public class AboutJenkins extends Component {
                     out.println("      - Usage:          " + node.getMode().getDescription());
                     if (node instanceof Slave) {
                         Slave slave = (Slave) node;
-                        out.println(
-                                "      - Launch method:  " + slave.getLauncher().getDescriptor().getDisplayName());
-                        out.println("      - Availability:   " + slave.getRetentionStrategy().getDescriptor()
-                                .getDisplayName());
+                        out.println("      - Launch method:  " + getDescriptorDisplayName(slave.getLauncher()));
+                        out.println("      - Availability:   " + getDescriptorDisplayName(slave.getRetentionStrategy()));
                     }
                     VirtualChannel channel = node.getChannel();
                     if (channel == null) {
@@ -435,6 +433,23 @@ public class AboutJenkins extends Component {
                     }
             );
         }
+    }
+
+    private static String getDescriptorDisplayName(@CheckForNull Describable<?> d) {
+        if (d == null) {
+            return "(none)";
+        }
+        Descriptor<?> t;
+        try {
+            t = d.getDescriptor();
+        } catch (AssertionError x) {
+            return "(missing descriptor for " + d.getClass().getName() + ")";
+        }
+        if (t == null) {
+            // Not really legal but SecurityRealm.None does it anyway:
+            return "(none)";
+        }
+        return t.getDisplayName();
     }
 
     /**
