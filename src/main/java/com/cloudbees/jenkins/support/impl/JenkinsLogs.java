@@ -53,7 +53,6 @@ import jenkins.model.Jenkins;
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
 
-    private final Formatter formatter = new SupportLogFormatter();
     private final Map<String,LogRecorder> logRecorders = Jenkins.getInstance().getLog().logRecorders;
     private final File customLogs = new File(new File(Jenkins.getInstance().getRootDir(), "logs"), "custom");
 
@@ -76,6 +75,7 @@ public class JenkinsLogs extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
+        final Formatter formatter = new SupportLogFormatter();
         result.add(new PrintedContent("nodes/master/logs/jenkins.log") {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
@@ -301,14 +301,20 @@ public class JenkinsLogs extends Component {
             stream = new ReopenableRotatingFileOutputStream(new File(customLogs, name + ".log"), 9);
             // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just truncated
             stream.rewind();
-            handler = new StreamHandler(stream, formatter);
+            handler = new StreamHandler(stream, new SupportLogFormatter());
             handler.setLevel(Level.ALL);
             count = 0;
         }
-        synchronized void publish(LogRecord record) throws IOException {
-            if (count++ > 9999) { // make sure it does not get enormous during a single session
+        void publish(LogRecord record) throws IOException {
+            boolean rewind = false;
+            synchronized (this) {
+                if (count++ > 9999) { // make sure it does not get enormous during a single session
+                    count = 0;
+                    rewind = true;
+                }
+            }
+            if (rewind) {
                 stream.rewind();
-                count = 0;
             }
             handler.publish(record);
             LogFlusher.scheduleFlush(handler);
