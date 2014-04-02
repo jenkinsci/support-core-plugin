@@ -139,15 +139,17 @@ public class FileDescriptorLimit extends Component {
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
     private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException {
-        String osName = System.getProperty("os.name").toLowerCase();
+        String osName = System.getProperty("os.name");
 
-        if (osName != null && !osName.contains("win")) { // If unix
+        if (osName != null && !osName.toLowerCase().contains("win")) { // If unix
             writer.println();
             writer.println("All open files");
             writer.println("==============");
             File[] files = new File("/proc/self/fd").listFiles();
-            for (File file : files) {
-                writer.println(file.getCanonicalPath());
+            if (files != null) {
+                for (File file : files) {
+                    writer.println(file.getCanonicalPath());
+                }
             }
         }
     }
@@ -158,9 +160,9 @@ public class FileDescriptorLimit extends Component {
      */
     @edu.umd.cs.findbugs.annotations.SuppressWarnings("DM_DEFAULT_ENCODING")
     private static void getUlimit(PrintWriter writer) throws UnsupportedEncodingException {
-        String osName = System.getProperty("os.name").toLowerCase();
+        String osName = System.getProperty("os.name");
 
-        if (osName != null && !osName.contains("win")) {
+        if (osName != null && !osName.toLowerCase().contains("win")) {
             ProcessBuilder builder = new ProcessBuilder("bash", "-c", "ulimit -a");
             Process process;
             BufferedReader bufferedReader = null;
@@ -168,7 +170,7 @@ public class FileDescriptorLimit extends Component {
                 process = builder.start();
                 // this is reading from the process so platform encoding is correct
                 bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line = "";
+                String line;
                 while ((line = bufferedReader.readLine()) != null) {
                     writer.println(line);
                 }
