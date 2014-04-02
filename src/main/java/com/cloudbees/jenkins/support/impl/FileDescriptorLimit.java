@@ -13,7 +13,16 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
@@ -54,9 +63,9 @@ public class FileDescriptorLimit extends Component {
                     out.flush();
                 }
                 try {
-                    getUlimit(os);
-                    getOpenFileDescriptorCount(os);
-                    listAllOpenFileDescriptors(os);
+                    getUlimit(out);
+                    getOpenFileDescriptorCount(out);
+                    listAllOpenFileDescriptors(out);
                 } finally {
                     os.flush();
                 }
@@ -99,12 +108,13 @@ public class FileDescriptorLimit extends Component {
      */
     private static final class GetUlimit implements Callable<String, RuntimeException> {
         public String call() {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            StringWriter bos = new StringWriter();
+            PrintWriter pw = new PrintWriter(bos);
             try {
-                getUlimit(bos);
-                getOpenFileDescriptorCount(bos);
-                listAllOpenFileDescriptors(bos);
-                return bos.toString("utf-8");
+                getUlimit(pw);
+                getOpenFileDescriptorCount(pw);
+                listAllOpenFileDescriptors(pw);
+                return bos.toString();
             } catch (Exception e) {
                 return bos.toString();
             }
@@ -114,9 +124,8 @@ public class FileDescriptorLimit extends Component {
     /**
      * * Using OperatingSystemMXBean, we can obtain the total number of open file descriptors.
      */
-    private static void getOpenFileDescriptorCount(OutputStream os) throws UnsupportedEncodingException {
+    private static void getOpenFileDescriptorCount(PrintWriter writer) throws UnsupportedEncodingException {
         OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "utf-8"), true);
         if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
             UnixOperatingSystemMXBean unixOperatingSystemMXBean = (UnixOperatingSystemMXBean) operatingSystemMXBean;
             writer.println("Open File Descriptor Count: " + unixOperatingSystemMXBean.getOpenFileDescriptorCount());
@@ -129,8 +138,7 @@ public class FileDescriptorLimit extends Component {
      * * going to /proc/self/fd. This will translate self to the correct PID of the current java
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
-    private static void listAllOpenFileDescriptors(OutputStream os) throws IOException {
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "utf-8"), true);
+    private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException {
         String osName = System.getProperty("os.name").toLowerCase();
 
         if (osName != null && !osName.contains("win")) { // If unix
@@ -148,8 +156,7 @@ public class FileDescriptorLimit extends Component {
      * * This method executes the command "bash -c ulimit -a" on the machine. If an exception is thrown log it
      * * to file and continue.
      */
-    private static void getUlimit(OutputStream os) throws UnsupportedEncodingException {
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "utf-8"), true);
+    private static void getUlimit(PrintWriter writer) throws UnsupportedEncodingException {
         String osName = System.getProperty("os.name").toLowerCase();
 
         if (osName != null && !osName.contains("win")) {
