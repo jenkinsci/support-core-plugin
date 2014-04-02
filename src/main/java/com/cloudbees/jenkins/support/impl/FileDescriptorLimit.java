@@ -156,6 +156,7 @@ public class FileDescriptorLimit extends Component {
      * * This method executes the command "bash -c ulimit -a" on the machine. If an exception is thrown log it
      * * to file and continue.
      */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings("DM_DEFAULT_ENCODING")
     private static void getUlimit(PrintWriter writer) throws UnsupportedEncodingException {
         String osName = System.getProperty("os.name").toLowerCase();
 
@@ -165,6 +166,7 @@ public class FileDescriptorLimit extends Component {
             BufferedReader bufferedReader = null;
             try {
                 process = builder.start();
+                // this is reading from the process so platform encoding is correct
                 bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line = "";
                 while ((line = bufferedReader.readLine()) != null) {
