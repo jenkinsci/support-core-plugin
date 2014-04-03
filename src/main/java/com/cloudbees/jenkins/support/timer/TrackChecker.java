@@ -4,12 +4,15 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.PeriodicWork;
+import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.management.ThreadInfo;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,6 +25,8 @@ public class TrackChecker extends PeriodicWork {
 
     @Inject
     Jenkins jenkins;
+
+    final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
     @Override
     public long getRecurrencePeriod() {
@@ -53,7 +58,7 @@ public class TrackChecker extends PeriodicWork {
                     if (req.record==null) {
                         File dir = new File(jenkins.getRootDir(), "slow-requests");
                         dir.mkdirs();
-                        req.record = new File(dir, "record" + (iota++) + ".txt");
+                        req.record = new File(dir, "record" + format.format(new Date(iota++)) + ".txt");
 
                         w = new PrintWriter(new FileWriter(req.record));
                         req.writeHeader(w);
@@ -71,8 +76,7 @@ public class TrackChecker extends PeriodicWork {
                         }
                     }
                 } finally {
-                    if (w!=null)
-                        w.close();
+                    IOUtils.closeQuietly(w);
                 }
             }
         }
