@@ -1,7 +1,10 @@
 package com.cloudbees.jenkins.support.timer;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.PrintWriter;
 import java.lang.management.ThreadInfo;
+import java.util.Date;
 
 /**
  * Tracks the request handling in progress.
@@ -29,6 +32,12 @@ final class InflightRequest {
      */
     volatile boolean ended;
 
+    /**
+     * When we start writing slow records, this field is set to non-null.
+     */
+    File record;
+
+
     InflightRequest(HttpServletRequest req) {
         url = req.getRequestURL().toString();
         startTime = System.currentTimeMillis();
@@ -36,5 +45,11 @@ final class InflightRequest {
 
     public boolean is(ThreadInfo t) {
         return thread.getId()==t.getThreadId();
+    }
+
+    void writeHeader(PrintWriter w) {
+        w.println("Date: " + new Date());
+        w.println("URL: " + url);
+        w.println();
     }
 }
