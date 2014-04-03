@@ -30,10 +30,12 @@ public class TrackerServletFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         Thread t = Thread.currentThread();
-        tracker.put(t, new Tag((HttpServletRequest) request));
+        Tag tag = new Tag((HttpServletRequest) request);
+        tracker.put(t, tag);
         try {
             chain.doFilter(request,response);
         } finally {
+            tag.ended = true;
             tracker.remove(t);
         }
     }
