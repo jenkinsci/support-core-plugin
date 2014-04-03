@@ -3,19 +3,20 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.api.SupportContext;
-import com.codahale.metrics.MetricRegistry;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
+import hudson.security.Permission;
 import hudson.util.IOException2;
 import jenkins.model.Jenkins;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Metrics from the different nodes.
@@ -29,6 +30,12 @@ public class Metrics extends Component {
     @NonNull
     public String getDisplayName() {
         return "Metrics";
+    }
+
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        // TODO was originally no permissions, but that seems iffy
+        return Collections.singleton(Jenkins.ADMINISTER);
     }
 
     @Override

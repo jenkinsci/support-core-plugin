@@ -75,7 +75,8 @@ public class AboutJenkins extends Component {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
-        return Collections.singleton(Jenkins.READ);
+        // Was originally READ, but a lot of the details here could be considered sensitive:
+        return Collections.singleton(Jenkins.ADMINISTER);
     }
 
     @Override

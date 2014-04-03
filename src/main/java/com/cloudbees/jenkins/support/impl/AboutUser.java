@@ -6,14 +6,13 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-
+import hudson.security.Permission;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Set;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
 
 /**
  * Basic information about the user's authentication.
@@ -26,6 +25,11 @@ public class AboutUser extends Component {
     @NonNull
     public String getDisplayName() {
         return "About user (basic authentication details only)";
+    }
+
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.emptySet();
     }
 
     @Override
