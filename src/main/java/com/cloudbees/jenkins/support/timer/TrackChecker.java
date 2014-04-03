@@ -27,20 +27,20 @@ public class TrackChecker extends PeriodicWork {
         threads = Functions.getThreadInfos();
 
         OUTER:
-        for (Tag t : filter.tracker.values()) {
+        for (InflightRequest req : filter.tracker.values()) {
             long stopTime = System.currentTimeMillis();
-            long totalTime = stopTime - t.startTime;
+            long totalTime = stopTime - req.startTime;
 
             if (totalTime>1000) {
                 if (threads==null)
                     threads = Functions.getThreadInfos();
 
                 // if the thread has exited while we are taking the thread dump, ignore this.
-                if (t.ended)    continue;
+                if (req.ended)    continue;
 
                 for (ThreadInfo thread : threads) {
-                    if (t.is(thread)) {
-                        System.out.println(t.url + " took: " + totalTime + " milliseconds.");
+                    if (req.is(thread)) {
+                        System.out.println(req.url + " took: " + totalTime + " milliseconds.");
                         for (StackTraceElement st : thread.getStackTrace()) {
                             System.out.println("    "+st);
                         }
