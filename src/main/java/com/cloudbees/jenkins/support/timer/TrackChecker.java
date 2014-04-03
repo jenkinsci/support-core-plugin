@@ -28,26 +28,7 @@ public class TrackChecker extends PeriodicWork {
             long stopTime = System.currentTimeMillis();
             long totalTime = stopTime - t.startTime;
             System.out.println(t.url + " took: " + totalTime + " milliseconds.");
-
-            if (totalTime > 60000) { // Request to website took over 1 minute
-                ThreadMXBean mbean = ManagementFactory.getThreadMXBean();;
-                long[] deadLocks;
-                try {
-                    deadLocks = mbean.findDeadlockedThreads();
-                } catch (UnsupportedOperationException x) {
-                    deadLocks = null;
-                }
-                if (deadLocks != null && deadLocks.length != 0) {
-                    System.err.println(" Deadlock Found ");
-                    ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
-                    for (ThreadInfo threadInfo : deadLockThreads) {
-                        StackTraceElement[] elements = threadInfo.getStackTrace();
-                        for (StackTraceElement element : elements) {
-                            System.err.println(element.toString());
-                        }
-                    }
-                }
-            }
+            
         }
     }
 
