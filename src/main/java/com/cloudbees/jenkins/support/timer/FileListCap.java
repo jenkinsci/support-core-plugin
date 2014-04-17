@@ -61,4 +61,11 @@ public class FileListCap {
         files.remove(f);
         add(f);
     }
+
+    /**
+     * Creates a new file object in this directory without changing the
+     */
+    public File file(String path) {
+        return new File(folder,path);
+    }
 }
