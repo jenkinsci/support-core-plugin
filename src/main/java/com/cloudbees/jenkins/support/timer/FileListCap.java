@@ -30,6 +30,7 @@ public class FileListCap {
         folder.mkdirs();
 
         File[] sortedFiles = folder.listFiles(filter);
+        if (sortedFiles==null)  return;
 
         // Sorting in ascending order.
         Arrays.sort(sortedFiles, new Comparator<File>() {
