@@ -19,6 +19,10 @@ public class FileListCap {
     private final LinkedHashSet<File> files;
     private int size;
 
+    public FileListCap(File folder, int size) {
+        this(folder,null,size);
+    }
+
     public FileListCap(File folder, FilenameFilter filter, int size) {
         this.folder = folder;
         this.files = new LinkedHashSet<File>();
