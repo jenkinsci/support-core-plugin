@@ -17,10 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * Marks the beginning and the end of the request processing so that {@link SlowRequestChecker} can find them.
+ *
  * @author Kohsuke Kawaguchi
  */
 @Extension
-public class TrackerServletFilter implements Filter {
+public class SlowRequestFilter implements Filter {
     final ConcurrentMap<Thread,InflightRequest> tracker = new ConcurrentHashMap<Thread, InflightRequest>();
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -43,6 +45,6 @@ public class TrackerServletFilter implements Filter {
 
     @Initializer
     public static void init() throws ServletException {
-        PluginServletFilter.addFilter(Jenkins.getInstance().getInjector().getInstance(TrackerServletFilter.class));
+        PluginServletFilter.addFilter(Jenkins.getInstance().getInjector().getInstance(SlowRequestFilter.class));
     }
 }

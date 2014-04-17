@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.slowrequest.InflightRequest;
-import com.cloudbees.jenkins.support.slowrequest.TrackerServletFilter;
+import com.cloudbees.jenkins.support.slowrequest.SlowRequestFilter;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Extension
 public class DeadlockTrackChecker extends PeriodicWork {
     @Inject
-    TrackerServletFilter filter;
+    SlowRequestFilter filter;
 
     static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 

@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.Functions;
@@ -16,15 +17,19 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Run periodically to find slow requests and track them.
+ *
  * @author Kohsuke Kawaguchi
  */
 @Extension
-public class TrackChecker extends PeriodicWork {
+public class SlowRequestChecker extends PeriodicWork {
     @Inject
-    TrackerServletFilter filter;
+    SlowRequestFilter filter;
 
     @Inject
     Jenkins jenkins;
+
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"),1024);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
@@ -56,14 +61,14 @@ public class TrackChecker extends PeriodicWork {
                 PrintWriter w = null;
                 try {
                     if (req.record==null) {
-                        File dir = new File(jenkins.getRootDir(), "slow-requests");
-                        dir.mkdirs();
-                        req.record = new File(dir, "record" + format.format(new Date(iota++)) + ".txt");
+                        req.record = logs.file(format.format(new Date(iota++)) + ".txt");
+                        logs.add(req.record);
 
                         w = new PrintWriter(new FileWriter(req.record));
                         req.writeHeader(w);
                     } else {
                         w = new PrintWriter(new FileWriter(req.record,true));
+                        logs.touch(req.record);
                     }
 
                     for (ThreadInfo thread : threads) {
