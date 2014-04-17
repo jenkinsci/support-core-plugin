@@ -3,10 +3,20 @@ package com.cloudbees.jenkins.support.timer;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
+import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
+import org.jinterop.winreg.IJIWinReg;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class DeadlockTrackChecker extends PeriodicWork {
     @Inject
     TrackerServletFilter filter;
+
+    static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 
     @Override
     public long getRecurrencePeriod() {
@@ -27,30 +39,34 @@ public class DeadlockTrackChecker extends PeriodicWork {
         for (InflightRequest t : filter.tracker.values()) {
             long stopTime = System.currentTimeMillis();
             long totalTime = stopTime - t.startTime;
-            System.out.println(t.url + " took: " + totalTime + " milliseconds.");
 
-            if (totalTime > 60000) { // Request to website took over 1 minute
-                ThreadMXBean mbean = ManagementFactory.getThreadMXBean();;
-                long[] deadLocks;
-                try {
-                    deadLocks = mbean.findDeadlockedThreads();
-                } catch (UnsupportedOperationException x) {
-                    deadLocks = null;
-                }
-                if (deadLocks != null && deadLocks.length != 0) {
-                    System.err.println(" Deadlock Found ");
-                    ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
-                    for (ThreadInfo threadInfo : deadLockThreads) {
-                        StackTraceElement[] elements = threadInfo.getStackTrace();
-                        for (StackTraceElement element : elements) {
-                            System.err.println(element.toString());
-                        }
+            System.out.println(t.url + " took: " + totalTime + " milliseconds.");
+            ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
+            long[] deadLocks;
+            try {
+                deadLocks = mbean.findDeadlockedThreads();
+            } catch (UnsupportedOperationException x) {
+                deadLocks = null;
+            }
+
+            if (deadLocks != null && deadLocks.length != 0) {
+                StringBuilder builder = new StringBuilder("Deadlock Found");
+                builder.append("=============");
+                ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
+                for (ThreadInfo threadInfo : deadLockThreads) {
+                    StackTraceElement[] elements = threadInfo.getStackTrace();
+                    for (StackTraceElement element : elements) {
+                        builder.append(element.toString());
                     }
                 }
+
+                FileUtils.writeStringToFile(
+                        new File(deadLockFolder,
+                                 "DeadlockDetected-" + System.currentTimeMillis() + ".txt"),
+
+                        builder.toString());
             }
         }
     }
-
-
 }
 
