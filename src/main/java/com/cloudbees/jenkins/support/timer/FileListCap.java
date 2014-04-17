@@ -46,6 +46,10 @@ public class FileListCap {
             files.add(f);
     }
 
+    public File getFolder() {
+        return folder;
+    }
+
     public synchronized void add(File f) {
         if (size <= files.size()) {
             Iterator itr =files.iterator();
