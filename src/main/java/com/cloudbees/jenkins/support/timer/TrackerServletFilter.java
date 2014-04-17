@@ -21,21 +21,21 @@ import java.util.concurrent.ConcurrentMap;
  */
 @Extension
 public class TrackerServletFilter implements Filter {
-    final ConcurrentMap<Thread,Tag> tracker = new ConcurrentHashMap<Thread, Tag>();
-//    private ThreadLocal<Tag> tracker = new ThreadLocal<Tag>();
-
-    public void init(FilterConfig filterConfig) throws ServletException {
-
-    }
+    final ConcurrentMap<Thread,InflightRequest> tracker = new ConcurrentHashMap<Thread, InflightRequest>();
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         Thread t = Thread.currentThread();
-        tracker.put(t, new Tag((HttpServletRequest) request));
+        InflightRequest req = new InflightRequest((HttpServletRequest) request);
+        tracker.put(t, req);
         try {
             chain.doFilter(request,response);
         } finally {
+            req.ended = true;
             tracker.remove(t);
         }
+    }
+
+    public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     public void destroy() {

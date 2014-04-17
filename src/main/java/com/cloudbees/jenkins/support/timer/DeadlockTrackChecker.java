@@ -24,7 +24,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
-        for (Tag t : filter.tracker.values()) {
+        for (InflightRequest t : filter.tracker.values()) {
             long stopTime = System.currentTimeMillis();
             long totalTime = stopTime - t.startTime;
             System.out.println(t.url + " took: " + totalTime + " milliseconds.");
