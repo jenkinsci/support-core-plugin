@@ -16,7 +16,7 @@ import java.util.LinkedHashSet;
  */
 public class FileListCap {
     private final File folder;
-    private final LinkedHashSet<File> files;
+    private final LinkedHashSet<File> files = new LinkedHashSet<File>();
     private int size;
 
     public FileListCap(File folder, int size) {
@@ -25,7 +25,6 @@ public class FileListCap {
 
     public FileListCap(File folder, FilenameFilter filter, int size) {
         this.folder = folder;
-        this.files = new LinkedHashSet<File>();
         this.size = size;
 
         folder.mkdirs();
