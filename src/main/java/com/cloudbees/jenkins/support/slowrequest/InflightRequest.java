@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.support.timer;
+package com.cloudbees.jenkins.support.slowrequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;

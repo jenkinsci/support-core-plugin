@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.timer;
 
+import com.cloudbees.jenkins.support.slowrequest.InflightRequest;
+import com.cloudbees.jenkins.support.slowrequest.TrackerServletFilter;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;

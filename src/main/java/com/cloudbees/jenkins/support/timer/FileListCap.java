@@ -8,9 +8,11 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 /**
+ * Maintains most recent N files in a directory in cooperation with the writer.
+ *
+ * Useful to record incidents as files without bankrupting
+ *
  * @author stevenchristou
- *         Date: 4/2/14
- *         Time: 6:52 PM
  */
 public class FileListCap {
     private final File folder;

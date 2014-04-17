@@ -1,4 +1,4 @@
-package com.cloudbees.jenkins.support.timer;
+package com.cloudbees.jenkins.support.slowrequest;
 
 import com.google.inject.Inject;
 import hudson.Extension;
