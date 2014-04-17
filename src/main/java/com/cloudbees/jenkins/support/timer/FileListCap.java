@@ -28,6 +28,8 @@ public class FileListCap {
         this.files = new LinkedHashSet<File>();
         this.size = size;
 
+        folder.mkdirs();
+
         File[] sortedFiles = folder.listFiles(filter);
 
         // Sorting in ascending order.
