@@ -5,18 +5,11 @@ import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
-import org.jinterop.winreg.IJIWinReg;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
