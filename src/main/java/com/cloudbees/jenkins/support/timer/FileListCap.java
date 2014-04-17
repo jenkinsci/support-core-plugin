@@ -8,21 +8,29 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 /**
+ * Maintains most recent N files in a directory in cooperation with the writer.
+ *
+ * Useful to record incidents as files without bankrupting
+ *
  * @author stevenchristou
- *         Date: 4/2/14
- *         Time: 6:52 PM
  */
 public class FileListCap {
     private final File folder;
-    private final LinkedHashSet<File> files;
+    private final LinkedHashSet<File> files = new LinkedHashSet<File>();
     private int size;
+
+    public FileListCap(File folder, int size) {
+        this(folder,null,size);
+    }
 
     public FileListCap(File folder, FilenameFilter filter, int size) {
         this.folder = folder;
-        this.files = new LinkedHashSet<File>();
         this.size = size;
 
+        folder.mkdirs();
+
         File[] sortedFiles = folder.listFiles(filter);
+        if (sortedFiles==null)  return;
 
         // Sorting in ascending order.
         Arrays.sort(sortedFiles, new Comparator<File>() {
@@ -36,6 +44,10 @@ public class FileListCap {
 
         for (File f : sortedFiles)
             files.add(f);
+    }
+
+    public File getFolder() {
+        return folder;
     }
 
     public synchronized void add(File f) {
@@ -52,5 +64,12 @@ public class FileListCap {
     public synchronized void touch(File f){
         files.remove(f);
         add(f);
+    }
+
+    /**
+     * Creates a new file object in this directory without changing the
+     */
+    public File file(String path) {
+        return new File(folder,path);
     }
 }
