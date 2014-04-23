@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class DeadlockTrackChecker extends PeriodicWork {
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
-
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"),1024);
     static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 
     @Override
@@ -41,8 +41,9 @@ public class DeadlockTrackChecker extends PeriodicWork {
         }
 
         if (deadLocks != null && deadLocks.length != 0) {
-            PrintWriter builder = new PrintWriter(new File(deadLockFolder,
-                    "DeadlockDetected-" + format.format(new Date()) + ".txt"));
+            File file = logs.file("DeadlockDetected-" + format.format(new Date()) + ".txt");
+            logs.add(file);
+            PrintWriter builder = new PrintWriter(file);
             try {
                 builder.println("==============");
                 builder.println("Deadlock Found");
