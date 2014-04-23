@@ -51,7 +51,7 @@ public class SlowRequestChecker extends PeriodicWork {
         for (InflightRequest req : filter.tracker.values()) {
             long totalTime = now - req.startTime;
 
-            if (totalTime>1000) {
+            if (totalTime> THRESHOLD) {
                 if (threads==null)
                     threads = Functions.getThreadInfos();
 
@@ -86,5 +86,10 @@ public class SlowRequestChecker extends PeriodicWork {
             }
         }
     }
-}
 
+    /**
+     * Time in milliseconds that's considered too slow for requests.
+     * Starting with a bit conservative value to catch serious offenders first.
+     */
+    public static final int THRESHOLD = 10000;
+}
