@@ -6,9 +6,13 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,6 +20,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension
 public class DeadlockTrackChecker extends PeriodicWork {
+
+    final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
+
     static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 
     @Override
@@ -34,21 +41,20 @@ public class DeadlockTrackChecker extends PeriodicWork {
         }
 
         if (deadLocks != null && deadLocks.length != 0) {
-            StringBuilder builder = new StringBuilder("Deadlock Found");
-            builder.append("=============");
-            ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks);
-            for (ThreadInfo threadInfo : deadLockThreads) {
-                StackTraceElement[] elements = threadInfo.getStackTrace();
-                for (StackTraceElement element : elements) {
-                    builder.append(element.toString());
+            PrintWriter builder = new PrintWriter(new File(deadLockFolder,
+                    "DeadlockDetected-" + format.format(new Date()) + ".txt"));
+            try {
+                builder.println("==============");
+                builder.println("Deadlock Found");
+                builder.println("==============");
+                ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks, Integer.MAX_VALUE);
+
+                for (ThreadInfo threadInfo : deadLockThreads) {
+                    builder.println(threadInfo);
                 }
+            } finally {
+                builder.close();
             }
-
-            FileUtils.writeStringToFile(
-                    new File(deadLockFolder,
-                             "DeadlockDetected-" + System.currentTimeMillis() + ".txt"),
-
-                    builder.toString());
         }
     }
 }
