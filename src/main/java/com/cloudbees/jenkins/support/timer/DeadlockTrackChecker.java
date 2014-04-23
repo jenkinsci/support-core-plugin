@@ -3,10 +3,8 @@ package com.cloudbees.jenkins.support.timer;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
@@ -16,7 +14,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author Kohsuke Kawaguchi
+ * @author Steven Chrisou
  */
 @Extension
 public class DeadlockTrackChecker extends PeriodicWork {
