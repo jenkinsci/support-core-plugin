@@ -36,7 +36,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
     @Override
     public long getRecurrencePeriod() {
-        return TimeUnit.SECONDS.toMillis(1);
+        return TimeUnit.SECONDS.toMillis(3);
     }
 
     @Override
