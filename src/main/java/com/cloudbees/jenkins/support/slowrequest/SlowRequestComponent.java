@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 @Extension
-public class SlowRequestComponent extends Component {
+public class SlowRequestComponent extends RequestComponent {
     @Inject
     SlowRequestChecker checker;
 
@@ -34,25 +34,6 @@ public class SlowRequestComponent extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        synchronized (checker.logs) {
-            // while we read and put the reports into the support bundle, we don't want
-            // the FileListCap to delete files. So we lock it.
-
-            File[] files = checker.logs.getFolder().listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".txt");
-                }
-            });
-            for (File f : Util.fixNull(Arrays.asList(files))) {
-                try {
-                    container.add(new StringContent("slow-requests/" + f.getName(),
-                            FileUtils.readFileToString(f)));
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to read "+f, e);
-                }
-            }
-        }
+        super.addContents(container, checker.logs);
     }
-
-    private static final Logger LOGGER = Logger.getLogger(SlowRequestComponent.class.getName());
 }
