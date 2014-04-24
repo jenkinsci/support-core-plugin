@@ -5,12 +5,16 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
+import hudson.security.Permission;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +24,11 @@ import java.util.logging.Logger;
  * @author stevenchristou
  */
 public abstract class FileListCapComponent extends Component {
+    @NonNull
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.singleton(Jenkins.ADMINISTER);
+    }
 
     public void addContents(@NonNull Container container, FileListCap fileListCap) {
         synchronized (fileListCap) {
