@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import com.google.inject.Injector;
 import hudson.Extension;
 import hudson.init.Initializer;
 import hudson.util.PluginServletFilter;
@@ -45,6 +46,8 @@ public class SlowRequestFilter implements Filter {
 
     @Initializer
     public static void init() throws ServletException {
-        PluginServletFilter.addFilter(Jenkins.getInstance().getInjector().getInstance(SlowRequestFilter.class));
+        Injector inj = Jenkins.getInstance().getInjector();
+        if (inj==null)      return;
+        PluginServletFilter.addFilter(inj.getInstance(SlowRequestFilter.class));
     }
 }
