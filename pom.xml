@@ -33,7 +33,7 @@
   </parent>
 
   <artifactId>support-core</artifactId>
-  <version>2.2-SNAPSHOT</version>
+  <version>2.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Support Core Plugin</name>
