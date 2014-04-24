@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
+import hudson.security.Permission;
 import hudson.util.Area;
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
@@ -16,6 +17,8 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Basic information about the user's browser.
@@ -28,6 +31,11 @@ public class AboutBrowser extends Component {
     @NonNull
     public String getDisplayName() {
         return "About browser";
+    }
+
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.emptySet();
     }
 
     @Override

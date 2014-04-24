@@ -32,10 +32,14 @@ import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
+import hudson.security.Permission;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -45,6 +49,10 @@ import org.apache.commons.lang.StringUtils;
 
     @Override public String getDisplayName() {
         return "Administrative monitors";
+    }
+
+    @Override public Set<Permission> getRequiredPermissions() {
+        return Collections.singleton(Jenkins.ADMINISTER);
     }
 
     @Override public void addContents(Container result) {

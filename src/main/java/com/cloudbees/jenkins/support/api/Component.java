@@ -49,14 +49,20 @@ public abstract class Component extends ExtensionPoint {
      *         in a bundle.
      */
     @NonNull
-    public Set<Permission> getRequiredPermissions() {
-        return Collections.emptySet();
+    public abstract Set<Permission> getRequiredPermissions();
+
+    private Set<Permission> _getRequiredPermissions() {
+        try {
+            return getRequiredPermissions();
+        } catch (AbstractMethodError x) {
+            return Collections.emptySet();
+        }
     }
 
     public String getDisplayPermissions() {
         StringBuilder buf = new StringBuilder();
         boolean first = true;
-        for (Permission p : getRequiredPermissions()) {
+        for (Permission p : _getRequiredPermissions()) {
             if (first) {
                 first = false;
             } else {
@@ -79,7 +85,7 @@ public abstract class Component extends ExtensionPoint {
         if (acl != null) {
             Authentication authentication = Jenkins.getAuthentication();
             assert authentication != null;
-            for (Permission p : getRequiredPermissions()) {
+            for (Permission p : _getRequiredPermissions()) {
                 if (!acl.hasPermission(authentication, p)) {
                     return false;
                 }
