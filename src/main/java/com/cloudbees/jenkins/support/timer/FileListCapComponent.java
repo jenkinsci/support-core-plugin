@@ -1,9 +1,8 @@
-package com.cloudbees.jenkins.support.slowrequest;
+package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.StringContent;
-import com.cloudbees.jenkins.support.timer.FileListCap;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import org.apache.commons.io.FileUtils;
@@ -20,7 +19,7 @@ import java.util.logging.Logger;
  *         Date: 4/23/14
  *         Time: 4:27 PM
  */
-public abstract class RequestComponent extends Component {
+public abstract class FileListCapComponent extends Component {
 
     public void addContents(@NonNull Container container, FileListCap fileListCap) {
         synchronized (fileListCap) {
@@ -43,5 +42,5 @@ public abstract class RequestComponent extends Component {
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(RequestComponent.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FileListCapComponent.class.getName());
 }

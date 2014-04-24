@@ -1,8 +1,6 @@
 package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.slowrequest.RequestComponent;
-import com.cloudbees.jenkins.support.timer.DeadlockTrackChecker;
 import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -13,7 +11,7 @@ import hudson.Extension;
  *         Time: 4:50 PM
  */
 @Extension
-public class DeadlockRequestComponent extends RequestComponent {
+public class DeadlockRequestComponent extends FileListCapComponent {
     @Inject
     DeadlockTrackChecker checker;
 
