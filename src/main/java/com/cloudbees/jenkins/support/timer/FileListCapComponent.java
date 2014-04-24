@@ -15,9 +15,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * {@link Component} that writes out fiels inside {@link FileListCap}.
+ *
  * @author stevenchristou
- *         Date: 4/23/14
- *         Time: 4:27 PM
  */
 public abstract class FileListCapComponent extends Component {
 
