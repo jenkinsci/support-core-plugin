@@ -27,7 +27,8 @@ public class FileListCap {
         this.folder = folder;
         this.size = size;
 
-        folder.mkdirs();
+        if (!folder.mkdirs())
+            throw new Error("Failed to create "+folder);
 
         File[] sortedFiles = folder.listFiles(filter);
         if (sortedFiles==null)  return;

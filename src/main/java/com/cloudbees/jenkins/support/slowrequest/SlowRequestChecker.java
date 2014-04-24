@@ -9,7 +9,8 @@ import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.management.ThreadInfo;
 import java.text.SimpleDateFormat;
@@ -64,10 +65,10 @@ public class SlowRequestChecker extends PeriodicWork {
                         req.record = logs.file(format.format(new Date(iota++)) + ".txt");
                         logs.add(req.record);
 
-                        w = new PrintWriter(new FileWriter(req.record));
+                        w = new PrintWriter(req.record,"UTF-8");
                         req.writeHeader(w);
                     } else {
-                        w = new PrintWriter(new FileWriter(req.record,true));
+                        w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true),"UTF-8"));
                         logs.touch(req.record);
                     }
 

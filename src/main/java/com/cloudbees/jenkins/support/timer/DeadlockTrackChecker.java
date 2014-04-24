@@ -41,7 +41,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
         if (deadLocks != null && deadLocks.length != 0) {
             File file = logs.file("DeadlockDetected-" + format.format(new Date()) + ".txt");
             logs.add(file);
-            PrintWriter builder = new PrintWriter(file);
+            PrintWriter builder = new PrintWriter(file,"UTF-8");
             try {
                 builder.println("==============");
                 builder.println("Deadlock Found");
