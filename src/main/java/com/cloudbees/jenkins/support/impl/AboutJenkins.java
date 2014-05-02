@@ -697,14 +697,14 @@ public class AboutJenkins extends Component {
                     if (proc.waitFor() == 0) {
                         result.append(min).append(" Distribution: ").append(distro).append("\n");
                     } else {
-                        logger.warning("lsb_release had a nonzero exit status");
+                        logger.fine("lsb_release had a nonzero exit status");
                     }
                     proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--version", "--short").start();
                     String modules = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0 && modules != null) {
                         result.append(min).append(" LSB Modules:  `").append(modules).append("`\n");
                     } else {
-                        logger.warning("lsb_release had a nonzero exit status");
+                        logger.fine("lsb_release had a nonzero exit status");
                     }
                 } catch (IOException x) {
                     logger.log(Level.WARNING, "lsb_release exists but could not run it", x);
