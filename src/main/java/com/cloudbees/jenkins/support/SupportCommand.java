@@ -80,7 +80,7 @@ import org.kohsuke.args4j.Argument;
                         filename = supportProvider.getName();
                     }
                 }
-                SupportPlugin.writeBundle(channel.call(new SaveBundle(filename)), selected);
+                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(filename)), selected);
             } finally {
                 SecurityContextHolder.setContext(old);
             }
