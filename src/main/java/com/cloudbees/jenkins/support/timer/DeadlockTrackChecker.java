@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DeadlockTrackChecker extends PeriodicWork {
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"),1024);
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
     static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 
     @Override

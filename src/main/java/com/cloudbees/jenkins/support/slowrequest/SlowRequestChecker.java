@@ -30,7 +30,7 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     Jenkins jenkins;
 
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"),1024);
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
