@@ -59,6 +59,9 @@ public class FileDescriptorLimit extends Component {
 
     private void addContents(@NonNull Container container, final @NonNull Node node) {
         Computer c = node.toComputer();
+        if (c == null) {
+            return;
+        }
         if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
             return;
         }
