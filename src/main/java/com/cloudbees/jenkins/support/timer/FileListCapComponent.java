@@ -2,21 +2,16 @@ package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.api.FileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
  * {@link Component} that writes out fiels inside {@link FileListCap}.
@@ -24,6 +19,10 @@ import java.util.logging.Logger;
  * @author stevenchristou
  */
 public abstract class FileListCapComponent extends Component {
+
+    /** Maximum file size to pack is 2Mb. */
+    private static final int MAX_FILE_SIZE = 2 * 1000000;
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -41,15 +40,9 @@ public abstract class FileListCapComponent extends Component {
                 }
             });
             for (File f : Util.fixNull(Arrays.asList(files))) {
-                try {
-                    container.add(new StringContent(fileListCap.getFolder().getName() + "/" + f.getName(),
-                            FileUtils.readFileToString(f)));
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to read "+f, e);
-                }
+                container.add(new FileContent(fileListCap.getFolder().getName() + "/" + f.getName(), f, MAX_FILE_SIZE));
             }
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(FileListCapComponent.class.getName());
 }
