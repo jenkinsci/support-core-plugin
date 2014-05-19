@@ -43,8 +43,7 @@ public class FileListCap {
             }
         });
 
-        for (File f : sortedFiles)
-            files.add(f);
+        files.addAll(Arrays.asList(sortedFiles));
     }
 
     public File getFolder() {
@@ -53,7 +52,7 @@ public class FileListCap {
 
     public synchronized void add(File f) {
         if (size <= files.size()) {
-            Iterator itr =files.iterator();
+            Iterator<File> itr = files.iterator();
             while (size <= files.size()) {
                 itr.remove();
             }
