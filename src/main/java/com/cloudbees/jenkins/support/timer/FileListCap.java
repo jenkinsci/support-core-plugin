@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Maintains most recent N files in a directory in cooperation with the writer.
@@ -15,6 +17,9 @@ import java.util.LinkedHashSet;
  * @author stevenchristou
  */
 public class FileListCap {
+
+    private static final Logger LOGGER = Logger.getLogger(FileListCap.class.getName());
+
     private final File folder;
     private final LinkedHashSet<File> files = new LinkedHashSet<File>();
     private int size;
@@ -55,7 +60,9 @@ public class FileListCap {
             Iterator<File> itr = files.iterator();
             while (size <= files.size()) {
                 File old = itr.next();
-                // TODO delete it?
+                if (!old.delete()) {
+                    LOGGER.log(Level.WARNING, "Failed to delete {0}", old);
+                }
                 itr.remove();
             }
         }

@@ -38,7 +38,7 @@ public class FileListCapTest {
         for (int i = 0; i < 10; i++) {
             flc.add(tmp.newFile());
         }
-        // TODO now what?
+        assertEquals(3, flc.getFolder().list().length);
     }
 
 }
