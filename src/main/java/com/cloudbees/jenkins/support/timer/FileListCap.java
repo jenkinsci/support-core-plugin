@@ -54,6 +54,8 @@ public class FileListCap {
         if (size <= files.size()) {
             Iterator<File> itr = files.iterator();
             while (size <= files.size()) {
+                File old = itr.next();
+                // TODO delete it?
                 itr.remove();
             }
         }
