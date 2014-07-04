@@ -312,7 +312,7 @@ public class AboutJenkins extends Component {
                             final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
                                     new GetJavaInfo("      -", "          +"), "Java info");
                             if (javaInfo == null) {
-                                logger.log(Level.WARNING,
+                                logger.log(Level.FINE,
                                         "Could not get Java info for {0} and no cached value available",
                                         node.getDisplayName());
                             } else {
