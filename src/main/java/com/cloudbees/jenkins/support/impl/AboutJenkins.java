@@ -439,8 +439,9 @@ public class AboutJenkins extends Component {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
-                                String slaveDigest = AsyncResultCache
-                                        .get(node, slaveDigestCache, new GetSlaveDigest(node.getRootPath()),
+                                final FilePath rootPath = node.getRootPath();
+                                String slaveDigest = rootPath == null ? "N/A" :
+                                        AsyncResultCache.get(node, slaveDigestCache, new GetSlaveDigest(rootPath),
                                                 "checksums", "N/A");
                                 out.println(slaveDigest);
                             } catch (IOException e) {
