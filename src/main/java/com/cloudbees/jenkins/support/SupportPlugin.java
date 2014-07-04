@@ -107,7 +107,7 @@ public class SupportPlugin extends Plugin {
      * How long remote operations can block support bundle generation for.
      */
     public static final int REMOTE_OPERATION_TIMEOUT_MS =
-            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_TIMEOUT_MS", 250);
+            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_TIMEOUT_MS", 500);
 
     /**
      * How long remote operations fallback caching can wait for
