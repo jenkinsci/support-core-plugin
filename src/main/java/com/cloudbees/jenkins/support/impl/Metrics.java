@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * Metrics from the different nodes.
@@ -25,6 +27,10 @@ import java.util.Set;
  */
 @Extension
 public class Metrics extends Component {
+
+    private static final String UNAVAILABLE = "\"N/A\"";
+
+    private final WeakHashMap<Node, byte[]> metricsCache = new WeakHashMap<Node, byte[]>();
 
     @Override
     @NonNull
@@ -42,31 +48,26 @@ public class Metrics extends Component {
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            result.add(new RemoteMetricsContent("nodes/slave/" + node.getDisplayName() + "/metrics.json", node));
+            result.add(new RemoteMetricsContent("nodes/slave/" + node.getDisplayName() + "/metrics.json", node,
+                    metricsCache));
         }
     }
 
     private static class RemoteMetricsContent extends Content {
 
         private final Node node;
+        private final WeakHashMap<Node, byte[]> metricsCache;
 
-        public RemoteMetricsContent(String name, Node node) {
+        public RemoteMetricsContent(String name, Node node, WeakHashMap<Node, byte[]> metricsCache) {
             super(name);
             this.node = node;
+            this.metricsCache = metricsCache;
         }
 
         @Override
         public void writeTo(OutputStream os) throws IOException {
-            VirtualChannel channel = node.getChannel();
-            if (channel == null) {
-                os.write("\"N/A\"".getBytes("utf-8"));
-            } else {
-                try {
-                    os.write(channel.call(new GetMetricsResult()));
-                } catch (InterruptedException e) {
-                    throw new IOException2(e);
-                }
-            }
+            os.write(AsyncResultCache.get(node, metricsCache, new GetMetricsResult(), "metrics data",
+                    UNAVAILABLE.getBytes("utf-8")));
         }
 
     }
@@ -75,6 +76,7 @@ public class Metrics extends Component {
         public byte[] call() throws RuntimeException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
+                // TODO pick up a per-slave metrics registry
                 new MetricsContent("", null).writeTo(bos);
             } catch (IOException e) {
                 throw new RuntimeException(e);
