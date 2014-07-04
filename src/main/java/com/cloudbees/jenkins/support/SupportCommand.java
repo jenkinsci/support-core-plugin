@@ -31,6 +31,11 @@ import hudson.cli.CLICommand;
 import hudson.remoting.Callable;
 import hudson.remoting.RemoteOutputStream;
 import hudson.security.ACL;
+import jenkins.model.Jenkins;
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.kohsuke.args4j.Argument;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,20 +43,20 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import jenkins.model.Jenkins;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.kohsuke.args4j.Argument;
 
-@Extension public class SupportCommand extends CLICommand {
+@Extension
+public class SupportCommand extends CLICommand {
 
-    @Argument(metaVar="COMPONENTS") public List<String> components = new ArrayList<String>();
+    @Argument(metaVar = "COMPONENTS")
+    public List<String> components = new ArrayList<String>();
 
-    @Override public String getShortDescription() {
+    @Override
+    public String getShortDescription() {
         return Messages.SupportCommand_generates_a_diagnostic_support_bundle_();
     }
 
-    @Override protected void printUsageSummary(PrintStream stderr) {
+    @Override
+    protected void printUsageSummary(PrintStream stderr) {
         stderr.println(Messages.SupportCommand_if_no_arguments_are_given_generate_a_bun());
         for (Component c : SupportPlugin.getComponents()) {
             stderr.print(c.getId());
@@ -60,7 +65,8 @@ import org.kohsuke.args4j.Argument;
         }
     }
 
-    @Override protected int run() throws Exception {
+    @Override
+    protected int run() throws Exception {
         Jenkins.getInstance().checkPermission(SupportPlugin.CREATE_BUNDLE);
         List<Component> selected = new ArrayList<Component>();
         for (Component c : SupportPlugin.getComponents()) {
@@ -92,10 +98,12 @@ import org.kohsuke.args4j.Argument;
 
     private static class SaveBundle implements Callable<OutputStream, IOException> {
         private final String filename;
+
         SaveBundle(String filename) {
             this.filename = filename;
         }
-        @Override public OutputStream call() throws IOException {
+
+        public OutputStream call() throws IOException {
             File f = File.createTempFile(filename, ".zip");
             System.err.println("Creating: " + f);
             return new RemoteOutputStream(new FileOutputStream(f));
