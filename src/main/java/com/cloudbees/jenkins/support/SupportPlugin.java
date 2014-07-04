@@ -103,12 +103,24 @@ import static com.codahale.metrics.MetricRegistry.name;
  */
 public class SupportPlugin extends Plugin {
 
+    /**
+     * How long remote operations can block support bundle generation for.
+     */
+    public static final int REMOTE_OPERATION_TIMEOUT_MS =
+            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_TIMEOUT_MS", 250);
+
+    /**
+     * How long remote operations fallback caching can wait for
+     */
+    public static final int REMOTE_OPERATION_CACHE_TIMEOUT_SEC =
+            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_CACHE_TIMEOUT_SEC", 300);
+
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
+
     public static final Permission CREATE_BUNDLE =
             new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
                     Jenkins.ADMINISTER, PermissionScope.JENKINS);
-
     private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal
             <Authentication>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
@@ -400,7 +412,7 @@ public class SupportPlugin extends Plugin {
             if (channel != null) {
                 final Future<List<LogRecord>> future = channel.callAsync(new LogFetcher());
                 try {
-                    return future.get(250, TimeUnit.MILLISECONDS);
+                    return future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (ExecutionException e) {
                     final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                     lr.setThrown(e);
@@ -410,7 +422,7 @@ public class SupportPlugin extends Plugin {
                         public void run() {
                             List<LogRecord> records;
                             try {
-                                records = future.get(5, TimeUnit.MINUTES);
+                                records = future.get(REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
                             } catch (InterruptedException e1) {
                                 final LogRecord lr =
                                         new LogRecord(Level.WARNING, "Could not retrieve remote log records");
@@ -426,6 +438,7 @@ public class SupportPlugin extends Plugin {
                                         new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                                 lr.setThrown(e1);
                                 records = Collections.singletonList(lr);
+                                future.cancel(true);
                             }
                             synchronized (SupportPlugin.this) {
                                 if (logRecords == null) {
