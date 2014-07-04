@@ -1,13 +1,16 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Node;
 import hudson.remoting.Callable;
+import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -18,6 +21,9 @@ import java.lang.management.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,32 +72,87 @@ public class ThreadDumps extends Component {
                 }
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            result.add(
-                    new Content("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt") {
-                        @Override
-                        public void writeTo(OutputStream os) throws IOException {
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
-                            out.println(node.getDisplayName());
-                            out.println("======");
-                            out.println();
-                            try {
-                                out.println(getThreadDump(node.getChannel()));
-                            } catch (IOException e) {
-                                logger.log(Level.WARNING, "Could not record thread dump for " + node.getDisplayName(),
-                                        e);
-                            } catch (InterruptedException e) {
-                                logger.log(Level.WARNING, "Could not record thread dump for " + node.getDisplayName(),
-                                        e);
-                            } finally {
-                                out.flush();
+            // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
+            final Future<String> threadDump;
+            try {
+                threadDump = getThreadDump(node);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Could not record thread dump for " + node.getDisplayName(), e);
+                final StringWriter sw = new StringWriter();
+                PrintWriter out = new PrintWriter(sw);
+                e.printStackTrace(out);
+                out.close();
+                result.add(
+                        new StringContent("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt", sw.toString()));
+                continue;
+            }
+            if (threadDump == null) {
+                StringBuilder buf = new StringBuilder();
+                buf.append(node.getDisplayName()).append("\n");
+                buf.append("======\n");
+                buf.append("\n");
+                buf.append("N/A: No connection to node.\n");
+                result.add(new StringContent("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt", buf.toString()));
+            } else {
+                result.add(
+                        new Content("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt") {
+                            @Override
+                            public void writeTo(OutputStream os) throws IOException {
+                                PrintWriter out =
+                                        new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                                try {
+                                    out.println(node.getDisplayName());
+                                    out.println("======");
+                                    out.println();
+                                    String content = null;
+                                    try {
+                                        // We want to wait here a bit longer than normal
+                                        // as we will not fall back to a cache
+                                        content = threadDump.get(Math.min(
+                                                SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS * 8,
+                                                TimeUnit.SECONDS
+                                                        .toMillis(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)
+                                        ), TimeUnit.MILLISECONDS);
+                                    } catch (InterruptedException e) {
+                                        logger.log(Level.WARNING,
+                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                e);
+                                        e.printStackTrace(out);
+                                    } catch (ExecutionException e) {
+                                        logger.log(Level.WARNING,
+                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                e);
+                                        e.printStackTrace(out);
+                                    } catch (TimeoutException e) {
+                                        logger.log(Level.WARNING,
+                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                e);
+                                        e.printStackTrace(out);
+                                        threadDump.cancel(true);
+                                    }
+                                    if (content != null) {
+                                        out.println(content);
+                                    }
+                                } finally {
+                                    out.flush();
+                                }
                             }
                         }
-                    }
-            );
+                );
+            }
 
         }
     }
 
+    public Future<String> getThreadDump(Node node) throws IOException {
+        VirtualChannel channel = node.getChannel();
+        if (channel == null) {
+            return null;
+        }
+        return channel.callAsync(new GetThreadDump());
+    }
+
+    @Deprecated
     public static String getThreadDump(VirtualChannel channel)
             throws IOException, InterruptedException {
         if (channel == null) {
