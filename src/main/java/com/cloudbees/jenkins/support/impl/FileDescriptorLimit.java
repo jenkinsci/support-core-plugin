@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -28,6 +29,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
+
 import jenkins.model.Jenkins;
 
 /**
@@ -35,6 +38,8 @@ import jenkins.model.Jenkins;
  */
 @Extension
 public class FileDescriptorLimit extends Component {
+
+    private final WeakHashMap<Node,String> fileDescriptorCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -83,10 +88,8 @@ public class FileDescriptorLimit extends Component {
                             out.println("======");
                             out.println();
                             try {
-                                out.println(getUlimit(node.getChannel()));
+                                out.println(getUlimit(node));
                             } catch (IOException e) {
-                                e.printStackTrace(out);
-                            } catch (InterruptedException e) {
                                 e.printStackTrace(out);
                             } finally {
                                 out.flush();
@@ -96,6 +99,12 @@ public class FileDescriptorLimit extends Component {
             );
     }
 
+    public String getUlimit(Node node) throws IOException {
+        return AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(), "file descriptor info",
+                "N/A: Either no connection to node or no cached result");
+    }
+
+    @Deprecated
     public static String getUlimit(VirtualChannel channel) throws IOException, InterruptedException {
         if (channel == null) {
             return "N/A: No connection to node.";

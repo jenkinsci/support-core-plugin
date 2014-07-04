@@ -5,6 +5,7 @@
 
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -53,6 +54,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -60,6 +65,7 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -71,6 +77,12 @@ import org.kohsuke.stapler.Stapler;
 public class AboutJenkins extends Component {
 
     private static final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
+
+    private final WeakHashMap<Node,String> slaveVersionCache = new WeakHashMap<Node, String>();
+
+    private final WeakHashMap<Node,String> javaInfoCache = new WeakHashMap<Node, String>();
+
+    private final WeakHashMap<Node,String> slaveDigestCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -289,19 +301,24 @@ public class AboutJenkins extends Component {
                     } else {
                         out.println("      - Status:         on-line");
                         try {
-                            out.println("      - Version:        " + channel.call(new GetSlaveVersion()));
+                            out.println("      - Version:        " +
+                                    AsyncResultCache.get(node, slaveVersionCache, new GetSlaveVersion(),
+                                            "slave.jar version", "(timeout with no cache available)"));
                         } catch (IOException e) {
-                            logger.log(Level.WARNING,
-                                    "Could not get slave.jar version for " + node.getDisplayName(), e);
-                        } catch (InterruptedException e) {
                             logger.log(Level.WARNING,
                                     "Could not get slave.jar version for " + node.getDisplayName(), e);
                         }
                         try {
-                            out.print(channel.call(new GetJavaInfo("      -", "          +")));
+                            final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
+                                    new GetJavaInfo("      -", "          +"), "Java info");
+                            if (javaInfo == null) {
+                                logger.log(Level.WARNING,
+                                        "Could not get Java info for {0} and no cached value available",
+                                        node.getDisplayName());
+                            } else {
+                                out.print(javaInfo);
+                            }
                         } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not get Java info for " + node.getDisplayName(), e);
-                        } catch (InterruptedException e) {
                             logger.log(Level.WARNING, "Could not get Java info for " + node.getDisplayName(), e);
                         }
                     }
@@ -422,11 +439,11 @@ public class AboutJenkins extends Component {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
-                                out.println(getSlaveDigest(node));
+                                String slaveDigest = AsyncResultCache
+                                        .get(node, slaveDigestCache, new GetSlaveDigest(node.getRootPath()),
+                                                "checksums", "N/A");
+                                out.println(slaveDigest);
                             } catch (IOException e) {
-                                logger.log(Level.WARNING,
-                                        "Could not compute checksums on slave " + node.getDisplayName(), e);
-                            } catch (InterruptedException e) {
                                 logger.log(Level.WARNING,
                                         "Could not compute checksums on slave " + node.getDisplayName(), e);
                             }
@@ -578,6 +595,7 @@ public class AboutJenkins extends Component {
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }
 
+    @Deprecated
     public static String getSlaveDigest(Node node)
             throws IOException, InterruptedException {
         VirtualChannel channel = node.getChannel();
