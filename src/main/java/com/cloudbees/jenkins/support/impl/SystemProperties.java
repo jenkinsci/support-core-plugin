@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -23,6 +24,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,9 @@ import java.util.logging.Logger;
 @Extension
 public class SystemProperties extends Component {
 
+    private static final Map<Object, Object> UNAVAILABLE = Collections.<Object, Object>singletonMap("N/A", "N/A");
     private final Logger logger = Logger.getLogger(SystemProperties.class.getName());
+    private final WeakHashMap<Node, Map<Object,Object>> systemPropertyCache = new WeakHashMap<Node, Map<Object, Object>>();
 
     @NonNull
     @Override
@@ -60,9 +64,9 @@ public class SystemProperties extends Component {
                                     .getSystemProperties(Jenkins.getInstance().getChannel()));
                             properties.store(os, null);
                         } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not record thread dump for master", e);
+                            logger.log(Level.WARNING, "Could not record system properties for master", e);
                         } catch (InterruptedException e) {
-                            logger.log(Level.WARNING, "Could not record thread dump for master", e);
+                            logger.log(Level.WARNING, "Could not record system properties for master", e);
                         }
                     }
                 }
@@ -74,12 +78,10 @@ public class SystemProperties extends Component {
                         public void writeTo(OutputStream os) {
                             try {
                                 Properties properties = new SortedProperties();
-                                properties.putAll(getSystemProperties(node.getChannel()));
+                                properties.putAll(getSystemProperties(node));
                                 properties.store(os, null);
                             } catch (IOException e) {
-                                logger.log(Level.WARNING, "Could not record thread dump for master", e);
-                            } catch (InterruptedException e) {
-                                logger.log(Level.WARNING, "Could not record thread dump for master", e);
+                                logger.log(Level.WARNING, "Could not record system properties for " + node.getDisplayName(), e);
                             }
                         }
                     }
@@ -87,10 +89,15 @@ public class SystemProperties extends Component {
         }
     }
 
+    public Map<Object, Object> getSystemProperties(Node node) throws IOException  {
+        return AsyncResultCache.get(node, systemPropertyCache, new GetSystemProperties(), "system properties", UNAVAILABLE);
+    }
+
+    @Deprecated
     public static Map<Object, Object> getSystemProperties(VirtualChannel channel)
             throws IOException, InterruptedException {
         if (channel == null) {
-            return Collections.<Object, Object>singletonMap("N/A", "N/A");
+            return UNAVAILABLE;
         }
         return channel.call(new GetSystemProperties());
     }
