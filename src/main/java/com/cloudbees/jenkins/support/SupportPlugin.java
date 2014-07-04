@@ -45,6 +45,7 @@ import hudson.model.Node;
 import hudson.model.PeriodicWork;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
+import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
 import hudson.security.Permission;
@@ -82,8 +83,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -113,6 +117,7 @@ public class SupportPlugin extends Plugin {
 
     private transient SupportContextImpl context = null;
     private transient Logger rootLogger;
+    private transient WeakHashMap<Node,List<LogRecord>> logRecords;
 
     private SupportProvider supportProvider;
     
@@ -205,10 +210,8 @@ public class SupportPlugin extends Plugin {
             VirtualChannel channel = c.getChannel();
             if (channel != null) {
                 try {
-                    channel.call(new LogUpdater(level));
+                    channel.callAsync(new LogUpdater(level));
                 } catch (IOException e) {
-                    // ignore
-                } catch (InterruptedException e) {
                     // ignore
                 }
             }
@@ -391,11 +394,64 @@ public class SupportPlugin extends Plugin {
         super.stop();
     }
 
-    public List<LogRecord> getAllLogRecords(Node node) throws IOException, InterruptedException {
+    public List<LogRecord> getAllLogRecords(final Node node) throws IOException, InterruptedException {
         if (node != null) {
             VirtualChannel channel = node.getChannel();
             if (channel != null) {
-                return channel.call(new LogFetcher());
+                final Future<List<LogRecord>> future = channel.callAsync(new LogFetcher());
+                try {
+                    return future.get(250, TimeUnit.MILLISECONDS);
+                } catch (ExecutionException e) {
+                    final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                    lr.setThrown(e);
+                    return Collections.singletonList(lr);
+                } catch (TimeoutException e) {
+                    Computer.threadPoolForRemoting.submit(new Runnable() {
+                        public void run() {
+                            List<LogRecord> records;
+                            try {
+                                records = future.get(5, TimeUnit.MINUTES);
+                            } catch (InterruptedException e1) {
+                                final LogRecord lr =
+                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                                lr.setThrown(e1);
+                                records = Collections.singletonList(lr);
+                            } catch (ExecutionException e1) {
+                                final LogRecord lr =
+                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                                lr.setThrown(e1);
+                                records = Collections.singletonList(lr);
+                            } catch (TimeoutException e1) {
+                                final LogRecord lr =
+                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                                lr.setThrown(e1);
+                                records = Collections.singletonList(lr);
+                            }
+                            synchronized (SupportPlugin.this) {
+                                if (logRecords == null) {
+                                    logRecords = new WeakHashMap<Node, List<LogRecord>>();
+                                }
+                                logRecords.put(node, records);
+                            }
+                        }
+                    });
+                    synchronized (this) {
+                        if (logRecords != null) {
+                            List<LogRecord> result = logRecords.get(node);
+                            if (result != null) {
+                                result = new ArrayList<LogRecord>(result);
+                                final LogRecord lr = new LogRecord(Level.WARNING, "Using cached remote log records");
+                                lr.setThrown(e);
+                                result.add(lr);
+                                return result;
+                            }
+                        } else {
+                            final LogRecord lr = new LogRecord(Level.WARNING, "No previous cached remote log records");
+                            lr.setThrown(e);
+                            return Collections.singletonList(lr);
+                        }
+                    }
+                }
             }
         }
         return Collections.emptyList();
@@ -477,16 +533,13 @@ public class SupportPlugin extends Plugin {
                 if (channel != null) {
                     final FilePath rootPath = node.getRootPath();
                     if (rootPath != null) {
-                        channel.call(new LogInitializer(rootPath, getLogLevel()));
+                        channel.callAsync(new LogInitializer(rootPath, getLogLevel()));
                     }
                 }
             } catch (IOException e) {
                 Logger.getLogger(SupportPlugin.class.getName())
                         .log(Level.WARNING, "Could not install root log handler on node: " + c.getName(), e);
             } catch (RuntimeException e) {
-                Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING,
-                        "Could not install root log handler on node: " + c.getName(), e);
-            } catch (InterruptedException e) {
                 Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING,
                         "Could not install root log handler on node: " + c.getName(), e);
             }
