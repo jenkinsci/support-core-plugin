@@ -115,6 +115,13 @@ public class SupportPlugin extends Plugin {
     public static final int REMOTE_OPERATION_CACHE_TIMEOUT_SEC =
             Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_CACHE_TIMEOUT_SEC", 300);
 
+    /**
+     * How often automatic support bundles should be collected. Should be {@code 1} unless you have very good reason
+     * to use a different period. {@code 0} disables bundle generation and {@code 24} is the longest period permitted.
+     */
+    public static final int AUTO_BUNDLE_PERIOD_HOURS =
+            Math.max(Math.min(24, Integer.getInteger(SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS", 1)), 0);
+
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
 
@@ -575,7 +582,7 @@ public class SupportPlugin extends Plugin {
             if (plugin == null) {
                 return;
             }
-            if (nextBundleWrite.get() < System.currentTimeMillis()) {
+            if (nextBundleWrite.get() < System.currentTimeMillis() && AUTO_BUNDLE_PERIOD_HOURS > 0) {
                 if (thread != null && thread.isAlive()) {
                     logger.log(Level.INFO, "Periodic bundle generating thread is still running. Execution aborted.");
                     return;
@@ -587,7 +594,9 @@ public class SupportPlugin extends Plugin {
                                 justification = "Best effort"
                         )
                         public void run() {
-                            nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(1));
+                            nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
+                            thread.setName(String.format("%s periodic bundle generator: since %s",
+                                    SupportPlugin.class.getSimpleName(), new Date()));
                             clearRequesterAuthentication();
                             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                             try {
@@ -612,6 +621,8 @@ public class SupportPlugin extends Plugin {
                                 } finally {
                                     IOUtils.closeQuietly(fos);
                                 }
+                                thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
+                                        SupportPlugin.class.getSimpleName(), new Date()));
                                 File[] files = bundleDir.listFiles(new FilenameFilter() {
                                     public boolean accept(File dir, String name) {
                                         return name.startsWith(bundlePrefix) && name.endsWith(".zip");
