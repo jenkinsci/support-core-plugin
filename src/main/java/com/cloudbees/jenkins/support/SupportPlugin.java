@@ -603,6 +603,8 @@ public class SupportPlugin extends Plugin {
                                 final String bundlePrefix = "support";
                                 File file = new File(bundleDir,
                                         bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+                                thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
+                                        SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                                 FileOutputStream fos = null;
                                 try {
                                     fos = new FileOutputStream(file);
