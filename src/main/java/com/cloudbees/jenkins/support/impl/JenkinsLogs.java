@@ -273,13 +273,14 @@ public class JenkinsLogs extends Component {
                                 TimeUnit.SECONDS)) {
                     try {
                         for (FileContent c : r
-                                .get(Math.min(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
+                                .get(Math.max(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
                             result.add(c);
                         }
                     } catch (ExecutionException e) {
-                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
+                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
                     } catch (TimeoutException e) {
-                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
+                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
+                        r.cancel(false);
                     }
                 }
             } catch (InterruptedException e) {
@@ -470,11 +471,11 @@ public class JenkinsLogs extends Component {
         }
 
         final Pipe p = Pipe.createRemoteToLocal();
-        final OutputStream out = p.getOut();
         channel.callAsync(new Callable<Void, IOException>() {
             private static final long serialVersionUID = 1L;
 
             public Void call() throws IOException {
+                final OutputStream out = p.getOut();
                 RandomAccessFile raf = null;
                 try {
                     raf = new RandomAccessFile(new File(remote), "r");
