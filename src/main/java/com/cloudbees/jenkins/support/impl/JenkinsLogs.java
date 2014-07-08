@@ -33,7 +33,9 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -398,25 +400,66 @@ public class JenkinsLogs extends Component {
         final VirtualChannel channel = path.getChannel();
         final String remote = path.getRemote();
         if(channel ==null) {
-            final FileInputStream fis = new FileInputStream(new File(remote));
-            fis.skip(offset);
-            return fis;
+            final RandomAccessFile raf = new RandomAccessFile(new File(remote), "r");
+            try {
+                raf.seek(offset);
+            } catch (IOException e) {
+                try {
+                    raf.close();
+                } catch (IOException e1) {
+                    // ignore
+                }
+                throw e;
+            }
+            return new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    return raf.read();
+                }
+
+                @Override
+                public void close() throws IOException {
+                    raf.close();
+                    super.close();
+                }
+
+                @Override
+                public int read(byte[] b, int off, int len) throws IOException {
+                    return raf.read(b, off, len);
+                }
+
+                @Override
+                public int read(byte[] b) throws IOException {
+                    return raf.read(b);
+                }
+            };
         }
 
         final Pipe p = Pipe.createRemoteToLocal();
+        final OutputStream out = p.getOut();
         channel.callAsync(new Callable<Void, IOException>() {
             private static final long serialVersionUID = 1L;
 
             public Void call() throws IOException {
-                FileInputStream fis = null;
+                RandomAccessFile raf = null;
                 try {
-                    fis = new FileInputStream(new File(remote));
-                    fis.skip(offset);
-                    Util.copyStream(fis, p.getOut());
+                    raf = new RandomAccessFile(new File(remote), "r");
+                    raf.seek(offset);
+                    byte[] buf = new byte[8192];
+                    int len;
+                    while ((len = raf.read(buf)) >= 0) {
+                        out.write(buf, 0, len);
+                    }
                     return null;
                 } finally {
-                    IOUtils.closeQuietly(fis);
-                    IOUtils.closeQuietly(p.getOut());
+                    IOUtils.closeQuietly(out);
+                    if (raf != null) {
+                        try {
+                            raf.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
                 }
             }
         });
