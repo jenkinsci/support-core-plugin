@@ -22,6 +22,8 @@ import hudson.remoting.Pipe;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
+import hudson.util.DaemonThreadFactory;
+import hudson.util.ExceptionCatchingThreadFactory;
 import hudson.util.IOUtils;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.io.ReopenableFileOutputStream;
@@ -52,6 +54,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Formatter;
@@ -256,10 +260,14 @@ public class JenkinsLogs extends Component {
                 }
             }
         }
+        ExecutorService service = Executors.newFixedThreadPool(
+                Math.min(Runtime.getRuntime().availableProcessors()*2, tasks.size()),
+                new ExceptionCatchingThreadFactory(new DaemonThreadFactory())
+        );
         try {
             long expiresNanoTime =
                     System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
-            for (java.util.concurrent.Future<List<FileContent>> r : Computer.threadPoolForRemoting
+            for (java.util.concurrent.Future<List<FileContent>> r : service
                     .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
                             TimeUnit.SECONDS)) {
                 try {
@@ -273,7 +281,9 @@ public class JenkinsLogs extends Component {
                 }
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
+        } finally {
+            service.shutdown();
         }
 
     }
