@@ -65,6 +65,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -475,7 +478,7 @@ public class JenkinsLogs extends Component {
             private static final long serialVersionUID = 1L;
 
             public Void call() throws IOException {
-                final OutputStream out = p.getOut();
+                final OutputStream out = new GZIPOutputStream(p.getOut(), 8192);
                 RandomAccessFile raf = null;
                 try {
                     raf = new RandomAccessFile(new File(remote), "r");
@@ -499,7 +502,7 @@ public class JenkinsLogs extends Component {
             }
         });
 
-        return p.getIn();
+        return new GZIPInputStream(p.getIn());
     }
 
     public static Map<String,File> getLogFiles(FilePath remote, File localCache)
@@ -540,7 +543,16 @@ public class JenkinsLogs extends Component {
                 }
                 result.put(entry.getKey(), local);
             } else {
-                remote.child(entry.getKey()).copyTo(new FilePath(local));
+                FileOutputStream fos = null;
+                InputStream is = null;
+                try {
+                    fos = new FileOutputStream(local, false);
+                    is = read(remote.child(entry.getKey()), 0);
+                    IOUtils.copy(is, fos);
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    IOUtils.closeQuietly(fos);
+                }
                 result.put(entry.getKey(), local);
             }
         }
