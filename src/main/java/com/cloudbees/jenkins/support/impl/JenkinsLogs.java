@@ -51,6 +51,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -150,9 +153,11 @@ public class JenkinsLogs extends Component {
 
         File cacheDir = new File(supportDir, "cache");
         final boolean needHack = SlaveLogFetcher.isRequired();
+        List<java.util.concurrent.Callable<List<FileContent>>> tasks = new ArrayList<java.util.concurrent
+                .Callable<List<FileContent>>>();
         for (final Node node : Jenkins.getInstance().getNodes()) {
             String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
-            File nodeCacheDir = new File(cacheDir, StringUtils.right(cacheKey, 8));
+            final File nodeCacheDir = new File(cacheDir, StringUtils.right(cacheKey, 8));
             if (node.toComputer() instanceof SlaveComputer) {
                 result.add(
                         new PrintedContent("nodes/slave/" + node.getDisplayName() + "/jenkins.log") {
@@ -182,26 +187,24 @@ public class JenkinsLogs extends Component {
                         }
                 );
             }
-            try {
-                FilePath rootPath = node.getRootPath();
-                if (rootPath != null) {
-                    FilePath supportPath = rootPath.child("support");
-                    if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
-                        for (Map.Entry<String,File> entry: logFiles.entrySet()) {
-                            result.add(new FileContent(
-                                    "nodes/slave/" + node.getDisplayName() + "/logs/" + entry.getKey(),
-                                    entry.getValue())
-                            );
+            final FilePath rootPath = node.getRootPath();
+            if (rootPath != null) {
+                tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
+                    public List<FileContent> call() throws Exception {
+                        List<FileContent> result = new ArrayList<FileContent>();
+                        FilePath supportPath = rootPath.child("support");
+                        if (supportPath.isDirectory()) {
+                            final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
+                            for (Map.Entry<String, File> entry : logFiles.entrySet()) {
+                                result.add(new FileContent(
+                                                "nodes/slave/" + node.getDisplayName() + "/logs/" + entry.getKey(),
+                                                entry.getValue())
+                                );
+                            }
                         }
+                        return result;
                     }
-                }
-            } catch (IOException e) {
-                // ignore
-            } catch (InterruptedException e) {
-                // ignore
-            } catch (Throwable t) {
-                // ignore
+                });
             }
             result.add(new PrintedContent("nodes/slave/" + node.getDisplayName() + "/logs/all_memory_buffer.log") {
                 @Override
@@ -252,6 +255,25 @@ public class JenkinsLogs extends Component {
 
                 }
             }
+        }
+        try {
+            long expiresNanoTime =
+                    System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
+            for (java.util.concurrent.Future<List<FileContent>> r : Computer.threadPoolForRemoting
+                    .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
+                            TimeUnit.SECONDS)) {
+                try {
+                    for (FileContent c : r.get(Math.min(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
+                        result.add(c);
+                    }
+                } catch (ExecutionException e) {
+                    LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
+                } catch (TimeoutException e) {
+                    LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
     }
