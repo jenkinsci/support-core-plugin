@@ -260,32 +260,34 @@ public class JenkinsLogs extends Component {
                 }
             }
         }
-        ExecutorService service = Executors.newFixedThreadPool(
-                Math.min(Runtime.getRuntime().availableProcessors()*2, tasks.size()),
-                new ExceptionCatchingThreadFactory(new DaemonThreadFactory())
-        );
-        try {
-            long expiresNanoTime =
-                    System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
-            for (java.util.concurrent.Future<List<FileContent>> r : service
-                    .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
-                            TimeUnit.SECONDS)) {
-                try {
-                    for (FileContent c : r.get(Math.min(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
-                        result.add(c);
+        if (!tasks.isEmpty()) {
+            ExecutorService service = Executors.newFixedThreadPool(
+                    Math.max(1, Math.min(Runtime.getRuntime().availableProcessors() * 2, tasks.size())),
+                    new ExceptionCatchingThreadFactory(new DaemonThreadFactory())
+            );
+            try {
+                long expiresNanoTime =
+                        System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
+                for (java.util.concurrent.Future<List<FileContent>> r : service
+                        .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
+                                TimeUnit.SECONDS)) {
+                    try {
+                        for (FileContent c : r
+                                .get(Math.min(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
+                            result.add(c);
+                        }
+                    } catch (ExecutionException e) {
+                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
+                    } catch (TimeoutException e) {
+                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
                     }
-                } catch (ExecutionException e) {
-                    LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
-                } catch (TimeoutException e) {
-                    LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs");
                 }
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
+            } finally {
+                service.shutdown();
             }
-        } catch (InterruptedException e) {
-            LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
-        } finally {
-            service.shutdown();
         }
-
     }
 
     private static class SlaveLogFetcher implements Callable<List<LogRecord>, RuntimeException> {
