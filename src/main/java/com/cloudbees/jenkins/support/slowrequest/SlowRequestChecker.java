@@ -24,6 +24,21 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension
 public class SlowRequestChecker extends PeriodicWork {
+    /**
+     * How often to run the slow request checker
+     * @since 2.12
+     */
+    public static final int RECURRENCE_PERIOD_SEC =
+            Integer.getInteger(SlowRequestChecker.class.getName()+".RECURRENCE_PERIOD_SEC", 3);
+
+    /**
+     * Time in milliseconds that's considered too slow for requests.
+     * Starting with a bit conservative value to catch serious offenders first.
+     * If this value is less than twice {@link #RECURRENCE_PERIOD_SEC} then that will be used instead.
+     */
+    public static final int THRESHOLD =
+            Integer.getInteger(SlowRequestChecker.class.getName()+".THRESHOLD_MS", 10000);
+
     @Inject
     SlowRequestFilter filter;
 
@@ -36,23 +51,26 @@ public class SlowRequestChecker extends PeriodicWork {
 
     @Override
     public long getRecurrencePeriod() {
-        return TimeUnit.SECONDS.toMillis(3);
+        return TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
     }
 
     @Override
     protected void doRun() throws Exception {
-        ThreadInfo[] threads;
-        threads = Functions.getThreadInfos();
+        ThreadInfo[] threads = null;
 
         final long now = System.currentTimeMillis();
 
         long iota = System.currentTimeMillis();
 
+        final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
+        long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
+                recurrencePeriosMillis * 2 : THRESHOLD;
+
         OUTER:
         for (InflightRequest req : filter.tracker.values()) {
             long totalTime = now - req.startTime;
 
-            if (totalTime> THRESHOLD) {
+            if (totalTime> thresholdMillis) {
                 if (threads==null)
                     threads = Functions.getThreadInfos();
 
@@ -88,9 +106,4 @@ public class SlowRequestChecker extends PeriodicWork {
         }
     }
 
-    /**
-     * Time in milliseconds that's considered too slow for requests.
-     * Starting with a bit conservative value to catch serious offenders first.
-     */
-    public static final int THRESHOLD = 10000;
 }
