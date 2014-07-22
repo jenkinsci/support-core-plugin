@@ -39,6 +39,14 @@ public class SlowRequestChecker extends PeriodicWork {
     public static final int THRESHOLD =
             Integer.getInteger(SlowRequestChecker.class.getName()+".THRESHOLD_MS", 10000);
 
+    /**
+     * Provide a means to disable the slow request checker. This is a volatile non-final field as if you run into
+     * issues in a running Jenkins you may need to disable without restarting Jenkins.
+     *
+     * @since 2.12
+     */
+    public static volatile boolean DISABLED = Boolean.getBoolean(SlowRequestChecker.class.getName()+".DISABLED");
+
     @Inject
     SlowRequestFilter filter;
 
@@ -56,6 +64,9 @@ public class SlowRequestChecker extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
+        if (DISABLED) {
+            return;
+        }
         ThreadInfo[] threads = null;
 
         final long now = System.currentTimeMillis();

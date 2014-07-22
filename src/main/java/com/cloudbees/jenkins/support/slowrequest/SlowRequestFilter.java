@@ -27,14 +27,18 @@ public class SlowRequestFilter implements Filter {
     final ConcurrentMap<Thread,InflightRequest> tracker = new ConcurrentHashMap<Thread, InflightRequest>();
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        Thread t = Thread.currentThread();
-        InflightRequest req = new InflightRequest((HttpServletRequest) request);
-        tracker.put(t, req);
-        try {
-            chain.doFilter(request,response);
-        } finally {
-            req.ended = true;
-            tracker.remove(t);
+        if (SlowRequestChecker.DISABLED) {
+            chain.doFilter(request, response);
+        } else {
+            Thread t = Thread.currentThread();
+            InflightRequest req = new InflightRequest((HttpServletRequest) request);
+            tracker.put(t, req);
+            try {
+                chain.doFilter(request, response);
+            } finally {
+                req.ended = true;
+                tracker.remove(t);
+            }
         }
     }
 
@@ -47,7 +51,9 @@ public class SlowRequestFilter implements Filter {
     @Initializer
     public static void init() throws ServletException {
         Injector inj = Jenkins.getInstance().getInjector();
-        if (inj==null)      return;
+        if (inj == null) {
+            return;
+        }
         PluginServletFilter.addFilter(inj.getInstance(SlowRequestFilter.class));
     }
 }
