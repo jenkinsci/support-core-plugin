@@ -131,6 +131,9 @@ public class JenkinsLogs extends Component {
                 return pattern.matcher(name).matches();
             }
         })) {
+            if (f.length() == 0) {
+                continue;
+            }
             result.add(new FileContent("other-logs/" + f.getName(), f));
         }
         final File supportDir = new File(Jenkins.getInstance().getRootDir(), "support");
