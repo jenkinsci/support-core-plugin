@@ -103,7 +103,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
                     for (ThreadInfo thread : threads) {
                         if (req.is(thread)) {
-                            w.println("TimeElapsed: " + totalTime + "ms");
+                            w.println(totalTime + "msec elapsed in " + thread.getThreadName());
                             for (StackTraceElement st : thread.getStackTrace()) {
                                 w.println("    "+st);
                             }
