@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.slowrequest;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.google.inject.Inject;
 import hudson.Extension;
-import hudson.Functions;
 import hudson.model.PeriodicWork;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
@@ -68,8 +67,8 @@ public class SlowRequestChecker extends PeriodicWork {
         if (DISABLED) {
             return;
         }
-        ThreadInfo[] threads = null;
-
+//        ThreadInfo[] threads = null;
+//
         final long now = System.currentTimeMillis();
 
         long iota = System.currentTimeMillis();
@@ -83,9 +82,6 @@ public class SlowRequestChecker extends PeriodicWork {
             long totalTime = now - req.startTime;
 
             if (totalTime> thresholdMillis) {
-                if (threads==null)
-                    threads = Functions.getThreadInfos();
-
                 // if the thread has exited while we are taking the thread dump, ignore this.
                 if (req.ended)    continue;
 
@@ -102,16 +98,13 @@ public class SlowRequestChecker extends PeriodicWork {
                         logs.touch(req.record);
                     }
 
-                    for (ThreadInfo thread : threads) {
-                        if (req.is(thread)) {
-                            w.println(ManagementFactory.getThreadMXBean().getThreadInfo(thread.getLockOwnerId()));
-                            w.println(totalTime + "msec elapsed in " + thread.getThreadName());
-                            for (StackTraceElement st : thread.getStackTrace()) {
-                                w.println("    "+st);
-                            }
-                            continue OUTER;
-                        }
-                    }
+                    ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId());
+
+                    w.println(lockedThread);
+                    w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
+                    w.println(ManagementFactory.getThreadMXBean().getThreadInfo(lockedThread.getLockOwnerId()));
+
+                    continue OUTER;
                 } finally {
                     IOUtils.closeQuietly(w);
                 }
