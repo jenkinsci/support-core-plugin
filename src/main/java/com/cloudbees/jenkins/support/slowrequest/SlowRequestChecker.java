@@ -98,10 +98,11 @@ public class SlowRequestChecker extends PeriodicWork {
                     }
 
                     ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId());
-
-                    w.println(lockedThread);
-                    w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
-                    w.println(ManagementFactory.getThreadMXBean().getThreadInfo(lockedThread.getLockOwnerId()));
+                    if (lockedThread != null ) {
+                        w.println(lockedThread);
+                        w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
+                        w.println(ManagementFactory.getThreadMXBean().getThreadInfo(lockedThread.getLockOwnerId()));
+                    }
 
                     continue OUTER;
                 } finally {
