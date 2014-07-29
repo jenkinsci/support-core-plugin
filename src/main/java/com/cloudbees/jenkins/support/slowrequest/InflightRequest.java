@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.slowrequest;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.PrintWriter;
-import java.lang.management.ThreadInfo;
 import java.util.Date;
 
 /**
@@ -41,10 +40,6 @@ final class InflightRequest {
     InflightRequest(HttpServletRequest req) {
         url = req.getRequestURL().toString();
         startTime = System.currentTimeMillis();
-    }
-
-    public boolean is(ThreadInfo t) {
-        return thread.getId()==t.getThreadId();
     }
 
     void writeHeader(PrintWriter w) {
