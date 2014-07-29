@@ -67,8 +67,7 @@ public class SlowRequestChecker extends PeriodicWork {
         if (DISABLED) {
             return;
         }
-//        ThreadInfo[] threads = null;
-//
+
         final long now = System.currentTimeMillis();
 
         long iota = System.currentTimeMillis();
