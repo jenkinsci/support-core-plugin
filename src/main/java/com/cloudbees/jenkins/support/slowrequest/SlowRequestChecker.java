@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -103,6 +104,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
                     for (ThreadInfo thread : threads) {
                         if (req.is(thread)) {
+                            w.println(ManagementFactory.getThreadMXBean().getThreadInfo(thread.getLockOwnerId()));
                             w.println(totalTime + "msec elapsed in " + thread.getThreadName());
                             for (StackTraceElement st : thread.getStackTrace()) {
                                 w.println("    "+st);
