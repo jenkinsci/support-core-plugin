@@ -76,7 +76,6 @@ public class SlowRequestChecker extends PeriodicWork {
         long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
                 recurrencePeriosMillis * 2 : THRESHOLD;
 
-        OUTER:
         for (InflightRequest req : filter.tracker.values()) {
             long totalTime = now - req.startTime;
 
@@ -103,8 +102,6 @@ public class SlowRequestChecker extends PeriodicWork {
                         w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
                         w.println(ManagementFactory.getThreadMXBean().getThreadInfo(lockedThread.getLockOwnerId()));
                     }
-
-                    continue OUTER;
                 } finally {
                     IOUtils.closeQuietly(w);
                 }
