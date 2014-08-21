@@ -33,6 +33,7 @@ import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
 import hudson.security.Permission;
+import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -76,7 +77,7 @@ import org.apache.commons.lang.StringUtils;
                         out.println();
                         out.println(monitor.getDisplayName());
                         out.println("--------------");
-                        if (monitor instanceof OldDataMonitor) {
+                        if (monitor instanceof OldDataMonitor && !suffersFromJENKINS24358()) {
                             OldDataMonitor odm = (OldDataMonitor) monitor;
                             for (Map.Entry<Saveable,OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
                                 out.println("  * Problematic object: `" + entry.getKey() + "`");
@@ -100,4 +101,20 @@ import org.apache.commons.lang.StringUtils;
         }
     }
 
+    private static boolean suffersFromJENKINS24358() {
+        VersionNumber version = Jenkins.getVersion();
+        if (version == null) {
+            return false;
+        } else if (version.compareTo(/*JENKINS-19544*/new VersionNumber("1.557")) >=0 && version.compareTo(new VersionNumber(/*JENKINS-24358*/"1.578")) < 0) {
+            if (version.toString().startsWith("1.565.") && version.compareTo(new VersionNumber(/* predicting JENKINS-24358 to be backported here */"1.565.3")) >=0) {
+                return false;
+            } else {
+                return true;
+            }
+        } else if (version.toString().startsWith(/* JENKINS-19544 backported to 1.554.1 */"1.554.")) {
+            return true;
+        } else { // before regression or after fix
+            return false;
+        }
+    }
 }
