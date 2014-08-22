@@ -38,7 +38,8 @@ final class InflightRequest {
 
 
     InflightRequest(HttpServletRequest req) {
-        url = req.getRequestURL().toString();
+        String query = req.getQueryString();
+        url = req.getRequestURL() + (query == null ? "" : "?" + query);
         startTime = System.currentTimeMillis();
     }
 
