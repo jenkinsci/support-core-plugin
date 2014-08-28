@@ -55,9 +55,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -65,7 +62,6 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -99,236 +95,9 @@ public class AboutJenkins extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(new PrintedContent("about.md") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                out.println("Jenkins");
-                out.println("=======");
-                out.println();
-                out.println("Version details");
-                out.println("---------------");
-                out.println();
-                out.println("  * Version: `" + Jenkins.getVersion().toString().replaceAll("`", "&#96;") + "`");
-                File jenkinsWar = Lifecycle.get().getHudsonWar();
-                if (jenkinsWar == null) {
-                    out.println("  * Mode:    Webapp Directory");
-                } else {
-                    out.println("  * Mode:    WAR");
-                }
-                try {
-                    final ServletContext servletContext = Stapler.getCurrent().getServletContext();
-                    out.println("  * Servlet container");
-                    out.println("      - Specification: " + servletContext.getMajorVersion() + "." + servletContext
-                            .getMinorVersion());
-                    out.println(
-                            "      - Name:          `" + servletContext.getServerInfo().replaceAll("`", "&#96;") + "`");
-                } catch (NullPointerException e) {
-                    // pity Stapler.getCurrent() throws an NPE when outside of a request
-                }
-                out.print(new GetJavaInfo("  *", "      -").call());
-                out.println();
-                SupportPlugin supportPlugin = SupportPlugin.getInstance();
-                if (supportPlugin != null) {
-                    SupportProvider supportProvider = supportPlugin.getSupportProvider();
-                    if (supportProvider != null) {
-                        try {
-                            supportProvider.printAboutJenkins(out);
-                        } catch (Throwable e) {
-                            // ignore as the customer may have an issue specific to the support provider
-                        }
-                    }
-                }
-                out.println();
-                out.println("Important configuration");
-                out.println("---------------");
-                out.println();
-                out.println("  * Security realm: " + getDescriptorName(Jenkins.getInstance().getSecurityRealm()));
-                out.println("  * Authorization strategy: " + getDescriptorName(Jenkins.getInstance().getAuthorizationStrategy()));
-                out.println();
-                out.println("Active Plugins");
-                out.println("--------------");
-                out.println();
-                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-                List<PluginWrapper> plugins = new ArrayList<PluginWrapper>(pluginManager.getPlugins());
-                Collections.sort(plugins);
-                for (PluginWrapper w : plugins) {
-                    if (w.isActive()) {
-                        out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
-                                ? " *(update available)*"
-                                : "") + " '" + w.getLongName() + "'");
-                    }
-                }
-            }
-        });
-        container.add(new PrintedContent("items.md") {
-            @Override protected void printTo(PrintWriter out) throws IOException {
-                out.println("Job statistics");
-                out.println("--------------");
-                out.println();
-                Map<Descriptor<TopLevelItem>, Stats> stats = new HashMap<Descriptor<TopLevelItem>, Stats>();
-                Stats total = new Stats();
-                for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
-                    if (Job.class.isAssignableFrom(d.clazz)) {
-                        stats.put(d, new Stats());
-                    }
-                }
-                // RunMap.createDirectoryFilter protected, so must do it by hand:
-                DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-                for (Job<?, ?> j : Jenkins.getInstance().getAllItems(Job.class)) {
-                    // too expensive: int builds = j.getBuilds().size();
-                    int builds = 0;
-                    // protected access: File buildDir = j.getBuildDir();
-                    File buildDir = Jenkins.getInstance().getBuildDirFor(j);
-                    File[] buildDirs = buildDir.listFiles();
-                    if (buildDirs != null) {
-                        for (File d : buildDirs) {
-                            if (mayBeDate(d.getName())) {
-                                // check for real
-                                try {
-                                    BUILD_FORMAT.parse(d.getName());
-                                    if (d.isDirectory()) {
-                                        builds++;
-                                    }
-                                } catch (ParseException x) {
-                                    // symlink etc., ignore
-                                }
-                            }
-                        }
-                    }
-                    total.add(builds);
-                    for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                        if (entry.getKey().clazz.isInstance(j)) {
-                            entry.getValue().add(builds);
-                        }
-                    }
-                }
-                out.println("  * All jobs");
-                out.println("      - Number of jobs: " + total.n());
-                out.println("      - Number of builds per job: " + total);
-                for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                    out.println("  * `" + entry.getKey().getId() + "`");
-                    out.println("      - Number of jobs: " + entry.getValue().n());
-                    out.println("      - Number of builds per job: " + entry.getValue());
-                }
-                out.println();
-                out.println("Container statistics");
-                out.println("--------------------");
-                out.println();
-                total = new Stats();
-                stats.clear();
-                for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
-                    if (ItemGroup.class.isAssignableFrom(d.clazz)) {
-                        stats.put(d, new Stats());
-                    }
-                }
-                for (Item j : Jenkins.getInstance().getAllItems(Item.class)) {
-                    if (j instanceof ItemGroup) {
-                        ItemGroup i = (ItemGroup) j;
-                        int items = i.getItems().size();
-                        total.add(items);
-                        for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                            if (entry.getKey().clazz.isInstance(j)) {
-                                entry.getValue().add(items);
-                            }
-                        }
-                    }
-                }
-                out.println("  * All containers");
-                out.println("      - Number of containers: " + total.n());
-                out.println("      - Number of items per container: " + total);
-                for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                    out.println(
-                            "  * Container type: `" + entry.getKey().getId() + "`");
-                    out.println("      - Number of containers: " + entry.getValue().n());
-                    out.println("      - Number of items per container: " + entry.getValue());
-                }
-            }
-        });
-        container.add(new PrintedContent("nodes.md") {
-            private String getLabelString(Node n) {
-                String r = n.getLabelString();
-                return r.isEmpty() ? "(none)" : r;
-            }
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                SupportPlugin supportPlugin = SupportPlugin.getInstance();
-                if (supportPlugin != null) {
-                    out.println("Node statistics");
-                    out.println("===============");
-                    out.println();
-                    out.println("  * Total number of nodes");
-                    printHistogram(out, supportPlugin.getJenkinsNodeTotalCount());
-                    out.println("  * Total number of nodes online");
-                    printHistogram(out, supportPlugin.getJenkinsNodeOnlineCount());
-                    out.println("  * Total number of executors");
-                    printHistogram(out, supportPlugin.getJenkinsExecutorTotalCount());
-                    out.println("  * Total number of executors in use");
-                    printHistogram(out, supportPlugin.getJenkinsExecutorUsedCount());
-                    out.println();
-                }
-                out.println("Build Nodes");
-                out.println("===========");
-                out.println();
-                out.println("  * master (Jenkins)");
-                out.println("      - Description:    _" + Jenkins.getInstance().getNodeDescription()
-                        .replaceAll("_", "&#95;") + "_");
-                out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
-                out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
-                        .replaceAll("`", "&#96;") + "`");
-                out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
-                out.println("      - Usage:          `" + Jenkins.getInstance().getMode() + "`");
-                out.print(new GetJavaInfo("      -", "          +").call());
-                out.println();
-                for (Node node : Jenkins.getInstance().getNodes()) {
-                    out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
-                    out.println("      - Description:    _" + node.getNodeDescription().replaceAll("_", "&#95;") + "_");
-                    out.println("      - Executors:      " + node.getNumExecutors());
-                    FilePath rootPath = node.getRootPath();
-                    if (rootPath != null) {
-                        out.println("      - Remote FS root: `" + rootPath.getRemote().replaceAll("`", "&#96;")
-                                + "`");
-                    } else if (node instanceof Slave) {
-                        out.println("      - Remote FS root: `" + Slave.class.cast(node).getRemoteFS()
-                                .replaceAll("`", "&#96;") + "`");
-                    }
-                    out.println("      - Labels:         " + getLabelString(node));
-                    out.println("      - Usage:          `" + node.getMode() + "`");
-                    if (node instanceof Slave) {
-                        Slave slave = (Slave) node;
-                        out.println("      - Launch method:  " + getDescriptorName(slave.getLauncher()));
-                        out.println("      - Availability:   " + getDescriptorName(slave.getRetentionStrategy()));
-                    }
-                    VirtualChannel channel = node.getChannel();
-                    if (channel == null) {
-                        out.println("      - Status:         off-line");
-                    } else {
-                        out.println("      - Status:         on-line");
-                        try {
-                            out.println("      - Version:        " +
-                                    AsyncResultCache.get(node, slaveVersionCache, new GetSlaveVersion(),
-                                            "slave.jar version", "(timeout with no cache available)"));
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING,
-                                    "Could not get slave.jar version for " + node.getNodeName(), e);
-                        }
-                        try {
-                            final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
-                                    new GetJavaInfo("      -", "          +"), "Java info");
-                            if (javaInfo == null) {
-                                logger.log(Level.FINE,
-                                        "Could not get Java info for {0} and no cached value available",
-                                        node.getNodeName());
-                            } else {
-                                out.print(javaInfo);
-                            }
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not get Java info for " + node.getNodeName(), e);
-                        }
-                    }
-                    out.println();
-                }
-            }
-        });
+        container.add(new AboutContent());
+        container.add(new ItemsContent());
+        container.add(new NodesContent());
         container.add(new PrintedContent("plugins/active.txt") {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
@@ -366,94 +135,9 @@ public class AboutJenkins extends Component {
                 }
             }
         });
-        container.add(new PrintedContent("nodes/master/checksums.md5") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                File jenkinsWar = Lifecycle.get().getHudsonWar();
-                if (jenkinsWar != null) {
-                    try {
-                        out.println(Util.getDigestOf(new FileInputStream(jenkinsWar)) + "  jenkins.war");
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, "Could not compute MD5 of jenkins.war", e);
-                    }
-                }
-                Stapler stapler = null;
-                try {
-                    stapler = Stapler.getCurrent();
-                } catch (NullPointerException e) {
-                    // the method is not always safe :-(
-                }
-                if (stapler != null) {
-                    final ServletContext servletContext = stapler.getServletContext();
-                    Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
-                    for (String resourcePath : new TreeSet<String>(resourcePaths)) {
-                        try {
-                            out.println(
-                                    Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
-                                            + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
-                        }
-                    }
-                    for (String resourcePath : Arrays.asList(
-                            "/WEB-INF/slave.jar",
-                            "/WEB-INF/remoting.jar",
-                            "/WEB-INF/jenkins-cli.jar",
-                            "/WEB-INF/web.xml")) {
-                        try {
-                            InputStream resourceAsStream = servletContext.getResourceAsStream(resourcePath);
-                            if (resourceAsStream == null) {
-                                continue;
-                            }
-                            out.println(
-                                    Util.getDigestOf(resourceAsStream) + "  war"
-                                            + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
-                        }
-                    }
-                    resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs");
-                    for (String resourcePath : new TreeSet<String>(resourcePaths)) {
-                        try {
-                            out.println(
-                                    Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
-                                            + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
-                        }
-                    }
-                }
-                for (File file : new File(Jenkins.getInstance().getRootDir(), "plugins").listFiles()) {
-                    if (file.isFile()) {
-                        try {
-                            out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file
-                                    .getName());
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war/" + file, e);
-                        }
-                    }
-                }
-            }
-        }
-        );
+        container.add(new MasterChecksumsContent());
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            container.add(
-                    new PrintedContent("nodes/slave/" + node.getNodeName() + "/checksums.md5") {
-                        @Override
-                        protected void printTo(PrintWriter out) throws IOException {
-                            try {
-                                final FilePath rootPath = node.getRootPath();
-                                String slaveDigest = rootPath == null ? "N/A" :
-                                        AsyncResultCache.get(node, slaveDigestCache, new GetSlaveDigest(rootPath),
-                                                "checksums", "N/A");
-                                out.println(slaveDigest);
-                            } catch (IOException e) {
-                                logger.log(Level.WARNING,
-                                        "Could not compute checksums on slave " + node.getNodeName(), e);
-                            }
-                        }
-                    }
-            );
+            container.add(new NodeChecksumsContent(node));
         }
     }
 
@@ -833,4 +517,337 @@ public class AboutJenkins extends Component {
             return s0;
         }
     }
+
+    private static class AboutContent extends PrintedContent {
+        AboutContent() {
+            super("about.md");
+        }
+        @Override protected void printTo(PrintWriter out) throws IOException {
+            out.println("Jenkins");
+            out.println("=======");
+            out.println();
+            out.println("Version details");
+            out.println("---------------");
+            out.println();
+            out.println("  * Version: `" + Jenkins.getVersion().toString().replaceAll("`", "&#96;") + "`");
+            File jenkinsWar = Lifecycle.get().getHudsonWar();
+            if (jenkinsWar == null) {
+                out.println("  * Mode:    Webapp Directory");
+            } else {
+                out.println("  * Mode:    WAR");
+            }
+            try {
+                final ServletContext servletContext = Stapler.getCurrent().getServletContext();
+                out.println("  * Servlet container");
+                out.println("      - Specification: " + servletContext.getMajorVersion() + "." + servletContext
+                        .getMinorVersion());
+                out.println(
+                        "      - Name:          `" + servletContext.getServerInfo().replaceAll("`", "&#96;") + "`");
+            } catch (NullPointerException e) {
+                // pity Stapler.getCurrent() throws an NPE when outside of a request
+            }
+            out.print(new GetJavaInfo("  *", "      -").call());
+            out.println();
+            SupportPlugin supportPlugin = SupportPlugin.getInstance();
+            if (supportPlugin != null) {
+                SupportProvider supportProvider = supportPlugin.getSupportProvider();
+                if (supportProvider != null) {
+                    try {
+                        supportProvider.printAboutJenkins(out);
+                    } catch (Throwable e) {
+                        // ignore as the customer may have an issue specific to the support provider
+                    }
+                }
+            }
+            out.println();
+            out.println("Important configuration");
+            out.println("---------------");
+            out.println();
+            out.println("  * Security realm: " + getDescriptorName(Jenkins.getInstance().getSecurityRealm()));
+            out.println("  * Authorization strategy: " + getDescriptorName(Jenkins.getInstance().getAuthorizationStrategy()));
+            out.println();
+            out.println("Active Plugins");
+            out.println("--------------");
+            out.println();
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            List<PluginWrapper> plugins = new ArrayList<PluginWrapper>(pluginManager.getPlugins());
+            Collections.sort(plugins);
+            for (PluginWrapper w : plugins) {
+                if (w.isActive()) {
+                    out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
+                            ? " *(update available)*"
+                            : "") + " '" + w.getLongName() + "'");
+                }
+            }
+        }
+    }
+
+    private static class ItemsContent extends PrintedContent {
+        ItemsContent() {
+            super("items.md");
+        }
+        @Override protected void printTo(PrintWriter out) throws IOException {
+            out.println("Job statistics");
+            out.println("--------------");
+            out.println();
+            Map<Descriptor<TopLevelItem>, Stats> stats = new HashMap<Descriptor<TopLevelItem>, Stats>();
+            Stats total = new Stats();
+            for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
+                if (Job.class.isAssignableFrom(d.clazz)) {
+                    stats.put(d, new Stats());
+                }
+            }
+            // RunMap.createDirectoryFilter protected, so must do it by hand:
+            DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            for (Job<?, ?> j : Jenkins.getInstance().getAllItems(Job.class)) {
+                // too expensive: int builds = j.getBuilds().size();
+                int builds = 0;
+                // protected access: File buildDir = j.getBuildDir();
+                File buildDir = Jenkins.getInstance().getBuildDirFor(j);
+                File[] buildDirs = buildDir.listFiles();
+                if (buildDirs != null) {
+                    for (File d : buildDirs) {
+                        if (mayBeDate(d.getName())) {
+                            // check for real
+                            try {
+                                BUILD_FORMAT.parse(d.getName());
+                                if (d.isDirectory()) {
+                                    builds++;
+                                }
+                            } catch (ParseException x) {
+                                // symlink etc., ignore
+                            }
+                        }
+                    }
+                }
+                total.add(builds);
+                for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
+                    if (entry.getKey().clazz.isInstance(j)) {
+                        entry.getValue().add(builds);
+                    }
+                }
+            }
+            out.println("  * All jobs");
+            out.println("      - Number of jobs: " + total.n());
+            out.println("      - Number of builds per job: " + total);
+            for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
+                out.println("  * `" + entry.getKey().getId() + "`");
+                out.println("      - Number of jobs: " + entry.getValue().n());
+                out.println("      - Number of builds per job: " + entry.getValue());
+            }
+            out.println();
+            out.println("Container statistics");
+            out.println("--------------------");
+            out.println();
+            total = new Stats();
+            stats.clear();
+            for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
+                if (ItemGroup.class.isAssignableFrom(d.clazz)) {
+                    stats.put(d, new Stats());
+                }
+            }
+            for (Item j : Jenkins.getInstance().getAllItems(Item.class)) {
+                if (j instanceof ItemGroup) {
+                    ItemGroup i = (ItemGroup) j;
+                    int items = i.getItems().size();
+                    total.add(items);
+                    for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
+                        if (entry.getKey().clazz.isInstance(j)) {
+                            entry.getValue().add(items);
+                        }
+                    }
+                }
+            }
+            out.println("  * All containers");
+            out.println("      - Number of containers: " + total.n());
+            out.println("      - Number of items per container: " + total);
+            for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
+                out.println(
+                        "  * Container type: `" + entry.getKey().getId() + "`");
+                out.println("      - Number of containers: " + entry.getValue().n());
+                out.println("      - Number of items per container: " + entry.getValue());
+            }
+        }
+    }
+
+    private class NodesContent extends PrintedContent {
+        NodesContent() {
+            super("nodes.md");
+        }
+        private String getLabelString(Node n) {
+            String r = n.getLabelString();
+            return r.isEmpty() ? "(none)" : r;
+        }
+        @Override protected void printTo(PrintWriter out) throws IOException {
+            SupportPlugin supportPlugin = SupportPlugin.getInstance();
+            if (supportPlugin != null) {
+                out.println("Node statistics");
+                out.println("===============");
+                out.println();
+                out.println("  * Total number of nodes");
+                printHistogram(out, supportPlugin.getJenkinsNodeTotalCount());
+                out.println("  * Total number of nodes online");
+                printHistogram(out, supportPlugin.getJenkinsNodeOnlineCount());
+                out.println("  * Total number of executors");
+                printHistogram(out, supportPlugin.getJenkinsExecutorTotalCount());
+                out.println("  * Total number of executors in use");
+                printHistogram(out, supportPlugin.getJenkinsExecutorUsedCount());
+                out.println();
+            }
+            out.println("Build Nodes");
+            out.println("===========");
+            out.println();
+            out.println("  * master (Jenkins)");
+            out.println("      - Description:    _" + Jenkins.getInstance().getNodeDescription()
+                    .replaceAll("_", "&#95;") + "_");
+            out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
+            out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
+                    .replaceAll("`", "&#96;") + "`");
+            out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
+            out.println("      - Usage:          `" + Jenkins.getInstance().getMode() + "`");
+            out.print(new GetJavaInfo("      -", "          +").call());
+            out.println();
+            for (Node node : Jenkins.getInstance().getNodes()) {
+                out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
+                out.println("      - Description:    _" + node.getNodeDescription().replaceAll("_", "&#95;") + "_");
+                out.println("      - Executors:      " + node.getNumExecutors());
+                FilePath rootPath = node.getRootPath();
+                if (rootPath != null) {
+                    out.println("      - Remote FS root: `" + rootPath.getRemote().replaceAll("`", "&#96;")
+                            + "`");
+                } else if (node instanceof Slave) {
+                    out.println("      - Remote FS root: `" + Slave.class.cast(node).getRemoteFS()
+                            .replaceAll("`", "&#96;") + "`");
+                }
+                out.println("      - Labels:         " + getLabelString(node));
+                out.println("      - Usage:          `" + node.getMode() + "`");
+                if (node instanceof Slave) {
+                    Slave slave = (Slave) node;
+                    out.println("      - Launch method:  " + getDescriptorName(slave.getLauncher()));
+                    out.println("      - Availability:   " + getDescriptorName(slave.getRetentionStrategy()));
+                }
+                VirtualChannel channel = node.getChannel();
+                if (channel == null) {
+                    out.println("      - Status:         off-line");
+                } else {
+                    out.println("      - Status:         on-line");
+                    try {
+                        out.println("      - Version:        " +
+                                AsyncResultCache.get(node, slaveVersionCache, new GetSlaveVersion(),
+                                        "slave.jar version", "(timeout with no cache available)"));
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING,
+                                "Could not get slave.jar version for " + node.getNodeName(), e);
+                    }
+                    try {
+                        final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
+                                new GetJavaInfo("      -", "          +"), "Java info");
+                        if (javaInfo == null) {
+                            logger.log(Level.FINE,
+                                    "Could not get Java info for {0} and no cached value available",
+                                    node.getNodeName());
+                        } else {
+                            out.print(javaInfo);
+                        }
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not get Java info for " + node.getNodeName(), e);
+                    }
+                }
+                out.println();
+            }
+        }
+    }
+
+    private static class MasterChecksumsContent extends PrintedContent {
+        MasterChecksumsContent() {
+            super("nodes/master/checksums.md5");
+        }
+        @Override protected void printTo(PrintWriter out) throws IOException {
+            File jenkinsWar = Lifecycle.get().getHudsonWar();
+            if (jenkinsWar != null) {
+                try {
+                    out.println(Util.getDigestOf(new FileInputStream(jenkinsWar)) + "  jenkins.war");
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Could not compute MD5 of jenkins.war", e);
+                }
+            }
+            Stapler stapler = null;
+            try {
+                stapler = Stapler.getCurrent();
+            } catch (NullPointerException e) {
+                // the method is not always safe :-(
+            }
+            if (stapler != null) {
+                final ServletContext servletContext = stapler.getServletContext();
+                Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
+                for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    try {
+                        out.println(
+                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
+                                        + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
+                    }
+                }
+                for (String resourcePath : Arrays.asList(
+                        "/WEB-INF/slave.jar",
+                        "/WEB-INF/remoting.jar",
+                        "/WEB-INF/jenkins-cli.jar",
+                        "/WEB-INF/web.xml")) {
+                    try {
+                        InputStream resourceAsStream = servletContext.getResourceAsStream(resourcePath);
+                        if (resourceAsStream == null) {
+                            continue;
+                        }
+                        out.println(
+                                Util.getDigestOf(resourceAsStream) + "  war"
+                                        + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
+                    }
+                }
+                resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs");
+                for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    try {
+                        out.println(
+                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
+                                        + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
+                    }
+                }
+            }
+            for (File file : new File(Jenkins.getInstance().getRootDir(), "plugins").listFiles()) {
+                if (file.isFile()) {
+                    try {
+                        out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file
+                                .getName());
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war/" + file, e);
+                    }
+                }
+            }
+        }
+    }
+
+    private class NodeChecksumsContent extends PrintedContent {
+        private final Node node;
+        NodeChecksumsContent(Node node) {
+            super("nodes/slave/" + node.getNodeName() + "/checksums.md5");
+            this.node = node;
+        }
+        @Override protected void printTo(PrintWriter out) throws IOException {
+            try {
+                final FilePath rootPath = node.getRootPath();
+                String slaveDigest = rootPath == null ? "N/A" :
+                        AsyncResultCache.get(node, slaveDigestCache, new GetSlaveDigest(rootPath),
+                                "checksums", "N/A");
+                out.println(slaveDigest);
+            } catch (IOException e) {
+                logger.log(Level.WARNING,
+                        "Could not compute checksums on slave " + node.getNodeName(), e);
+            }
+        }
+    }
+
 }
