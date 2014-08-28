@@ -158,22 +158,10 @@ public class AboutJenkins extends Component {
                                 : "") + " '" + w.getLongName() + "'");
                     }
                 }
-                if (supportPlugin != null) {
-                    out.println();
-                    out.println("Node statistics");
-                    out.println("---------------");
-                    out.println();
-                    out.println("  * Total number of nodes");
-                    printHistogram(out, supportPlugin.getJenkinsNodeTotalCount());
-                    out.println("  * Total number of nodes online");
-                    printHistogram(out, supportPlugin.getJenkinsNodeOnlineCount());
-                    out.println("  * Total number of executors");
-                    printHistogram(out, supportPlugin.getJenkinsExecutorTotalCount());
-                    out.println("  * Total number of executors in use");
-                    printHistogram(out, supportPlugin.getJenkinsExecutorUsedCount());
-                    out.println();
-                }
-                out.println();
+            }
+        });
+        container.add(new PrintedContent("items.md") {
+            @Override protected void printTo(PrintWriter out) throws IOException {
                 out.println("Job statistics");
                 out.println("--------------");
                 out.println();
@@ -263,6 +251,21 @@ public class AboutJenkins extends Component {
             }
             @Override
             protected void printTo(PrintWriter out) throws IOException {
+                SupportPlugin supportPlugin = SupportPlugin.getInstance();
+                if (supportPlugin != null) {
+                    out.println("Node statistics");
+                    out.println("===============");
+                    out.println();
+                    out.println("  * Total number of nodes");
+                    printHistogram(out, supportPlugin.getJenkinsNodeTotalCount());
+                    out.println("  * Total number of nodes online");
+                    printHistogram(out, supportPlugin.getJenkinsNodeOnlineCount());
+                    out.println("  * Total number of executors");
+                    printHistogram(out, supportPlugin.getJenkinsExecutorTotalCount());
+                    out.println("  * Total number of executors in use");
+                    printHistogram(out, supportPlugin.getJenkinsExecutorUsedCount());
+                    out.println();
+                }
                 out.println("Build Nodes");
                 out.println("===========");
                 out.println();
