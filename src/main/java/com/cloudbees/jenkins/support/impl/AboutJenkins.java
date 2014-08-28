@@ -232,6 +232,7 @@ public class AboutJenkins extends Component {
                         default:
                             break;
                     }
+                    break;
                 case '6':
                 case '7':
                 case '8':

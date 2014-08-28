@@ -47,5 +47,6 @@ public class AboutJenkinsTest {
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00--0"), is(false));
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-60"), is(false));
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-0-"), is(false));
+        assertThat("valid", AboutJenkins.mayBeDate("2014-03-24_12-48-41"), is(true));
     }
 }
