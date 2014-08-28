@@ -22,13 +22,11 @@ import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.lifecycle.Lifecycle;
 import hudson.model.Describable;
-import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Slave;
-import hudson.model.TopLevelItem;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
@@ -53,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
@@ -587,86 +586,75 @@ public class AboutJenkins extends Component {
             super("items.md");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            out.println("Job statistics");
-            out.println("--------------");
-            out.println();
-            Map<Descriptor<TopLevelItem>, Stats> stats = new HashMap<Descriptor<TopLevelItem>, Stats>();
-            Stats total = new Stats();
-            for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
-                if (Job.class.isAssignableFrom(d.clazz)) {
-                    stats.put(d, new Stats());
-                }
-            }
+            Map<String,Integer> containerCounts = new TreeMap<String,Integer>();
+            Map<String,Stats> jobStats = new HashMap<String,Stats>();
+            Stats jobTotal = new Stats();
+            Map<String,Stats> containerStats = new HashMap<String,Stats>();
             // RunMap.createDirectoryFilter protected, so must do it by hand:
             DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-            for (Job<?, ?> j : Jenkins.getInstance().getAllItems(Job.class)) {
-                // too expensive: int builds = j.getBuilds().size();
-                int builds = 0;
-                // protected access: File buildDir = j.getBuildDir();
-                File buildDir = Jenkins.getInstance().getBuildDirFor(j);
-                File[] buildDirs = buildDir.listFiles();
-                if (buildDirs != null) {
-                    for (File d : buildDirs) {
-                        if (mayBeDate(d.getName())) {
-                            // check for real
-                            try {
-                                BUILD_FORMAT.parse(d.getName());
-                                if (d.isDirectory()) {
-                                    builds++;
+            for (Item i : Jenkins.getInstance().getAllItems()) {
+                String key = i.getClass().getName();
+                Integer cnt = containerCounts.get(key);
+                containerCounts.put(key, cnt == null ? 1 : cnt + 1);
+                if (i instanceof Job) {
+                    Job<?,?> j = (Job) i;
+                    // too expensive: int builds = j.getBuilds().size();
+                    int builds = 0;
+                    // protected access: File buildDir = j.getBuildDir();
+                    File buildDir = Jenkins.getInstance().getBuildDirFor(j);
+                    File[] buildDirs = buildDir.listFiles();
+                    if (buildDirs != null) {
+                        for (File d : buildDirs) {
+                            if (mayBeDate(d.getName())) {
+                                // check for real
+                                try {
+                                    BUILD_FORMAT.parse(d.getName());
+                                    if (d.isDirectory()) {
+                                        builds++;
+                                    }
+                                } catch (ParseException x) {
+                                    // symlink etc., ignore
                                 }
-                            } catch (ParseException x) {
-                                // symlink etc., ignore
                             }
                         }
                     }
-                }
-                total.add(builds);
-                for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                    if (entry.getKey().clazz.isInstance(j)) {
-                        entry.getValue().add(builds);
+                    jobTotal.add(builds);
+                    Stats s = jobStats.get(key);
+                    if (s == null) {
+                        jobStats.put(key, s = new Stats());
                     }
+                    s.add(builds);
+                }
+                if (i instanceof ItemGroup) {
+                    Stats s = containerStats.get(key);
+                    if (s == null) {
+                        containerStats.put(key, s = new Stats());
+                    }
+                    s.add(((ItemGroup) i).getItems().size());
                 }
             }
-            out.println("  * All jobs");
-            out.println("      - Number of jobs: " + total.n());
-            out.println("      - Number of builds per job: " + total);
-            for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                out.println("  * `" + entry.getKey().getId() + "`");
-                out.println("      - Number of jobs: " + entry.getValue().n());
-                out.println("      - Number of builds per job: " + entry.getValue());
+            out.println("Item statistics");
+            out.println("===============");
+            out.println();
+            for (Map.Entry<String,Integer> entry : containerCounts.entrySet()) {
+                String key = entry.getKey();
+                out.println("  * `" + key + "`");
+                out.println("    - Number of items: " + entry.getValue());
+                Stats s = jobStats.get(key);
+                if (s != null) {
+                    out.println("    - Number of builds per job: " + s);
+                }
+                s = containerStats.get(key);
+                if (s != null) {
+                    out.println("    - Number of items per container: " + s);
+                }
             }
             out.println();
-            out.println("Container statistics");
-            out.println("--------------------");
+            out.println("Total job statistics");
+            out.println("======================");
             out.println();
-            total = new Stats();
-            stats.clear();
-            for (Descriptor<TopLevelItem> d : Jenkins.getInstance().getDescriptorList(TopLevelItem.class)) {
-                if (ItemGroup.class.isAssignableFrom(d.clazz)) {
-                    stats.put(d, new Stats());
-                }
-            }
-            for (Item j : Jenkins.getInstance().getAllItems(Item.class)) {
-                if (j instanceof ItemGroup) {
-                    ItemGroup i = (ItemGroup) j;
-                    int items = i.getItems().size();
-                    total.add(items);
-                    for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                        if (entry.getKey().clazz.isInstance(j)) {
-                            entry.getValue().add(items);
-                        }
-                    }
-                }
-            }
-            out.println("  * All containers");
-            out.println("      - Number of containers: " + total.n());
-            out.println("      - Number of items per container: " + total);
-            for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                out.println(
-                        "  * Container type: `" + entry.getKey().getId() + "`");
-                out.println("      - Number of containers: " + entry.getValue().n());
-                out.println("      - Number of items per container: " + entry.getValue());
-            }
+            out.println("  * Number of jobs: " + jobTotal.n());
+            out.println("  * Number of builds per job: " + jobTotal);
         }
     }
 
