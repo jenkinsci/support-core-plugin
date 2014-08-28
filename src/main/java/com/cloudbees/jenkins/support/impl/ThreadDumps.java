@@ -77,31 +77,31 @@ public class ThreadDumps extends Component {
             try {
                 threadDump = getThreadDump(node);
             } catch (IOException e) {
-                logger.log(Level.WARNING, "Could not record thread dump for " + node.getDisplayName(), e);
+                logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
                 final StringWriter sw = new StringWriter();
                 PrintWriter out = new PrintWriter(sw);
                 e.printStackTrace(out);
                 out.close();
                 result.add(
-                        new StringContent("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt", sw.toString()));
+                        new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", sw.toString()));
                 continue;
             }
             if (threadDump == null) {
                 StringBuilder buf = new StringBuilder();
-                buf.append(node.getDisplayName()).append("\n");
+                buf.append(node.getNodeName()).append("\n");
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt", buf.toString()));
+                result.add(new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", buf.toString()));
             } else {
                 result.add(
-                        new Content("nodes/slave/" + node.getDisplayName() + "/thread-dump.txt") {
+                        new Content("nodes/slave/" + node.getNodeName() + "/thread-dump.txt") {
                             @Override
                             public void writeTo(OutputStream os) throws IOException {
                                 PrintWriter out =
                                         new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                                 try {
-                                    out.println(node.getDisplayName());
+                                    out.println(node.getNodeName());
                                     out.println("======");
                                     out.println();
                                     String content = null;
@@ -115,17 +115,17 @@ public class ThreadDumps extends Component {
                                         ), TimeUnit.MILLISECONDS);
                                     } catch (InterruptedException e) {
                                         logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                "Could not record thread dump for " + node.getNodeName(),
                                                 e);
                                         e.printStackTrace(out);
                                     } catch (ExecutionException e) {
                                         logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                "Could not record thread dump for " + node.getNodeName(),
                                                 e);
                                         e.printStackTrace(out);
                                     } catch (TimeoutException e) {
                                         logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getDisplayName(),
+                                                "Could not record thread dump for " + node.getNodeName(),
                                                 e);
                                         e.printStackTrace(out);
                                         threadDump.cancel(true);

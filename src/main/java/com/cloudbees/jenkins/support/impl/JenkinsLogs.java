@@ -170,7 +170,7 @@ public class JenkinsLogs extends Component {
             final File nodeCacheDir = new File(cacheDir, StringUtils.right(cacheKey, 8));
             if (node.toComputer() instanceof SlaveComputer) {
                 result.add(
-                        new PrintedContent("nodes/slave/" + node.getDisplayName() + "/jenkins.log") {
+                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
                             @Override
                             protected void printTo(PrintWriter out) throws IOException {
                                 Computer computer = node.toComputer();
@@ -207,7 +207,7 @@ public class JenkinsLogs extends Component {
                             final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
                             for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                                 result.add(new FileContent(
-                                                "nodes/slave/" + node.getDisplayName() + "/logs/" + entry.getKey(),
+                                                "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
                                                 entry.getValue())
                                 );
                             }
@@ -216,7 +216,7 @@ public class JenkinsLogs extends Component {
                     }
                 });
             }
-            result.add(new PrintedContent("nodes/slave/" + node.getDisplayName() + "/logs/all_memory_buffer.log") {
+            result.add(new PrintedContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     try {
@@ -237,7 +237,7 @@ public class JenkinsLogs extends Component {
                     getLogFile.setAccessible(true);
                     File logFile = (File) getLogFile.invoke(computer);
                     if (logFile != null && logFile.isFile()) {
-                        result.add(new FileContent("nodes/slave/" + node.getDisplayName() + "/launch.log", logFile));
+                        result.add(new FileContent("nodes/slave/" + node.getNodeName() + "/launch.log", logFile));
                         haveLogFile = true;
                     } else {
                         haveLogFile = false;
@@ -254,7 +254,7 @@ public class JenkinsLogs extends Component {
                 if (!haveLogFile) {
                     // fall back to surefire method... even if potential memory hog
                     result.add(
-                            new PrintedContent("nodes/slave/" + node.getDisplayName() + "/launch.log") {
+                            new PrintedContent("nodes/slave/" + node.getNodeName() + "/launch.log") {
                                 @Override
                                 protected void printTo(PrintWriter out) throws IOException {
                                     out.println(computer.getLog());

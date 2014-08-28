@@ -79,7 +79,7 @@ public class AsyncResultCache<T> implements Runnable {
     }
 
     private static String getNodeName(Node node) {
-        return node instanceof Jenkins ? "master" : node.getDisplayName();
+        return node instanceof Jenkins ? "master" : node.getNodeName();
     }
 
     public AsyncResultCache(Node node, WeakHashMap<Node, T> cache, Future<T> future, String name) {

@@ -73,7 +73,7 @@ public class SystemProperties extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + node.getDisplayName() + "/system.properties") {
+                    new Content("nodes/slave/" + node.getNodeName() + "/system.properties") {
                         @Override
                         public void writeTo(OutputStream os) {
                             try {
@@ -81,7 +81,7 @@ public class SystemProperties extends Component {
                                 properties.putAll(getSystemProperties(node));
                                 properties.store(os, null);
                             } catch (IOException e) {
-                                logger.log(Level.WARNING, "Could not record system properties for " + node.getDisplayName(), e);
+                                logger.log(Level.WARNING, "Could not record system properties for " + node.getNodeName(), e);
                             }
                         }
                     }

@@ -68,7 +68,7 @@ public class EnvironmentVariables extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new PrintedContent("nodes/slave/" + node.getDisplayName() + "/environment.txt") {
+                    new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
@@ -78,7 +78,7 @@ public class EnvironmentVariables extends Component {
                                 }
                             } catch (IOException e) {
                                 logger.log(Level.WARNING,
-                                        "Could not record environment of node " + node.getDisplayName(), e);
+                                        "Could not record environment of node " + node.getNodeName(), e);
                             }
                         }
                     }

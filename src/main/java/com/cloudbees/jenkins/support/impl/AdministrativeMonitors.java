@@ -75,7 +75,7 @@ import org.apache.commons.lang.StringUtils;
                     out.println("========");
                     for (AdministrativeMonitor monitor : activated.values()) {
                         out.println();
-                        out.println(monitor.getDisplayName());
+                        out.println("`" + monitor.id + "`");
                         out.println("--------------");
                         if (monitor instanceof OldDataMonitor && !suffersFromJENKINS24358()) {
                             OldDataMonitor odm = (OldDataMonitor) monitor;

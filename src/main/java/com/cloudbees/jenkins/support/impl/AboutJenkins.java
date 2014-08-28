@@ -142,8 +142,8 @@ public class AboutJenkins extends Component {
                 out.println("Important configuration");
                 out.println("---------------");
                 out.println();
-                out.println("  * Security realm: " + getDescriptorDisplayName(Jenkins.getInstance().getSecurityRealm()));
-                out.println("  * Authorization strategy: " + getDescriptorDisplayName(Jenkins.getInstance().getAuthorizationStrategy()));
+                out.println("  * Security realm: " + getDescriptorName(Jenkins.getInstance().getSecurityRealm()));
+                out.println("  * Authorization strategy: " + getDescriptorName(Jenkins.getInstance().getAuthorizationStrategy()));
                 out.println();
                 out.println("Active Plugins");
                 out.println("--------------");
@@ -218,7 +218,7 @@ public class AboutJenkins extends Component {
                 out.println("      - Number of jobs: " + total.n());
                 out.println("      - Number of builds per job: " + total);
                 for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
-                    out.println("  * Jobs that `" + entry.getKey().getDisplayName().replaceAll("`", "&#96;") + "`");
+                    out.println("  * `" + entry.getKey().getId() + "`");
                     out.println("      - Number of jobs: " + entry.getValue().n());
                     out.println("      - Number of builds per job: " + entry.getValue());
                 }
@@ -250,7 +250,7 @@ public class AboutJenkins extends Component {
                 out.println("      - Number of items per container: " + total);
                 for (Map.Entry<Descriptor<TopLevelItem>, Stats> entry : stats.entrySet()) {
                     out.println(
-                            "  * Container type: `" + entry.getKey().getDisplayName().replaceAll("`", "&#96;") + "`");
+                            "  * Container type: `" + entry.getKey().getId() + "`");
                     out.println("      - Number of containers: " + entry.getValue().n());
                     out.println("      - Number of items per container: " + entry.getValue());
                 }
@@ -267,18 +267,18 @@ public class AboutJenkins extends Component {
                 out.println("===========");
                 out.println();
                 out.println("  * master (Jenkins)");
-                out.println("      - Description:    `" + Jenkins.getInstance().getNodeDescription()
-                        .replaceAll("`", "&#96;") + "`");
+                out.println("      - Description:    _" + Jenkins.getInstance().getNodeDescription()
+                        .replaceAll("_", "&#95;") + "_");
                 out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
                 out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
                         .replaceAll("`", "&#96;") + "`");
                 out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
-                out.println("      - Usage:          " + Jenkins.getInstance().getMode().getDescription());
+                out.println("      - Usage:          `" + Jenkins.getInstance().getMode() + "`");
                 out.print(new GetJavaInfo("      -", "          +").call());
                 out.println();
                 for (Node node : Jenkins.getInstance().getNodes()) {
-                    out.println("  * " + node.getDisplayName() + " (" + getDescriptorDisplayName(node) + ")");
-                    out.println("      - Description:    `" + node.getNodeDescription().replaceAll("`", "&#96;") + "`");
+                    out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
+                    out.println("      - Description:    _" + node.getNodeDescription().replaceAll("_", "&#95;") + "_");
                     out.println("      - Executors:      " + node.getNumExecutors());
                     FilePath rootPath = node.getRootPath();
                     if (rootPath != null) {
@@ -289,11 +289,11 @@ public class AboutJenkins extends Component {
                                 .replaceAll("`", "&#96;") + "`");
                     }
                     out.println("      - Labels:         " + getLabelString(node));
-                    out.println("      - Usage:          " + node.getMode().getDescription());
+                    out.println("      - Usage:          `" + node.getMode() + "`");
                     if (node instanceof Slave) {
                         Slave slave = (Slave) node;
-                        out.println("      - Launch method:  " + getDescriptorDisplayName(slave.getLauncher()));
-                        out.println("      - Availability:   " + getDescriptorDisplayName(slave.getRetentionStrategy()));
+                        out.println("      - Launch method:  " + getDescriptorName(slave.getLauncher()));
+                        out.println("      - Availability:   " + getDescriptorName(slave.getRetentionStrategy()));
                     }
                     VirtualChannel channel = node.getChannel();
                     if (channel == null) {
@@ -306,7 +306,7 @@ public class AboutJenkins extends Component {
                                             "slave.jar version", "(timeout with no cache available)"));
                         } catch (IOException e) {
                             logger.log(Level.WARNING,
-                                    "Could not get slave.jar version for " + node.getDisplayName(), e);
+                                    "Could not get slave.jar version for " + node.getNodeName(), e);
                         }
                         try {
                             final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
@@ -314,12 +314,12 @@ public class AboutJenkins extends Component {
                             if (javaInfo == null) {
                                 logger.log(Level.FINE,
                                         "Could not get Java info for {0} and no cached value available",
-                                        node.getDisplayName());
+                                        node.getNodeName());
                             } else {
                                 out.print(javaInfo);
                             }
                         } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not get Java info for " + node.getDisplayName(), e);
+                            logger.log(Level.WARNING, "Could not get Java info for " + node.getNodeName(), e);
                         }
                     }
                     out.println();
@@ -435,7 +435,7 @@ public class AboutJenkins extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             container.add(
-                    new PrintedContent("nodes/slave/" + node.getDisplayName() + "/checksums.md5") {
+                    new PrintedContent("nodes/slave/" + node.getNodeName() + "/checksums.md5") {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
@@ -446,7 +446,7 @@ public class AboutJenkins extends Component {
                                 out.println(slaveDigest);
                             } catch (IOException e) {
                                 logger.log(Level.WARNING,
-                                        "Could not compute checksums on slave " + node.getDisplayName(), e);
+                                        "Could not compute checksums on slave " + node.getNodeName(), e);
                             }
                         }
                     }
@@ -454,21 +454,11 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static String getDescriptorDisplayName(@CheckForNull Describable<?> d) {
+    private static String getDescriptorName(@CheckForNull Describable<?> d) {
         if (d == null) {
             return "(none)";
         }
-        Descriptor<?> t;
-        try {
-            t = d.getDescriptor();
-        } catch (AssertionError x) {
-            return "(missing descriptor for " + d.getClass().getName() + ")";
-        }
-        if (t == null) {
-            // Not really legal but SecurityRealm.None does it anyway:
-            return "(none)";
-        }
-        return t.getDisplayName();
+        return "`" + d.getClass().getName() + "`";
     }
 
     /**

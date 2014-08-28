@@ -48,7 +48,7 @@ public class Metrics extends Component {
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            result.add(new RemoteMetricsContent("nodes/slave/" + node.getDisplayName() + "/metrics.json", node,
+            result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,
                     metricsCache));
         }
     }
