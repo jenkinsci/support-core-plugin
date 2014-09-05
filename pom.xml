@@ -33,7 +33,7 @@
   </parent>
 
   <artifactId>support-core</artifactId>
-  <version>2.14</version>
+  <version>2.15-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Support Core Plugin</name>
@@ -64,7 +64,7 @@
     <connection>scm:git:git://github.com/jenkinsci/support-core-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/support-core-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/support-core-plugin</url>
-    <tag>support-core-2.14</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
