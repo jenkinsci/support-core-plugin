@@ -104,8 +104,11 @@ public class SlowRequestChecker extends PeriodicWork {
                         if (lockOwnerId != -1) // If the thread is not locked, then getLockOwnerId returns -1.
                         {
                             ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId);
+                            w.println(threadInfo);
                             if (threadInfo != null) {
-                                w.println(threadInfo);
+                                for (StackTraceElement st : threadInfo.getStackTrace()) {
+                                   w.println("    " + st);
+                                }
                             }
                         }
                     }
