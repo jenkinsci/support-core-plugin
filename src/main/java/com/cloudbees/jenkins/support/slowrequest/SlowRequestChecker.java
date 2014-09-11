@@ -100,15 +100,15 @@ public class SlowRequestChecker extends PeriodicWork {
                     if (lockedThread != null ) {
                         w.println(lockedThread);
                         w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
+                        printThreadStackElements(lockedThread, w);
+
                         long lockOwnerId = lockedThread.getLockOwnerId();
                         if (lockOwnerId != -1) // If the thread is not locked, then getLockOwnerId returns -1.
                         {
                             ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId);
                             w.println(threadInfo);
                             if (threadInfo != null) {
-                                for (StackTraceElement st : threadInfo.getStackTrace()) {
-                                   w.println("    " + st);
-                                }
+                                printThreadStackElements(threadInfo, w);
                             }
                         }
                     }
@@ -116,6 +116,12 @@ public class SlowRequestChecker extends PeriodicWork {
                     IOUtils.closeQuietly(w);
                 }
             }
+        }
+    }
+
+    private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer) {
+        for (StackTraceElement element : threadinfo.getStackTrace()) {
+            writer.println("    " + element);
         }
     }
 
