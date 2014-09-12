@@ -7,6 +7,8 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -157,14 +159,19 @@ public class FileDescriptorLimit extends Component {
      * * going to /proc/self/fd. This will translate self to the correct PID of the current java
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
-    private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException {
+    private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException, InterruptedException {
         writer.println();
         writer.println("All open files");
         writer.println("==============");
         File[] files = new File("/proc/self/fd").listFiles();
         if (files != null) {
             for (File file : files) {
-                writer.println(file.getCanonicalPath());
+                try {
+                    writer.println(Util.resolveSymlink(file));
+                } catch (IOException e) {
+                    // If we fail to resolve the symlink, just print the file.
+                    writer.println(file.getCanonicalPath());
+                }
             }
         }
     }
