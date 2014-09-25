@@ -687,7 +687,7 @@ public class AboutJenkins extends Component {
             out.println("===========");
             out.println();
             out.println("  * master (Jenkins)");
-            out.println("      - Description:    _" + Jenkins.getInstance().getNodeDescription()
+            out.println("      - Description:    _" + Util.fixNull(Jenkins.getInstance().getNodeDescription())
                     .replaceAll("_", "&#95;") + "_");
             out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
             out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
@@ -698,7 +698,7 @@ public class AboutJenkins extends Component {
             out.println();
             for (Node node : Jenkins.getInstance().getNodes()) {
                 out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
-                out.println("      - Description:    _" + node.getNodeDescription().replaceAll("_", "&#95;") + "_");
+                out.println("      - Description:    _" + Util.fixNull(node.getNodeDescription()).replaceAll("_", "&#95;") + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
