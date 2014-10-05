@@ -1,0 +1,84 @@
+/*
+ * The MIT License
+ * 
+ * Copyright (c) 2014 schristou88
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package com.cloudbees.jenkins.support.timer;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
+import java.io.File;
+
+import static org.junit.Assert.*;
+
+/**
+ * @author schristou88
+ */
+public class DeadlockTest {
+  @Rule
+  public JenkinsRule j = new JenkinsRule();
+
+  public void sleep() {
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void detectDeadlock() throws Exception {
+    final Object object1 = new Object();
+    final Object object2 = new Object();
+    Thread t1 = new Thread( new Runnable() {
+      public void run() {
+        synchronized (object1) {
+          sleep();
+          synchronized (object2) { }
+        }
+      }
+    });
+
+    Thread t2 = new Thread( new Runnable() {
+      public void run() {
+        synchronized (object2) {
+          sleep();
+          synchronized (object1) { }
+        }
+      }
+    });
+
+    t1.start();
+    t2.start();
+
+    Thread.sleep(1000 * 5); // Wait 5 seconds, then execute deadlock checker.
+
+    // Force call deadlock checker
+    DeadlockTrackChecker dtc = new DeadlockTrackChecker();
+    dtc.doRun();
+
+    // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread could be
+    // invoked twice.
+    assertTrue("Failed to detect deadlock.", new File(j.getInstance().getRootDir(), "/deadlocks").listFiles().length >= 1);
+  }
+}
