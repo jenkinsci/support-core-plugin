@@ -42,15 +42,19 @@ import java.io.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 /**
  * @author schristou88
  */
 @Extension
-public class RootCAs extends Component{
+public class RootCAs extends Component {
+
+  @Override
+  public boolean isSelectedByDefault() {
+    return false;
+  }
+
   @NonNull
   @Override
   public Set<Permission> getRequiredPermissions() {
