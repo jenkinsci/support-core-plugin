@@ -81,12 +81,6 @@ public class RootCAs extends Component {
     if (c == null) {
       return;
     }
-    if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
-      return;
-    }
-    if (!node.createLauncher(TaskListener.NULL).isUnix()) {
-      return;
-    }
     String name;
     if (node instanceof Jenkins) {
       name = "master";
