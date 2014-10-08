@@ -21,7 +21,7 @@ import jenkins.model.Jenkins;
 public abstract class FileListCapComponent extends Component {
 
     /** Maximum file size to pack is 2Mb. */
-    private static final int MAX_FILE_SIZE = 2 * 1000000;
+    public static final int MAX_FILE_SIZE = 2 * 1000000;
 
     @NonNull
     @Override

@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.timer.FileListCap;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -96,6 +97,8 @@ public class SlowRequestChecker extends PeriodicWork {
                         logs.touch(req.record);
                     }
 
+                    if (req.record.length() >= FileListCapComponent.MAX_FILE_SIZE)
+                      continue;
                     ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId());
                     if (lockedThread != null ) {
                         w.println(lockedThread);
