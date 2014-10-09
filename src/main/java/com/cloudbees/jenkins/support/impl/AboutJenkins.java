@@ -548,18 +548,6 @@ public class AboutJenkins extends Component {
             }
             out.print(new GetJavaInfo("  *", "      -").call());
             out.println();
-            SupportPlugin supportPlugin = SupportPlugin.getInstance();
-            if (supportPlugin != null) {
-                SupportProvider supportProvider = supportPlugin.getSupportProvider();
-                if (supportProvider != null) {
-                    try {
-                        supportProvider.printAboutJenkins(out);
-                    } catch (Throwable e) {
-                        // ignore as the customer may have an issue specific to the support provider
-                    }
-                }
-            }
-            out.println();
             out.println("Important configuration");
             out.println("---------------");
             out.println();
@@ -577,6 +565,18 @@ public class AboutJenkins extends Component {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
                             ? " *(update available)*"
                             : "") + " '" + w.getLongName() + "'");
+                }
+            }
+            SupportPlugin supportPlugin = SupportPlugin.getInstance();
+            if (supportPlugin != null) {
+                SupportProvider supportProvider = supportPlugin.getSupportProvider();
+                if (supportProvider != null) {
+                    out.println();
+                    try {
+                        supportProvider.printAboutJenkins(out);
+                    } catch (Throwable e) {
+                        logger.log(Level.WARNING, null, e);
+                    }
                 }
             }
         }
