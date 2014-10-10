@@ -179,6 +179,9 @@ public class JenkinsLogs extends Component {
      */
     private void addSlaveLaunchLog(Container result) {
         class Slave implements Comparable<Slave> {
+            /**
+             * Launch log directory of the slave: logs/slaves/NAME
+             */
             File dir;
             long time;
 
@@ -215,13 +218,16 @@ public class JenkinsLogs extends Component {
 
         {// find all the slave launch log files and sort them newer ones first
 
-            File slaveLogs = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
-            for (File dir : slaveLogs.listFiles()) {
-                File lastLog = new File(dir, "slave.log");
-                if (lastLog.exists()) {
-                    Slave s = new Slave(dir, lastLog);
-                    if (s.isTooOld())       continue;   // we don't care
-                    all.add(s);
+            File slaveLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            File[] logs = slaveLogsDir.listFiles();
+            if (logs!=null) {
+                for (File dir : logs) {
+                    File lastLog = new File(dir, "slave.log");
+                    if (lastLog.exists()) {
+                        Slave s = new Slave(dir, lastLog);
+                        if (s.isTooOld()) continue;   // we don't care
+                        all.add(s);
+                    }
                 }
             }
 
@@ -237,9 +243,11 @@ public class JenkinsLogs extends Component {
 
         // now add them all
         for (Slave s : all) {
-            for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
-                result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
-            }
+            File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
+            if (files!=null)
+                for (File f : files) {
+                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
+                }
         }
     }
 
