@@ -20,6 +20,7 @@ import hudson.model.PeriodicWork;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
+import hudson.slaves.Cloud;
 import hudson.slaves.SlaveComputer;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
@@ -34,8 +35,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -92,6 +91,7 @@ public class JenkinsLogs extends Component {
         addMasterJulLogRecords(result);
         addOtherMasterLogs(result);
         addLogRecorders(result);
+        addSlaveLaunchLog(result);
 
         SmartLogFetcher logFetcher = new SmartLogFetcher();
         final boolean needHack = SlaveLogFetcher.isRequired();
@@ -130,7 +130,6 @@ public class JenkinsLogs extends Component {
                 );
             }
             addSlaveJulLogRecords(result, tasks, node, logFetcher);
-            addSlaveLaunchLog(result, node);
         }
 
         // execute all the expensive computations in parallel to speed up the time
@@ -166,49 +165,80 @@ public class JenkinsLogs extends Component {
     }
 
     /**
-     * Adds a slave launch log, which captures the current running connection of this slave.
+     * Adds slave launch logs, which captures the current and past running connections to the slave.
      *
      * <p>
-     * This log tends to show how the slave got connected.
+     * In the presence of {@link Cloud} plugins like EC2, we want to find past slaves, not just current ones.
+     * So we don't try to loop through {@link Node} here but just try to look at the file systems to find them
+     * all.
      *
-     * We pry into {@link Computer#getLogFile()}, and if not, assume it is available where we expect it to be.
-     *
-     * TODO: Starting 1.585 {@link Computer#getLogFile()} is public
+     * <p>
+     * Generally these cloud plugins do not clean up old logs, so if run for a long time, the log directory
+     * will be full of old files that are not very interesting. Use some heuristics to cut off logs
+     * that are old.
      */
-    private void addSlaveLaunchLog(Container result, final Node node) {
-        final Computer computer = node.toComputer();
-        if (computer != null) {
-            boolean haveLogFile;
-            try {
-                Method getLogFile = computer.getClass().getMethod("getLogFile");
-                getLogFile.setAccessible(true);
-                File logFile = (File) getLogFile.invoke(computer);
-                if (logFile != null && logFile.isFile()) {
-                    result.add(new FileContent("nodes/slave/" + node.getNodeName() + "/launch.log", logFile));
-                    haveLogFile = true;
-                } else {
-                    haveLogFile = false;
-                }
-            } catch (ClassCastException e) {
-                haveLogFile = false;
-            } catch (InvocationTargetException e) {
-                haveLogFile = false;
-            } catch (NoSuchMethodException e) {
-                haveLogFile = false;
-            } catch (IllegalAccessException e) {
-                haveLogFile = false;
+    private void addSlaveLaunchLog(Container result) {
+        class Slave implements Comparable<Slave> {
+            File dir;
+            long time;
+
+            Slave(File dir, File lastLog) {
+                this.dir = dir;
+                this.time = lastLog.lastModified();
             }
-            if (!haveLogFile) {
-                // fall back to surefire method... even if potential memory hog
-                result.add(
-                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/launch.log") {
-                            @Override
-                            protected void printTo(PrintWriter out) throws IOException {
-                                out.println(computer.getLog());
-                                out.flush();
-                            }
-                        }
-                );
+
+            /** Slave name */
+            String getName() { return dir.getName(); }
+
+            /**
+             * Use the primary log file's timestamp to compare newer slaves from older slaves.
+             *
+             * sort in descending order; newer ones first.
+             */
+            public int compareTo(Slave that) {
+                long lhs = this.time;
+                long rhs = that.time;
+                if (lhs<rhs)    return 1;
+                if (lhs>rhs)    return -1;
+                return 0;
+            }
+
+            /**
+             * If the file is more than a year old, can't imagine how that'd be of any interest.
+             */
+            public boolean isTooOld() {
+                return time < System.currentTimeMillis()-TimeUnit.DAYS.toMillis(365);
+            }
+        }
+
+        List<Slave> all = new ArrayList<Slave>();
+
+        {// find all the slave launch log files and sort them newer ones first
+
+            File slaveLogs = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            for (File dir : slaveLogs.listFiles()) {
+                File lastLog = new File(dir, "slave.log");
+                if (lastLog.exists()) {
+                    Slave s = new Slave(dir, lastLog);
+                    if (s.isTooOld())       continue;   // we don't care
+                    all.add(s);
+                }
+            }
+
+            Collections.sort(all);
+        }
+
+        {// this might be still too many, so try to cap them.
+            int acceptableSize = Math.max(256, Jenkins.getInstance().getNodes().size() * 5);
+
+            if (all.size() > acceptableSize)
+                all = all.subList(0, acceptableSize);
+        }
+
+        // now add them all
+        for (Slave s : all) {
+            for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
+                result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
             }
         }
     }
