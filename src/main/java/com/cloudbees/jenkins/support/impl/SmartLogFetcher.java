@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import hudson.FilePath;
+import hudson.FilePath.FileCallable;
 import hudson.Util;
 import hudson.model.Node;
 import hudson.remoting.Callable;
@@ -69,7 +70,7 @@ class SmartLogFetcher {
             hashes.put(file.getName(), new FileHash(file));
         }
 
-        Map<String,Long> offsets = remote.act(new LogFileHashSlurper(remote, hashes));
+        Map<String,Long> offsets = remote.act(new LogFileHashSlurper(hashes));
         hashes.keySet().removeAll(offsets.keySet());
         for (String key: hashes.keySet()) {
             final File deadCacheFile = new File(localCache, key);
@@ -189,22 +190,17 @@ class SmartLogFetcher {
         }
     }
 
-    public static final class LogFileHashSlurper implements Callable<Map<String,Long>, IOException> {
+    public static final class LogFileHashSlurper implements FileCallable<Map<String,Long>> {
+        private final Map<String,FileHash> cached;
 
-        private final FilePath path;
-        private final Map<String,FileHash> cache;
-
-        public LogFileHashSlurper(FilePath path, Map<String, FileHash> cache) {
-            this.path = path;
-            this.cache = cache;
+        public LogFileHashSlurper(Map<String, FileHash> cached) {
+            this.cached = cached;
         }
 
-        public Map<String, Long> call() throws IOException {
-            assert path.getChannel() == null;
-            File path = new File(this.path.getRemote());
+        public Map<String, Long> invoke(File path, VirtualChannel channel) throws IOException, InterruptedException {
             Map<String, Long> result = new LinkedHashMap<String, Long>();
             for (File file : path.listFiles(new LogFilenameFilter())) {
-                FileHash hash = cache.get(file.getName());
+                FileHash hash = cached.get(file.getName());
                 if (hash != null && hash.isPartialMatch(file)) {
                     if (file.length() == hash.getLength()) {
                         result.put(file.getName(), Long.MAX_VALUE); // indicate have everything
