@@ -14,7 +14,7 @@ import java.util.Set;
 import jenkins.model.Jenkins;
 
 /**
- * {@link Component} that writes out fiels inside {@link FileListCap}.
+ * {@link Component} that attaches files inside {@link FileListCap} into a support bundle.
  *
  * @author stevenchristou
  */
