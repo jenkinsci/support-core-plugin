@@ -233,7 +233,7 @@ public class JenkinsLogs extends Component {
     }
 
     /**
-     * Captures
+     * Captures a "recent" (but still fairly large number of) j.u.l entries written on this slave.
      *
      * @see #addMasterJulLogRecords(Container)
      */
