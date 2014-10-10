@@ -132,6 +132,7 @@ public class SupportPlugin extends Plugin {
             <Authentication>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
+    private static final String SUPPORT_DIRECTORY_NAME = "support";
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
 
     private transient SupportContextImpl context = null;
@@ -146,7 +147,7 @@ public class SupportPlugin extends Plugin {
     public SupportPlugin() {
         super();
         handler.setLevel(getLogLevel());
-        handler.setDirectory(new File(Jenkins.getInstance().getRootDir(), "support"), "all");
+        handler.setDirectory(getRootDirectory(), "all");
     }
 
     public SupportProvider getSupportProvider() {
@@ -164,6 +165,14 @@ public class SupportPlugin extends Plugin {
         }
         return supportProvider;
     }
+
+    /**
+     * Working directory that the support-core plugin uses to write out files.
+     */
+    public static File getRootDirectory() {
+        return new File(Jenkins.getInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
+    }
+
 
     public static Authentication getRequesterAuthentication() {
         return requesterAuthentication.get();
@@ -507,7 +516,7 @@ public class SupportPlugin extends Plugin {
                 }
             }
             LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
-            LogHolder.SLAVE_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), "support"), "all");
+            LogHolder.SLAVE_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
             ROOT_LOGGER.addHandler(LogHolder.SLAVE_LOG_HANDLER);
             return null;
         }
@@ -600,7 +609,7 @@ public class SupportPlugin extends Plugin {
                             clearRequesterAuthentication();
                             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                             try {
-                                File bundleDir = new File(Jenkins.getInstance().getRootDir(), "support");
+                                File bundleDir = getRootDirectory();
                                 if (!bundleDir.exists()) {
                                     if (!bundleDir.mkdirs()) {
                                         return;
