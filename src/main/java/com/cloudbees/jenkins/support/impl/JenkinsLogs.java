@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
@@ -263,17 +264,14 @@ public class JenkinsLogs extends Component {
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new PrintedContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
+        result.add(new LogRecordContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
             @Override
-            protected void printTo(PrintWriter out) throws IOException {
+            public Iterable<LogRecord> getLogRecords() throws IOException {
                 try {
-                    for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords(node)) {
-                        out.print(LOG_FORMATTER.format(logRecord));
-                    }
+                    return SupportPlugin.getInstance().getAllLogRecords(node);
                 } catch (InterruptedException e) {
-                    e.printStackTrace(out);
+                    throw (IOException)new InterruptedIOException().initCause(e);
                 }
-                out.flush();
             }
         });
     }
@@ -292,13 +290,10 @@ public class JenkinsLogs extends Component {
             } else {
                 // Was not stored for some reason; fine, just load the memory buffer.
                 final LogRecorder recorder = entry.getValue();
-                result.add(new PrintedContent(entryName) {
+                result.add(new LogRecordContent(entryName) {
                     @Override
-                    protected void printTo(PrintWriter out) throws IOException {
-                        for (LogRecord logRecord : recorder.getLogRecords()) {
-                            out.print(LOG_FORMATTER.format(logRecord));
-                        }
-                        out.flush();
+                    public Iterable<LogRecord> getLogRecords() {
+                        return recorder.getLogRecords();
                     }
                 });
             }
@@ -326,16 +321,10 @@ public class JenkinsLogs extends Component {
      * @see WebAppMain#installLogger()
      */
     private void addMasterJulRingBuffer(Container result) {
-        result.add(new PrintedContent("nodes/master/logs/jenkins.log") {
+        result.add(new LogRecordContent("nodes/master/logs/jenkins.log") {
             @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                List<LogRecord> records = new ArrayList<LogRecord>(Jenkins.logRecords);
-                for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
-                     iterator.hasPrevious(); ) {
-                    LogRecord logRecord = iterator.previous();
-                    out.print(LOG_FORMATTER.format(logRecord));
-                }
-                out.flush();
+            public Iterable<LogRecord> getLogRecords() {
+                return Lists.reverse(new ArrayList<LogRecord>(Jenkins.logRecords));
             }
         });
     }
@@ -353,13 +342,10 @@ public class JenkinsLogs extends Component {
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new PrintedContent("nodes/master/logs/all_memory_buffer.log") {
+        result.add(new LogRecordContent("nodes/master/logs/all_memory_buffer.log") {
             @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords()) {
-                    out.print(LOG_FORMATTER.format(logRecord));
-                }
-                out.flush();
+            public Iterable<LogRecord> getLogRecords() {
+                return SupportPlugin.getInstance().getAllLogRecords();
             }
         });
 
