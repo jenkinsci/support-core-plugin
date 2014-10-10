@@ -206,6 +206,23 @@ public class JenkinsLogs extends Component {
                 return 0;
             }
 
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+
+                Slave slave = (Slave) o;
+
+                if (time != slave.time) return false;
+
+                return true;
+            }
+
+            @Override
+            public int hashCode() {
+                return (int) (time ^ (time >>> 32));
+            }
+
             /**
              * If the file is more than a year old, can't imagine how that'd be of any interest.
              */
