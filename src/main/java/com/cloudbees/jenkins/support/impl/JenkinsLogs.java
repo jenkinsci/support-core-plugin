@@ -12,45 +12,34 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.Util;
 import hudson.WebAppMain;
 import hudson.logging.LogRecorder;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.PeriodicWork;
 import hudson.remoting.Callable;
-import hudson.remoting.Pipe;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
-import hudson.util.IOUtils;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.io.ReopenableFileOutputStream;
 import hudson.util.io.ReopenableRotatingFileOutputStream;
+import jenkins.model.Jenkins;
+
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.RandomAccessFile;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -67,14 +56,8 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-import jenkins.model.Jenkins;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
-
-import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
+import static com.cloudbees.jenkins.support.SupportPlugin.*;
 
 /**
  * Log files from the different nodes
@@ -110,15 +93,13 @@ public class JenkinsLogs extends Component {
         addOtherMasterLogs(result);
         addLogRecorders(result);
 
-        File cacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
+        SmartLogFetcher logFetcher = new SmartLogFetcher();
         final boolean needHack = SlaveLogFetcher.isRequired();
 
         // expensive remote computation are pooled together and executed later concurrently across all the slaves
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
 
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
-            final File nodeCacheDir = new File(cacheDir, StringUtils.right(cacheKey, 8));
             if (node.toComputer() instanceof SlaveComputer) {
                 result.add(
                         new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
@@ -148,7 +129,7 @@ public class JenkinsLogs extends Component {
                         }
                 );
             }
-            addSlaveJulLogRecords(result, tasks, node, nodeCacheDir);
+            addSlaveJulLogRecords(result, tasks, node, logFetcher);
             addSlaveLaunchLog(result, node);
         }
 
@@ -237,7 +218,7 @@ public class JenkinsLogs extends Component {
      *
      * @see #addMasterJulLogRecords(Container)
      */
-    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final File nodeCacheDir) {
+    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
@@ -246,7 +227,7 @@ public class JenkinsLogs extends Component {
                     List<FileContent> result = new ArrayList<FileContent>();
                     FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
                     if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
+                        final Map<String, File> logFiles = logFetcher.getLogFiles(node, supportPath);
                         for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                             result.add(new FileContent(
                                             "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
@@ -493,236 +474,6 @@ public class JenkinsLogs extends Component {
             }
         }
 
-    }
-
-    public static InputStream read(FilePath path, final long offset) throws IOException {
-        final VirtualChannel channel = path.getChannel();
-        final String remote = path.getRemote();
-        if(channel ==null) {
-            final RandomAccessFile raf = new RandomAccessFile(new File(remote), "r");
-            try {
-                raf.seek(offset);
-            } catch (IOException e) {
-                try {
-                    raf.close();
-                } catch (IOException e1) {
-                    // ignore
-                }
-                throw e;
-            }
-            return new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    return raf.read();
-                }
-
-                @Override
-                public void close() throws IOException {
-                    raf.close();
-                    super.close();
-                }
-
-                @Override
-                public int read(byte[] b, int off, int len) throws IOException {
-                    return raf.read(b, off, len);
-                }
-
-                @Override
-                public int read(byte[] b) throws IOException {
-                    return raf.read(b);
-                }
-            };
-        }
-
-        final Pipe p = Pipe.createRemoteToLocal();
-        channel.callAsync(new Callable<Void, IOException>() {
-            private static final long serialVersionUID = 1L;
-
-            public Void call() throws IOException {
-                final OutputStream out = new GZIPOutputStream(p.getOut(), 8192);
-                RandomAccessFile raf = null;
-                try {
-                    raf = new RandomAccessFile(new File(remote), "r");
-                    raf.seek(offset);
-                    byte[] buf = new byte[8192];
-                    int len;
-                    while ((len = raf.read(buf)) >= 0) {
-                        out.write(buf, 0, len);
-                    }
-                    return null;
-                } finally {
-                    IOUtils.closeQuietly(out);
-                    if (raf != null) {
-                        try {
-                            raf.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    }
-                }
-            }
-        });
-
-        return new GZIPInputStream(p.getIn());
-    }
-
-    public static Map<String,File> getLogFiles(FilePath remote, File localCache)
-            throws InterruptedException, IOException {
-        if (!localCache.isDirectory() && !localCache.mkdirs()) {
-            throw new IOException("Could not create local cache directory: " + localCache);
-        }
-        final Map<String, FileHash> hashes = new LinkedHashMap<String, FileHash>();
-        for (File file : localCache.listFiles(new LogFilenameFilter())) {
-            hashes.put(file.getName(), new FileHash(file));
-        }
-
-        Map<String,Long> offsets = remote.act(new LogFileHashSlurper(remote, hashes));
-        hashes.keySet().removeAll(offsets.keySet());
-        for (String key: hashes.keySet()) {
-            final File deadCacheFile = new File(localCache, key);
-            if (!deadCacheFile.delete()) {
-                LOGGER.log(Level.WARNING, "Unable to delete redundant cache file: {0}", deadCacheFile);
-            }
-        }
-        Map<String,File> result = new LinkedHashMap<String, File>();
-        for (Map.Entry<String, Long> entry:offsets.entrySet()) {
-            File local = new File(localCache, entry.getKey());
-            if (entry.getValue() > 0 && local.isFile()) {
-                final long localLength = local.length();
-                if (entry.getValue() < Long.MAX_VALUE) {
-                    // only copy the new content
-                    FileOutputStream fos = null;
-                    InputStream is = null;
-                    try {
-                        fos = new FileOutputStream(local, true);
-                        is = read(remote.child(entry.getKey()), localLength);
-                        IOUtils.copy(is, fos);
-                    } finally {
-                        IOUtils.closeQuietly(is);
-                        IOUtils.closeQuietly(fos);
-                    }
-                }
-                result.put(entry.getKey(), local);
-            } else {
-                FileOutputStream fos = null;
-                InputStream is = null;
-                try {
-                    fos = new FileOutputStream(local, false);
-                    is = read(remote.child(entry.getKey()), 0);
-                    IOUtils.copy(is, fos);
-                } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(fos);
-                }
-                result.put(entry.getKey(), local);
-            }
-        }
-        return result;
-    }
-
-    public static final class LogFileHashSlurper implements Callable<Map<String,Long>, IOException> {
-
-        private final FilePath path;
-        private final Map<String,FileHash> cache;
-
-        public LogFileHashSlurper(FilePath path, Map<String, FileHash> cache) {
-            this.path = path;
-            this.cache = cache;
-        }
-
-        public Map<String, Long> call() throws IOException {
-            assert path.getChannel() == null;
-            File path = new File(this.path.getRemote());
-            Map<String, Long> result = new LinkedHashMap<String, Long>();
-            for (File file : path.listFiles(new LogFilenameFilter())) {
-                FileHash hash = cache.get(file.getName());
-                if (hash != null && hash.isPartialMatch(file)) {
-                    if (file.length() == hash.getLength()) {
-                        result.put(file.getName(), Long.MAX_VALUE); // indicate have everything
-                    } else {
-                        result.put(file.getName(), hash.getLength());
-                    }
-                } else {
-                    // read the whole thing
-                    result.put(file.getName(), 0L);
-                }
-            }
-            return result;
-        }
-
-    }
-
-    private static class LogFilenameFilter implements FilenameFilter {
-        public boolean accept(File dir, String name) {
-            return name.endsWith(".log");
-        }
-    }
-
-    public static final class FileHash implements Serializable {
-        private static final long serialVersionUID = 1L;
-        private static final String ZERO_LENGTH_MD5 = "d41d8cd98f00b204e9800998ecf8427e";
-        private final long length;
-        private final String md5;
-
-        public FileHash(long length, String md5) {
-            this.length = length;
-            this.md5 = md5;
-        }
-
-        public FileHash(File file) throws IOException {
-            this.length = file.length();
-            this.md5 = getDigestOf(new FileInputStream(file), length);
-        }
-
-        public FileHash(FilePath file) throws IOException, InterruptedException {
-            this.length = file.length();
-            this.md5 = getDigestOf(file.read(), length);
-        }
-
-        public long getLength() {
-            return length;
-        }
-
-        public String getMd5() {
-            return md5;
-        }
-
-        public boolean isPartialMatch(File file) throws IOException {
-            if (file.length() < length) return false;
-            return md5.equals(getDigestOf(new FileInputStream(file), length));
-        }
-
-        public static String getDigestOf(InputStream stream, long length) throws IOException {
-            try {
-                if (length == 0 || stream == null) return ZERO_LENGTH_MD5;
-                int bufferSize;
-                if (length < 8192L) bufferSize = (int) length;
-                else if (length > 65536L) bufferSize = 65536;
-                else bufferSize = 8192;
-                byte[] buffer = new byte[bufferSize];
-                MessageDigest digest = null;
-                try {
-                    digest = MessageDigest.getInstance("md5");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IllegalStateException("Java Language Specification mandates MD5 as a supported digest",
-                            e);
-                }
-                int read;
-                while (length > 0 && (read = stream.read(buffer, 0, (int) Math.min(bufferSize, length))) != -1) {
-                    digest.update(buffer, 0, read);
-                    length -= read;
-                }
-                return Hex.encodeHexString(digest.digest());
-            } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                }
-            }
-        }
     }
 
     /**
