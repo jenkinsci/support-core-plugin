@@ -5,7 +5,6 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
-import com.cloudbees.jenkins.support.api.FilePathContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -29,8 +28,8 @@ import hudson.util.RingBufferLogHandler;
 import hudson.util.io.ReopenableFileOutputStream;
 import hudson.util.io.ReopenableRotatingFileOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -70,7 +69,6 @@ import java.util.zip.GZIPOutputStream;
 
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -124,16 +122,7 @@ public class JenkinsLogs extends Component {
                 out.flush();
             }
         });
-        for (File f : Jenkins.getInstance().getRootDir().listFiles(new FilenameFilter() {
-            final Pattern pattern = Pattern.compile("^.*\\.log(\\.\\d+)?$");
-
-            public boolean accept(File dir, String name) {
-                return pattern.matcher(name).matches();
-            }
-        })) {
-            if (f.length() == 0) {
-                continue;
-            }
+        for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
             result.add(new FileContent("other-logs/" + f.getName(), f));
         }
         final File supportDir = new File(Jenkins.getInstance().getRootDir(), "support");
@@ -667,4 +656,14 @@ public class JenkinsLogs extends Component {
         }
     }
 
+    /**
+     * Matches log files and their rotated names, such as "foo.log" or "foo.log.1"
+     */
+    private static final FileFilter ROTATED_LOGFILE_FILTER = new FileFilter() {
+        final Pattern pattern = Pattern.compile("^.*\\.log(\\.\\d+)?$");
+
+        public boolean accept(File f) {
+            return pattern.matcher(f.getName()).matches() && f.length()>0;
+        }
+    };
 }
