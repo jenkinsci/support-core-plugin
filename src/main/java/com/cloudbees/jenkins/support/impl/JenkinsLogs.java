@@ -12,6 +12,7 @@ import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Util;
+import hudson.WebAppMain;
 import hudson.logging.LogRecorder;
 import hudson.model.Computer;
 import hudson.model.Node;
@@ -100,57 +101,12 @@ public class JenkinsLogs extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        final Formatter formatter = new SupportLogFormatter();
-        result.add(new PrintedContent("nodes/master/logs/jenkins.log") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                List<LogRecord> records = new ArrayList<LogRecord>(Jenkins.logRecords);
-                for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
-                     iterator.hasPrevious(); ) {
-                    LogRecord logRecord = iterator.previous();
-                    out.print(formatter.format(logRecord));
-                }
-                out.flush();
-            }
-        });
-        result.add(new PrintedContent("nodes/master/logs/all_memory_buffer.log") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords()) {
-                    out.print(formatter.format(logRecord));
-                }
-                out.flush();
-            }
-        });
-        for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
-            result.add(new FileContent("other-logs/" + f.getName(), f));
-        }
-        final File supportDir = new File(Jenkins.getInstance().getRootDir(), "support");
-        for (File file : supportDir.listFiles(new LogFilenameFilter())){
-            result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
-        }
-        for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
-            String name = entry.getKey();
-            String entryName = "nodes/master/logs/custom/" + name + ".log";
-            File storedFile = new File(customLogs, name + ".log");
-            if (storedFile.isFile()) {
-                result.add(new FileContent(entryName, storedFile));
-            } else {
-                // Was not stored for some reason; fine, just load the memory buffer.
-                final LogRecorder recorder = entry.getValue();
-                result.add(new PrintedContent(entryName) {
-                    @Override
-                    protected void printTo(PrintWriter out) throws IOException {
-                        for (LogRecord logRecord : recorder.getLogRecords()) {
-                            out.print(formatter.format(logRecord));
-                        }
-                        out.flush();
-                    }
-                });
-            }
-        }
+        addMasterJulRingBuffer(result);
+        addMasterJulLogRecords(result);
+        addOtherMasterLogs(result);
+        addLogRecorders(result);
 
-        File cacheDir = new File(supportDir, "cache");
+        File cacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
         final boolean needHack = SlaveLogFetcher.isRequired();
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = new ArrayList<java.util.concurrent
                 .Callable<List<FileContent>>>();
@@ -173,7 +129,7 @@ public class JenkinsLogs extends Component {
                                         for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
                                              iterator.hasPrevious(); ) {
                                             LogRecord logRecord = iterator.previous();
-                                            out.print(formatter.format(logRecord));
+                                            out.print(LOG_FORMATTER.format(logRecord));
                                         }
                                     } catch (Throwable e) {
                                         out.println();
@@ -210,7 +166,7 @@ public class JenkinsLogs extends Component {
                 protected void printTo(PrintWriter out) throws IOException {
                     try {
                         for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords(node)) {
-                            out.print(formatter.format(logRecord));
+                            out.print(LOG_FORMATTER.format(logRecord));
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace(out);
@@ -283,6 +239,97 @@ public class JenkinsLogs extends Component {
             } finally {
                 service.shutdown();
             }
+        }
+    }
+
+    /**
+     * Dumps the content of {@link LogRecorder}, which is the groups of loggers configured
+     * by the user. The contents are also ring buffer and only remembers recent 256 or so entries.
+     */
+    private void addLogRecorders(Container result) {
+        for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
+            String name = entry.getKey();
+            String entryName = "nodes/master/logs/custom/" + name + ".log";
+            File storedFile = new File(customLogs, name + ".log");
+            if (storedFile.isFile()) {
+                result.add(new FileContent(entryName, storedFile));
+            } else {
+                // Was not stored for some reason; fine, just load the memory buffer.
+                final LogRecorder recorder = entry.getValue();
+                result.add(new PrintedContent(entryName) {
+                    @Override
+                    protected void printTo(PrintWriter out) throws IOException {
+                        for (LogRecord logRecord : recorder.getLogRecords()) {
+                            out.print(LOG_FORMATTER.format(logRecord));
+                        }
+                        out.flush();
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Grabs any files that look like log files directly under {@code $JENKINS_HOME}, just in case
+     * any of them are useful.
+     *
+     * Some plugins write log files here.
+     */
+    private void addOtherMasterLogs(Container result) {
+        for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
+            result.add(new FileContent("other-logs/" + f.getName(), f));
+        }
+    }
+
+    /**
+     * Adds {@link Jenkins#logRecords} (from core) into the support bundle.
+     *
+     * <p>
+     * This is a small ring buffer that contains most recent log entries emitted from j.u.l logging.
+     *
+     * @see WebAppMain#installLogger()
+     */
+    private void addMasterJulRingBuffer(Container result) {
+        result.add(new PrintedContent("nodes/master/logs/jenkins.log") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
+                List<LogRecord> records = new ArrayList<LogRecord>(Jenkins.logRecords);
+                for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
+                     iterator.hasPrevious(); ) {
+                    LogRecord logRecord = iterator.previous();
+                    out.print(LOG_FORMATTER.format(logRecord));
+                }
+                out.flush();
+            }
+        });
+    }
+
+    /**
+     * Adds j.u.l logging output that the support-core plugin captures.
+     *
+     * <p>
+     * Compared to {@link #addMasterJulRingBuffer(Container)}, this one uses disk files,
+     * so it remembers larger number of entries.
+     */
+    private void addMasterJulLogRecords(Container result) {
+        // this file captures the most recent of those that are still kept around in memory.
+        // this overlaps with Jenkins.logRecords, and also overlaps with what's written in files,
+        // but added nonetheless just in case.
+        //
+        // should be ignorable.
+        result.add(new PrintedContent("nodes/master/logs/all_memory_buffer.log") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
+                for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords()) {
+                    out.print(LOG_FORMATTER.format(logRecord));
+                }
+                out.flush();
+            }
+        });
+
+        // log records written to the disk
+        for (File file : SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter())){
+            result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
         }
     }
 
@@ -666,4 +713,6 @@ public class JenkinsLogs extends Component {
             return pattern.matcher(f.getName()).matches() && f.length()>0;
         }
     };
+
+    private static final Formatter LOG_FORMATTER = new SupportLogFormatter();
 }
