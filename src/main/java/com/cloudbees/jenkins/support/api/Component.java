@@ -37,6 +37,10 @@ import java.util.Set;
 /**
  * Represents a component of a support bundle.
  *
+ * <p>
+ * This is the unit of user consent; when creating a support bundle, the user would enable/disable
+ * individual components.
+ *
  * @author Stephen Connolly
  */
 public abstract class Component extends ExtensionPoint {
