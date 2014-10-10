@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
+import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
@@ -72,6 +73,8 @@ import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
+import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
+
 /**
  * Log files from the different nodes
  */
@@ -108,8 +111,10 @@ public class JenkinsLogs extends Component {
 
         File cacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
         final boolean needHack = SlaveLogFetcher.isRequired();
-        List<java.util.concurrent.Callable<List<FileContent>>> tasks = new ArrayList<java.util.concurrent
-                .Callable<List<FileContent>>>();
+
+        // expensive remote computation are pooled together and executed later concurrently across all the slaves
+        List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
+
         for (final Node node : Jenkins.getInstance().getNodes()) {
             String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
             final File nodeCacheDir = new File(cacheDir, StringUtils.right(cacheKey, 8));
@@ -142,75 +147,11 @@ public class JenkinsLogs extends Component {
                         }
                 );
             }
-            final FilePath rootPath = node.getRootPath();
-            if (rootPath != null) {
-                tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
-                    public List<FileContent> call() throws Exception {
-                        List<FileContent> result = new ArrayList<FileContent>();
-                        FilePath supportPath = rootPath.child("support");
-                        if (supportPath.isDirectory()) {
-                            final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
-                            for (Map.Entry<String, File> entry : logFiles.entrySet()) {
-                                result.add(new FileContent(
-                                                "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
-                                                entry.getValue())
-                                );
-                            }
-                        }
-                        return result;
-                    }
-                });
-            }
-            result.add(new PrintedContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
-                @Override
-                protected void printTo(PrintWriter out) throws IOException {
-                    try {
-                        for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords(node)) {
-                            out.print(LOG_FORMATTER.format(logRecord));
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace(out);
-                    }
-                    out.flush();
-                }
-            });
-            final Computer computer = node.toComputer();
-            if (computer != null) {
-                boolean haveLogFile;
-                try {
-                    Method getLogFile = computer.getClass().getMethod("getLogFile");
-                    getLogFile.setAccessible(true);
-                    File logFile = (File) getLogFile.invoke(computer);
-                    if (logFile != null && logFile.isFile()) {
-                        result.add(new FileContent("nodes/slave/" + node.getNodeName() + "/launch.log", logFile));
-                        haveLogFile = true;
-                    } else {
-                        haveLogFile = false;
-                    }
-                } catch (ClassCastException e) {
-                    haveLogFile = false;
-                } catch (InvocationTargetException e) {
-                    haveLogFile = false;
-                } catch (NoSuchMethodException e) {
-                    haveLogFile = false;
-                } catch (IllegalAccessException e) {
-                    haveLogFile = false;
-                }
-                if (!haveLogFile) {
-                    // fall back to surefire method... even if potential memory hog
-                    result.add(
-                            new PrintedContent("nodes/slave/" + node.getNodeName() + "/launch.log") {
-                                @Override
-                                protected void printTo(PrintWriter out) throws IOException {
-                                    out.println(computer.getLog());
-                                    out.flush();
-                                }
-                            }
-                    );
-
-                }
-            }
+            addSlaveJulLogRecords(result, tasks, node, nodeCacheDir);
+            addSlaveLaunchLog(result, node);
         }
+
+        // execute all the expensive computations in parallel to speed up the time
         if (!tasks.isEmpty()) {
             ExecutorService service = Executors.newFixedThreadPool(
                     Math.max(1, Math.min(Runtime.getRuntime().availableProcessors() * 2, tasks.size())),
@@ -240,6 +181,101 @@ public class JenkinsLogs extends Component {
                 service.shutdown();
             }
         }
+    }
+
+    /**
+     * Adds a slave launch log, which captures the current running connection of this slave.
+     *
+     * <p>
+     * This log tends to show how the slave got connected.
+     *
+     * We pry into {@link Computer#getLogFile()}, and if not, assume it is available where we expect it to be.
+     *
+     * TODO: Starting 1.585 {@link Computer#getLogFile()} is public
+     */
+    private void addSlaveLaunchLog(Container result, final Node node) {
+        final Computer computer = node.toComputer();
+        if (computer != null) {
+            boolean haveLogFile;
+            try {
+                Method getLogFile = computer.getClass().getMethod("getLogFile");
+                getLogFile.setAccessible(true);
+                File logFile = (File) getLogFile.invoke(computer);
+                if (logFile != null && logFile.isFile()) {
+                    result.add(new FileContent("nodes/slave/" + node.getNodeName() + "/launch.log", logFile));
+                    haveLogFile = true;
+                } else {
+                    haveLogFile = false;
+                }
+            } catch (ClassCastException e) {
+                haveLogFile = false;
+            } catch (InvocationTargetException e) {
+                haveLogFile = false;
+            } catch (NoSuchMethodException e) {
+                haveLogFile = false;
+            } catch (IllegalAccessException e) {
+                haveLogFile = false;
+            }
+            if (!haveLogFile) {
+                // fall back to surefire method... even if potential memory hog
+                result.add(
+                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/launch.log") {
+                            @Override
+                            protected void printTo(PrintWriter out) throws IOException {
+                                out.println(computer.getLog());
+                                out.flush();
+                            }
+                        }
+                );
+            }
+        }
+    }
+
+    /**
+     * Captures
+     *
+     * @see #addMasterJulLogRecords(Container)
+     */
+    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final File nodeCacheDir) {
+        final FilePath rootPath = node.getRootPath();
+        if (rootPath != null) {
+            // rotated log files stored on the disk
+            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
+                public List<FileContent> call() throws Exception {
+                    List<FileContent> result = new ArrayList<FileContent>();
+                    FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
+                    if (supportPath.isDirectory()) {
+                        final Map<String, File> logFiles = getLogFiles(supportPath, nodeCacheDir);
+                        for (Map.Entry<String, File> entry : logFiles.entrySet()) {
+                            result.add(new FileContent(
+                                            "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
+                                            entry.getValue())
+                            );
+                        }
+                    }
+                    return result;
+                }
+            });
+        }
+
+        // this file captures the most recent of those that are still kept around in memory.
+        // this overlaps with Jenkins.logRecords, and also overlaps with what's written in files,
+        // but added nonetheless just in case.
+        //
+        // should be ignorable.
+        result.add(new PrintedContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
+                try {
+                    for (LogRecord logRecord : SupportPlugin.getInstance().getAllLogRecords(node)) {
+                        out.print(LOG_FORMATTER.format(logRecord));
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace(out);
+                }
+                out.flush();
+            }
+        });
     }
 
     /**

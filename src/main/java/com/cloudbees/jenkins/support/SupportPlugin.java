@@ -132,7 +132,7 @@ public class SupportPlugin extends Plugin {
             <Authentication>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
-    private static final String SUPPORT_DIRECTORY_NAME = "support";
+    public static final String SUPPORT_DIRECTORY_NAME = "support";
     private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
 
     private transient SupportContextImpl context = null;
