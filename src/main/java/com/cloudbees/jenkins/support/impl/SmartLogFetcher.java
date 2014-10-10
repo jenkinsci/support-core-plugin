@@ -42,76 +42,102 @@ import java.util.zip.GZIPOutputStream;
  * @author Stephen Connolly
  */
 class SmartLogFetcher {
-    private final File cacheDir;
+    private final File rootCacheDir;
 
     public SmartLogFetcher() {
-        cacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
+        rootCacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
     }
 
-    /**
-     * Directory on this machine we use to cache log files available on the given node.
-     */
-    File getCacheDir(Node node) {
-        String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
-        return new File(cacheDir, StringUtils.right(cacheKey, 8));
+    public ForNode forNode(Node n) throws IOException {
+        return new ForNode(n);
     }
 
-    public Map<String,File> getLogFiles(Node node, FilePath remote)
-            throws InterruptedException, IOException {
-        File localCache = getCacheDir(node);
+    class ForNode {
+        private final Node node;
 
-        if (!localCache.isDirectory() && !localCache.mkdirs()) {
-            throw new IOException("Could not create local cache directory: " + localCache);
-        }
+        /**
+         * Directory on this machine we use to cache log files available on the given node.
+         */
+        private final File cacheDir;
 
-        // build an inventory of what we already have locally
-        final Map<String, FileHash> hashes = new LinkedHashMap<String, FileHash>();
-        for (File file : localCache.listFiles(new LogFilenameFilter())) {
-            hashes.put(file.getName(), new FileHash(file));
-        }
+        ForNode(Node node) throws IOException {
+            this.node = node;
 
-        Map<String,Long> offsets = remote.act(new LogFileHashSlurper(hashes));
-        hashes.keySet().removeAll(offsets.keySet());
-        for (String key: hashes.keySet()) {
-            final File deadCacheFile = new File(localCache, key);
-            if (!deadCacheFile.delete()) {
-                LOGGER.log(Level.WARNING, "Unable to delete redundant cache file: {0}", deadCacheFile);
+            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
+            this.cacheDir = new File(rootCacheDir, StringUtils.right(cacheKey, 8));
+
+            if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {
+                throw new IOException("Could not create local cache directory: " + cacheDir);
             }
         }
-        Map<String,File> result = new LinkedHashMap<String, File>();
-        for (Map.Entry<String, Long> entry : offsets.entrySet()) {
-            File local = new File(localCache, entry.getKey());
-            if (entry.getValue() > 0 && local.isFile()) {
-                final long localLength = local.length();
-                if (entry.getValue() < Long.MAX_VALUE) {
-                    // only copy the new content
+
+        /**
+         * Retrieves all the log files in the given remote directory into local directory,
+         * then return them as a map keyed by relative file names from {@code remoteDir}.
+         */
+        public Map<String,File> getLogFiles(FilePath remoteDir)
+                throws InterruptedException, IOException {
+            File localCache = cacheDir;
+
+            // build an inventory of what we already have locally
+            final Map<String, FileHash> hashes = new LinkedHashMap<String, FileHash>();
+            for (File file : localCache.listFiles(new LogFilenameFilter())) {
+                hashes.put(file.getName(), new FileHash(file));
+            }
+
+            // figure out what we need to read
+            Map<String,Long> offsets = remoteDir.act(new LogFileHashSlurper(hashes));
+
+            evictDeadCache(hashes, offsets);
+
+            // then read those
+            Map<String,File> result = new LinkedHashMap<String, File>();
+            for (Map.Entry<String, Long> entry : offsets.entrySet()) {
+                File local = new File(localCache, entry.getKey());
+                if (entry.getValue() > 0 && local.isFile()) {
+                    final long localLength = local.length();
+                    if (entry.getValue() < Long.MAX_VALUE) {
+                        // only copy the new content
+                        FileOutputStream fos = null;
+                        InputStream is = null;
+                        try {
+                            fos = new FileOutputStream(local, true);
+                            is = read(remoteDir.child(entry.getKey()), localLength);
+                            IOUtils.copy(is, fos);
+                        } finally {
+                            IOUtils.closeQuietly(is);
+                            IOUtils.closeQuietly(fos);
+                        }
+                    }
+                    result.put(entry.getKey(), local);
+                } else {
                     FileOutputStream fos = null;
                     InputStream is = null;
                     try {
-                        fos = new FileOutputStream(local, true);
-                        is = read(remote.child(entry.getKey()), localLength);
+                        fos = new FileOutputStream(local, false);
+                        is = read(remoteDir.child(entry.getKey()), 0);
                         IOUtils.copy(is, fos);
                     } finally {
                         IOUtils.closeQuietly(is);
                         IOUtils.closeQuietly(fos);
                     }
+                    result.put(entry.getKey(), local);
                 }
-                result.put(entry.getKey(), local);
-            } else {
-                FileOutputStream fos = null;
-                InputStream is = null;
-                try {
-                    fos = new FileOutputStream(local, false);
-                    is = read(remote.child(entry.getKey()), 0);
-                    IOUtils.copy(is, fos);
-                } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(fos);
+            }
+            return result;
+        }
+
+        private void evictDeadCache(Map<String, FileHash> hashes, Map<String, Long> offsets) {
+            for (String key: hashes.keySet()) {
+                if (offsets.containsKey(key))
+                    continue;   // still exists on the slave
+
+                final File deadCacheFile = new File(cacheDir, key);
+                if (!deadCacheFile.delete()) {
+                    LOGGER.log(Level.WARNING, "Unable to delete redundant cache file: {0}", deadCacheFile);
                 }
-                result.put(entry.getKey(), local);
             }
         }
-        return result;
     }
 
     /**
@@ -190,16 +216,25 @@ class SmartLogFetcher {
         }
     }
 
+    /**
+     * Takes what we already cached on the master, then figure out what needs to be transferred back.
+     *
+     * <p>
+     * Returns the information as a tuple of (relative file name from the directory, offset that needs to be read)
+     */
     public static final class LogFileHashSlurper implements FileCallable<Map<String,Long>> {
+        /**
+         * What we already cached on the master side.
+         */
         private final Map<String,FileHash> cached;
 
         public LogFileHashSlurper(Map<String, FileHash> cached) {
             this.cached = cached;
         }
 
-        public Map<String, Long> invoke(File path, VirtualChannel channel) throws IOException, InterruptedException {
+        public Map<String, Long> invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
             Map<String, Long> result = new LinkedHashMap<String, Long>();
-            for (File file : path.listFiles(new LogFilenameFilter())) {
+            for (File file : dir.listFiles(new LogFilenameFilter())) {
                 FileHash hash = cached.get(file.getName());
                 if (hash != null && hash.isPartialMatch(file)) {
                     if (file.length() == hash.getLength()) {
@@ -221,7 +256,7 @@ class SmartLogFetcher {
      * Reads a file not from the beginning but from the given offset.
      */
     // TODO: switch to FilePath.readFromOffset() post 1.585
-    public static InputStream read(FilePath path, final long offset) throws IOException {
+    private static InputStream read(FilePath path, final long offset) throws IOException {
         final VirtualChannel channel = path.getChannel();
         final String remote = path.getRemote();
         if(channel ==null) {

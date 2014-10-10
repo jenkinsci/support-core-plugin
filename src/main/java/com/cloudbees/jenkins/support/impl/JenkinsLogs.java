@@ -227,7 +227,7 @@ public class JenkinsLogs extends Component {
                     List<FileContent> result = new ArrayList<FileContent>();
                     FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
                     if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = logFetcher.getLogFiles(node, supportPath);
+                        final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
                         for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                             result.add(new FileContent(
                                             "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
