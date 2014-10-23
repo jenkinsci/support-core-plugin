@@ -73,7 +73,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
         long iota = System.currentTimeMillis();
 
-        final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
+        final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);   
         long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
                 recurrencePeriosMillis * 2 : THRESHOLD;
 
@@ -99,7 +99,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
                     if (req.record.length() >= FileListCapComponent.MAX_FILE_SIZE)
                       continue;
-                    ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId());
+                    ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId(), Integer.MAX_VALUE);
                     if (lockedThread != null ) {
                         w.println(lockedThread);
                         w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
@@ -108,7 +108,7 @@ public class SlowRequestChecker extends PeriodicWork {
                         long lockOwnerId = lockedThread.getLockOwnerId();
                         if (lockOwnerId != -1) // If the thread is not locked, then getLockOwnerId returns -1.
                         {
-                            ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId);
+                            ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId, Integer.MAX_VALUE);
                             w.println(threadInfo);
                             if (threadInfo != null) {
                                 printThreadStackElements(threadInfo, w);
