@@ -73,7 +73,7 @@ public class SlowRequestChecker extends PeriodicWork {
 
         long iota = System.currentTimeMillis();
 
-        final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);   
+        final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
         long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
                 recurrencePeriosMillis * 2 : THRESHOLD;
 
