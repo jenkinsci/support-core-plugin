@@ -134,6 +134,25 @@ public class AboutJenkins extends Component {
                 }
             }
         });
+
+        container.add(new PrintedContent("docker/Dockerfile") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
+                out.println("FROM jenkins:" + Jenkins.getVersion().toString());
+                out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
+                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+                List<PluginWrapper> plugins = pluginManager.getPlugins();
+                Collections.sort(plugins);
+                for (PluginWrapper w : plugins) {
+                    if (w.isActive()) {
+                        out.println("RUN curl $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()
+                                + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".hpi");
+                    }
+                }
+                out.println("");
+            }
+        });
+
         container.add(new MasterChecksumsContent());
         for (final Node node : Jenkins.getInstance().getNodes()) {
             container.add(new NodeChecksumsContent(node));
