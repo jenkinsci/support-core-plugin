@@ -145,7 +145,7 @@ public class AboutJenkins extends Component {
                 Collections.sort(plugins);
                 for (PluginWrapper w : plugins) {
                     if (w.isActive()) {
-                        out.println("RUN curl $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()
+                        out.println("RUN curl $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
                                 + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".hpi");
                     }
                 }
