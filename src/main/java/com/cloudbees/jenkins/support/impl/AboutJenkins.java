@@ -292,16 +292,6 @@ public class AboutJenkins extends Component {
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }
 
-    @Deprecated
-    public static String getSlaveDigest(Node node)
-            throws IOException, InterruptedException {
-        VirtualChannel channel = node.getChannel();
-        if (channel == null) {
-            return "N/A";
-        }
-        return channel.call(new GetSlaveDigest(node.getRootPath()));
-    }
-
     private static final class GetSlaveDigest implements Callable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String rootPathName;
