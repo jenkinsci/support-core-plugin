@@ -58,10 +58,12 @@ public class SupportCommand extends CLICommand {
     @Override
     protected void printUsageSummary(PrintStream stderr) {
         stderr.println(Messages.SupportCommand_if_no_arguments_are_given_generate_a_bun());
+        int maxlen = 0;
         for (Component c : SupportPlugin.getComponents()) {
-            stderr.print(c.getId());
-            stderr.print('\t');
-            stderr.println(c.getDisplayName());
+            maxlen = Math.max(maxlen, c.getId().length());
+        }
+        for (Component c : SupportPlugin.getComponents()) {
+            stderr.printf("%-" + maxlen + "s %s%n", c.getId(), c.getDisplayName());
         }
     }
 
