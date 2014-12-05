@@ -699,7 +699,7 @@ public class AboutJenkins extends Component {
             out.println("      - Description:    _" + Util.fixNull(Jenkins.getInstance().getNodeDescription())
                     .replaceAll("_", "&#95;") + "_");
             out.println("      - Executors:      " + Jenkins.getInstance().getNumExecutors());
-            out.println("      - Remote FS root: `" + Jenkins.getInstance().getRootPath().getRemote()
+            out.println("      - FS root:        `" + Jenkins.getInstance().getRootDir().getAbsolutePath()
                     .replaceAll("`", "&#96;") + "`");
             out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
             out.println("      - Usage:          `" + Jenkins.getInstance().getMode() + "`");
