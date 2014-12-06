@@ -685,6 +685,21 @@ public class AboutJenkins extends Component {
             List<PluginWrapper> plugins = pluginManager.getPlugins();
             Collections.sort(plugins);
 
+            List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
+            for (PluginWrapper w : plugins) {
+                if (!w.isEnabled()) {
+                    disabled.add(w);
+                }
+            }
+            if (!disabled.isEmpty()) {
+                out.println("RUN touch \\");
+                for (PluginWrapper w : disabled) {
+                    out.println("      /usr/share/jenkins/ref/plugins/" + w.getShortName() + ".jpi.disabled \\");
+                }
+                out.println();
+            }
+
+
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println("RUN curl -L $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
