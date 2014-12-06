@@ -21,12 +21,7 @@ import hudson.PluginManager;
 import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.lifecycle.Lifecycle;
-import hudson.model.Describable;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Slave;
+import hudson.model.*;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
@@ -60,7 +55,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
+
+import hudson.util.PersistedList;
+import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -97,61 +96,12 @@ public class AboutJenkins extends Component {
         container.add(new AboutContent());
         container.add(new ItemsContent());
         container.add(new NodesContent());
-        container.add(new PrintedContent("plugins/active.txt") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-                List<PluginWrapper> plugins = pluginManager.getPlugins();
-                Collections.sort(plugins);
-                for (PluginWrapper w : plugins) {
-                    if (w.isActive()) {
-                        out.println(w.getShortName() + ":" + w.getVersion());
-                    }
-                }
-            }
-        });
-        container.add(new PrintedContent("plugins/disabled.txt") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-                List<PluginWrapper> plugins = pluginManager.getPlugins();
-                Collections.sort(plugins);
-                for (PluginWrapper w : plugins) {
-                    if (!w.isActive()) {
-                        out.println(w.getShortName() + ":" + w.getVersion());
-                    }
-                }
-            }
-        });
-        container.add(new PrintedContent("plugins/failed.txt") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-                List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
-                // no need to sort
-                for (PluginManager.FailedPlugin w : plugins) {
-                    out.println(w.name + " -> " + w.cause);
-                }
-            }
-        });
+        container.add(new ActivePlugins("plugins/active.txt"));
+        container.add(new DisabledPlugins());
+        container.add(new FailedPlugins());
 
-        container.add(new PrintedContent("docker/Dockerfile") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                out.println("FROM jenkins:" + Jenkins.getVersion().toString());
-                out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
-                PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
-                List<PluginWrapper> plugins = pluginManager.getPlugins();
-                Collections.sort(plugins);
-                for (PluginWrapper w : plugins) {
-                    if (w.isActive()) {
-                        out.println("RUN curl $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
-                                + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".hpi");
-                    }
-                }
-                out.println("");
-            }
-        });
+        // container.add(new ActivePlugins("docker/plugins.txt"));
+        container.add(new Dockerfile());
 
         container.add(new MasterChecksumsContent());
         for (final Node node : Jenkins.getInstance().getNodes()) {
@@ -665,6 +615,90 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("  * Number of jobs: " + jobTotal.n());
             out.println("  * Number of builds per job: " + jobTotal);
+        }
+    }
+
+    private static class ActivePlugins extends PrintedContent {
+        public ActivePlugins(String path) {
+            super(path);
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            List<PluginWrapper> plugins = pluginManager.getPlugins();
+            Collections.sort(plugins);
+            for (PluginWrapper w : plugins) {
+                if (w.isActive()) {
+                    out.println(w.getShortName() + ":" + w.getVersion());
+                }
+            }
+        }
+    }
+
+    private static class DisabledPlugins extends PrintedContent {
+        public DisabledPlugins() {
+            super("plugins/disabled.txt");
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            List<PluginWrapper> plugins = pluginManager.getPlugins();
+            Collections.sort(plugins);
+            for (PluginWrapper w : plugins) {
+                if (!w.isActive()) {
+                    out.println(w.getShortName() + ":" + w.getVersion());
+                }
+            }
+        }
+    }
+
+    private static class FailedPlugins extends PrintedContent {
+        public FailedPlugins() {
+            super("plugins/failed.txt");
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
+            // no need to sort
+            for (PluginManager.FailedPlugin w : plugins) {
+                out.println(w.name + " -> " + w.cause);
+            }
+        }
+    }
+
+    private static class Dockerfile extends PrintedContent {
+        public Dockerfile() {
+            super("docker/Dockerfile");
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            out.println("FROM jenkins:" + Jenkins.getVersion().toString());
+
+            out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
+
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            List<PluginWrapper> plugins = pluginManager.getPlugins();
+            Collections.sort(plugins);
+
+            for (PluginWrapper w : plugins) {
+                if (w.isActive()) {
+                    out.println("RUN curl -L $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
+                            + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".jpi");
+                }
+            }
+
+            /* waiting for official docker image update
+            out.println("COPY plugins.txt /plugins.txt");
+            out.println("RUN /usr/local/bin/plugins.sh < plugins.txt");
+            */
+
+            out.println();
+
         }
     }
 
