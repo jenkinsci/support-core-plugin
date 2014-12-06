@@ -37,18 +37,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -56,10 +45,7 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
 
-import hudson.util.PersistedList;
-import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -677,13 +663,34 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            out.println("FROM jenkins:" + Jenkins.getVersion().toString());
+
+            String fullVersion = Jenkins.getVersion().toString();
+            int s = fullVersion.indexOf(' ');
+            if (s > 0 && fullVersion.contains("CloudBees")) {
+                out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));
+
+                out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com/");
+            } else {
+                out.println("FROM jenkins:" + fullVersion);
+            }
 
             out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
 
             PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
             List<PluginWrapper> plugins = pluginManager.getPlugins();
             Collections.sort(plugins);
+
+            for (PluginWrapper w : plugins) {
+                if (w.isActive()) {
+                    out.println("RUN curl -L $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
+                            + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".jpi");
+                }
+            }
+
+            /* waiting for official docker image update
+            out.println("COPY plugins.txt /plugins.txt");
+            out.println("RUN /usr/local/bin/plugins.sh < plugins.txt");
+            */
 
             List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
             for (PluginWrapper w : plugins) {
@@ -698,19 +705,6 @@ public class AboutJenkins extends Component {
                 }
                 out.println();
             }
-
-
-            for (PluginWrapper w : plugins) {
-                if (w.isActive()) {
-                    out.println("RUN curl -L $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
-                            + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".jpi");
-                }
-            }
-
-            /* waiting for official docker image update
-            out.println("COPY plugins.txt /plugins.txt");
-            out.println("RUN /usr/local/bin/plugins.sh < plugins.txt");
-            */
 
             out.println();
 
