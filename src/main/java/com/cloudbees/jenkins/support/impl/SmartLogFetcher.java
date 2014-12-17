@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,9 +44,19 @@ import java.util.zip.GZIPOutputStream;
  */
 class SmartLogFetcher {
     private final File rootCacheDir;
+    private final FilenameFilter filter;
 
-    public SmartLogFetcher() {
-        rootCacheDir = new File(SupportPlugin.getRootDirectory(), "cache");
+    /**
+     * @param id
+     *      SmartLogFetcher only supports one directory full of log files retrieved in one go.
+     *      So different IDs would have to be specified for different log files from different directories.
+     * @param filter
+     *      Used to match log files within the target directory.
+     */
+    public SmartLogFetcher(String id, FilenameFilter filter) {
+        this.rootCacheDir = new File(SupportPlugin.getRootDirectory(), id);
+        this.filter = filter;
+        assert filter instanceof Serializable;
     }
 
     public ForNode forNode(Node n) throws IOException {
@@ -81,12 +92,12 @@ class SmartLogFetcher {
 
             // build an inventory of what we already have locally
             final Map<String, FileHash> hashes = new LinkedHashMap<String, FileHash>();
-            for (File file : localCache.listFiles(new LogFilenameFilter())) {
+            for (File file : localCache.listFiles(filter)) {
                 hashes.put(file.getName(), new FileHash(file));
             }
 
             // figure out what we need to read
-            Map<String,Long> offsets = remoteDir.act(new LogFileHashSlurper(hashes));
+            Map<String,Long> offsets = remoteDir.act(new LogFileHashSlurper(hashes, filter));
 
             evictDeadCache(hashes, offsets);
 
@@ -228,13 +239,16 @@ class SmartLogFetcher {
          */
         private final Map<String,FileHash> cached;
 
-        public LogFileHashSlurper(Map<String, FileHash> cached) {
+        private final FilenameFilter filter;
+
+        public LogFileHashSlurper(Map<String, FileHash> cached, FilenameFilter filter) {
             this.cached = cached;
+            this.filter = filter;
         }
 
         public Map<String, Long> invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
             Map<String, Long> result = new LinkedHashMap<String, Long>();
-            for (File file : dir.listFiles(new LogFilenameFilter())) {
+            for (File file : dir.listFiles(filter)) {
                 FileHash hash = cached.get(file.getName());
                 if (hash != null && hash.isPartialMatch(file)) {
                     if (file.length() == hash.getLength()) {

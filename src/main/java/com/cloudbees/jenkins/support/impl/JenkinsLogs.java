@@ -93,7 +93,8 @@ public class JenkinsLogs extends Component {
         addLogRecorders(result);
         addSlaveLaunchLog(result);
 
-        SmartLogFetcher logFetcher = new SmartLogFetcher();
+        SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
+        SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
         final boolean needHack = SlaveLogFetcher.isRequired();
 
         // expensive remote computation are pooled together and executed later concurrently across all the slaves
@@ -130,6 +131,7 @@ public class JenkinsLogs extends Component {
                 );
             }
             addSlaveJulLogRecords(result, tasks, node, logFetcher);
+            addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
         }
 
         // execute all the expensive computations in parallel to speed up the time
@@ -310,6 +312,29 @@ public class JenkinsLogs extends Component {
                 }
             }
         });
+    }
+
+    /**
+     * Captures stdout/stderr log files produced by winsw.
+     */
+    private void addWinsStdoutStderrLog(List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+        final FilePath rootPath = node.getRootPath();
+        if (rootPath != null) {
+            // rotated log files stored on the disk
+            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
+                public List<FileContent> call() throws Exception {
+                    List<FileContent> result = new ArrayList<FileContent>();
+                    final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
+                    for (Map.Entry<String, File> entry : logFiles.entrySet()) {
+                        result.add(new FileContent(
+                                        "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
+                                        entry.getValue())
+                        );
+                    }
+                    return result;
+                }
+            });
+        }
     }
 
     /**
