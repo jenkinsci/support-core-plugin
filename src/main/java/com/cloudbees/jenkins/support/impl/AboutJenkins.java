@@ -548,13 +548,24 @@ public class AboutJenkins extends Component {
                     int builds = 0;
                     // protected access: File buildDir = j.getBuildDir();
                     File buildDir = Jenkins.getInstance().getBuildDirFor(j);
+                    boolean newFormat = new File(buildDir, "legacyIds").isFile(); // JENKINS-24380
                     File[] buildDirs = buildDir.listFiles();
                     if (buildDirs != null) {
                         for (File d : buildDirs) {
-                            if (mayBeDate(d.getName())) {
+                            String name = d.getName();
+                            if (newFormat) {
+                                try {
+                                    Integer.parseInt(name);
+                                    if (d.isDirectory()) {
+                                        builds++;
+                                    }
+                                } catch (NumberFormatException x) {
+                                    // something else
+                                }
+                            } else /* legacy format */if (mayBeDate(name)) {
                                 // check for real
                                 try {
-                                    BUILD_FORMAT.parse(d.getName());
+                                    BUILD_FORMAT.parse(name);
                                     if (d.isDirectory()) {
                                         builds++;
                                     }
