@@ -35,6 +35,7 @@ import jenkins.model.Jenkins;
 
 import java.io.*;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -66,8 +67,8 @@ public class BuildQueue extends Component {
         public void writeTo(OutputStream os) throws IOException {
           PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
           try {
-            Queue.Item[] items = Jenkins.getInstance().getQueue().getItems();
-            out.println("Current build queue has " +  items.length + " item(s).");
+            List<Queue.Item> items = Jenkins.getInstance().getQueue().getApproximateItemsQuickly();
+            out.println("Current build queue has " +  items.size() + " item(s).");
             out.println("---------------");
 
             for (Queue.Item item : items) {
