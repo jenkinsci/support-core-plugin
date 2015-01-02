@@ -37,6 +37,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.*;
 import java.security.KeyStore;
@@ -96,6 +97,8 @@ public class RootCAs extends Component {
                   out.println(getRootCA(node));
                 } catch (IOException e) {
                   e.printStackTrace(out);
+                } catch (InterruptedException e) {
+                  e.printStackTrace(out);
                 } finally {
                   out.flush();
                 }
@@ -104,12 +107,12 @@ public class RootCAs extends Component {
     );
   }
 
-  public Future<String> getRootCA(Node node) throws IOException {
+  public String getRootCA(Node node) throws IOException, InterruptedException {
     VirtualChannel channel = node.getChannel();
     if (channel == null) {
       return null;
     }
-    return channel.callAsync(new GetRootCA());
+    return channel.call(new GetRootCA());
   }
 
 
@@ -119,31 +122,27 @@ public class RootCAs extends Component {
             justification = "Best effort"
     )
     public String call() {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      try {
-        getRootCAList(bos);
-        return bos.toString("utf-8");
-      } catch (UnsupportedEncodingException e) {
-        return bos.toString();
-      }
+      StringWriter writer = new StringWriter();
+      getRootCAList(writer);
+      return writer.toString();
     }
 
     private static final long serialVersionUID = 1L;
   }
 
-  public static void getRootCAList(OutputStream out) throws UnsupportedEncodingException {
-    PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
+  public static void getRootCAList(StringWriter writer) {
+    KeyStore instance = null;
     try {
-      KeyStore instance = KeyStore.getInstance(KeyStore.getDefaultType());
+      instance = KeyStore.getInstance(KeyStore.getDefaultType());
       while (instance.aliases().hasMoreElements()) {
         String s = instance.aliases().nextElement();
-        writer.println("========");
-        writer.println("Alias: " + s);
-        writer.println(instance.getCertificate(s).getPublicKey());
-        writer.println("Trusted certificate: " + instance.isCertificateEntry(s));
+        writer.append("========");
+        writer.append("Alias: " + s);
+        writer.append(instance.getCertificate(s).getPublicKey().toString());
+        writer.append("Trusted certificate: " + instance.isCertificateEntry(s));
       }
     } catch (KeyStoreException e) {
-      e.printStackTrace(writer);
+      writer.write(ExceptionUtils.getFullStackTrace(e));
     }
   }
 }
