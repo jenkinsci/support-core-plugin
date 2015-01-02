@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -44,12 +45,15 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * @author schristou88
  */
 @Extension
 public class RootCAs extends Component {
+
+  private final WeakHashMap<Node, String> certCache = new WeakHashMap<Node, String>();
 
   @Override
   public boolean isSelectedByDefault() {
@@ -108,11 +112,8 @@ public class RootCAs extends Component {
   }
 
   public String getRootCA(Node node) throws IOException, InterruptedException {
-    VirtualChannel channel = node.getChannel();
-    if (channel == null) {
-      return null;
-    }
-    return channel.call(new GetRootCA());
+    return AsyncResultCache.get(node, certCache, new GetRootCA(), "Root CA info",
+            "N/A: Either no connection to node, or no cached result");
   }
 
 
