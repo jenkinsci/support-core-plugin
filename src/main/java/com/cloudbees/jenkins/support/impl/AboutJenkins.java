@@ -691,28 +691,43 @@ public class AboutJenkins extends Component {
             List<PluginWrapper> plugins = pluginManager.getPlugins();
             Collections.sort(plugins);
 
+            List<PluginWrapper> activated = new ArrayList<PluginWrapper>();
+            List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
             for (PluginWrapper w : plugins) {
+                if (!w.isEnabled()) {
+                    disabled.add(w);
+                }
                 if (w.isActive()) {
-                    out.println("RUN curl -L $JENKINS_UC/download/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
-                            + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".jpi");
+                    activated.add(w);
                 }
             }
+
+            out.println("RUN curl \\");
+            Iterator<PluginWrapper> activatedIT = activated.iterator();
+            while (activatedIT.hasNext()) {
+                PluginWrapper w = activatedIT.next();
+                out.print("\t-L $JENKINS_UC/download/plugins/" + w.getShortName() + "/" + w.getVersion() + "/" + w.getShortName() + ".hpi"
+                        + " -o /usr/share/jenkins/ref/plugins/" + w.getShortName() + ".jpi");
+                if (activatedIT.hasNext()) {
+                    out.println(" \\");
+                }
+            }
+            out.println();
 
             /* waiting for official docker image update
             out.println("COPY plugins.txt /plugins.txt");
             out.println("RUN /usr/local/bin/plugins.sh < plugins.txt");
             */
 
-            List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
-            for (PluginWrapper w : plugins) {
-                if (!w.isEnabled()) {
-                    disabled.add(w);
-                }
-            }
             if (!disabled.isEmpty()) {
                 out.println("RUN touch \\");
-                for (PluginWrapper w : disabled) {
-                    out.println("      /usr/share/jenkins/ref/plugins/" + w.getShortName() + ".jpi.disabled \\");
+                Iterator<PluginWrapper> disabledIT = disabled.iterator();
+                while (disabledIT.hasNext()) {
+                    PluginWrapper w = disabledIT.next();
+                    out.print("\n\t/usr/share/jenkins/ref/plugins/" + w.getShortName() + ".jpi.disabled");
+                    if (disabledIT.hasNext()) {
+                        out.println(" \\");
+                    }
                 }
                 out.println();
             }
