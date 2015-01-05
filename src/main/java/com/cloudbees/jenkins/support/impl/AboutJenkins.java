@@ -680,7 +680,7 @@ public class AboutJenkins extends Component {
             if (s > 0 && fullVersion.contains("CloudBees")) {
                 out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));
 
-                out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com/");
+                out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com");
             } else {
                 out.println("FROM jenkins:" + fullVersion);
             }
