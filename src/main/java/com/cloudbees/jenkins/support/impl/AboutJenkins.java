@@ -693,7 +693,7 @@ public class AboutJenkins extends Component {
 
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
-                    out.println("RUN curl -L $JENKINS_UC/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
+                    out.println("RUN curl -L $JENKINS_UC/download/plugins/"+w.getShortName()+"/"+w.getVersion()+"/"+w.getShortName()+".hpi"
                             + " -o /usr/share/jenkins/ref/plugins/"+w.getShortName()+".jpi");
                 }
             }
