@@ -75,6 +75,10 @@ public class SupportAction implements RootAction {
         return "support";
     }
 
+    public String getActionTitleText() {
+        return getActionTitle().toString();
+    }
+
     public Localizable getActionTitle() {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
