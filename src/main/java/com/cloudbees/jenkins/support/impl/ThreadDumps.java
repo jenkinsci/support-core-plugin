@@ -226,7 +226,7 @@ public class ThreadDumps extends Component {
                 x.printStackTrace(writer);
                 cpuPercentage = 0;
             }
-            writer.printf("%s id=%d (0x%x) state=%s cpu=%d%%",
+            writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
                     t.getThreadName(),
                     t.getThreadId(),
                     t.getThreadId(),
@@ -320,7 +320,7 @@ public class ThreadDumps extends Component {
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
         for (Map.Entry<Thread, StackTraceElement[]> entry : Functions.dumpAllThreads().entrySet()) {
             final Thread t = entry.getKey();
-            writer.printf("%s id=%d (0x%x) state=%s",
+            writer.printf("\"%s\" id=%d (0x%x) state=%s",
                     t.getName(),
                     t.getId(),
                     t.getId(),
