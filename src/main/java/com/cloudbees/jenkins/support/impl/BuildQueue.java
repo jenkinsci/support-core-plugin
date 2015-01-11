@@ -28,7 +28,9 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Functions;
 import hudson.model.Cause;
+import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -72,7 +74,12 @@ public class BuildQueue extends Component {
             out.println("---------------");
 
             for (Queue.Item item : items) {
-              out.println(" * Name of item: " + item.task.getFullDisplayName());
+              if (item instanceof Item) {
+                out.println(" * Name of item: " + ((Item) item).getFullName());
+              }
+              else {
+                out.println(" * Name of item: " + Functions.escape(item.task.getFullDisplayName()));
+              }
               out.println("    - In queue for: " + item.getInQueueForString());
               out.println("    - Is blocked: " + item.isBlocked());
               out.println("    - Why in queue: " + item.getWhy());
