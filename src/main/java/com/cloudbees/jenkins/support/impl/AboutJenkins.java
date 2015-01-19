@@ -326,6 +326,7 @@ public class AboutJenkins extends Component {
             result.append(min).append(" Name:    ").append(System.getProperty("java.vm.name")).append("\n");
             result.append(min).append(" Vendor:  ").append(System.getProperty("java.vm.vendor")).append("\n");
             result.append(min).append(" Version: ").append(System.getProperty("java.vm.version")).append("\n");
+            result.append(min).append(" Bit size: ").append(System.getProperty("sun.arch.data.model")).append("\n");
             result.append(maj).append(" Operating system\n");
             result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
             result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
