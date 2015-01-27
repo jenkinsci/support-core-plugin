@@ -86,6 +86,11 @@ public class FileContent extends Content {
         }
     }
 
+    @Override
+    public long getTime()  throws IOException {
+        return file.lastModified();
+    }
+
     /**
      * {@link InputStream} decorator that chops off the underlying stream at the
      * specified length

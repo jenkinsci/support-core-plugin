@@ -336,7 +336,9 @@ public class SupportPlugin extends Plugin {
                     }
                     final String name = c.getName();
                     try {
-                        zip.putNextEntry(new ZipEntry(name));
+                        ZipEntry entry = new ZipEntry(name);
+                        entry.setTime(c.getTime());
+                        zip.putNextEntry(entry);
                         c.writeTo(bos);
                     } catch (Throwable e) {
                         LogRecord logRecord =
