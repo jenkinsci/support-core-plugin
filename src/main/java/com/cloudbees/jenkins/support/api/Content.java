@@ -45,4 +45,6 @@ public abstract class Content {
     }
 
     public abstract void writeTo(OutputStream os) throws IOException;
+
+    public long getTime() throws IOException { return System.currentTimeMillis(); }
 }

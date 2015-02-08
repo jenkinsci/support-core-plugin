@@ -52,4 +52,13 @@ public class FilePathContent extends Content {
             throw new IOException2(e);
         }
     }
+
+    @Override
+    public long getTime() throws IOException {
+        try {
+            return file.lastModified();
+        } catch (InterruptedException e) {
+            throw new IOException2(e);
+        }
+    }
 }
