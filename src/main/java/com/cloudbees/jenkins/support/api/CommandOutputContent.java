@@ -5,6 +5,7 @@ import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.util.WeakHashMap;
@@ -35,27 +36,13 @@ public class CommandOutputContent extends StringContent {
             StringWriter bos = new StringWriter();
             PrintWriter pw = new PrintWriter(bos);
             try {
-                dumpCommandOutput(pw, command);
+                Process proc = new ProcessBuilder().command(command).redirectErrorStream(true).start();
+                IOUtils.copy(proc.getInputStream(), pw);
             } catch (Exception e) {
                 e.printStackTrace(pw);
             }
             pw.flush();
             return bos.toString();
-        }
-
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
-        private static void dumpCommandOutput(PrintWriter writer, String... command) throws IOException {
-            InputStream is = new ProcessBuilder(command).start().getInputStream();
-            try {
-                // this is reading from the process so platform encoding is correct
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    writer.println(line);
-                }
-            } finally {
-                is.close();
-            }
         }
     }
 

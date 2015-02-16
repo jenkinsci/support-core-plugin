@@ -41,7 +41,7 @@ public class JVMProcessSystemMetricsContents extends Component {
     @Override
     @NonNull
     public String getDisplayName() {
-        return "JVM process system metrics (Unix only)";
+        return "JVM process system metrics (Linux only)";
     }
 
     @NonNull

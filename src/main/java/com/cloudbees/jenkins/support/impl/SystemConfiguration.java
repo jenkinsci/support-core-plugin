@@ -38,13 +38,12 @@ public class SystemConfiguration extends Component {
         UNIX_PROC_CONTENTS.put("/proc/swaps", "swaps.txt");
         UNIX_PROC_CONTENTS.put("/proc/cpuinfo", "cpuinfo.txt");
         UNIX_PROC_CONTENTS.put("/proc/mounts", "mounts.txt");
-        UNIX_PROC_CONTENTS.put("/proc/sys/kernel/random/entropy_avail", "kernel_entropy_avail.txt");
     }
 
     @Override
     @NonNull
     public String getDisplayName() {
-        return "System configuration (Unix only)";
+        return "System configuration (Linux only)";
     }
 
     @NonNull
