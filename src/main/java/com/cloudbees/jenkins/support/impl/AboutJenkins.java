@@ -31,8 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
+import java.lang.management.*;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -309,6 +308,35 @@ public class AboutJenkins extends Component {
                     .append("\n");
             result.append(min).append(" Free memory:      ").append(humanReadableSize(freeMem)).append("\n");
             result.append(min).append(" In-use memory:    ").append(humanReadableSize(allocMem - freeMem)).append("\n");
+
+            for(MemoryPoolMXBean bean : ManagementFactory.getMemoryPoolMXBeans()) {
+                if (bean.getName().toLowerCase().contains("perm gen")) {
+                    MemoryUsage currentUsage = bean.getUsage();
+                    result.append(min).append(" PermGen used:     ").append(humanReadableSize(currentUsage.getUsed())).append("\n");
+                    result.append(min).append(" PermGen max:      ").append(humanReadableSize(currentUsage.getMax())).append("\n");
+                    break;
+                }
+            }
+
+            for(MemoryManagerMXBean bean : ManagementFactory.getMemoryManagerMXBeans()) {
+                if (bean.getName().contains("MarkSweepCompact")) {
+                    result.append(min).append(" GC strategy:      SerialGC\n");
+                    break;
+                }
+                if (bean.getName().contains("ConcurrentMarkSweep")) {
+                    result.append(min).append(" GC strategy:      ConcMarkSweepGC\n");
+                    break;
+                }
+                if (bean.getName().contains("PS")) {
+                    result.append(min).append(" GC strategy:      ParallelGC\n");
+                    break;
+                }
+                if (bean.getName().contains("G1")) {
+                    result.append(min).append(" GC strategy:      G1\n");
+                    break;
+                }
+            }
+
             result.append(maj).append(" Java Runtime Specification\n");
             result.append(min).append(" Name:    ").append(System.getProperty("java.specification.name")).append("\n");
             result.append(min).append(" Vendor:  ").append(System.getProperty("java.specification.vendor"))
