@@ -31,8 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
+import java.lang.management.*;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -309,6 +308,16 @@ public class AboutJenkins extends Component {
                     .append("\n");
             result.append(min).append(" Free memory:      ").append(humanReadableSize(freeMem)).append("\n");
             result.append(min).append(" In-use memory:    ").append(humanReadableSize(allocMem - freeMem)).append("\n");
+
+            for(MemoryPoolMXBean bean : ManagementFactory.getMemoryPoolMXBeans()) {
+                if (bean.getName().toLowerCase().contains("perm gen")) {
+                    MemoryUsage currentUsage = bean.getUsage();
+                    result.append(min).append(" PermGen used:     ").append(humanReadableSize(currentUsage.getUsed())).append("\n");
+                    result.append(min).append(" PermGen max:      ").append(humanReadableSize(currentUsage.getMax())).append("\n");
+                    break;
+                }
+            }
+
             result.append(maj).append(" Java Runtime Specification\n");
             result.append(min).append(" Name:    ").append(System.getProperty("java.specification.name")).append("\n");
             result.append(min).append(" Vendor:  ").append(System.getProperty("java.specification.vendor"))
