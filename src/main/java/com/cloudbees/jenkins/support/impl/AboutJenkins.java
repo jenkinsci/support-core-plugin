@@ -318,6 +318,25 @@ public class AboutJenkins extends Component {
                 }
             }
 
+            for(MemoryManagerMXBean bean : ManagementFactory.getMemoryManagerMXBeans()) {
+                if (bean.getName().contains("MarkSweepCompact")) {
+                    result.append(min).append(" GC strategy:      SerialGC\n");
+                    break;
+                }
+                if (bean.getName().contains("ConcurrentMarkSweep")) {
+                    result.append(min).append(" GC strategy:      ConcMarkSweepGC\n");
+                    break;
+                }
+                if (bean.getName().contains("PS")) {
+                    result.append(min).append(" GC strategy:      ParallelGC\n");
+                    break;
+                }
+                if (bean.getName().contains("G1")) {
+                    result.append(min).append(" GC strategy:      G1\n");
+                    break;
+                }
+            }
+
             result.append(maj).append(" Java Runtime Specification\n");
             result.append(min).append(" Name:    ").append(System.getProperty("java.specification.name")).append("\n");
             result.append(min).append(" Vendor:  ").append(System.getProperty("java.specification.vendor"))
