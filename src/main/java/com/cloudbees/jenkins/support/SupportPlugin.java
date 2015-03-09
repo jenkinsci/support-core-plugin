@@ -281,7 +281,7 @@ public class SupportPlugin extends Plugin {
         manifest.append(StringUtils.repeat("=", bundleName.length())).append('\n');
         manifest.append("\n");
         manifest.append("Generated on ")
-                .append(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss Z").format(new Date()))
+                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date()))
                 .append("\n");
         manifest.append("\n");
         manifest.append("Requested components:\n\n");
