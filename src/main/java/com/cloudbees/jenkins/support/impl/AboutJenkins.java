@@ -703,19 +703,20 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
 
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
             String fullVersion = Jenkins.getVersion().toString();
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
                 out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));
-
-                out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com");
             } else {
                 out.println("FROM jenkins:" + fullVersion);
+            }
+            if (pluginManager.getPlugin("nectar-license") != null) { // even if atop an OSS WAR
+                out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com");
             }
 
             out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
 
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
             List<PluginWrapper> plugins = pluginManager.getPlugins();
             Collections.sort(plugins);
 
