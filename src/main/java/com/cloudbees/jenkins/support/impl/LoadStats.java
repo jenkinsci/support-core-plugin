@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -77,7 +78,7 @@ public class LoadStats extends Component {
     @Override
     public void addContents(@NonNull Container container) {
         Jenkins jenkins = Jenkins.getInstance();
-        add(container, "unlabeled", jenkins.unlabeledLoad);
+        add(container, "no-label", jenkins.unlabeledLoad);
         add(container, "overall", jenkins.overallLoad);
         for (Label l: jenkins.getLabels()) {
             try {
@@ -91,12 +92,12 @@ public class LoadStats extends Component {
     private void add(@NonNull Container container, String name, LoadStatistics stats) {
         boolean headless = GraphicsEnvironment.isHeadless();
         for (MultiStageTimeSeries.TimeScale scale: MultiStageTimeSeries.TimeScale.values()) {
+            String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
             if (!headless) {
                 BufferedImage image = stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
-                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scale.name().toLowerCase()),
-                        image));
+                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scaleName), image));
             }
-            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scale.name().toLowerCase()), stats, scale));
+            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scaleName), stats, scale));
         }
     }
 
