@@ -37,7 +37,6 @@ import hudson.model.TimeSeries;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -176,7 +175,7 @@ public class LoadStats extends Component {
                     if (ts != null) {
                         TimeSeries series = ts.pick(scale);
                         if (series != null) {
-                            data.put(f.getName(), series.getHistory());
+                            data.put(camelCaseToSentenceCase(f.getName()), series.getHistory());
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -241,14 +240,30 @@ public class LoadStats extends Component {
                 String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
                 out.printf("set output \"%s.png\";%n", scaleName);
                 int col = 2;
+                List<String> names = new ArrayList<String>();
                 for (Field f : FIELDS) {
-                    String name = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(f.getName()), " ");
+                    names.add(camelCaseToSentenceCase(f.getName()));
+                }
+                Collections.sort(names);
+                for (String name : names) {
                     out.printf("%s \"%s.csv\" using 1:%d with lines title \"%s\"", col == 2 ? "plot" : ",", scaleName,
-                            col, name.substring(0, 1).toUpperCase(Locale.ENGLISH) + name.substring(1).toLowerCase(Locale.ENGLISH));
+                            col, name);
                     col++;
                 }
                 out.println(";");
             }
         }
+    }
+
+    /**
+     * Converts "aCamelCaseString" into "A sentence case string".
+     *
+     * @param camelCase camelCase.
+     * @return Sentence case.
+     */
+    private static String camelCaseToSentenceCase(String camelCase) {
+        String name = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(camelCase), " ");
+        return name.substring(0, 1).toUpperCase(Locale.ENGLISH) + name.substring(1)
+                .toLowerCase(Locale.ENGLISH);
     }
 }
