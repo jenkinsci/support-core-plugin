@@ -200,7 +200,7 @@ public class LoadStats extends Component {
                 maxLen = Math.max(maxLen, entry.getValue().length);
             }
             out.println();
-            for (int row = maxLen - 1, offset = 0; row >= 0; row--, offset++) {
+            for (int row = maxLen - 1, offset = 1; row >= 0; row--, offset++) {
                 out.print(dateFormat.format(new Date(time - clock * (maxLen - offset))));
                 for (float[] h : data.values()) {
                     out.print(',');
