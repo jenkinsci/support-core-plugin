@@ -36,6 +36,8 @@ import hudson.model.MultiStageTimeSeries;
 import hudson.model.TimeSeries;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -224,7 +226,7 @@ public class LoadStats extends Component {
             out.println("#!/usr/bin/env gnuplot");
             out.println("set style line 101 lc rgb '#000000' lt 1 lw 1;");
             out.println("set border 3 front ls 101;");
-            out.println("set tics nomirror out scale;");
+            out.println("set tics nomirror out;");
             out.println("set format '%g';");
             out.println("set key box linestyle 101;");
             out.println("set key outside;");
@@ -234,14 +236,15 @@ public class LoadStats extends Component {
             out.println("set xdata time; ");
             out.println("set xtics rotate; ");
             out.println("set datafile sep \",\";");
-            out.println("set term png size 500,400;");
+            out.println("set term png font \"arial\" 9 size 500,400;");
             for (MultiStageTimeSeries.TimeScale scale : MultiStageTimeSeries.TimeScale.values()) {
                 String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
                 out.printf("set output \"%s.png\";%n", scaleName);
                 int col = 2;
                 for (Field f : FIELDS) {
+                    String name = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(f.getName()), " ");
                     out.printf("%s \"%s.csv\" using 1:%d with lines title \"%s\"", col == 2 ? "plot" : ",", scaleName,
-                            col, f.getName());
+                            col, name.substring(0, 1).toUpperCase(Locale.ENGLISH) + name.substring(1).toLowerCase(Locale.ENGLISH));
                     col++;
                 }
                 out.println(";");
