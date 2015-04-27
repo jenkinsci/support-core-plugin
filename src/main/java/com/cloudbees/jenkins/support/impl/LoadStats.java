@@ -158,7 +158,7 @@ public class LoadStats extends Component {
         return result;
     }
 
-    private class CsvContent extends PrintedContent {
+    private static class CsvContent extends PrintedContent {
 
         private final Map<String, float[]> data;
         private final long time;
@@ -214,7 +214,7 @@ public class LoadStats extends Component {
         }
     }
 
-    private class GnuPlotScript extends PrintedContent {
+    private static class GnuPlotScript extends PrintedContent {
 
         public GnuPlotScript(String name) {
             super(name);
