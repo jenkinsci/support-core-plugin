@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -328,7 +329,7 @@ public class JenkinsLogs extends Component {
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
                                         "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
-                                        entry.getValue())
+                                        entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
                         );
                     }
                     return result;
