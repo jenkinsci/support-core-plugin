@@ -116,10 +116,9 @@ public class NetworkInterfaces extends Component {
                     byte[] hardwareAddress = ni.getHardwareAddress();
 
                     // Do not have permissions or address does not exist
-                    if (hardwareAddress == null || hardwareAddress.length == 0)
-                        continue;
+                    if (hardwareAddress != null && hardwareAddress.length != 0)
+                        bos.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
 
-                    bos.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
                     bos.append(" ** Index - ").append(ni.getIndex()).append("\n");
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                     while (inetAddresses.hasMoreElements()) {
