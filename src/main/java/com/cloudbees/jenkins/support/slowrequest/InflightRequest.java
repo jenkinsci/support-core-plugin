@@ -55,7 +55,7 @@ final class InflightRequest {
         url = req.getRequestURL() + (query == null ? "" : "?" + query);
         startTime = System.currentTimeMillis();
         userName = Jenkins.getAuthentication().getName();
-        referer = ((StaplerRequest)req).getReferer();
+        referer = req.getHeader("Referer");
     }
 
     void writeHeader(PrintWriter w) {
