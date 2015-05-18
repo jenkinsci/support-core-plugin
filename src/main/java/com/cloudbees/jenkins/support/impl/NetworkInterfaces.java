@@ -37,6 +37,7 @@ import hudson.security.Permission;
 import hudson.util.HexBinaryConverter;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
+import org.codehaus.groovy.runtime.StackTraceUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -102,16 +103,15 @@ public class NetworkInterfaces extends Component {
 
     private static final class GetNetworkInterfaces implements Callable<String, RuntimeException> {
         public String call() {
-            StringWriter bos = new StringWriter();
-            PrintWriter pw = new PrintWriter(bos);
+            StringBuilder bos = new StringBuilder();
 
             try {
                 Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
                 while (networkInterfaces.hasMoreElements()) {
-                    pw.println("-----------");
+                    bos.append("-----------\n");
 
                     NetworkInterface ni = networkInterfaces.nextElement();
-                    pw.println(" * Name " + ni.getDisplayName());
+                    bos.append(" * Name ").append(ni.getDisplayName()).append("\n");
 
                     byte[] hardwareAddress = ni.getHardwareAddress();
 
@@ -119,28 +119,26 @@ public class NetworkInterfaces extends Component {
                     if (hardwareAddress == null || hardwareAddress.length == 0)
                         continue;
 
-                    pw.println(" ** Hardware Address - " + Util.toHexString(hardwareAddress));
-                    pw.println(" ** Index - " + ni.getIndex());
+                    bos.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
+                    bos.append(" ** Index - ").append(ni.getIndex()).append("\n");
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                     while (inetAddresses.hasMoreElements()) {
                         NetworkInterface networkInterface =  networkInterfaces.nextElement();
-                        pw.println(" ** InetAddress - " + networkInterface);
+                        bos.append(" ** InetAddress - ").append(networkInterface).append("\n");
                     }
-                    pw.println(" ** MTU - " + ni.getMTU());
-                    pw.println(" ** Is Up - " + ni.isUp());
-                    pw.println(" ** Is Virtual - " + ni.isVirtual());
-                    pw.println(" ** Is Loopback - " + ni.isLoopback());
-                    pw.println(" ** Is Point to Point - " + ni.isPointToPoint());
-                    pw.println(" ** Supports multicast - " + ni.supportsMulticast());
+                    bos.append(" ** MTU - ").append(ni.getMTU()).append("\n");
+                    bos.append(" ** Is Up - ").append(ni.isUp()).append("\n");
+                    bos.append(" ** Is Virtual - ").append(ni.isVirtual()).append("\n");
+                    bos.append(" ** Is Loopback - ").append(ni.isLoopback()).append("\n");
+                    bos.append(" ** Is Point to Point - ").append(ni.isPointToPoint()).append("\n");
+                    bos.append(" ** Supports multicast - ").append(ni.supportsMulticast()).append("\n");
 
                     if (ni.getParent() != null) {
-                        pw.println(" ** Child of - " + ni.getParent().getDisplayName());
+                        bos.append(" ** Child of - ").append(ni.getParent().getDisplayName()).append("\n");
                     }
                 }
             } catch (SocketException e) {
-                e.printStackTrace(pw);
-            } finally {
-                pw.flush();
+                bos.append(e.getMessage());
             }
 
             return bos.toString();
