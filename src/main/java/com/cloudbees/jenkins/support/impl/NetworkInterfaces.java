@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
@@ -120,7 +121,11 @@ public class NetworkInterfaces extends Component {
 
                     pw.println(" ** Hardware Address - " + Util.toHexString(hardwareAddress));
                     pw.println(" ** Index - " + ni.getIndex());
-                    pw.println(" ** Inet Address - " + ni.getInetAddresses());
+                    Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        NetworkInterface networkInterface =  networkInterfaces.nextElement();
+                        pw.println(" ** InetAddress - " + networkInterface);
+                    }
                     pw.println(" ** MTU - " + ni.getMTU());
                     pw.println(" ** Is Up - " + ni.isUp());
                     pw.println(" ** Is Virtual - " + ni.isVirtual());
