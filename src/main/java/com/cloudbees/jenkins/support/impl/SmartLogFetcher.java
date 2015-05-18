@@ -248,7 +248,11 @@ class SmartLogFetcher {
 
         public Map<String, Long> invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
             Map<String, Long> result = new LinkedHashMap<String, Long>();
-            for (File file : dir.listFiles(filter)) {
+            File[] files = dir.listFiles(filter);
+            if (files == null) {
+                return result;
+            }
+            for (File file : files) {
                 FileHash hash = cached.get(file.getName());
                 if (hash != null && hash.isPartialMatch(file)) {
                     if (file.length() == hash.getLength()) {

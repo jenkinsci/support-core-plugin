@@ -2,11 +2,13 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
+import static com.cloudbees.jenkins.support.SupportPlugin.*;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -22,13 +24,12 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.Cloud;
 import hudson.slaves.SlaveComputer;
+import hudson.util.CopyOnWriteList;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
 import hudson.util.RingBufferLogHandler;
 import hudson.util.io.ReopenableFileOutputStream;
 import hudson.util.io.ReopenableRotatingFileOutputStream;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.io.InterruptedIOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,8 +57,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
-
-import static com.cloudbees.jenkins.support.SupportPlugin.*;
+import jenkins.model.Jenkins;
 
 /**
  * Log files from the different nodes
@@ -328,7 +329,7 @@ public class JenkinsLogs extends Component {
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
                                         "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
-                                        entry.getValue())
+                                        entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
                         );
                     }
                     return result;
@@ -501,6 +502,22 @@ public class JenkinsLogs extends Component {
     private final class CustomHandler extends Handler {
 
         private final Map<String,LogFile> logFiles = new HashMap<String,LogFile>();
+
+        /** JENKINS-27669: try to preload classes that will be needed by {@link #publish} */
+        CustomHandler() {
+            Arrays.hashCode(new Class<?>[] {
+                Map.Entry.class,
+                LogRecorder.class,
+                LogRecorder.Target.class,
+                LogFile.class,
+                ReopenableFileOutputStream.class,
+                ReopenableRotatingFileOutputStream.class,
+                StreamHandler.class,
+                SupportLogFormatter.class,
+                LogFlusher.class,
+                CopyOnWriteList.class,
+            });
+        }
 
         @Override public void publish(LogRecord record) {
             for (Map.Entry<String,LogRecorder> entry : logRecorders.entrySet()) {
