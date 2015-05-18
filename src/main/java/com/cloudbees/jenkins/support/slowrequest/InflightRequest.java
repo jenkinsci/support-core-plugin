@@ -1,5 +1,9 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import com.google.common.net.HttpHeaders;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.StaplerRequest;
+
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.PrintWriter;
@@ -36,14 +40,27 @@ final class InflightRequest {
      */
     File record;
 
+    /**
+     * Username of user who made the http call.
+     */
+    final String userName;
+
+    /**
+     * Referer link to track any redirect urls.
+     */
+    final String referer;
 
     InflightRequest(HttpServletRequest req) {
         String query = req.getQueryString();
         url = req.getRequestURL() + (query == null ? "" : "?" + query);
         startTime = System.currentTimeMillis();
+        userName = Jenkins.getAuthentication().getName();
+        referer = ((StaplerRequest)req).getReferer();
     }
 
     void writeHeader(PrintWriter w) {
+        w.println("Username: " + userName);
+        w.println("Referer: " + referer);
         w.println("Date: " + new Date());
         w.println("URL: " + url);
         w.println();
