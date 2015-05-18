@@ -23,7 +23,6 @@ public class NetworkInterfacesTest {
 
         NetworkInterfaces ni = new NetworkInterfaces();
         String masterNetworkInterfaces = ni.getNetworkInterface(r.jenkins);
-        System.out.printf(masterNetworkInterfaces);
 
         assertThat("Should at least contain one network interface.",
                 masterNetworkInterfaces,
