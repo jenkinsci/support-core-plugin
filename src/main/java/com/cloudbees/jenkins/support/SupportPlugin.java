@@ -381,7 +381,9 @@ public class SupportPlugin extends Plugin {
 
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED, before = InitMilestone.JOB_LOADED)
     public static void loadConfig() throws IOException {
-        getInstance().load();
+        SupportPlugin instance = getInstance();
+        if (instance != null)
+            instance.load();
     }
 
     @Override
