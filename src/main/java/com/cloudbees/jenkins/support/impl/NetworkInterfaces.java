@@ -122,8 +122,8 @@ public class NetworkInterfaces extends Component {
                     bos.append(" ** Index - ").append(ni.getIndex()).append("\n");
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                     while (inetAddresses.hasMoreElements()) {
-                        NetworkInterface networkInterface =  networkInterfaces.nextElement();
-                        bos.append(" ** InetAddress - ").append(networkInterface).append("\n");
+                        InetAddress inetAddress =  inetAddresses.nextElement();
+                        bos.append(" ** InetAddress - ").append(inetAddress).append("\n");
                     }
                     bos.append(" ** MTU - ").append(ni.getMTU()).append("\n");
                     bos.append(" ** Is Up - ").append(ni.isUp()).append("\n");
