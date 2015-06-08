@@ -76,7 +76,7 @@ public class NetworkInterfaces extends Component {
                 new Content("nodes/master/networkInterface.md") {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes());
+                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes("utf-8"));
                     }
                 }
         );
@@ -86,7 +86,7 @@ public class NetworkInterfaces extends Component {
                     new Content("nodes/slave/" + node.getNodeName() + "/networkInterface.md") {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
-                            os.write(getNetworkInterface(node).getBytes());
+                            os.write(getNetworkInterface(node).getBytes("utf-8"));
                         }
                     }
             );
