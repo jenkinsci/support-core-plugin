@@ -167,7 +167,6 @@ public class SupportAction implements RootAction {
                 SupportPlugin.clearRequesterAuthentication();
             }
         } finally {
-            servletOutputStream.close();
             logger.fine("Response completed");
         }
     }
