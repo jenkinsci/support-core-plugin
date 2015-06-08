@@ -655,7 +655,7 @@ public class AboutJenkins extends Component {
             Collections.sort(plugins);
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
-                    out.println(w.getShortName() + ":" + w.getVersion());
+                    out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
                 }
             }
         }
@@ -673,7 +673,7 @@ public class AboutJenkins extends Component {
             Collections.sort(plugins);
             for (PluginWrapper w : plugins) {
                 if (!w.isActive()) {
-                    out.println(w.getShortName() + ":" + w.getVersion());
+                    out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
                 }
             }
         }
