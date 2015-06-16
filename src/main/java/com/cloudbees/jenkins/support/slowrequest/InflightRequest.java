@@ -64,7 +64,12 @@ final class InflightRequest {
         userName = Jenkins.getAuthentication().getName();
         referer = req.getHeader("Referer");
         String agentHeader = req.getHeader("User-Agent");
-        userAgent = UADetectorServiceFactory.getResourceModuleParser().parse(agentHeader);
+        if (agentHeader != null) {
+            userAgent = UADetectorServiceFactory.getResourceModuleParser().parse(agentHeader);
+        }
+        else {
+            userAgent = null;
+        }
     }
 
     void writeHeader(PrintWriter w) {
