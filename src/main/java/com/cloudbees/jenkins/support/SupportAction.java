@@ -26,12 +26,14 @@ package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
+
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
@@ -42,12 +44,16 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -146,8 +152,10 @@ public class SupportAction implements RootAction {
         if (supportPlugin != null) {
             SupportProvider supportProvider = supportPlugin.getSupportProvider();
             if (supportProvider != null) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
                 // let the provider name it
-                filename = supportProvider.getName();
+                filename = supportProvider.getName() + "_" + dateFormat.format(new Date());
             }
         }
         rsp.addHeader("Content-Disposition", "inline; filename=" + filename + ".zip;");
