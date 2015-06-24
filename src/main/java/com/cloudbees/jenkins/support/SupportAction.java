@@ -152,13 +152,14 @@ public class SupportAction implements RootAction {
         if (supportPlugin != null) {
             SupportProvider supportProvider = supportPlugin.getSupportProvider();
             if (supportProvider != null) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
                 // let the provider name it
-                filename = supportProvider.getName() + "_" + dateFormat.format(new Date());
+                filename = supportProvider.getName();
             }
         }
-        rsp.addHeader("Content-Disposition", "inline; filename=" + filename + ".zip;");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        rsp.addHeader("Content-Disposition", "inline; filename=" + filename + "_" + dateFormat.format(new Date()) + ".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
