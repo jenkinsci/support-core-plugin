@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.TaskListener;
@@ -145,7 +146,7 @@ public class RootCAs extends Component {
         writer.append("Trusted certificate: " + instance.isCertificateEntry(s));
       }
     } catch (KeyStoreException e) {
-      writer.write(ExceptionUtils.getFullStackTrace(e));
+      writer.write(Functions.printThrowable(e));
     }
   }
 }
