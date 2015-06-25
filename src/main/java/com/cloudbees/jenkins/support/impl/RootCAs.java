@@ -44,6 +44,7 @@ import java.io.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -135,8 +136,9 @@ public class RootCAs extends Component {
     KeyStore instance = null;
     try {
       instance = KeyStore.getInstance(KeyStore.getDefaultType());
-      while (instance.aliases().hasMoreElements()) {
-        String s = instance.aliases().nextElement();
+      Enumeration<String> aliases = instance.aliases();
+      while (aliases.hasMoreElements()) {
+        String s = aliases.nextElement();
         writer.append("========");
         writer.append("Alias: " + s);
         writer.append(instance.getCertificate(s).getPublicKey().toString());
