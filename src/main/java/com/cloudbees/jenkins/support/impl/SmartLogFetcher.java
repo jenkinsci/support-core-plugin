@@ -92,8 +92,11 @@ class SmartLogFetcher {
 
             // build an inventory of what we already have locally
             final Map<String, FileHash> hashes = new LinkedHashMap<String, FileHash>();
-            for (File file : localCache.listFiles(filter)) {
-                hashes.put(file.getName(), new FileHash(file));
+            final File[] localCacheFiles = localCache.listFiles(filter);
+            if (localCacheFiles != null) {
+                for (File file : localCacheFiles) {
+                    hashes.put(file.getName(), new FileHash(file));
+                }
             }
 
             // figure out what we need to read

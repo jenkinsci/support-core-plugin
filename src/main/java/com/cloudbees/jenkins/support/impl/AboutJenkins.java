@@ -45,6 +45,7 @@ import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
 
 import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -238,7 +239,7 @@ public class AboutJenkins extends Component {
         public String call() {
             StringBuilder result = new StringBuilder();
             final File rootPath = new File(this.rootPathName);
-            for (File file : rootPath.listFiles()) {
+            for (File file : FileUtils.listFiles(rootPath, null, false)) {
                 if (file.isFile()) {
                     try {
                         result.append(Util.getDigestOf(new FileInputStream(file)))
@@ -859,6 +860,12 @@ public class AboutJenkins extends Component {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) { 
+                // Lifecycle.get() depends on Jenkins instance, hence this method won't work in any case
+                throw new IOException("Jenkins has not been started, or was already shut down");
+            }
+            
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar != null) {
                 try {
@@ -913,7 +920,9 @@ public class AboutJenkins extends Component {
                     }
                 }
             }
-            for (File file : new File(Jenkins.getInstance().getRootDir(), "plugins").listFiles()) {
+                 
+            final Collection<File> pluginFiles = FileUtils.listFiles(new File(jenkins.getRootDir(), "plugins"), null, false);
+            for (File file : pluginFiles) {
                 if (file.isFile()) {
                     try {
                         out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file
