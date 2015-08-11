@@ -53,7 +53,7 @@ public class BuildQueueTest {
   @Rule public JenkinsRule j = new JenkinsRule();
 
   @Ignore("Unit test fails when performing a release. The queue has a race condition" +
-          "which is resolved in 1.607+.")
+          "which is resolved in 1.607+ (TODO).")
   @Test
   public void verifyMinimumBuildQueue() throws Exception {
     // Given
