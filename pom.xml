@@ -54,6 +54,10 @@
       <id>stephenconnolly</id>
       <name>Stephen Connolly</name>
     </developer>
+    <developer>
+      <id>christ66</id>
+      <name>Steven Christou</name>
+    </developer>
   </developers>
 
   <prerequisites>
