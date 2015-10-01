@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.timer;
 
+import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
@@ -21,7 +22,6 @@ public class DeadlockTrackChecker extends PeriodicWork {
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
     final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
-    static final File deadLockFolder = new File(Jenkins.getInstance().getRootDir(), "/support");
 
     @Override
     public long getRecurrencePeriod() {
@@ -49,7 +49,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
                 ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks, Integer.MAX_VALUE);
 
                 for (ThreadInfo threadInfo : deadLockThreads) {
-                    builder.println(threadInfo);
+                    ThreadDumps.printThreadInfo(builder, threadInfo, mbean);
                 }
             } finally {
                 builder.close();

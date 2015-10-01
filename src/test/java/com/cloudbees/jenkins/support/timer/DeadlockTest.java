@@ -29,6 +29,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.*;
 
 /**
@@ -48,6 +49,8 @@ public class DeadlockTest {
 
   @Test
   public void detectDeadlock() throws Exception {
+    File[] files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
+    int initialCount = files == null ? 0 : files.length;
     final Object object1 = new Object();
     final Object object2 = new Object();
     Thread t1 = new Thread( new Runnable() {
@@ -79,6 +82,8 @@ public class DeadlockTest {
 
     // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread could be
     // invoked twice.
-    assertTrue("Failed to detect deadlock.", new File(j.getInstance().getRootDir(), "/deadlocks").listFiles().length >= 1);
+    files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
+    assertNotNull("There should be at least one deadlock file", files);
+    assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
   }
 }

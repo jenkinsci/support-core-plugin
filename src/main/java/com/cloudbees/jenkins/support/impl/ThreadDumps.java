@@ -13,11 +13,19 @@ import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-
-import java.io.*;
-import java.lang.management.*;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 /**
  * Thread dumps from the nodes.
@@ -216,72 +226,7 @@ public class ThreadDumps extends Component {
         }
 
         for (int ti = threads.length - 1; ti >= 0; ti--) {
-            final ThreadInfo t = threads[ti];
-            long cpuPercentage;
-            try {
-                long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
-                long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
-                cpuPercentage = (cpuTime == 0) ? 0: 100 * threadUserTime / cpuTime;
-            } catch (UnsupportedOperationException x) {
-                x.printStackTrace(writer);
-                cpuPercentage = 0;
-            }
-            writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
-                    t.getThreadName(),
-                    t.getThreadId(),
-                    t.getThreadId(),
-                    t.getThreadState(),
-                    cpuPercentage);
-            final LockInfo lock = t.getLockInfo();
-            if (lock != null && t.getThreadState() != Thread.State.BLOCKED) {
-                writer.printf("\n    - waiting on <0x%08x> (a %s)",
-                        lock.getIdentityHashCode(),
-                        lock.getClassName());
-                writer.printf("\n    - locked <0x%08x> (a %s)",
-                        lock.getIdentityHashCode(),
-                        lock.getClassName());
-            } else if (lock != null && t.getThreadState() == Thread.State.BLOCKED) {
-                writer.printf("\n    - waiting to lock <0x%08x> (a %s)",
-                        lock.getIdentityHashCode(),
-                        lock.getClassName());
-            }
-
-            if (t.isSuspended()) {
-                writer.print(" (suspended)");
-            }
-
-            if (t.isInNative()) {
-                writer.print(" (running in native)");
-            }
-
-            writer.println();
-            if (t.getLockOwnerName() != null) {
-                writer.printf("     owned by %s id=%d\n", t.getLockOwnerName(), t.getLockOwnerId());
-            }
-
-            final StackTraceElement[] elements = t.getStackTrace();
-            final MonitorInfo[] monitors = t.getLockedMonitors();
-
-            for (int i = 0; i < elements.length; i++) {
-                final StackTraceElement element = elements[i];
-                writer.printf("    at %s\n", element);
-                for (int j = 1; j < monitors.length; j++) {
-                    final MonitorInfo monitor = monitors[j];
-                    if (monitor.getLockedStackDepth() == i) {
-                        writer.printf("      - locked %s\n", monitor);
-                    }
-                }
-            }
-            writer.println();
-
-            final LockInfo[] locks = t.getLockedSynchronizers();
-            if (locks.length > 0) {
-                writer.printf("    Locked synchronizers: count = %d\n", locks.length);
-                for (LockInfo l : locks) {
-                    writer.printf("      - %s\n", l);
-                }
-                writer.println();
-            }
+            printThreadInfo(writer, threads[ti], mbean);
         }
 
         // Print any information about deadlocks.
@@ -305,6 +250,88 @@ public class ThreadDumps extends Component {
 
         writer.println();
         writer.flush();
+    }
+
+    /**
+     * Prints the {@link ThreadInfo} (because {@link ThreadInfo#toString()} caps out the stack trace at 8 frames)
+     *
+     * @param writer the writer to print to.
+     * @param t      the thread to print
+     * @param mbean  the {@link ThreadMXBean} to use.
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
+            justification = "We don't want platform specific"
+    )
+    public static void printThreadInfo(PrintWriter writer, ThreadInfo t, ThreadMXBean mbean) {
+        long cpuPercentage;
+        try {
+            long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
+            long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
+            cpuPercentage = (cpuTime == 0) ? 0: 100 * threadUserTime / cpuTime;
+        } catch (UnsupportedOperationException x) {
+            x.printStackTrace(writer);
+            cpuPercentage = 0;
+        }
+        writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
+                t.getThreadName(),
+                t.getThreadId(),
+                t.getThreadId(),
+                t.getThreadState(),
+                cpuPercentage);
+        final LockInfo lock = t.getLockInfo();
+        if (lock != null && t.getThreadState() != Thread.State.BLOCKED) {
+            writer.printf("\n    - waiting on <0x%08x> (a %s)",
+                    lock.getIdentityHashCode(),
+                    lock.getClassName());
+            writer.printf("\n    - locked <0x%08x> (a %s)",
+                    lock.getIdentityHashCode(),
+                    lock.getClassName());
+        } else if (lock != null && t.getThreadState() == Thread.State.BLOCKED) {
+            writer.printf("\n    - waiting to lock <0x%08x> (a %s)",
+                    lock.getIdentityHashCode(),
+                    lock.getClassName());
+        }
+
+        if (t.isSuspended()) {
+            writer.print(" (suspended)");
+        }
+
+        if (t.isInNative()) {
+            writer.print(" (running in native)");
+        }
+
+        writer.println();
+        if (t.getLockOwnerName() != null) {
+            writer.printf("      owned by \"%s\" id=%d (0x%x)\n",
+                    t.getLockOwnerName(),
+                    t.getLockOwnerId(),
+                    t.getLockOwnerId());
+        }
+
+        final StackTraceElement[] elements = t.getStackTrace();
+        final MonitorInfo[] monitors = t.getLockedMonitors();
+
+        for (int i = 0; i < elements.length; i++) {
+            final StackTraceElement element = elements[i];
+            writer.printf("    at %s\n", element);
+            for (int j = 1; j < monitors.length; j++) {
+                final MonitorInfo monitor = monitors[j];
+                if (monitor.getLockedStackDepth() == i) {
+                    writer.printf("      - locked %s\n", monitor);
+                }
+            }
+        }
+        writer.println();
+
+        final LockInfo[] locks = t.getLockedSynchronizers();
+        if (locks.length > 0) {
+            writer.printf("    Locked synchronizers: count = %d\n", locks.length);
+            for (LockInfo l : locks) {
+                writer.printf("      - %s\n", l);
+            }
+            writer.println();
+        }
     }
 
     /**
