@@ -49,7 +49,11 @@ public class DeadlockTrackChecker extends PeriodicWork {
                 ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks, Integer.MAX_VALUE);
 
                 for (ThreadInfo threadInfo : deadLockThreads) {
-                    ThreadDumps.printThreadInfo(builder, threadInfo, mbean);
+                    try {
+                        ThreadDumps.printThreadInfo(builder, threadInfo, mbean);
+                    } catch (LinkageError e) {
+                        builder.println(threadInfo);
+                    }
                 }
             } finally {
                 builder.close();

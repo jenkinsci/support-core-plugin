@@ -72,18 +72,27 @@ public class DeadlockTest {
     });
 
     t1.start();
-    t2.start();
+    try {
+      t2.start();
+      try {
 
-    Thread.sleep(1000 * 5); // Wait 5 seconds, then execute deadlock checker.
+        Thread.sleep(1000 * 5); // Wait 5 seconds, then execute deadlock checker.
 
-    // Force call deadlock checker
-    DeadlockTrackChecker dtc = new DeadlockTrackChecker();
-    dtc.doRun();
+        // Force call deadlock checker
+        DeadlockTrackChecker dtc = new DeadlockTrackChecker();
+        dtc.doRun();
 
-    // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread could be
-    // invoked twice.
-    files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
-    assertNotNull("There should be at least one deadlock file", files);
-    assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
+        // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread could be
+
+        // invoked twice.
+        files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
+        assertNotNull("There should be at least one deadlock file", files);
+        assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
+      } finally {
+        t2.stop();
+      }
+    } finally {
+      t1.stop();
+    }
   }
 }
