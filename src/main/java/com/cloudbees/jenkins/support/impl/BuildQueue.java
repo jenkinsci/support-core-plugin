@@ -90,10 +90,10 @@ public class BuildQueue extends Component {
               }
 
               for (QueueTaskDispatcher taskDispatcher : QueueTaskDispatcher.all()) {
-                  out.println("Task Dispatcher: " + taskDispatcher);
-                  out.println(" - Can run: " + taskDispatcher.canRun(item));
+                  out.println("  * Task Dispatcher: " + taskDispatcher);
+                  out.println("    - Can run: " + taskDispatcher.canRun(item));
               }
-
+              out.println("----");
               out.println();
             }
           } finally {
