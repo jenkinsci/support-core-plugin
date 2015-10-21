@@ -45,6 +45,7 @@ import javax.annotation.CheckForNull;
 import javax.servlet.ServletContext;
 
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 import org.kohsuke.stapler.Stapler;
 
 /**
@@ -509,6 +510,7 @@ public class AboutJenkins extends Component {
             } else {
                 out.println("  * Mode:    WAR");
             }
+            out.println("  * Url:     " + JenkinsLocationConfiguration.get().getUrl());
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
