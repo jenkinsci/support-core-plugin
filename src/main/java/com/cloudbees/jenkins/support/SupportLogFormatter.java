@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support;
 
+import org.apache.commons.lang.time.FastDateFormat;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.MessageFormat;
@@ -37,9 +39,7 @@ import java.util.logging.LogRecord;
  * @author Stephen Connolly
  */
 public class SupportLogFormatter extends Formatter {
-    private final Date date = new Date();
-    private final MessageFormat formatter =
-            new MessageFormat("{0,date,yyyy-MM-dd} {0,time,HH:mm:ss.SSSZ} {1}\t{2}\t{3}: {4}\n");
+    FastDateFormat fdf = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZ");
     private final Object[] args = new Object[6];
 
     @Override
@@ -47,32 +47,48 @@ public class SupportLogFormatter extends Formatter {
             value = {"DE_MIGHT_IGNORE"},
             justification = "The exception wasn't thrown on our stack frame"
     )
-    public synchronized String format(LogRecord record) {
-        date.setTime(record.getMillis());
-        args[0] = date;
-        args[1] = "[id=" + record.getThreadID() + "]";
-        args[2] = record.getLevel().getName();
-        args[3] = record.getSourceMethodName() != null
-                ? abbreviateClassName(
-                record.getSourceClassName() == null ? record.getLoggerName() : record.getSourceClassName(), 32)
-                + "#" + record.getSourceMethodName()
-                : abbreviateClassName(
-                        record.getSourceClassName() == null ? record.getLoggerName() : record.getSourceClassName(),
-                        40);
-        args[4] = formatMessage(record);
-        StringBuffer buf = formatter.format(args, new StringBuffer(), null);
+    public String format(LogRecord record) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(fdf.format(new Date(record.getMillis())));
+        builder.append(" [id=").append(record.getThreadID()).append("]");
+
+        builder.append("\t").append(record.getLevel().getName()).append("\t");
+
+        if (record.getSourceMethodName() != null) {
+            String sourceClass;
+            if (record.getSourceClassName() == null) {
+                sourceClass = record.getLoggerName();
+            } else {
+                sourceClass = record.getSourceClassName();
+            }
+
+            builder.append(abbreviateClassName(sourceClass, 32)).append("#").append(record.getSourceMethodName());
+        } else {
+            String sourceClass;
+            if (record.getSourceClassName() == null) {
+                sourceClass = record.getLoggerName();
+            } else {
+                sourceClass = record.getSourceClassName();
+            }
+            builder.append(abbreviateClassName(sourceClass, 40));
+        }
+
+        builder.append(": ").append(formatMessage(record));
+
         if (record.getThrown() != null) {
             try {
                 StringWriter writer = new StringWriter();
                 PrintWriter out = new PrintWriter(writer);
                 record.getThrown().printStackTrace(out);
                 out.close();
-                buf.append(writer.toString());
+                builder.append(writer.toString());
             } catch (Exception e) {
                 // ignore
             }
         }
-        return buf.toString();
+
+        builder.append("\n");
+        return builder.toString();
     }
 
     public String abbreviateClassName(String fqcn, int targetLength) {
