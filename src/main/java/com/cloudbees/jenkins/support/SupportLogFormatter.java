@@ -48,12 +48,11 @@ public class SupportLogFormatter extends Formatter {
             justification = "The exception wasn't thrown on our stack frame"
     )
     public String format(LogRecord record) {
-        StringBuffer buffer = new StringBuffer();
-        fdf.format(new Date(record.getMillis()), buffer);
+        StringBuilder builder = new StringBuilder();
+        builder.append(fdf.format(new Date(record.getMillis())));
+        builder.append(" [id=").append(record.getThreadID()).append("]");
 
-        buffer.append(" [id=").append(record.getThreadID()).append("]");
-
-        buffer.append("\t").append(record.getLevel().getName()).append("\t");
+        builder.append("\t").append(record.getLevel().getName()).append("\t");
 
         if (record.getSourceMethodName() != null) {
             String sourceClass;
@@ -63,7 +62,7 @@ public class SupportLogFormatter extends Formatter {
                 sourceClass = record.getSourceClassName();
             }
 
-            buffer.append(abbreviateClassName(sourceClass, 32)).append("#").append(record.getSourceMethodName());
+            builder.append(abbreviateClassName(sourceClass, 32)).append("#").append(record.getSourceMethodName());
         } else {
             String sourceClass;
             if (record.getSourceClassName() == null) {
@@ -71,10 +70,10 @@ public class SupportLogFormatter extends Formatter {
             } else {
                 sourceClass = record.getSourceClassName();
             }
-            buffer.append(abbreviateClassName(sourceClass, 40));
+            builder.append(abbreviateClassName(sourceClass, 40));
         }
 
-        buffer.append(": ").append(formatMessage(record));
+        builder.append(": ").append(formatMessage(record));
 
         if (record.getThrown() != null) {
             try {
@@ -82,14 +81,14 @@ public class SupportLogFormatter extends Formatter {
                 PrintWriter out = new PrintWriter(writer);
                 record.getThrown().printStackTrace(out);
                 out.close();
-                buffer.append(writer.toString());
+                builder.append(writer.toString());
             } catch (Exception e) {
                 // ignore
             }
         }
 
-        buffer.append("\n");
-        return buffer.toString();
+        builder.append("\n");
+        return builder.toString();
     }
 
     public String abbreviateClassName(String fqcn, int targetLength) {
