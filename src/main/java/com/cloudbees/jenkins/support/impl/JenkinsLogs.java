@@ -111,8 +111,9 @@ public class JenkinsLogs extends Component {
                                     try {
                                         List<LogRecord> records = null;
                                         if (needHack) {
-                                            if (computer.getChannel() != null) {
-                                                Future<List<LogRecord>> future = SlaveLogFetcher.getLogRecords(computer.getChannel());
+                                            VirtualChannel channel = computer.getChannel();
+                                            if (channel != null) {
+                                                Future<List<LogRecord>> future = SlaveLogFetcher.getLogRecords(channel);
                                                 records = future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                                             }
                                         }
