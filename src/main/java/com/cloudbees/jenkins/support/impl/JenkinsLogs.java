@@ -19,8 +19,9 @@ import hudson.logging.LogRecorder;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.PeriodicWork;
+import hudson.remoting.*;
 import hudson.remoting.Callable;
-import hudson.remoting.VirtualChannel;
+import hudson.remoting.Future;
 import hudson.security.Permission;
 import hudson.slaves.Cloud;
 import hudson.slaves.SlaveComputer;
@@ -45,11 +46,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -112,9 +109,19 @@ public class JenkinsLogs extends Component {
                                     out.println("N/A");
                                 } else {
                                     try {
-                                        List<LogRecord> records = needHack
-                                                ? SlaveLogFetcher.getLogRecords(computer)
-                                                : computer.getLogRecords();
+                                        List<LogRecord> records = null;
+                                        if (needHack) {
+                                            VirtualChannel channel = computer.getChannel();
+                                            if (channel != null) {
+                                                Future<List<LogRecord>> future = SlaveLogFetcher.getLogRecords(channel);
+                                                records = future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                                            }
+                                        }
+
+                                        if (records == null) {
+                                            records = computer.getLogRecords();
+                                        }
+
                                         for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
                                              iterator.hasPrevious(); ) {
                                             LogRecord logRecord = iterator.previous();
@@ -458,6 +465,15 @@ public class JenkinsLogs extends Component {
             }
         }
 
+        public static Future<List<LogRecord>> getLogRecords(@NonNull VirtualChannel channel) throws IOException {
+            return channel.callAsync(new SlaveLogFetcher());
+        }
+
+        /**
+         * @deprecated Please use getLogRecords(Channel) instead. This method is synchronous which could cause
+         * the channel to block.
+         */
+        @Deprecated
         public static List<LogRecord> getLogRecords(Computer computer) throws IOException, InterruptedException {
             VirtualChannel channel = computer.getChannel();
             if (channel == null) {
