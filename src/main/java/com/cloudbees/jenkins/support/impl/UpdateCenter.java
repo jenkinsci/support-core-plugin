@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * @since 2.30
  * @author schristou88
  *         Date: 11/25/15
  *         Time: 5:36 PM
@@ -54,6 +55,7 @@ public class UpdateCenter extends Component {
 
                             out.println("======");
 
+                            out.println("Update center name: " + updateCenter.getClass().getName());
                             out.println("Last updated: " + updateCenter.getLastUpdatedString());
                         }
                     }
