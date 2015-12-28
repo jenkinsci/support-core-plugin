@@ -52,7 +52,6 @@ public class UpdateCenter extends Component {
 
                             out.println("======");
 
-                            out.println("Update center name: " + updateCenter.getClass().getName());
                             out.println("Last updated: " + updateCenter.getLastUpdatedString());
                         }
                     }
