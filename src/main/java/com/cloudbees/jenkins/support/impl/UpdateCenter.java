@@ -48,6 +48,7 @@ public class UpdateCenter extends Component {
                             for (UpdateSite c : updateCenter.getSiteList()) {
                                 out.println(" - Url: " + c.getUrl());
                                 out.println(" - Connection Url: " + c.getConnectionCheckUrl());
+                                out.println(" - Implementation Type: " + c.getClass().getName());
                             }
 
                             out.println("======");
