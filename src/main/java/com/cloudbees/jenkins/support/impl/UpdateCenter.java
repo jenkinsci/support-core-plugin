@@ -16,9 +16,6 @@ import java.util.Set;
 
 /**
  * @since 2.30
- * @author schristou88
- *         Date: 11/25/15
- *         Time: 5:36 PM
  */
 @Extension
 public class UpdateCenter extends Component {
