@@ -63,6 +63,7 @@ import jenkins.model.Jenkins;
 public class JenkinsLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(JenkinsLogs.class.getName());
+    private static final int MAX_ROTATE_LOGS = Integer.getInteger(JenkinsLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
     private final Map<String,LogRecorder> logRecorders = Jenkins.getInstance().getLog().logRecorders;
     private final File customLogs = new File(new File(Jenkins.getInstance().getRootDir(), "logs"), "custom");
 
@@ -492,7 +493,7 @@ public class JenkinsLogs extends Component {
         @SuppressWarnings(value="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification="if mkdirs fails, will just get a stack trace later")
         LogFile(String name) throws IOException {
             customLogs.mkdirs();
-            stream = new ReopenableRotatingFileOutputStream(new File(customLogs, name + ".log"), 9);
+            stream = new ReopenableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
             // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just truncated
             stream.rewind();
             handler = new StreamHandler(stream, new SupportLogFormatter());
