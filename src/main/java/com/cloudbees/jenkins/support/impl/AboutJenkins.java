@@ -23,6 +23,7 @@ import hudson.Util;
 import hudson.lifecycle.Lifecycle;
 import hudson.model.*;
 import hudson.remoting.Callable;
+import hudson.remoting.Launcher;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.IOUtils;
@@ -803,6 +804,7 @@ public class AboutJenkins extends Component {
                     .replaceAll("`", "&#96;") + "`");
             out.println("      - Labels:         " + getLabelString(Jenkins.getInstance()));
             out.println("      - Usage:          `" + Jenkins.getInstance().getMode() + "`");
+            out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : Jenkins.getInstance().getNodes()) {
