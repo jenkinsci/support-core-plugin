@@ -252,6 +252,7 @@ public class ThreadDumps extends Component {
         writer.flush();
     }
 
+    // TODO Functions.sortThreadsAndGetGroupMap + Functions.Functions.dumpThreadInfo not showing lock owners in some cases
     /**
      * Prints the {@link ThreadInfo} (because {@link ThreadInfo#toString()} caps out the stack trace at 8 frames)
      *
