@@ -28,6 +28,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.*;
@@ -57,8 +59,18 @@ public class DeadlockTest {
       public void run() {
         synchronized (object1) {
           sleep();
-          synchronized (object2) { }
+          firstMethod();
         }
+      }
+      void firstMethod() {
+          secondMethod(20);
+      }
+      void secondMethod(int x) {
+          if (x > 0) {
+              secondMethod(x - 1);
+          } else {
+              synchronized (object2) {}
+          }
       }
     });
 
@@ -88,6 +100,9 @@ public class DeadlockTest {
         files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
         assertNotNull("There should be at least one deadlock file", files);
         assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
+        String text = FileUtils.readFileToString(files[initialCount]);
+        assertThat(text, Matchers.containsString("secondMethod"));
+        assertThat(text, Matchers.containsString("firstMethod"));
       } finally {
         t2.stop();
       }
