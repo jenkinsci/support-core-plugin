@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * Add information about the different update centers available to
+ * the Jenkins instance.
+ *
  * @since 2.30
  */
 @Extension
