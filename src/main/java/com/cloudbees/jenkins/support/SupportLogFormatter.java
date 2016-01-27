@@ -24,12 +24,20 @@
 
 package com.cloudbees.jenkins.support;
 
+/***********************************************
+ * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
+ * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
+ ***********************************************/
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
+/***********************************************
+ * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
+ * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
+ ***********************************************/
 
 /**
  * Format log files in a nicer format that is easier to read and search.
