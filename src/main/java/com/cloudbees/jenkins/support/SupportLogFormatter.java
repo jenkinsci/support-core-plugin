@@ -24,14 +24,20 @@
 
 package com.cloudbees.jenkins.support;
 
-import org.apache.commons.lang.time.FastDateFormat;
-
+/***********************************************
+ * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
+ * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
+ ***********************************************/
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
+/***********************************************
+ * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
+ * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
+ ***********************************************/
 
 /**
  * Format log files in a nicer format that is easier to read and search.
@@ -39,7 +45,14 @@ import java.util.logging.LogRecord;
  * @author Stephen Connolly
  */
 public class SupportLogFormatter extends Formatter {
-    FastDateFormat fdf = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZ");
+    
+    private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        }
+    };
+
     private final Object[] args = new Object[6];
 
     @Override
@@ -49,7 +62,7 @@ public class SupportLogFormatter extends Formatter {
     )
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder();
-        builder.append(fdf.format(new Date(record.getMillis())));
+        builder.append(threadLocalDateFormat.get().format(new Date(record.getMillis())));
         builder.append(" [id=").append(record.getThreadID()).append("]");
 
         builder.append("\t").append(record.getLevel().getName()).append("\t");
