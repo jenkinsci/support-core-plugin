@@ -48,9 +48,11 @@ public class LoggerManager extends Component {
                 Enumeration<String> loggerNames = logManager.getLoggerNames();
                 while (loggerNames.hasMoreElements()) {
                     String loggerName =  loggerNames.nextElement();
-                    Level level = logManager.getLogger(loggerName).getLevel();
-                    if (level != null) {
-                        out.println(loggerName + " - " + level);
+                    if (logManager.getLogger(loggerName) != null) {
+                        Level level = logManager.getLogger(loggerName).getLevel();
+                        if (level != null) {
+                            out.println(loggerName + " - " + level);
+                        }
                     }
                 }
             }
