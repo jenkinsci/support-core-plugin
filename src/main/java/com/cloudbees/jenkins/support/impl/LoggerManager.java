@@ -15,6 +15,7 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  * Output the current list of loggers for the master and display the
@@ -48,8 +49,9 @@ public class LoggerManager extends Component {
                 Enumeration<String> loggerNames = logManager.getLoggerNames();
                 while (loggerNames.hasMoreElements()) {
                     String loggerName =  loggerNames.nextElement();
-                    if (logManager.getLogger(loggerName) != null) {
-                        Level level = logManager.getLogger(loggerName).getLevel();
+                    Logger loggerByName = logManager.getLogger(loggerName);
+                    if (loggerByName != null) {
+                        Level level = loggerByName.getLevel();
                         if (level != null) {
                             out.println(loggerName + " - " + level);
                         }
