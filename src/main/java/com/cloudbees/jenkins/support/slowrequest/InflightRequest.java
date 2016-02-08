@@ -57,6 +57,11 @@ final class InflightRequest {
      */
     final ReadableUserAgent userAgent;
 
+    /**
+     * Locale of slow request
+     */
+    final String locale;
+
     InflightRequest(HttpServletRequest req) {
         String query = req.getQueryString();
         url = req.getRequestURL() + (query == null ? "" : "?" + query);
@@ -65,6 +70,7 @@ final class InflightRequest {
         referer = req.getHeader("Referer");
         String agentHeader = req.getHeader("User-Agent");
         userAgent = agentHeader != null ? UADetectorServiceFactory.getResourceModuleParser().parse(agentHeader) : null;
+        locale = req.getLocale().toString();
     }
 
     void writeHeader(PrintWriter w) {
@@ -73,6 +79,7 @@ final class InflightRequest {
         w.println("User Agent: " + userAgent);
         w.println("Date: " + new Date());
         w.println("URL: " + url);
+        w.println("Locale: " + locale);
         w.println();
     }
 }
