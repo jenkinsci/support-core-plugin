@@ -145,7 +145,7 @@ public class SupportLogHandler extends Handler {
                         return name.startsWith(logFilePrefix) && name.endsWith(".log");
                     }
                 });
-                if (files.length > maxFiles) {
+                if (files != null && files.length > maxFiles) {
                     Arrays.sort(files, new Comparator<File>() {
                         public int compare(File o1, File o2) {
                             long lm1 = o1.lastModified();

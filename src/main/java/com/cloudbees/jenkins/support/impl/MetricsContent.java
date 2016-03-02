@@ -7,6 +7,7 @@ import com.codahale.metrics.json.HealthCheckModule;
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import hudson.model.Computer;
 
 import java.io.IOException;
 import java.io.OutputStream;
