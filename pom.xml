@@ -75,7 +75,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.findbugs.failure.strict>true</maven.findbugs.failure.strict>
+    <findbugs-maven-plugin.version>3.0.3</findbugs-maven-plugin.version>
+    <findbugs.failOnError>true</findbugs.failOnError>
   </properties>
 
   <repositories>
@@ -99,9 +100,10 @@
       <version>1.0</version>
     </dependency>
     <dependency>
-      <groupId>com.github.stephenc.findbugs</groupId>
-      <artifactId>findbugs-annotations</artifactId>
-      <version>1.3.9-1</version>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>annotations</artifactId>
+      <version>3.0.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -175,13 +177,15 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>${findbugs-maven-plugin.version}</version>
         <configuration>
           <excludeFilterFile>src/findbugs/excludesFilter.xml</excludeFilterFile>
-          <failOnError>${maven.findbugs.failure.strict}</failOnError>
+          <failOnError>${findbugs.failOnError}</failOnError>
+          <xmlOutput>true</xmlOutput>
         </configuration>
         <executions>
           <execution>
+            <id>run-findbugs</id>
             <phase>verify</phase>
             <goals>
               <goal>check</goal>

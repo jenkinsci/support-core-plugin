@@ -55,6 +55,7 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Log files from the different nodes
@@ -373,12 +374,21 @@ public class JenkinsLogs extends Component {
     /**
      * Grabs any files that look like log files directly under {@code $JENKINS_HOME}, just in case
      * any of them are useful.
-     *
+     * Does not add anything if Jenkins instance is unavailable.
      * Some plugins write log files here.
      */
     private void addOtherMasterLogs(Container result) {
-        for (File f : Jenkins.getInstance().getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
-            result.add(new FileContent("other-logs/" + f.getName(), f));
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
+            return;
+        }
+
+        File[] files = jenkins.getRootDir().listFiles(ROTATED_LOGFILE_FILTER);
+        if (files != null) {
+            for (File f : files) {
+                result.add(new FileContent("other-logs/" + f.getName(), f));
+            }
         }
     }
 
@@ -419,8 +429,20 @@ public class JenkinsLogs extends Component {
             }
         });
 
+        final Jenkins jenkins = Jenkins.getInstance();
+        if (jenkins == null) {
+            LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
+            return;
+        }
+        
+        final File[] julLogFiles = SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter());
+        if (julLogFiles == null) {
+            LOGGER.log(Level.WARNING, "Cannot add master java.util.logging logs to the bundle. Cannot access log files");
+            return;
+        }
+        
         // log records written to the disk
-        for (File file : SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter())){
+        for (File file : julLogFiles){
             result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
         }
     }
