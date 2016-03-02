@@ -383,8 +383,8 @@ public class JenkinsLogs extends Component {
             LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
             return;
         }
-        
-        for (File f : FileUtils.listFiles(jenkins.getRootDir(), null, false)) {
+
+        for (File f : jenkins.getRootDir().listFiles(ROTATED_LOGFILE_FILTER)) {
             result.add(new FileContent("other-logs/" + f.getName(), f));
         }
     }
