@@ -30,6 +30,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
+import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -64,6 +65,7 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
@@ -153,7 +155,7 @@ public class SupportPlugin extends Plugin {
     public SupportProvider getSupportProvider() {
         if (supportProvider == null) {
             // if this is not set, pick the first one that we can get our hands on
-            for (Descriptor<SupportProvider> d : Jenkins.getInstance().getDescriptorList(SupportProvider.class)) {
+            for (Descriptor<SupportProvider> d : Helper.getActiveInstance().getDescriptorList(SupportProvider.class)) {
                 if (d instanceof SupportProviderDescriptor) {
                     try {
                         supportProvider = ((SupportProviderDescriptor) (d)).newDefaultInstance();
@@ -168,9 +170,11 @@ public class SupportPlugin extends Plugin {
 
     /**
      * Working directory that the support-core plugin uses to write out files.
+     *
+     * @return the wrking directory that the support-core plugin uses to write out files.
      */
     public static File getRootDirectory() {
-        return new File(Jenkins.getInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
+        return new File(Helper.getActiveInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
     }
 
 
@@ -197,7 +201,13 @@ public class SupportPlugin extends Plugin {
         return excludedComponents != null ? excludedComponents : Collections.<String>emptySet();
     }
 
-    /** @see Component#getId */
+    /**
+     * Sets the ids of the components to be excluded.
+     *
+     * @param excludedComponents Component Ids (by default class names) to exclude.
+     * @see Component#getId
+     * @throws IOException if an error occurs while saving the configuration.
+     */
     public void setExcludedComponents(Set<String> excludedComponents) throws IOException {
         this.excludedComponents = excludedComponents;
         save();
@@ -230,7 +240,7 @@ public class SupportPlugin extends Plugin {
     public static void setLogLevel(Level level) {
         SupportPlugin instance = getInstance();
         instance.handler.setLevel(level);
-        for (Node n : Jenkins.getInstance().getNodes()) {
+        for (Node n : Helper.getActiveInstance().getNodes()) {
             Computer c = n.toComputer();
             if (c == null) {
                 continue;
@@ -247,11 +257,11 @@ public class SupportPlugin extends Plugin {
     }
 
     public static SupportPlugin getInstance() {
-        return Jenkins.getInstance().getPlugin(SupportPlugin.class);
+        return Helper.getActiveInstance().getPlugin(SupportPlugin.class);
     }
 
     public static ExtensionList<Component> getComponents() {
-        return Jenkins.getInstance().getExtensionList(Component.class);
+        return Helper.getActiveInstance().getExtensionList(Component.class);
     }
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
@@ -525,6 +535,12 @@ public class SupportPlugin extends Plugin {
             return null;
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
+        }
+
     }
 
     public static class LogFetcher implements Callable<List<LogRecord>, RuntimeException> {
@@ -532,6 +548,12 @@ public class SupportPlugin extends Plugin {
 
         public List<LogRecord> call() throws RuntimeException {
             return new ArrayList<LogRecord>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
 
     }
@@ -549,6 +571,12 @@ public class SupportPlugin extends Plugin {
         public Void call() throws RuntimeException {
             LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
             return null;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
 
     }
@@ -678,7 +706,7 @@ public class SupportPlugin extends Plugin {
     public static class GlobalConfigurationImpl extends GlobalConfiguration {
 
         public boolean isSelectable() {
-            return Jenkins.getInstance().getDescriptorList(SupportProvider.class).size() > 1;
+            return Helper.getActiveInstance().getDescriptorList(SupportProvider.class).size() > 1;
         }
 
         public SupportProvider getSupportProvider() {

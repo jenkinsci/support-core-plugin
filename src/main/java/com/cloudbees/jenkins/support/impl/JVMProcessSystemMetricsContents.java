@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.*;
+import com.cloudbees.jenkins.support.util.Helper;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -52,7 +53,7 @@ public class JVMProcessSystemMetricsContents extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Jenkins.getInstance();
+        Jenkins j = Helper.getActiveInstance();
         addUnixContents(container, j);
 
         for (Node node : j.getNodes()) {

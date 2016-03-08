@@ -59,7 +59,8 @@ public class SupportActionTest extends Assert {
             HtmlPage p = wc.goTo(root.getUrlName());
 
             HtmlForm form = p.getFormByName("bundle-contents");
-            Page zip = form.submit((HtmlButton) form.getHtmlElementsByTagName("button").get(0));
+            HtmlButton submit = (HtmlButton) form.getHtmlElementsByTagName("button").get(0);
+            Page zip = submit.click();
             File zipFile = File.createTempFile("test", "zip");
             IOUtils.copy(zip.getWebResponse().getContentAsStream(), zipFile);
 

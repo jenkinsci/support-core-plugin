@@ -9,6 +9,7 @@ import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
+import com.cloudbees.jenkins.support.util.Helper;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -55,6 +56,7 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
+import org.jenkinsci.remoting.RoleChecker;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -65,8 +67,8 @@ public class JenkinsLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(JenkinsLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(JenkinsLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
-    private final Map<String,LogRecorder> logRecorders = Jenkins.getInstance().getLog().logRecorders;
-    private final File customLogs = new File(new File(Jenkins.getInstance().getRootDir(), "logs"), "custom");
+    private final Map<String,LogRecorder> logRecorders = Helper.getActiveInstance().getLog().logRecorders;
+    private final File customLogs = new File(new File(Helper.getActiveInstance().getRootDir(), "logs"), "custom");
 
     @NonNull
     @Override
@@ -100,7 +102,7 @@ public class JenkinsLogs extends Component {
         // expensive remote computation are pooled together and executed later concurrently across all the slaves
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
 
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Helper.getActiveInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 result.add(
                         new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
@@ -247,7 +249,7 @@ public class JenkinsLogs extends Component {
 
         {// find all the slave launch log files and sort them newer ones first
 
-            File slaveLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            File slaveLogsDir = new File(Helper.getActiveInstance().getRootDir(), "logs/slaves");
             File[] logs = slaveLogsDir.listFiles();
             if (logs!=null) {
                 for (File dir : logs) {
@@ -264,7 +266,7 @@ public class JenkinsLogs extends Component {
         }
 
         {// this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Jenkins.getInstance().getNodes().size() * 5);
+            int acceptableSize = Math.max(256, Helper.getActiveInstance().getNodes().size() * 5);
 
             if (all.size() > acceptableSize)
                 all = all.subList(0, acceptableSize);
@@ -434,13 +436,13 @@ public class JenkinsLogs extends Component {
             LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
             return;
         }
-        
+
         final File[] julLogFiles = SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter());
         if (julLogFiles == null) {
             LOGGER.log(Level.WARNING, "Cannot add master java.util.logging logs to the bundle. Cannot access log files");
             return;
         }
-        
+
         // log records written to the disk
         for (File file : julLogFiles){
             result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
@@ -486,6 +488,12 @@ public class JenkinsLogs extends Component {
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
 
         public static Future<List<LogRecord>> getLogRecords(@NonNull VirtualChannel channel) throws IOException {

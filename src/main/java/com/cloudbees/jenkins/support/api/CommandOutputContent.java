@@ -6,6 +6,7 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.*;
 import java.util.WeakHashMap;
@@ -43,6 +44,12 @@ public class CommandOutputContent extends StringContent {
             }
             pw.flush();
             return bos.toString();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
     }
 

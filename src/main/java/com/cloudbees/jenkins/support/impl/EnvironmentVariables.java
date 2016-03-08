@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -11,6 +12,7 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -57,7 +59,7 @@ public class EnvironmentVariables extends Component {
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
                             for (Map.Entry<String, String> entry : getEnvironmentVariables(
-                                    Jenkins.getInstance()).entrySet()) {
+                                    Helper.getActiveInstance()).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -66,7 +68,7 @@ public class EnvironmentVariables extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Helper.getActiveInstance().getNodes()) {
             result.add(
                     new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
                         @Override
@@ -108,6 +110,12 @@ public class EnvironmentVariables extends Component {
                             return System.getenv();
                         }
                     }));
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;
