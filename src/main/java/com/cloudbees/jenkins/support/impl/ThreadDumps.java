@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -36,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * Thread dumps from the nodes.
@@ -81,7 +83,7 @@ public class ThreadDumps extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Helper.getActiveInstance().getNodes()) {
             // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
             final Future<String> threadDump;
             try {
@@ -186,13 +188,20 @@ public class ThreadDumps extends Component {
             }
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
+        }
+
         private static final long serialVersionUID = 1L;
     }
 
     /**
      * Dumps all of the threads' current information to an output stream.
      *
-     * @param out an output stream
+     * @param out an output stream.
+     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
         try {
@@ -206,7 +215,8 @@ public class ThreadDumps extends Component {
     /**
      * Dumps all of the threads' current information to an output stream.
      *
-     * @param out an output stream
+     * @param out an output stream.
+     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
     @IgnoreJRERequirement
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
@@ -338,7 +348,8 @@ public class ThreadDumps extends Component {
     /**
      * Dumps all of the threads' current information to an output stream.
      *
-     * @param out an output stream
+     * @param out an output stream.
+     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
             value = {"VA_FORMAT_STRING_USES_NEWLINE"},

@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.util;
 
 import hudson.remoting.Callable;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.util.Locale;
 
@@ -29,6 +30,12 @@ public enum SystemPlatform {
         private static final long serialVersionUID = 1L;
         public SystemPlatform call() {
             return current();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
     }
 }

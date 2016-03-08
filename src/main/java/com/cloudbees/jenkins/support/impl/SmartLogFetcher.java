@@ -11,6 +11,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.util.IOUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -271,6 +272,12 @@ class SmartLogFetcher {
             return result;
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
+        }
+
     }
 
     /**
@@ -342,6 +349,12 @@ class SmartLogFetcher {
                         }
                     }
                 }
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void checkRoles(RoleChecker checker) throws SecurityException {
+                // TODO: do we have to verify some role?
             }
         });
 

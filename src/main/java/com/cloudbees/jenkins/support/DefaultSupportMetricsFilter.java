@@ -46,7 +46,7 @@ public class DefaultSupportMetricsFilter extends SupportMetricsFilter {
     /**
      * Creates a new instance of the filter.
      *
-     * @param registry
+     * @param registry Metric registry to use.
      */
     public DefaultSupportMetricsFilter(MetricRegistry registry) {
         super(registry, createMeterNamesByStatusCode(), NAME_PREFIX + "other");
