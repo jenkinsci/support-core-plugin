@@ -58,6 +58,7 @@ public class SupportMetricsFilter implements Filter {
     /**
      * Creates a new instance of the filter.
      *
+     * @param registry               Metric registry to use.
      * @param meterNamesByStatusCode A map, keyed by status code, of meter names that we are
      *                               interested in.
      * @param otherMetricName        The name used for the catch-all meter.

@@ -59,7 +59,7 @@ public abstract class TruncatedContent extends Content {
    * {$Content} that will be printed to a specific {$PrintWriter}.
    *
    * @param out PrintWriter to print to
-   * @throws IOException
+   * @throws IOException if and error occurs while performing the operation.
    */
   protected abstract void printTo(PrintWriter out) throws IOException;
 

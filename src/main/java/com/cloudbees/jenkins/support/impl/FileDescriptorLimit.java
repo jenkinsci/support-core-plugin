@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Helper;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -34,6 +35,8 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import jenkins.model.Jenkins;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * @author schristou88
@@ -57,7 +60,7 @@ public class FileDescriptorLimit extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Jenkins.getInstance();
+        Jenkins j = Helper.getActiveInstance();
         addContents(container, j);
         for (Node node : j.getNodes()) {
             addContents(container, node);
@@ -139,18 +142,29 @@ public class FileDescriptorLimit extends Component {
             pw.flush();
             return bos.toString();
         }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
+        }
     }
 
     /**
      * * Using OperatingSystemMXBean, we can obtain the total number of open file descriptors.
      */
+    @IgnoreJRERequirement
     private static void getOpenFileDescriptorCount(PrintWriter writer) throws UnsupportedEncodingException {
-        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-        if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
-            UnixOperatingSystemMXBean unixOperatingSystemMXBean = (UnixOperatingSystemMXBean) operatingSystemMXBean;
-            writer.println("Open File Descriptor Count: " + unixOperatingSystemMXBean.getOpenFileDescriptorCount());
-        } else {
-            writer.println("Wrong bean: " + operatingSystemMXBean);
+        try {
+            OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+            if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
+                UnixOperatingSystemMXBean unixOperatingSystemMXBean = (UnixOperatingSystemMXBean) operatingSystemMXBean;
+                writer.println("Open File Descriptor Count: " + unixOperatingSystemMXBean.getOpenFileDescriptorCount());
+            } else {
+                writer.println("Wrong bean: " + operatingSystemMXBean);
+            }
+        } catch(LinkageError e) {
+            writer.println("Unable to get the total number of open file descriptors using OperatingSystemMXBean");
         }
     }
 

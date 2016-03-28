@@ -34,6 +34,7 @@ import hudson.security.ACL;
 import jenkins.model.Jenkins;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.args4j.Argument;
 
 import java.io.File;
@@ -109,6 +110,12 @@ public class SupportCommand extends CLICommand {
             File f = File.createTempFile(filename, ".zip");
             System.err.println("Creating: " + f);
             return new RemoteOutputStream(new FileOutputStream(f));
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
     }
 

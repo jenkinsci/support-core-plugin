@@ -24,7 +24,9 @@ public abstract class LogRecordContent extends PrintedContent {
     /**
      * Iterates {@link LogRecord}s to be printed as this content.
      *
+     * @return the {@link LogRecord}s to be printed as this content.
      * @see Lists#reverse(List)
+     * @throws IOException if an error occurs while performing the operation.
      */
     public abstract Iterable<LogRecord> getLogRecords() throws IOException;
 

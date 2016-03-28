@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -38,6 +39,7 @@ import hudson.util.HexBinaryConverter;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
 import org.codehaus.groovy.runtime.StackTraceUtils;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -81,7 +83,7 @@ public class NetworkInterfaces extends Component {
                 }
         );
 
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Helper.getActiveInstance().getNodes()) {
             result.add(
                     new Content("nodes/slave/" + node.getNodeName() + "/networkInterface.md") {
                         @Override
@@ -141,6 +143,12 @@ public class NetworkInterfaces extends Component {
             }
 
             return bos.toString();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
     }
 }
