@@ -534,6 +534,7 @@ public class AboutJenkins extends Component {
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
             out.println("  * Url:     " + (jlc != null ? jlc.getUrl() : "No JenkinsLocationConfiguration available"));
+            out.println("  * CSRF Protection: "  + jenkins.isUseCrumbs());
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
