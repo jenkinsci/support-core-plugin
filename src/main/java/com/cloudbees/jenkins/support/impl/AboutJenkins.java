@@ -734,7 +734,7 @@ public class AboutJenkins extends Component {
             String fullVersion = Jenkins.getVersion().toString();
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
-                out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));
+                out.println("FROM cloudbees/jenkins-enterprise:" + fullVersion.substring(0, s));
             } else {
                 out.println("FROM jenkins:" + fullVersion);
             }
