@@ -733,11 +733,11 @@ public class AboutJenkins extends Component {
             PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
             String fullVersion = Jenkins.getVersion().toString();
             int s = fullVersion.indexOf(' ');
-            if (s > 0 && fullVersion.contains("CloudBees")) {
-                out.println("FROM cloudbees/jenkins-enterprise:" + fullVersion.substring(0, s));
-            } else {
-                out.println("FROM jenkins:" + fullVersion);
-            }
+
+            String dockerImageLocation = System.getProperty(AboutJenkins.class.getName() + ".dockerImageLocation", "jenkins");
+
+            out.println("FROM " + dockerImageLocation + ": " + fullVersion.substring(0, s));
+
             if (pluginManager.getPlugin("nectar-license") != null) { // even if atop an OSS WAR
                 out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com");
             }
