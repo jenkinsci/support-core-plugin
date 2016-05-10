@@ -736,7 +736,7 @@ public class AboutJenkins extends Component {
 
             String dockerImageLocation = System.getProperty(AboutJenkins.class.getName() + ".dockerImageLocation", "jenkins");
 
-            out.println("FROM " + dockerImageLocation + ": " + fullVersion.substring(0, s));
+            out.println("FROM " + dockerImageLocation + ":" + fullVersion.substring(0, s));
 
             if (pluginManager.getPlugin("nectar-license") != null) { // even if atop an OSS WAR
                 out.println("ENV JENKINS_UC http://jenkins-updates.cloudbees.com");
