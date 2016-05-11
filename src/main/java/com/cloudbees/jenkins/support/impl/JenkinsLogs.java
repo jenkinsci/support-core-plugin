@@ -392,6 +392,15 @@ public class JenkinsLogs extends Component {
                 result.add(new FileContent("other-logs/" + f.getName(), f));
             }
         }
+        File logs = new File(jenkins.getRootDir(), "logs");
+        if (logs.isDirectory()) {
+            files = logs.listFiles(ROTATED_LOGFILE_FILTER);
+            if (files != null) {
+                for (File f : files) {
+                    result.add(new FileContent("other-logs/" + f.getName(), f));
+                }
+            }
+        }
     }
 
     /**
