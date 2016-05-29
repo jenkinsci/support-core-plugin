@@ -210,7 +210,7 @@ public class SupportAction implements RootAction {
 
     //=================================================================
 
-    public List<File> doGetFileList() throws IOException {
+    public List<File> getList() throws IOException {
         List<File> fileList = new ArrayList<File>();
         BundleBrowser bundleBrowser = new BundleBrowser();
         File[] list = bundleBrowser.getFileList();

@@ -43,24 +43,10 @@
       <a href="BundleBrowser">Browse</a>
 
       <f:form name="bundle-contents" method="POST" action="download">
-        <j:forEach var="component" items="${it.components}">
+        <j:forEach var="component" items="${it.list}">
           <f:entry field="component">
-            <div name="components">
-              <j:if test="${component.enabled}">
-                <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
-                            title="${component.displayName}"/>
-              </j:if>
-              <j:if test="${!component.enabled}">
-                <input type="checkbox"
-                       name="selected"
-                       value="false"
-                       disabled="disabled"/>
-                <label class="attach-previous" style="text-decoration: line-through;"
-                       title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
-                </label>
-              </j:if>
-              <input style="display:none" name="name" value="${component.id}"/>
-            </div>
+            ${component.name}
+            <br></br>
           </f:entry>
         </j:forEach>
         <f:entry>

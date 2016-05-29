@@ -1,4 +1,4 @@
-w<!--
+<!--
  ~ The MIT License
  ~
  ~ Copyright (c) 2013, CloudBees, Inc.
@@ -35,6 +35,17 @@ w<!--
         ${it.actionBlurb}
       </p>
 
+      <f:form name="bundle-contents" method="POST" action="download">
+        <j:forEach var="component" items="${it.list}">
+          <f:entry field="component">
+            <labelText action="download">${component.name}</labelText>
+            <br></br>
+          </f:entry>
+        </j:forEach>
+        <f:entry>
+          <f:submit value="${%Generate Bundle}"/>
+        </f:entry>
+      </f:form>
 
 
     </l:main-panel>
