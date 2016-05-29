@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 
+import com.cloudbees.jenkins.support.util.Helper;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
@@ -115,7 +116,7 @@ public class SupportAction implements RootAction {
     }
 
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        final Jenkins instance = Jenkins.getInstance();
+        final Jenkins instance = Helper.getActiveInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
         if (!"POST".equals(req.getMethod())) {
@@ -170,7 +171,7 @@ public class SupportAction implements RootAction {
                 try {
                     SupportPlugin.writeBundle(servletOutputStream, components);
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, e.getMessage(), e);
+                    logger.log(Level.FINE, e.getMessage(), e);
                 } finally {
                     SecurityContextHolder.setContext(old);
                 }

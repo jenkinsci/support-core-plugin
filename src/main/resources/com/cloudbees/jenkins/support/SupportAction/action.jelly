@@ -21,6 +21,7 @@
  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  ~ THE SOFTWARE.
  -->
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
   <l:task icon="${h.getIconFilePath(action)}" title="${action.displayName}"
           href="${h.getActionUrl(it.url,action)}"

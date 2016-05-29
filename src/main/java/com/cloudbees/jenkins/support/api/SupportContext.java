@@ -35,13 +35,19 @@ import com.codahale.metrics.health.HealthCheckRegistry;
  */
 public interface SupportContext {
     /**
-     * @deprecated use {@link com.codahale.metrics.jenkins.Metrics#metricRegistry()}
+     * Returns the {@link MetricRegistry} for the current Jenkins.
+     *
+     * @return the {@link MetricRegistry} for the current Jenkins.
+     * @deprecated use {@link jenkins.metrics.api.Metrics#metricRegistry()}
      */
     @Deprecated
     MetricRegistry getMetricsRegistry();
 
     /**
-     * @deprecated use {@link com.codahale.metrics.jenkins.Metrics#healthCheckRegistry()}
+     * Returns the {@link HealthCheckRegistry} for the current.
+     *
+     * @return the {@link HealthCheckRegistry} for the current.
+     * @deprecated use {@link jenkins.metrics.api.Metrics#healthCheckRegistry()}
      */
     @Deprecated
     HealthCheckRegistry getHealthCheckRegistry();

@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.security.ACL;
 import hudson.security.Permission;
@@ -85,7 +86,7 @@ public abstract class Component extends ExtensionPoint {
      * @return {@code true} if the current authentication can include this component in a bundle.
      */
     public boolean isEnabled() {
-        ACL acl = Jenkins.getInstance().getAuthorizationStrategy().getRootACL();
+        ACL acl = Helper.getActiveInstance().getAuthorizationStrategy().getRootACL();
         if (acl != null) {
             Authentication authentication = Jenkins.getAuthentication();
             assert authentication != null;
@@ -105,7 +106,11 @@ public abstract class Component extends ExtensionPoint {
     @NonNull
     public abstract String getDisplayName();
 
-    /** By default, the {@link Class#getSimpleName} of the component implementation. */
+    /**
+     * Returns the component id.
+     *
+     * @return by default, the {@link Class#getSimpleName} of the component implementation.
+     */
     @NonNull public String getId() {
         return getClass().getSimpleName();
     }

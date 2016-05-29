@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -70,7 +71,7 @@ public class BuildQueue extends Component {
         public void writeTo(OutputStream os) throws IOException {
           PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
           try {
-            List<Queue.Item> items = Jenkins.getInstance().getQueue().getApproximateItemsQuickly();
+            List<Queue.Item> items = Helper.getActiveInstance().getQueue().getApproximateItemsQuickly();
             out.println("Current build queue has " +  items.size() + " item(s).");
             out.println("---------------");
 

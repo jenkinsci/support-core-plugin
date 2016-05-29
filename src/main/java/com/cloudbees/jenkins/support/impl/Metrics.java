@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -12,6 +13,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.IOException2;
 import jenkins.model.Jenkins;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,7 +49,7 @@ public class Metrics extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Helper.getActiveInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,
                     metricsCache));
         }
@@ -82,6 +84,12 @@ public class Metrics extends Component {
                 throw new RuntimeException(e);
             }
             return bos.toByteArray();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void checkRoles(RoleChecker checker) throws SecurityException {
+            // TODO: do we have to verify some role?
         }
     }
 

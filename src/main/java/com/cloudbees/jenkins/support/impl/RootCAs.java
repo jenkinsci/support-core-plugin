@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -40,6 +41,7 @@ import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.*;
 import java.security.KeyStore;
@@ -76,7 +78,7 @@ public class RootCAs extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    Jenkins j = Jenkins.getInstance();
+    Jenkins j = Helper.getActiveInstance();
     addContents(container, j);
     for (Node node : j.getNodes()) {
       addContents(container, node);
@@ -128,6 +130,12 @@ public class RootCAs extends Component {
       StringWriter writer = new StringWriter();
       getRootCAList(writer);
       return writer.toString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void checkRoles(RoleChecker checker) throws SecurityException {
+      // TODO: do we have to verify some role?
     }
 
     private static final long serialVersionUID = 1L;
