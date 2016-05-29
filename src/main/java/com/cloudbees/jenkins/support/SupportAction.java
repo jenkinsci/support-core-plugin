@@ -31,6 +31,7 @@ import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.Permission;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
@@ -45,6 +46,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -203,5 +205,30 @@ public class SupportAction implements RootAction {
         public boolean isSelected() {
             return selected;
         }
+    }
+
+    //=================================================================
+
+    public List<File> doGetFileList() throws IOException {
+        List<File> fileList = new ArrayList<File>();
+        BundleBrowser bundleBrowser = new BundleBrowser();
+        File[] list = bundleBrowser.getFileList();
+        for(File file:list){
+            fileList.add(file);
+        }
+        return fileList;
+    }
+
+    public ListBoxModel doFillGoalTypeItems() throws IOException {
+        ListBoxModel items = new ListBoxModel();
+        List<File> fileList = new ArrayList<File>();
+        BundleBrowser bundleBrowser = new BundleBrowser();
+        File[] list = bundleBrowser.getFileList();
+
+        for(File file:list){
+            fileList.add(file);
+            items.add(file.getName(),file.getName());
+        }
+        return items;
     }
 }

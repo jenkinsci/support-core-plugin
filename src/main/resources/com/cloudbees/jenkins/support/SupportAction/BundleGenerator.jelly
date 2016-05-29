@@ -34,14 +34,6 @@
       <p>
         ${it.actionBlurb}
       </p>
-      <p>
-        ${%detail}
-      </p>
-
-      <a href="BundleGenerator">Download Bundles</a>
-      <br/>
-      <a href="BundleBrowser">Browse</a>
-
       <f:form name="bundle-contents" method="POST" action="download">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">
@@ -67,7 +59,6 @@
           <f:submit value="${%Generate Bundle}"/>
         </f:entry>
       </f:form>
-
     </l:main-panel>
   </l:layout>
 </j:jelly>

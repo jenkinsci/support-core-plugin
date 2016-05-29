@@ -1,4 +1,4 @@
-<!--
+w<!--
  ~ The MIT License
  ~
  ~ Copyright (c) 2013, CloudBees, Inc.
@@ -34,39 +34,8 @@
       <p>
         ${it.actionBlurb}
       </p>
-      <p>
-        ${%detail}
-      </p>
 
-      <a href="BundleGenerator">Download Bundles</a>
-      <br/>
-      <a href="BundleBrowser">Browse</a>
 
-      <f:form name="bundle-contents" method="POST" action="download">
-        <j:forEach var="component" items="${it.components}">
-          <f:entry field="component">
-            <div name="components">
-              <j:if test="${component.enabled}">
-                <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
-                            title="${component.displayName}"/>
-              </j:if>
-              <j:if test="${!component.enabled}">
-                <input type="checkbox"
-                       name="selected"
-                       value="false"
-                       disabled="disabled"/>
-                <label class="attach-previous" style="text-decoration: line-through;"
-                       title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
-                </label>
-              </j:if>
-              <input style="display:none" name="name" value="${component.id}"/>
-            </div>
-          </f:entry>
-        </j:forEach>
-        <f:entry>
-          <f:submit value="${%Generate Bundle}"/>
-        </f:entry>
-      </f:form>
 
     </l:main-panel>
   </l:layout>
