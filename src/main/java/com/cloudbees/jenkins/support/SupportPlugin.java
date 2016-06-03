@@ -68,14 +68,7 @@ import org.apache.tools.zip.ZipOutputStream;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -383,6 +376,36 @@ public class SupportPlugin extends Plugin {
         } finally {
             outputStream.flush();
         }
+    }
+
+    public static void writeBundleCollection(OutputStream outputStream,ArrayList<File>zipFileList) throws IOException {
+        byte[] buffer;
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        try {
+            for (File file : zipFileList) {
+                ZipEntry ze = new ZipEntry(file.getName());
+                zipOutputStream.putNextEntry(ze);
+
+                FileInputStream in =
+                        new FileInputStream(file);
+
+                int len;
+                buffer = new byte[1024*1024];
+                while ((len = in.read(buffer)) > 0) {
+                    zipOutputStream.write(buffer, 0, len);
+                }
+
+                in.close();
+            }
+
+        }finally{
+          //  bufferedOutputStream.flush();
+            zipOutputStream.close();
+            outputStream.flush();
+            outputStream.close();
+        }
+
+        //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
     }
 
     public List<LogRecord> getAllLogRecords() {

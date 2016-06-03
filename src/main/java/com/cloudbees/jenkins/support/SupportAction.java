@@ -34,6 +34,7 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
@@ -67,6 +68,7 @@ import java.util.logging.Logger;
 public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
+    private final String  bundleCollectionName = "BundleCollection";
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
@@ -211,13 +213,8 @@ public class SupportAction implements RootAction {
     //=================================================================
 
     public List<File> getList() throws IOException {
-        List<File> fileList = new ArrayList<File>();
         BundleBrowser bundleBrowser = new BundleBrowser();
-        File[] list = bundleBrowser.getFileList();
-        for(File file:list){
-            fileList.add(file);
-        }
-        return fileList;
+        return bundleBrowser.getZipFileList();
     }
 
     public ListBoxModel doFillGoalTypeItems() throws IOException {
@@ -232,4 +229,53 @@ public class SupportAction implements RootAction {
         }
         return items;
     }
+
+    public void doDownloadBundle(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
+        if (!"POST".equals(req.getMethod())) {
+            rsp.sendRedirect2(".");
+            return;
+        }
+        JSONObject json = req.getSubmittedForm();
+        JSONArray jsonArray = json.getJSONArray("components");
+        if (!json.has("components")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        logger.fine("Parsing request...");
+
+        for(int i=0; i<jsonArray.size(); i++){
+            String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
+            if("true".equals(isSelected)){
+                selectedFileIndices.add(i);
+            }
+        }
+
+        logger.fine("Preparing response...");
+        rsp.setContentType("application/zip");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        rsp.addHeader("Content-Disposition", "inline; filename="+bundleCollectionName+"_"+dateFormat.format(new Date())+".zip;");
+        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        BundleBrowser bundleBrowser = new BundleBrowser();
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    SupportPlugin.writeBundleCollection(servletOutputStream,(ArrayList<File>)bundleBrowser.getSelectedFiles(selectedFileIndices));
+                } catch (IOException e) {
+                    logger.log(Level.FINE, e.getMessage(), e);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
+            } finally {
+                SupportPlugin.clearRequesterAuthentication();
+            }
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
 }

@@ -40,19 +40,7 @@
 
       <a href="BundleGenerator">Download Bundles</a>
       <br/>
-      <a href="BundleBrowser">Browse</a>
-
-      <f:form name="bundle-contents" method="POST" action="download">
-        <j:forEach var="component" items="${it.list}">
-          <f:entry field="component">
-            ${component.name}
-            <br></br>
-          </f:entry>
-        </j:forEach>
-        <f:entry>
-          <f:submit value="${%Generate Bundle}"/>
-        </f:entry>
-      </f:form>
+      <a href="BundleBrowser">Browse Bundles</a>
 
     </l:main-panel>
   </l:layout>

@@ -35,11 +35,15 @@
         ${it.actionBlurb}
       </p>
 
-      <f:form name="bundle-contents" method="POST" action="download">
+      <f:form name="bundle-contents" method="POST" action="downloadBundle">
         <j:forEach var="component" items="${it.list}">
-          <f:entry field="component">
-            <labelText action="download">${component.name}</labelText>
+          <f:entry field="${component.name}">
+            <div name="components">
+            <f:checkbox name="selected" checked="false"
+                        title="${component.name}"/>
+            <!--<labelText action="download">${component.name}</labelText>-->
             <br></br>
+            </div>
           </f:entry>
         </j:forEach>
         <f:entry>
