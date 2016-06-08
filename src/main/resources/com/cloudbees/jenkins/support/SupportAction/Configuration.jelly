@@ -31,30 +31,43 @@
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
-
-      <f:form name="bundle-contents" method="POST" action="downloadBundles">
-        <j:forEach var="component" items="${it.list}">
-          <f:entry field="${component.name}">
-            <div name="components">
-            <f:checkbox name="selected" checked="false"
-                        title="${component.name}"/>
-
-            <br></br>
-            </div>
-          </f:entry>
-        </j:forEach>
-        <f:entry>
-          <f:submit value="Download"/>
+      <br/>
+      <h2>Configuration</h2>
+      Enter the maximum number of days you wish to keep a bundle in the server.
+      <br></br>
+      <!--<f:form action="addConfiguration" method="POST" name="config">
+      <f:entry field="numberOfYears" title="Years">
+        <select  name="version">
+          <j:forEach var="inst" items="${it.list}">
+            <f:option selected="${inst.name}">${inst.name}</f:option>
+          </j:forEach>
+        </select>
+      </f:entry>
+        <f:entry field="numberOfMonths" title="Months">
+          <select  name="months">
+            <j:forEach var="inst" items="${it.list}">
+              <f:option selected="${inst.name}">${inst.name}</f:option>
+            </j:forEach>
+          </select>
         </f:entry>
-        <f:entry>
-          <f:submit value="Delete" />
+        <f:entry field="numberOfdays" title="days">
+          <select  name="days">
+            <j:forEach var="inst" items="${it.list}">
+              <f:option selected="${inst.name}">${inst.name}</f:option>
+            </j:forEach>
+          </select>
         </f:entry>
-      </f:form>
+      </f:form>-->
 
-
+     <f:form action="configure" method="POST" name="config">
+       <br/>
+       <f:entry title="Number of days :">
+         <f:textbox name="numberOfDays" value="${it.numberOfDays}" ></f:textbox>
+       </f:entry>
+       <f:entry>
+         <f:submit value="Save"></f:submit>
+       </f:entry>
+     </f:form>
     </l:main-panel>
   </l:layout>
 </j:jelly>

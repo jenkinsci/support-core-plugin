@@ -34,6 +34,7 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import jnr.ffi.annotations.In;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -43,13 +44,13 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.Interceptor;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,6 +70,7 @@ public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
     private final String  bundleCollectionName = "BundleCollection";
+    public static int numberOfDays = 30;
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
@@ -213,58 +215,77 @@ public class SupportAction implements RootAction {
     //=================================================================
 
     public List<File> getList() throws IOException {
-        BundleBrowser bundleBrowser = new BundleBrowser();
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         return bundleBrowser.getZipFileList();
     }
 
-    public ListBoxModel doFillGoalTypeItems() throws IOException {
+    public List<Integer> getYearList(){
+        List<Integer> yearList = new ArrayList<Integer>();
+        for(int i=2000; i<2016; i++){
+            yearList.add(i);
+        }
+        return yearList;
+    }
+
+    public List<Integer> getMonthList(){
+        List<Integer> monthList = new ArrayList<Integer>();
+        for(int i=1; i<=12; i++){
+            monthList.add(i);
+        }
+        return monthList;
+    }
+
+    public List<Integer> getDaysList(){
+        List<Integer> daysList = new ArrayList<Integer>();
+        for(int i=1; i<=12; i++){
+            daysList.add(i);
+        }
+        return daysList;
+    }
+
+    public ListBoxModel getItems() throws IOException {
         ListBoxModel items = new ListBoxModel();
         List<File> fileList = new ArrayList<File>();
-        BundleBrowser bundleBrowser = new BundleBrowser();
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         File[] list = bundleBrowser.getFileList();
 
         for(File file:list){
             fileList.add(file);
-            items.add(file.getName(),file.getName());
+            items.add("ljdn","sdnflkn");
         }
         return items;
     }
 
-    public void doDownloadBundle(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
+    public void doSubmitAction(StaplerRequest req,StaplerResponse rsp){
+
+    }
+
+    public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         if (!"POST".equals(req.getMethod())) {
             rsp.sendRedirect2(".");
             return;
         }
         JSONObject json = req.getSubmittedForm();
-        JSONArray jsonArray = json.getJSONArray("components");
+
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        logger.fine("Parsing request...");
 
-        for(int i=0; i<jsonArray.size(); i++){
-            String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
-            if("true".equals(isSelected)){
-                selectedFileIndices.add(i);
-            }
-        }
-
-        logger.fine("Preparing response...");
+        List<Integer> indexList = getSelectedIndices(req);
         rsp.setContentType("application/zip");
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         rsp.addHeader("Content-Disposition", "inline; filename="+bundleCollectionName+"_"+dateFormat.format(new Date())+".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
-        BundleBrowser bundleBrowser = new BundleBrowser();
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
             try {
                 SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                 try {
-                    SupportPlugin.writeBundleCollection(servletOutputStream,(ArrayList<File>)bundleBrowser.getSelectedFiles(selectedFileIndices));
+                    SupportPlugin.writeBundleCollection(servletOutputStream,bundleBrowser.getSelectedFiles(indexList));
                 } catch (IOException e) {
                     logger.log(Level.FINE, e.getMessage(), e);
                 } finally {
@@ -276,6 +297,103 @@ public class SupportAction implements RootAction {
         } finally {
             logger.fine("Response completed");
         }
+    }
+
+    public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        if (!"POST".equals(req.getMethod())) {
+            rsp.sendRedirect2(".");
+            return;
+        }
+        JSONObject json = req.getSubmittedForm();
+        if (!json.has("components")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        List<Integer> indexList = getSelectedIndices(req);
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        bundleBrowser.deleteBundle(indexList);
+        PrintWriter out = rsp.getWriter();
+        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        out.println("</script>");
+        //rsp.sendRedirect2("./BundleBrowser");
+        rsp.forwardToPreviousPage(req);
+
+        rsp.setContentType("text/html");
+        out.println("<script type=\"text/javascript\">");
+        out.println("alert('Bundle(s) Deleted!');");
+        //dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        //rsp.addHeader("Content-Disposition", "inline; filename="+bundleCollectionName+"_"+dateFormat.format(new Date())+".zip;");
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+            SecurityContextHolder.setContext(old);
+            SupportPlugin.clearRequesterAuthentication();
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
+    private List<Integer> getSelectedIndices(StaplerRequest req) throws ServletException {
+        ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
+        JSONObject json = req.getSubmittedForm();
+        JSONArray jsonArray = json.getJSONArray("components");
+
+        for(int i=0; i<jsonArray.size(); i++){
+            String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
+            if("true".equals(isSelected)){
+                selectedFileIndices.add(i);
+            }
+        }
+        return selectedFileIndices;
+    }
+
+    public String getMyString() throws IOException {
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        return bundleBrowser.getJsonFileList();
+    }
+
+    public void doConfigure(StaplerRequest req,StaplerResponse rsp) throws ServletException {
+        String fileName = "config.txt";
+        String line = null;
+        String numberOfDays = req.getSubmittedForm().getString("numberOfDays");
+        try {
+            File file = new File(fileName);
+            // FileReader reads text files in the default encoding.
+            FileWriter fileWriter = new FileWriter(file);
+            fileWriter.append(numberOfDays);
+            fileWriter.close();
+            rsp.forwardToPreviousPage(req);
+        }
+        catch(FileNotFoundException ex) {
+            ex.printStackTrace();
+        }
+        catch(IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public int getNumberOfDays(){
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        return bundleBrowser.getPurgingAge();
+    }
+
+    public void doSubmit(StaplerRequest req, StaplerResponse rsp){
+        System.out.println("Test passed");
+    }
+
+    public void doDelete2(File file) throws IOException {
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        for(File f: bundleBrowser.getZipFileList()){
+            if(file.getName().equals(f.getName())){
+                f.delete();
+                break;
+            }
+        }
+    }
+
+    public void doDelete(String s){
+        System.out.println(s);
     }
 
 }

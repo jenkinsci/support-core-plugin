@@ -1,18 +1,15 @@
 package com.cloudbees.jenkins.support;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.util.*;
 
 //import org.apache.tools.zip;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
 import org.apache.tools.zip.ZipOutputStream;
-/*import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;*/
-
 /**
  * Created by minudika on 5/29/16.
  */
@@ -20,6 +17,13 @@ public class BundleBrowser {
     private final String root = "./work/support";
     private List<File> zipFileList ;
     private ZipFile allInOneZipFile;
+    private static BundleBrowser bundleBrowser = new BundleBrowser();
+
+    private BundleBrowser(){}
+
+    public static BundleBrowser getBundleBrowser(){
+        return bundleBrowser;
+    }
 
     public File[] getFileList() throws IOException {
         File rootFile = new File(root);
@@ -48,7 +52,7 @@ public class BundleBrowser {
         return zipFileList;
     }
 
-    public List<File> getSelectedFiles(ArrayList<Integer> selectedFileIndices) throws IOException {
+    public List<File> getSelectedFiles(List<Integer> selectedFileIndices) throws IOException {
        List<File> list = new ArrayList<File>();
         List<File> zipFileList = getZipFileList();
         for(Integer i : selectedFileIndices){
@@ -57,52 +61,105 @@ public class BundleBrowser {
         return  list;
     }
 
-    public void compressFiles(List<File>fileNames){
-        byte[] buffer = new byte[1024*1024*10];
-        try{
-            String zipFile = "bundles.zip";
-            FileOutputStream fos = new FileOutputStream(root+File.separator+zipFile);
-            ZipOutputStream zos = new ZipOutputStream(fos);
-
-            System.out.println("Output to Zip : " + zipFile);
-
-            for(File file : fileNames){
-
-                System.out.println("File Added : " + file);
-                ZipEntry ze= new ZipEntry(file.getName());
-                zos.putNextEntry(ze);
-
-                FileInputStream in =
-                        new FileInputStream(file);
-
-                int len;
-                while ((len = in.read(buffer)) > 0) {
-                    zos.write(buffer, 0, len);
-                }
-
-                in.close();
-            }
-
-            zos.closeEntry();
-            zos.close();
-
-            System.out.println("Done");
-        }catch(IOException ex){
-            ex.printStackTrace();
+    public void deleteBundle(List<Integer>indices){
+        for(Integer i : indices){
+            zipFileList.get(i).delete();
         }
     }
 
-   /* public static void main(String args[]) throws IOException {
-        BundleBrowser bundleBrowser = new BundleBrowser();
-        File[] fileList = bundleBrowser.getFileList();
-        List<File> names = new ArrayList<File>();
+    public String getJsonFileList() throws IOException {
+        String json="{'core' : { " +
+                "'data' : [" +
+                "";
+      /*{ 'core' : {
+            'data' : [
+            { "id" : "ajson1", "parent" : "#", "text" : "Simple root node" },
+            { "id" : "ajson2", "parent" : "#", "text" : "Root node 2" },
+            { "id" : "ajson3", "parent" : "ajson2", "text" : "Child 1" },
+            { "id" : "ajson4", "parent" : "ajson2", "text" : "Child 2" },
+            ]
+        } }*/
 
-        for (File file:fileList){
-            if(file.getName().contains(".zip")){
-               names.add(file);
+        JSONObject jsonObject = new JSONObject();
+        Map map;
+        ArrayList<Map> content = new ArrayList<Map>();
+        getZipFileList();
+        for(File file:zipFileList){
+            map=new HashMap<String,String>();
+            map.put("id",file.getName());
+            map.put("parent","#");
+            map.put("text",file.getName());
+            content.add(map);
+
+            /*List<ZipEntry> zipContent=getZipContent(new ZipFile(file));
+            for(ZipEntry entry : zipContent){
+                String array[] = entry.toString().split("/");
+                map = new HashMap();
+                map=new HashMap<String,String>();
+                map.put("id",entry.getName());
+                map.put("parent",file.getName());
+                map.put("text",entry.getName());
+                content.add(map);
+
             }
+            content.add(map);*/
+
+        }
+        for(Map zipEntry:content){
+            String entry = "{ \"id\" : \""+zipEntry.get("id")+ "\", " +
+                    "\"parent\" : \""+zipEntry.get("parent")+"\", " +
+                    "\"text\" : \""+zipEntry.get("text")+"\" },";
+            json+=entry;
         }
 
-        bundleBrowser.compressFiles(names);
-    }*/
+        json+="]}}";
+
+        return json;
+    }
+
+    public void doScheduledPurge() throws IOException {
+        List<File> list = getZipFileList();
+        int nDays = getPurgingAge();
+        for(File file : list){
+            Date lastModifiedDate = new Date(file.lastModified());
+            Date currentDate = new Date(System.currentTimeMillis());
+            long lastModifiedTime = lastModifiedDate.getTime()/(24*3600*1000);
+            long currentTime = currentDate.getTime()/(24*3600*1000);
+
+            if(currentTime - lastModifiedTime >nDays){
+                file.delete();
+            }
+        }
+    }
+
+    public int getPurgingAge(){
+        int numberOfDays = 0;
+        String line = null;
+        try {
+
+            File file = new File("config.txt");
+
+            if (file.createNewFile()){
+                //System.out.println("File is created!");
+                FileWriter fileWriter = new FileWriter(file);
+                fileWriter.append("100");
+                fileWriter.close();
+                return 100;
+            }else{
+                //System.out.println("File already exists.");
+                FileReader fileReader = new FileReader(file);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                while((line = bufferedReader.readLine() )!= null){
+                    numberOfDays = Integer.parseInt(line.trim());
+                    return numberOfDays;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return numberOfDays;
+
+    }
 }

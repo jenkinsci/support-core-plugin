@@ -22,10 +22,18 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
+
+<!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css">&lt;!&ndash;-->
+
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
+    <link rel="stylesheet" href="${resURL}/plugin/support-core/css/style.min.css" />
+
+    <script src="${resURL}/plugin/support-core/js/jquery.js"></script>
+    <script src="${resURL}/plugin/support-core/js/jstree.min.js"></script>
+
     <l:main-panel>
       <h1>
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
@@ -41,6 +49,49 @@
       <a href="BundleGenerator">Download Bundles</a>
       <br/>
       <a href="BundleBrowser">Browse Bundles</a>
+      <br/>
+      <a href="Configuration">Configuration</a>
+
+
+      <br></br>
+      This tree is not working propoerly. Seems like it fails to parse the json string we pass to the method.
+      <div id="container"></div>
+
+      <br></br>
+      <br></br>
+      This tree is working properly. But this way cannot be used for our implementation.
+      <div id="container2">
+        <ul>
+          <li>Root node
+            <ul>
+              <li>Child node 1</li>
+              <li>Child node 2</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <script>
+        $('#container').jstree({
+          'core' : {
+            'data' : [
+              'Simple root node',
+              {
+                'id' : 'node_2',
+                'text' : 'Root node with options',
+                'state' : { 'opened' : true, 'selected' : true },
+                'children' : [ { 'text' : 'Child 1' }, 'Child 2']
+              }
+            ]
+          }
+        });
+      </script>
+
+      <script>
+        $(function() {
+          $('#container2').jstree();
+        });
+      </script>
 
     </l:main-panel>
   </l:layout>
