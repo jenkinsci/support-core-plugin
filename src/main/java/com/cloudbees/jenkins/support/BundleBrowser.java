@@ -1,6 +1,11 @@
 package com.cloudbees.jenkins.support;
 
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -40,7 +45,8 @@ public class BundleBrowser {
         return zipFileList;
     }
 
-    public List<ZipEntry> getZipContent(ZipFile zipFile){
+    public List<ZipEntry> getZipContent(File file) throws IOException {
+        ZipFile zipFile = new ZipFile(file);
         ArrayList<ZipEntry> zipFileList = new ArrayList<ZipEntry>();
         Enumeration<? extends ZipEntry> entries = zipFile.getEntries();
 
@@ -160,6 +166,22 @@ public class BundleBrowser {
         }
 
         return numberOfDays;
-
     }
+
+   /* public List<Entity> getFileTree() throws IOException {
+        List<File> fileList = getZipFileList();
+        List<Entity> entityList = new ArrayList<Entity>();
+        for(File file : fileList){
+            Entity entity = new Entity();
+            entity.setName(file.getName());
+            if(file.isDirectory()){
+
+            }
+            else{
+
+            }
+        }
+
+    }*/
+
 }

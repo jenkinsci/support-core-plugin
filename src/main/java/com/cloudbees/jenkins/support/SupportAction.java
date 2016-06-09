@@ -40,6 +40,7 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.tools.zip.ZipEntry;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -256,8 +257,16 @@ public class SupportAction implements RootAction {
         return items;
     }
 
-    public void doSubmitAction(StaplerRequest req,StaplerResponse rsp){
+    public void doDownloadOrDelete(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
 
+        if("download".equals(goal)){
+            doDownloadBundles(req,rsp);
+        }
+        else{
+            doDeleteBundles(req,rsp);
+        }
     }
 
     public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
@@ -266,6 +275,7 @@ public class SupportAction implements RootAction {
             return;
         }
         JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
 
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -314,16 +324,12 @@ public class SupportAction implements RootAction {
         BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         bundleBrowser.deleteBundle(indexList);
         PrintWriter out = rsp.getWriter();
-        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
         out.println("</script>");
-        //rsp.sendRedirect2("./BundleBrowser");
         rsp.forwardToPreviousPage(req);
 
         rsp.setContentType("text/html");
         out.println("<script type=\"text/javascript\">");
         out.println("alert('Bundle(s) Deleted!');");
-        //dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        //rsp.addHeader("Content-Disposition", "inline; filename="+bundleCollectionName+"_"+dateFormat.format(new Date())+".zip;");
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
@@ -346,11 +352,6 @@ public class SupportAction implements RootAction {
             }
         }
         return selectedFileIndices;
-    }
-
-    public String getMyString() throws IOException {
-        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
-        return bundleBrowser.getJsonFileList();
     }
 
     public void doConfigure(StaplerRequest req,StaplerResponse rsp) throws ServletException {
@@ -378,22 +379,9 @@ public class SupportAction implements RootAction {
         return bundleBrowser.getPurgingAge();
     }
 
-    public void doSubmit(StaplerRequest req, StaplerResponse rsp){
-        System.out.println("Test passed");
-    }
-
-    public void doDelete2(File file) throws IOException {
-        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
-        for(File f: bundleBrowser.getZipFileList()){
-            if(file.getName().equals(f.getName())){
-                f.delete();
-                break;
-            }
-        }
-    }
-
     public void doDelete(String s){
         System.out.println(s);
     }
+
 
 }

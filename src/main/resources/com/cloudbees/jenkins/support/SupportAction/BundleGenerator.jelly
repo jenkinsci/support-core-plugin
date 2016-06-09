@@ -31,9 +31,6 @@
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
       <f:form name="bundle-contents" method="POST" action="download">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">

@@ -31,26 +31,26 @@
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
-
-      <f:form name="bundle-contents" method="POST" action="downloadBundles">
+      <f:form name="bundle-contents" method="POST" action="downloadOrDelete">
         <j:forEach var="component" items="${it.list}">
           <f:entry field="${component.name}">
             <div name="components">
             <f:checkbox name="selected" checked="false"
                         title="${component.name}"/>
-
             <br></br>
             </div>
           </f:entry>
         </j:forEach>
-        <f:entry>
-          <f:submit value="Download"/>
+
+        <f:entry name="goalType"  field="goalType">
+          <select name="goalType">
+            <option value="download">Download</option>
+            <option value="delete">Delete</option>
+          </select>
         </f:entry>
+
         <f:entry>
-          <f:submit value="Delete" />
+          <f:submit value="Submit" />
         </f:entry>
       </f:form>
 
