@@ -62,7 +62,7 @@ import org.apache.commons.io.FileUtils;
 /**
  * Log files from the master node only.
  */
-@Extension
+@Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(JenkinsLogs.class.getName());

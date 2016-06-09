@@ -16,6 +16,7 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -70,14 +71,17 @@ public class SupportActionTest extends Assert {
             // TODO: emit some log entries and see if it gets captured here
             assertNotNull(z.getEntry("about.md"));
             assertNotNull(z.getEntry("nodes.md"));
-            assertNotNull(z.getEntry("nodes/slave/slave1/system.properties"));
             assertNotNull(z.getEntry("nodes/master/thread-dump.txt"));
-            assertNotNull(z.getEntry("nodes/slave/slave2/launchLogs/slave.log"));
         } finally {
             logger.removeHandler(checker);
             for (LogRecord r : checker.getView()) {
-                if (r.getLevel().intValue() >= Level.WARNING.intValue())
+                if (r.getLevel().intValue() >= Level.WARNING.intValue()) {
+                    Throwable thrown = r.getThrown();
+                    if (thrown != null)
+                        thrown.printStackTrace(System.err);
+
                     fail(r.getMessage());
+                }
             }
         }
     }
