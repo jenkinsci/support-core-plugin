@@ -23,8 +23,6 @@
  -->
 <?jelly escape-by-default='true'?>
 
-<!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css">&lt;!&ndash;-->
-
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
@@ -35,7 +33,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
     <!--<script src="${resURL}/plugin/support-core/js/jstree.min.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
-
 
     <l:main-panel>
       <h1>
@@ -54,6 +51,8 @@
       <a href="BundleBrowser">Browse Bundles</a>
       <br/>
       <a href="Configuration">Configuration</a>
+      <br/>
+      <a href="Test">Test</a>
 
     </l:main-panel>
   </l:layout>

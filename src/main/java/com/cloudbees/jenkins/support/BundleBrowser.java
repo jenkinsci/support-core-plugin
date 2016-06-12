@@ -1,5 +1,28 @@
-package com.cloudbees.jenkins.support;
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2013, CloudBees, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
+package com.cloudbees.jenkins.support;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,6 +31,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //import org.apache.tools.zip;
 import net.sf.json.JSON;
@@ -15,13 +40,11 @@ import net.sf.json.JSONObject;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
 import org.apache.tools.zip.ZipOutputStream;
-/**
- * Created by minudika on 5/29/16.
- */
+
 public class BundleBrowser {
+    private final Logger logger = Logger.getLogger(BundleBrowser.class.getName());
     private final String root = "./work/support";
     private List<File> zipFileList ;
-    private ZipFile allInOneZipFile;
     private static BundleBrowser bundleBrowser = new BundleBrowser();
 
     private BundleBrowser(){}
@@ -53,14 +76,13 @@ public class BundleBrowser {
         while(entries.hasMoreElements()){
             ZipEntry entry = entries.nextElement();
             zipFileList.add(entry);
-            System.out.println(entry.getName());
         }
         return zipFileList;
     }
 
     public List<File> getSelectedFiles(List<Integer> selectedFileIndices) throws IOException {
        List<File> list = new ArrayList<File>();
-        List<File> zipFileList = getZipFileList();
+       // List<File> zipFileList = getZipFileList();
         for(Integer i : selectedFileIndices){
             list.add(zipFileList.get(i));
         }
@@ -70,6 +92,7 @@ public class BundleBrowser {
     public void deleteBundle(List<Integer>indices){
         for(Integer i : indices){
             zipFileList.get(i).delete();
+            zipFileList.remove(i);
         }
     }
 
@@ -132,7 +155,7 @@ public class BundleBrowser {
             long lastModifiedTime = lastModifiedDate.getTime()/(24*3600*1000);
             long currentTime = currentDate.getTime()/(24*3600*1000);
 
-            if(currentTime - lastModifiedTime >nDays){
+            if(currentTime - lastModifiedTime > nDays){
                 file.delete();
             }
         }
@@ -146,13 +169,11 @@ public class BundleBrowser {
             File file = new File("config.txt");
 
             if (file.createNewFile()){
-                //System.out.println("File is created!");
                 FileWriter fileWriter = new FileWriter(file);
                 fileWriter.append("100");
                 fileWriter.close();
                 return 100;
             }else{
-                //System.out.println("File already exists.");
                 FileReader fileReader = new FileReader(file);
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
                 while((line = bufferedReader.readLine() )!= null){
@@ -160,28 +181,9 @@ public class BundleBrowser {
                     return numberOfDays;
                 }
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.FINE, e.getMessage(), e);
         }
-
         return numberOfDays;
     }
-
-   /* public List<Entity> getFileTree() throws IOException {
-        List<File> fileList = getZipFileList();
-        List<Entity> entityList = new ArrayList<Entity>();
-        for(File file : fileList){
-            Entity entity = new Entity();
-            entity.setName(file.getName());
-            if(file.isDirectory()){
-
-            }
-            else{
-
-            }
-        }
-
-    }*/
-
 }

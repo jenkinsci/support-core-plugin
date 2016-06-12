@@ -725,7 +725,6 @@ public class SupportPlugin extends Plugin {
                 }
             }
         }
-
     }
 
     @Extension
@@ -755,6 +754,7 @@ public class SupportPlugin extends Plugin {
 }
 
  class ScheduledTask {
+    private final Logger logger = Logger.getLogger(ScheduledTask.class.getName());
     private final ScheduledExecutorService scheduler = Executors
             .newScheduledThreadPool(1);
 
@@ -771,7 +771,7 @@ public class SupportPlugin extends Plugin {
                             BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
                             bundleBrowser.doScheduledPurge();
                         }catch(Exception ex) {
-                            ex.printStackTrace();
+                            logger.log(Level.FINE, ex.getMessage(), ex);
                         }
                     }
                 }, 0, 1, TimeUnit.DAYS);

@@ -42,6 +42,8 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.tools.zip.ZipEntry;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -70,8 +72,7 @@ import java.util.logging.Logger;
 public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
-    private final String  bundleCollectionName = "BundleCollection";
-    public static int numberOfDays = 30;
+    private static final String  BUNDLE_COLLECTION_NAME = "BundleCollection";
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
@@ -213,50 +214,13 @@ public class SupportAction implements RootAction {
         }
     }
 
-    //=================================================================
-
+    @Restricted(NoExternalUse.class)
     public List<File> getList() throws IOException {
         BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         return bundleBrowser.getZipFileList();
     }
 
-    public List<Integer> getYearList(){
-        List<Integer> yearList = new ArrayList<Integer>();
-        for(int i=2000; i<2016; i++){
-            yearList.add(i);
-        }
-        return yearList;
-    }
-
-    public List<Integer> getMonthList(){
-        List<Integer> monthList = new ArrayList<Integer>();
-        for(int i=1; i<=12; i++){
-            monthList.add(i);
-        }
-        return monthList;
-    }
-
-    public List<Integer> getDaysList(){
-        List<Integer> daysList = new ArrayList<Integer>();
-        for(int i=1; i<=12; i++){
-            daysList.add(i);
-        }
-        return daysList;
-    }
-
-    public ListBoxModel getItems() throws IOException {
-        ListBoxModel items = new ListBoxModel();
-        List<File> fileList = new ArrayList<File>();
-        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
-        File[] list = bundleBrowser.getFileList();
-
-        for(File file:list){
-            fileList.add(file);
-            items.add("ljdn","sdnflkn");
-        }
-        return items;
-    }
-
+    @Restricted(NoExternalUse.class)
     public void doDownloadOrDelete(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         String goal = json.get("goalType").toString();
@@ -269,6 +233,7 @@ public class SupportAction implements RootAction {
         }
     }
 
+    @Restricted(NoExternalUse.class)
     public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         if (!"POST".equals(req.getMethod())) {
             rsp.sendRedirect2(".");
@@ -287,7 +252,7 @@ public class SupportAction implements RootAction {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        rsp.addHeader("Content-Disposition", "inline; filename="+bundleCollectionName+"_"+dateFormat.format(new Date())+".zip;");
+        rsp.addHeader("Content-Disposition", "inline; filename="+BUNDLE_COLLECTION_NAME+"_"+dateFormat.format(new Date())+".zip;");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         try {
@@ -309,6 +274,7 @@ public class SupportAction implements RootAction {
         }
     }
 
+    @Restricted(NoExternalUse.class)
     public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         if (!"POST".equals(req.getMethod())) {
             rsp.sendRedirect2(".");
@@ -343,45 +309,45 @@ public class SupportAction implements RootAction {
     private List<Integer> getSelectedIndices(StaplerRequest req) throws ServletException {
         ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
         JSONObject json = req.getSubmittedForm();
-        JSONArray jsonArray = json.getJSONArray("components");
 
-        for(int i=0; i<jsonArray.size(); i++){
-            String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
-            if("true".equals(isSelected)){
-                selectedFileIndices.add(i);
+        if(!json.isArray()){
+            selectedFileIndices.add(0);
+        }else {
+            JSONArray jsonArray = json.getJSONArray("components");
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
+                if ("true".equals(isSelected)) {
+                    selectedFileIndices.add(i);
+                }
             }
         }
         return selectedFileIndices;
     }
 
+    @Restricted(NoExternalUse.class)
     public void doConfigure(StaplerRequest req,StaplerResponse rsp) throws ServletException {
         String fileName = "config.txt";
-        String line = null;
         String numberOfDays = req.getSubmittedForm().getString("numberOfDays");
         try {
             File file = new File(fileName);
-            // FileReader reads text files in the default encoding.
             FileWriter fileWriter = new FileWriter(file);
             fileWriter.append(numberOfDays);
             fileWriter.close();
             rsp.forwardToPreviousPage(req);
         }
         catch(FileNotFoundException ex) {
-            ex.printStackTrace();
+            logger.log(Level.FINE, ex.getMessage(), ex);
         }
         catch(IOException ex) {
-            ex.printStackTrace();
+            logger.log(Level.FINE, ex.getMessage(), ex);
         }
     }
 
+    @Restricted(NoExternalUse.class)
     public int getNumberOfDays(){
         BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
         return bundleBrowser.getPurgingAge();
     }
-
-    public void doDelete(String s){
-        System.out.println(s);
-    }
-
 
 }

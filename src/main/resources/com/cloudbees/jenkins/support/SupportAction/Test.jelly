@@ -26,24 +26,33 @@
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
+
+    <!--<link rel="stylesheet" href="${resURL}/plugin/support-core/css/style.min.css" />-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <!--<script src="${resURL}/plugin/support-core/js/jquery.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+    <!--<script src="${resURL}/plugin/support-core/js/jstree.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
     <l:main-panel>
       <h1>
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
       <br/>
-      <h2>${%Configuration}</h2>
-      Enter the maximum number of days you wish to keep a bundle in the server.
-      <br/>
-     <f:form action="configure" method="POST" name="config">
-       <br/>
-       <f:entry title="${%Number of days :}">
-         <f:textbox name="numberOfDays" value="${it.numberOfDays}" ></f:textbox>
-       </f:entry>
-       <f:entry>
-         <f:submit value="${%Save}"></f:submit>
-       </f:entry>
-     </f:form>
+
+        <div id="container">
+          <ul>
+            <li>Root node 1</li>
+            <li>Root node 2</li>
+          </ul>
+        </div>
+
+      <script>
+      $("#container").jstree();
+      </script>
+
+
     </l:main-panel>
   </l:layout>
 </j:jelly>
