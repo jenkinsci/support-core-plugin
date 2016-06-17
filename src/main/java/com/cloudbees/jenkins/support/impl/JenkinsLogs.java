@@ -60,7 +60,7 @@ import org.jenkinsci.remoting.RoleChecker;
 import org.apache.commons.io.FileUtils;
 
 /**
- * Log files from the different nodes
+ * Log files from the master node only.
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
@@ -79,7 +79,7 @@ public class JenkinsLogs extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Log Recorders";
+        return "Master Log Recorders";
     }
 
     @Override
@@ -93,260 +93,6 @@ public class JenkinsLogs extends Component {
         addMasterJulLogRecords(result);
         addOtherMasterLogs(result);
         addLogRecorders(result);
-        addSlaveLaunchLog(result);
-
-        SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
-        SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
-        final boolean needHack = SlaveLogFetcher.isRequired();
-
-        // expensive remote computation are pooled together and executed later concurrently across all the slaves
-        List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
-
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
-            if (node.toComputer() instanceof SlaveComputer) {
-                result.add(
-                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
-                            @Override
-                            protected void printTo(PrintWriter out) throws IOException {
-                                Computer computer = node.toComputer();
-                                if (computer == null) {
-                                    out.println("N/A");
-                                } else {
-                                    try {
-                                        List<LogRecord> records = null;
-                                        if (needHack) {
-                                            VirtualChannel channel = computer.getChannel();
-                                            if (channel != null) {
-                                                Future<List<LogRecord>> future = SlaveLogFetcher.getLogRecords(channel);
-                                                records = future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                                            }
-                                        }
-
-                                        if (records == null) {
-                                            records = computer.getLogRecords();
-                                        }
-
-                                        for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
-                                             iterator.hasPrevious(); ) {
-                                            LogRecord logRecord = iterator.previous();
-                                            out.print(LOG_FORMATTER.format(logRecord));
-                                        }
-                                    } catch (Throwable e) {
-                                        out.println();
-                                        e.printStackTrace(out);
-                                    }
-                                }
-                                out.flush();
-
-                            }
-                        }
-                );
-            }
-            addSlaveJulLogRecords(result, tasks, node, logFetcher);
-            addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
-        }
-
-        // execute all the expensive computations in parallel to speed up the time
-        if (!tasks.isEmpty()) {
-            ExecutorService service = Executors.newFixedThreadPool(
-                    Math.max(1, Math.min(Runtime.getRuntime().availableProcessors() * 2, tasks.size())),
-                    new ExceptionCatchingThreadFactory(new DaemonThreadFactory())
-            );
-            try {
-                long expiresNanoTime =
-                        System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
-                for (java.util.concurrent.Future<List<FileContent>> r : service
-                        .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
-                                TimeUnit.SECONDS)) {
-                    try {
-                        for (FileContent c : r
-                                .get(Math.max(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
-                            result.add(c);
-                        }
-                    } catch (ExecutionException e) {
-                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
-                    } catch (TimeoutException e) {
-                        LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
-                        r.cancel(false);
-                    }
-                }
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
-            } finally {
-                service.shutdown();
-            }
-        }
-    }
-
-    /**
-     * Adds slave launch logs, which captures the current and past running connections to the slave.
-     *
-     * <p>
-     * In the presence of {@link Cloud} plugins like EC2, we want to find past slaves, not just current ones.
-     * So we don't try to loop through {@link Node} here but just try to look at the file systems to find them
-     * all.
-     *
-     * <p>
-     * Generally these cloud plugins do not clean up old logs, so if run for a long time, the log directory
-     * will be full of old files that are not very interesting. Use some heuristics to cut off logs
-     * that are old.
-     */
-    private void addSlaveLaunchLog(Container result) {
-        class Slave implements Comparable<Slave> {
-            /**
-             * Launch log directory of the slave: logs/slaves/NAME
-             */
-            File dir;
-            long time;
-
-            Slave(File dir, File lastLog) {
-                this.dir = dir;
-                this.time = lastLog.lastModified();
-            }
-
-            /** Slave name */
-            String getName() { return dir.getName(); }
-
-            /**
-             * Use the primary log file's timestamp to compare newer slaves from older slaves.
-             *
-             * sort in descending order; newer ones first.
-             */
-            public int compareTo(Slave that) {
-                long lhs = this.time;
-                long rhs = that.time;
-                if (lhs<rhs)    return 1;
-                if (lhs>rhs)    return -1;
-                return 0;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-
-                Slave slave = (Slave) o;
-
-                if (time != slave.time) return false;
-
-                return true;
-            }
-
-            @Override
-            public int hashCode() {
-                return (int) (time ^ (time >>> 32));
-            }
-
-            /**
-             * If the file is more than a year old, can't imagine how that'd be of any interest.
-             */
-            public boolean isTooOld() {
-                return time < System.currentTimeMillis()-TimeUnit.DAYS.toMillis(365);
-            }
-        }
-
-        List<Slave> all = new ArrayList<Slave>();
-
-        {// find all the slave launch log files and sort them newer ones first
-
-            File slaveLogsDir = new File(Helper.getActiveInstance().getRootDir(), "logs/slaves");
-            File[] logs = slaveLogsDir.listFiles();
-            if (logs!=null) {
-                for (File dir : logs) {
-                    File lastLog = new File(dir, "slave.log");
-                    if (lastLog.exists()) {
-                        Slave s = new Slave(dir, lastLog);
-                        if (s.isTooOld()) continue;   // we don't care
-                        all.add(s);
-                    }
-                }
-            }
-
-            Collections.sort(all);
-        }
-
-        {// this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Helper.getActiveInstance().getNodes().size() * 5);
-
-            if (all.size() > acceptableSize)
-                all = all.subList(0, acceptableSize);
-        }
-
-        // now add them all
-        for (Slave s : all) {
-            File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
-            if (files!=null)
-                for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
-                }
-        }
-    }
-
-    /**
-     * Captures a "recent" (but still fairly large number of) j.u.l entries written on this slave.
-     *
-     * @see #addMasterJulLogRecords(Container)
-     */
-    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
-        final FilePath rootPath = node.getRootPath();
-        if (rootPath != null) {
-            // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
-                public List<FileContent> call() throws Exception {
-                    List<FileContent> result = new ArrayList<FileContent>();
-                    FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
-                    if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
-                        for (Map.Entry<String, File> entry : logFiles.entrySet()) {
-                            result.add(new FileContent(
-                                            "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
-                                            entry.getValue())
-                            );
-                        }
-                    }
-                    return result;
-                }
-            });
-        }
-
-        // this file captures the most recent of those that are still kept around in memory.
-        // this overlaps with Jenkins.logRecords, and also overlaps with what's written in files,
-        // but added nonetheless just in case.
-        //
-        // should be ignorable.
-        result.add(new LogRecordContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
-            @Override
-            public Iterable<LogRecord> getLogRecords() throws IOException {
-                try {
-                    return SupportPlugin.getInstance().getAllLogRecords(node);
-                } catch (InterruptedException e) {
-                    throw (IOException)new InterruptedIOException().initCause(e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Captures stdout/stderr log files produced by winsw.
-     */
-    private void addWinsStdoutStderrLog(List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
-        final FilePath rootPath = node.getRootPath();
-        if (rootPath != null) {
-            // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
-                public List<FileContent> call() throws Exception {
-                    List<FileContent> result = new ArrayList<FileContent>();
-                    final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
-                    for (Map.Entry<String, File> entry : logFiles.entrySet()) {
-                        result.add(new FileContent(
-                                        "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
-                                        entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
-                        );
-                    }
-                    return result;
-                }
-            });
-        }
     }
 
     /**
@@ -458,71 +204,6 @@ public class JenkinsLogs extends Component {
         }
     }
 
-    private static class SlaveLogFetcher implements Callable<List<LogRecord>, RuntimeException> {
-
-        public static boolean isRequired() {
-            try {
-                SlaveComputer.class.getClassLoader().loadClass(SlaveComputer.class.getName() + "$SlaveLogFetcher");
-                return false;
-            } catch (ClassNotFoundException e) {
-                return true;
-            }
-        }
-
-        public List<LogRecord> call() throws RuntimeException {
-            try {
-                Class<?> aClass =
-                        SlaveComputer.class.getClassLoader().loadClass(SlaveComputer.class.getName() + "$LogHolder");
-                Field logHandler = aClass.getDeclaredField("SLAVE_LOG_HANDLER");
-                boolean accessible = logHandler.isAccessible();
-                try {
-                    if (!accessible) {
-                        logHandler.setAccessible(true);
-                    }
-                    Object instance = logHandler.get(null);
-                    if (instance instanceof RingBufferLogHandler) {
-                        RingBufferLogHandler handler = (RingBufferLogHandler) instance;
-                        return new ArrayList<LogRecord>(handler.getView());
-                    }
-                } finally {
-                    if (!accessible) {
-                        logHandler.setAccessible(accessible);
-                    }
-                }
-                throw new RuntimeException("Could not retrieve logs");
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchFieldException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
-        public static Future<List<LogRecord>> getLogRecords(@NonNull VirtualChannel channel) throws IOException {
-            return channel.callAsync(new SlaveLogFetcher());
-        }
-
-        /**
-         * @deprecated Please use getLogRecords(Channel) instead. This method is synchronous which could cause
-         * the channel to block.
-         */
-        @Deprecated
-        public static List<LogRecord> getLogRecords(Computer computer) throws IOException, InterruptedException {
-            VirtualChannel channel = computer.getChannel();
-            if (channel == null) {
-                return Collections.emptyList();
-            } else {
-                return channel.call(new SlaveLogFetcher());
-            }
-        }
-    }
 
     @SuppressWarnings(value="SIC_INNER_SHOULD_BE_STATIC_NEEDS_THIS", justification="customLogs is not static, so this is a bug in FB")
     private final class LogFile {
@@ -632,7 +313,7 @@ public class JenkinsLogs extends Component {
     /**
      * Matches log files and their rotated names, such as "foo.log" or "foo.log.1"
      */
-    private static final FileFilter ROTATED_LOGFILE_FILTER = new FileFilter() {
+    protected static final FileFilter ROTATED_LOGFILE_FILTER = new FileFilter() {
         final Pattern pattern = Pattern.compile("^.*\\.log(\\.\\d+)?$");
 
         public boolean accept(File f) {
@@ -640,5 +321,5 @@ public class JenkinsLogs extends Component {
         }
     };
 
-    private static final Formatter LOG_FORMATTER = new SupportLogFormatter();
+    protected static final Formatter LOG_FORMATTER = new SupportLogFormatter();
 }
