@@ -1,8 +1,6 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
- *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -24,26 +22,26 @@
 
 package com.cloudbees.jenkins.support;
 
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import org.apache.tools.zip;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
-import org.apache.tools.zip.ZipEntry;
-import org.apache.tools.zip.ZipFile;
-import org.apache.tools.zip.ZipOutputStream;
 
 public class BundleBrowser {
     private final Logger logger = Logger.getLogger(BundleBrowser.class.getName());
     private final String root = "./work/support";
+    private final int defaultPurgingAge = 100; // maximum number of days, a bundle is kept within the server
     private List<File> zipFileList ;
     private static BundleBrowser bundleBrowser = new BundleBrowser();
 
@@ -82,7 +80,6 @@ public class BundleBrowser {
 
     public List<File> getSelectedFiles(List<Integer> selectedFileIndices) throws IOException {
        List<File> list = new ArrayList<File>();
-       // List<File> zipFileList = getZipFileList();
         for(Integer i : selectedFileIndices){
             list.add(zipFileList.get(i));
         }
@@ -94,56 +91,6 @@ public class BundleBrowser {
             zipFileList.get(i).delete();
             zipFileList.remove(i);
         }
-    }
-
-    public String getJsonFileList() throws IOException {
-        String json="{'core' : { " +
-                "'data' : [" +
-                "";
-      /*{ 'core' : {
-            'data' : [
-            { "id" : "ajson1", "parent" : "#", "text" : "Simple root node" },
-            { "id" : "ajson2", "parent" : "#", "text" : "Root node 2" },
-            { "id" : "ajson3", "parent" : "ajson2", "text" : "Child 1" },
-            { "id" : "ajson4", "parent" : "ajson2", "text" : "Child 2" },
-            ]
-        } }*/
-
-        JSONObject jsonObject = new JSONObject();
-        Map map;
-        ArrayList<Map> content = new ArrayList<Map>();
-        getZipFileList();
-        for(File file:zipFileList){
-            map=new HashMap<String,String>();
-            map.put("id",file.getName());
-            map.put("parent","#");
-            map.put("text",file.getName());
-            content.add(map);
-
-            /*List<ZipEntry> zipContent=getZipContent(new ZipFile(file));
-            for(ZipEntry entry : zipContent){
-                String array[] = entry.toString().split("/");
-                map = new HashMap();
-                map=new HashMap<String,String>();
-                map.put("id",entry.getName());
-                map.put("parent",file.getName());
-                map.put("text",entry.getName());
-                content.add(map);
-
-            }
-            content.add(map);*/
-
-        }
-        for(Map zipEntry:content){
-            String entry = "{ \"id\" : \""+zipEntry.get("id")+ "\", " +
-                    "\"parent\" : \""+zipEntry.get("parent")+"\", " +
-                    "\"text\" : \""+zipEntry.get("text")+"\" },";
-            json+=entry;
-        }
-
-        json+="]}}";
-
-        return json;
     }
 
     public void doScheduledPurge() throws IOException {
@@ -163,11 +110,9 @@ public class BundleBrowser {
 
     public int getPurgingAge(){
         int numberOfDays = 0;
-        String line = null;
+        String line;
         try {
-
             File file = new File("config.txt");
-
             if (file.createNewFile()){
                 FileWriter fileWriter = new FileWriter(file);
                 fileWriter.append("100");
@@ -180,10 +125,13 @@ public class BundleBrowser {
                     numberOfDays = Integer.parseInt(line.trim());
                     return numberOfDays;
                 }
+                bufferedReader.close();
             }
         } catch (IOException e) {
             logger.log(Level.FINE, e.getMessage(), e);
         }
-        return numberOfDays;
+        finally {
+            return numberOfDays;
+        }
     }
 }

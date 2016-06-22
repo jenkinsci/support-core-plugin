@@ -26,11 +26,12 @@
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
+    <st:adjunct includes="org.kohsuke.stapler.jquery" />
 
     <!--<link rel="stylesheet" href="${resURL}/plugin/support-core/css/style.min.css" />-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
     <!--<script src="${resURL}/plugin/support-core/js/jquery.js"></script>-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>-->
     <!--<script src="${resURL}/plugin/support-core/js/jstree.min.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 
@@ -41,16 +42,18 @@
       </h1>
       <br/>
 
-        <div id="container">
-          <ul>
-            <li>Root node 1</li>
-            <li>Root node 2</li>
-          </ul>
-        </div>
+      <table>
+        <tr>
+          <td><a href="BundleGenerator"><img src="${resURL}/plugin/support-core/images/commons/CreateBundle.png" alt=""/></a></td>
+          <td><a href="BundleBrowser"><img src="${resURL}/plugin/support-core/images/commons/DownloadBundle.png" alt=""/></a></td>
+          <td><a href="Configuration"><img src="${resURL}/plugin/support-core/images/commons/configure.png" alt=""/></a></td>
+        </tr>
+      </table>
 
-      <script>
-      $("#container").jstree();
-      </script>
+
+
+
+
 
 
     </l:main-panel>

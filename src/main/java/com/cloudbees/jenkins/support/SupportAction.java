@@ -222,6 +222,9 @@ public class SupportAction implements RootAction {
 
     @Restricted(NoExternalUse.class)
     public void doDownloadOrDelete(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+
         JSONObject json = req.getSubmittedForm();
         String goal = json.get("goalType").toString();
 
@@ -309,10 +312,10 @@ public class SupportAction implements RootAction {
     private List<Integer> getSelectedIndices(StaplerRequest req) throws ServletException {
         ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
         JSONObject json = req.getSubmittedForm();
-
-        if(!json.isArray()){
+        try{
+            req.getSubmittedForm().getJSONObject("components");
             selectedFileIndices.add(0);
-        }else {
+        }catch (Exception e) {
             JSONArray jsonArray = json.getJSONArray("components");
 
             for (int i = 0; i < jsonArray.size(); i++) {
@@ -326,21 +329,28 @@ public class SupportAction implements RootAction {
     }
 
     @Restricted(NoExternalUse.class)
-    public void doConfigure(StaplerRequest req,StaplerResponse rsp) throws ServletException {
+    public void doConfigure(StaplerRequest req,StaplerResponse rsp) throws ServletException, IOException {
         String fileName = "config.txt";
         String numberOfDays = req.getSubmittedForm().getString("numberOfDays");
         try {
-            File file = new File(fileName);
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.append(numberOfDays);
-            fileWriter.close();
-            rsp.forwardToPreviousPage(req);
-        }
-        catch(FileNotFoundException ex) {
-            logger.log(Level.FINE, ex.getMessage(), ex);
-        }
-        catch(IOException ex) {
-            logger.log(Level.FINE, ex.getMessage(), ex);
+            Integer.parseInt(numberOfDays);
+            try {
+                File file = new File(fileName);
+                FileWriter fileWriter = new FileWriter(file);
+                fileWriter.append(numberOfDays);
+                fileWriter.close();
+                rsp.forwardToPreviousPage(req);
+            } catch (FileNotFoundException ex) {
+                logger.log(Level.FINE, ex.getMessage(), ex);
+            } catch (IOException ex) {
+                logger.log(Level.FINE, ex.getMessage(), ex);
+            }
+        }catch (Exception e) {
+            PrintWriter out = rsp.getWriter();
+            rsp.setContentType("text/html");
+            out.println("<script type=\"text/javascript\">");
+            out.println("alert('Input must be an integer!');");
+            out.println("</script>");
         }
     }
 
