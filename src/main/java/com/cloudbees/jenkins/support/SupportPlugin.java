@@ -68,14 +68,7 @@ import org.apache.tools.zip.ZipOutputStream;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -86,10 +79,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -140,6 +130,8 @@ public class SupportPlugin extends Plugin {
     private transient SupportContextImpl context = null;
     private transient Logger rootLogger;
     private transient WeakHashMap<Node,List<LogRecord>> logRecords;
+    private Runnable scheduleRunner;
+
 
     private SupportProvider supportProvider;
     
@@ -150,6 +142,14 @@ public class SupportPlugin extends Plugin {
         super();
         handler.setLevel(getLogLevel());
         handler.setDirectory(getRootDirectory(), "all");
+        scheduleRunner = new Runnable() {
+            @Override
+            public void run() {
+                ScheduledTask ste = new ScheduledTask();
+                ste.startScheduleTask();
+            }
+        };
+        scheduleRunner.run();
     }
 
     public SupportProvider getSupportProvider() {
@@ -383,6 +383,32 @@ public class SupportPlugin extends Plugin {
         } finally {
             outputStream.flush();
         }
+    }
+
+    public static void writeBundleCollection(OutputStream outputStream,List<File>zipFileList) throws IOException {
+        byte[] buffer ;
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        try {
+            for (File file : zipFileList) {
+                ZipEntry ze = new ZipEntry(file.getName());
+                zipOutputStream.putNextEntry(ze);
+
+                FileInputStream in =
+                        new FileInputStream(file);
+
+                int len;
+                buffer = new byte[1024*1024];
+                while ((len = in.read(buffer)) > 0) {
+                    zipOutputStream.write(buffer, 0, len);
+                }
+                in.close();
+            }
+        }finally{
+            zipOutputStream.close();
+            outputStream.flush();
+            outputStream.close();
+        }
+        //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
     }
 
     public List<LogRecord> getAllLogRecords() {
@@ -699,7 +725,6 @@ public class SupportPlugin extends Plugin {
                 }
             }
         }
-
     }
 
     @Extension
@@ -726,5 +751,29 @@ public class SupportPlugin extends Plugin {
             return true;
         }
     }
+}
 
+ class ScheduledTask {
+    private final Logger logger = Logger.getLogger(ScheduledTask.class.getName());
+    private final ScheduledExecutorService scheduler = Executors
+            .newScheduledThreadPool(1);
+
+    public void startScheduleTask() {
+        /**
+         * not using the taskHandle returned here, but it can be used to cancel
+         * the task, or check if it's done (for recurring tasks, that's not
+         * going to be very useful)
+         */
+        final ScheduledFuture<?> taskHandle = scheduler.scheduleAtFixedRate(
+                new Runnable() {
+                    public void run() {
+                        try {
+                            BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+                            bundleBrowser.doScheduledPurge();
+                        }catch(Exception ex) {
+                            logger.log(Level.FINE, ex.getMessage(), ex);
+                        }
+                    }
+                }, 0, 1, TimeUnit.DAYS);
+    }
 }

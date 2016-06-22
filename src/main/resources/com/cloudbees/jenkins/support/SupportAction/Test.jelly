@@ -22,12 +22,12 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
     <st:adjunct includes="org.kohsuke.stapler.jquery" />
+
     <!--<link rel="stylesheet" href="${resURL}/plugin/support-core/css/style.min.css" />-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
     <!--<script src="${resURL}/plugin/support-core/js/jquery.js"></script>-->
@@ -40,21 +40,21 @@
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
-      <p>
-        ${%detail}
-      </p>
       <br/>
-      <br/>
+
       <table>
         <tr>
-          <td><a href="BundleGenerator"><img src="${resURL}/plugin/support-core/images/commons/CreateBundles.png" alt=""/></a></td>
-          <td><a href="BundleBrowser"><img src="${resURL}/plugin/support-core/images/commons/BrowseBundles.png" alt=""/></a></td>
+          <td><a href="BundleGenerator"><img src="${resURL}/plugin/support-core/images/commons/CreateBundle.png" alt=""/></a></td>
+          <td><a href="BundleBrowser"><img src="${resURL}/plugin/support-core/images/commons/DownloadBundle.png" alt=""/></a></td>
           <td><a href="Configuration"><img src="${resURL}/plugin/support-core/images/commons/configure.png" alt=""/></a></td>
         </tr>
       </table>
+
+
+
+
+
+
 
     </l:main-panel>
   </l:layout>
