@@ -1,10 +1,8 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import com.google.common.net.HttpHeaders;
 import jenkins.model.Jenkins;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.service.UADetectorServiceFactory;
-import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;

@@ -1,6 +1,9 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.api.*;
+import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.TruncatedContent;
+import com.cloudbees.jenkins.support.api.TruncationException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
