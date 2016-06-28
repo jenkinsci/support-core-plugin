@@ -1,8 +1,6 @@
 <!--
  ~ The MIT License
  ~
- ~ Copyright (c) 2013, CloudBees, Inc.
- ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
  ~ of this software and associated documentation files (the "Software"), to deal
  ~ in the Software without restriction, including without limitation the rights
@@ -22,40 +20,40 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
-    <st:adjunct includes="org.kohsuke.stapler.jquery" />
-    <!--<link rel="stylesheet" href="${resURL}/plugin/support-core/css/style.min.css" />-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-    <!--<script src="${resURL}/plugin/support-core/js/jquery.js"></script>-->
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>-->
-    <!--<script src="${resURL}/plugin/support-core/js/jstree.min.js"></script>-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
-
     <l:main-panel>
       <h1>
         <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
         ${it.actionTitle}
       </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
-      <p>
-        ${%detail}
-      </p>
-      <br/>
-      <br/>
-      <table>
-        <tr>
-          <td><a href="BundleGenerator"><img src="${resURL}/plugin/support-core/images/commons/CreateBundles.png" alt=""/></a></td>
-          <td><a href="BundleBrowser"><img src="${resURL}/plugin/support-core/images/commons/BrowseBundles.png" alt=""/></a></td>
-          <td><a href="Configuration"><img src="${resURL}/plugin/support-core/images/commons/configure.png" alt=""/></a></td>
-        </tr>
-      </table>
-
+      <f:form name="bundle-contents" method="POST" action="download">
+        <j:forEach var="component" items="${it.components}">
+          <f:entry field="component">
+            <div name="components">
+              <j:if test="${component.enabled}">
+                <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
+                            title="${component.displayName}"/>
+              </j:if>
+              <j:if test="${!component.enabled}">
+                <input type="checkbox"
+                       name="selected"
+                       value="false"
+                       disabled="disabled"/>
+                <label class="attach-previous" style="text-decoration: line-through;"
+                       title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
+                </label>
+              </j:if>
+              <input style="display:none" name="name" value="${component.id}"/>
+            </div>
+          </f:entry>
+        </j:forEach>
+        <f:entry>
+          <f:submit value="${%Generate Bundle}"/>
+        </f:entry>
+      </f:form>
     </l:main-panel>
   </l:layout>
 </j:jelly>
