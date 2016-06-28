@@ -284,12 +284,16 @@ public class ThreadDumps extends Component {
             x.printStackTrace(writer);
             cpuPercentage = 0;
         }
-        writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
+
+        long time = t.getBlockedTime() + t.getWaitedTime();
+
+        writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%% time=%dms",
                 t.getThreadName(),
                 t.getThreadId(),
                 t.getThreadId(),
                 t.getThreadState(),
-                cpuPercentage);
+                cpuPercentage,
+                time);
         final LockInfo lock = t.getLockInfo();
         if (lock != null && t.getThreadState() != Thread.State.BLOCKED) {
             writer.printf("\n    - waiting on <0x%08x> (a %s)",

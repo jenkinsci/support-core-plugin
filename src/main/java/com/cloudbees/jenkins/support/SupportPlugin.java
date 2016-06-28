@@ -76,6 +76,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -402,6 +404,12 @@ public class SupportPlugin extends Plugin {
         rootLogger = Logger.getLogger("");
         rootLogger.addHandler(handler);
         context = new SupportContextImpl();
+        // If thread contention monitoring is supported, then we should enable
+        // it when the plugin is started.
+        ThreadMXBean mbean= ManagementFactory.getThreadMXBean();
+        if (mbean.isThreadContentionMonitoringSupported()) {
+            mbean.setThreadContentionMonitoringEnabled(true);
+        }
     }
 
     @NonNull
