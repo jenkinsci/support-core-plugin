@@ -30,6 +30,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
+import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -62,6 +63,7 @@ import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
@@ -70,12 +72,14 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -395,6 +399,41 @@ public class SupportPlugin extends Plugin {
         if (instance != null)
             instance.load();
     }
+
+    public static boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
+    public static int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
+    public static boolean milestonesCompleted = false;
+    @Initializer(after =  InitMilestone.COMPLETED)
+    public static void completedMilestones() throws IOException {
+        milestonesCompleted = true;
+    }
+
+    @Initializer(after = InitMilestone.STARTED)
+    public static void threadDumpStartup() throws Exception {
+        if (!logStartupPerformanceIssues) return;
+
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                while (!milestonesCompleted) {
+                    File f = new File(SUPPORT_DIRECTORY_NAME, "/startup-threadDump.txt");
+                    try {
+                        ThreadDumps.threadDumpModern(new FileOutputStream(f));
+                        // Generate a thread dump every few mi
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        t.start();
+    }
+
 
     @Override
     public synchronized void start() throws Exception {
