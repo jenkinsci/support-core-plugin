@@ -77,6 +77,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -412,13 +413,25 @@ public class SupportPlugin extends Plugin {
     public static void threadDumpStartup() throws Exception {
         if (!logStartupPerformanceIssues) return;
 
-        Thread t = new Thread() {
+        Thread t = new Thread("Support core plugin startup diagnostics") {
             @Override
             public void run() {
-                while (!milestonesCompleted) {
-                    File f = new File(SUPPORT_DIRECTORY_NAME, "/startup-threadDump.txt");
+                File f = new File(getRootDirectory(), "/startup-threadDump.txt");
+                if (!f.exists()) {
                     try {
-                        ThreadDumps.threadDumpModern(new FileOutputStream(f));
+                        f.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                while (!milestonesCompleted) {
+                    PrintStream ps = null;
+                    FileOutputStream fileOutputStream = null;
+                    try {
+                        fileOutputStream = new FileOutputStream(f);
+                        ps = new PrintStream(fileOutputStream);
+                        ps.println("=== Thread dump at " + new Date() + " ===");
+                        ThreadDumps.threadDumpModern(fileOutputStream);
                         // Generate a thread dump every few mi
                         Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
                     } catch (UnsupportedEncodingException e) {
@@ -427,6 +440,8 @@ public class SupportPlugin extends Plugin {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    } finally {
+                        org.apache.commons.io.IOUtils.closeQuietly(fileOutputStream);
                     }
                 }
             }
