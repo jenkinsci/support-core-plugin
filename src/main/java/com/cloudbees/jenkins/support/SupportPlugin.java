@@ -86,6 +86,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -401,9 +402,10 @@ public class SupportPlugin extends Plugin {
             instance.load();
     }
 
-    public static boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
-    public static int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
-    public static boolean milestonesCompleted = false;
+    private static final boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
+    private static final int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
+    private static boolean milestonesCompleted = false;
+
     @Initializer(after =  InitMilestone.COMPLETED)
     public static void completedMilestones() throws IOException {
         milestonesCompleted = true;
@@ -412,27 +414,29 @@ public class SupportPlugin extends Plugin {
     @Initializer(after = InitMilestone.STARTED)
     public static void threadDumpStartup() throws Exception {
         if (!logStartupPerformanceIssues) return;
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date())+ ".txt");
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         Thread t = new Thread("Support core plugin startup diagnostics") {
             @Override
             public void run() {
-                File f = new File(getRootDirectory(), "/startup-threadDump.txt");
-                if (!f.exists()) {
-                    try {
-                        f.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
                 while (!milestonesCompleted) {
                     PrintStream ps = null;
                     FileOutputStream fileOutputStream = null;
                     try {
-                        fileOutputStream = new FileOutputStream(f);
-                        ps = new PrintStream(fileOutputStream);
+                        fileOutputStream = new FileOutputStream(f, true);
+                        ps = new PrintStream(fileOutputStream, false, "UTF-8");
                         ps.println("=== Thread dump at " + new Date() + " ===");
                         ThreadDumps.threadDumpModern(fileOutputStream);
-                        // Generate a thread dump every few mi
+                        // Generate a thread dump every few seconds/minutes
+                        ps.flush();
                         Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
@@ -441,6 +445,7 @@ public class SupportPlugin extends Plugin {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     } finally {
+                        org.apache.commons.io.IOUtils.closeQuietly(ps);
                         org.apache.commons.io.IOUtils.closeQuietly(fileOutputStream);
                     }
                 }
