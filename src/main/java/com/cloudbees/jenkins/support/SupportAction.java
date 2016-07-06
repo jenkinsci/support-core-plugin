@@ -42,6 +42,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -112,6 +113,44 @@ public class SupportAction implements RootAction {
     public List<Component> getComponents() {
         return SupportPlugin.getComponents();
     }
+
+
+    public void doPsesupport(StaplerRequest req, StaplerResponse rsp) throws ServletException,IOException{
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+
+        final List<Component> components = new ArrayList<Component>(getComponents());
+
+        logger.fine("Preparing response...");
+        rsp.setContentType("application/zip");
+        String filename = "pse-support"; // default bundle filename
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        rsp.addHeader("Content-Disposition", "inline; filename=" + filename + "_" + dateFormat.format(new Date()) + ".zip;");
+        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    SupportPlugin.writeBundle(servletOutputStream, components);
+                } catch (IOException e) {
+                    logger.log(Level.FINE, e.getMessage(), e);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
+            } finally {
+                SupportPlugin.clearRequesterAuthentication();
+            }
+        } finally {
+            logger.fine("Response completed");
+        }
+
+    }
+
+
+
 
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
