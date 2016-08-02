@@ -88,7 +88,7 @@ import org.apache.commons.lang.StringUtils;
                                 }
                                 String extra = value.extra;
                                 if (!StringUtils.isBlank(extra)) {
-                                    out.println("    - " + extra);
+                                    out.println("    - " + extra); // TODO could be a multiline stack trace, quote it
                                 }
                             }
                         } else {
