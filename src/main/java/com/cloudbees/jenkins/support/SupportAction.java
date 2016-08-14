@@ -29,7 +29,13 @@ import com.cloudbees.jenkins.support.api.SupportProvider;
 
 import com.cloudbees.jenkins.support.util.Helper;
 import hudson.Extension;
+import hudson.FilePath;
+import hudson.Util;
+import hudson.model.Action;
+import hudson.model.DirectoryBrowserSupport;
+import hudson.model.InvisibleAction;
 import hudson.model.RootAction;
+import hudson.model.Run;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -37,16 +43,26 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.IOUtils;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,6 +73,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Main root action for generating support.
@@ -113,14 +130,77 @@ public class SupportAction implements RootAction {
         return SupportPlugin.getComponents();
     }
 
+    public class Bundle {
+        File location;
+        public Bundle(File location) {
+            this.location = location;
+        }
+
+        public File getFile() {
+            return location;
+        }
+
+        public String getName() {
+            return location.getName();
+        }
+
+        public String getHref() {
+            return "bundles/bundle/" + getName();
+        }
+
+        public long getLength() {
+            return location.length();
+        }
+
+        private void doDownload(StaplerRequest req, StaplerResponse rsp) throws IOException {
+            OutputStream os = rsp.getOutputStream();
+            try {
+                rsp.setContentType("application/zip");
+                Util.copyStreamAndClose(new FileInputStream(location), os);
+            } finally {
+                IOUtils.closeQuietly(os);
+            }
+        }
+    }
+
+    public final class BundleList extends ArrayList<Bundle> {
+        public void doBundle(StaplerRequest req, StaplerResponse rsp) throws IOException {
+            String restOfPath = req.getRestOfPath();
+            if(restOfPath.replace('\\', '/').contains("/../")) {
+                // don't serve anything other than files in the artifacts dir
+                rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            if (restOfPath.charAt(0) == '/') {
+                restOfPath = restOfPath.substring(1);
+            }
+            for (Bundle b : this) {
+                if (b.getName().equals(restOfPath)) {
+                    b.doDownload(req, rsp);
+                }
+            }
+        }
+    }
+
+    public @Nonnull BundleList getBundles() {
+        BundleList bundles = new BundleList();
+        for (File f : SupportPlugin.getRootDirectory().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.contains(".zip");
+            }
+        })) {
+            bundles.add(new Bundle(f));
+        }
+
+        return bundles;
+    }
+
+    @RequirePOST
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
-        if (!"POST".equals(req.getMethod())) {
-            rsp.sendRedirect2(".");
-            return;
-        }
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);

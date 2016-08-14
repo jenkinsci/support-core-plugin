@@ -26,42 +26,46 @@
          xmlns:f="/lib/form">
   <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
+    <st:include page="topic.jelly"/>
+
     <l:main-panel>
-      <h1>
-        <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
-        ${it.actionTitle}
-      </h1>
-      <p>
-        ${it.actionBlurb}
-      </p>
-      <p>
-        ${%detail}
-      </p>
-      <f:form name="bundle-contents" method="POST" action="download">
-        <j:forEach var="component" items="${it.components}">
-          <f:entry field="component">
-            <div name="components">
-              <j:if test="${component.enabled}">
-                <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
-                            title="${component.displayName}"/>
-              </j:if>
-              <j:if test="${!component.enabled}">
-                <input type="checkbox"
-                       name="selected"
-                       value="false"
-                       disabled="disabled"/>
-                <label class="attach-previous" style="text-decoration: line-through;"
-                       title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
-                </label>
-              </j:if>
-              <input style="display:none" name="name" value="${component.id}"/>
-            </div>
-          </f:entry>
-        </j:forEach>
-        <f:entry>
-          <f:submit value="${%Generate Bundle}"/>
-        </f:entry>
-      </f:form>
+      <div class="pane-frame">
+      <table id="pluginsAdv" class="pane" style="margin-top:0; border-top:none">
+        <tr style="border-top:none; white-space: normal">
+         <td>
+           <p>
+             ${%detail}
+           </p>
+
+          <f:form name="bundle-contents" method="POST" action="download">
+            <j:forEach var="component" items="${it.components}">
+              <f:entry field="component">
+                <div name="components">
+                  <j:if test="${component.enabled}">
+                    <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
+                                title="${component.displayName}"/>
+                  </j:if>
+                  <j:if test="${!component.enabled}">
+                    <input type="checkbox"
+                           name="selected"
+                           value="false"
+                           disabled="disabled"/>
+                    <label class="attach-previous" style="text-decoration: line-through;"
+                           title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
+                    </label>
+                  </j:if>
+                  <input style="display:none" name="name" value="${component.id}"/>
+                </div>
+              </f:entry>
+            </j:forEach>
+            <f:entry>
+              <f:submit value="${%Generate Bundle}"/>
+            </f:entry>
+          </f:form>
+         </td>
+        </tr>
+      </table>
+    </div>
     </l:main-panel>
   </l:layout>
 </j:jelly>
