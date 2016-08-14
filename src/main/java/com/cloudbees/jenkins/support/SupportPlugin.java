@@ -30,6 +30,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
+import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -62,6 +63,7 @@ import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
@@ -70,17 +72,21 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -406,6 +412,59 @@ public class SupportPlugin extends Plugin {
         if (instance != null)
             instance.load();
     }
+
+    private static final boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
+    private static final int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
+    private static boolean milestonesCompleted = false;
+
+    @Initializer(after =  InitMilestone.COMPLETED)
+    public static void completedMilestones() throws IOException {
+        milestonesCompleted = true;
+    }
+
+    @Initializer(after = InitMilestone.STARTED)
+    public static void threadDumpStartup() throws Exception {
+        if (!logStartupPerformanceIssues) return;
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date())+ ".txt");
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Thread t = new Thread("Support core plugin startup diagnostics") {
+            @Override
+            public void run() {
+                while (!milestonesCompleted) {
+                    PrintStream ps = null;
+                    FileOutputStream fileOutputStream = null;
+                    try {
+                        fileOutputStream = new FileOutputStream(f, true);
+                        ps = new PrintStream(fileOutputStream, false, "UTF-8");
+                        ps.println("=== Thread dump at " + new Date() + " ===");
+                        ThreadDumps.threadDumpModern(fileOutputStream);
+                        // Generate a thread dump every few seconds/minutes
+                        ps.flush();
+                        Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } finally {
+                        org.apache.commons.io.IOUtils.closeQuietly(ps);
+                        org.apache.commons.io.IOUtils.closeQuietly(fileOutputStream);
+                    }
+                }
+            }
+        };
+        t.start();
+    }
+
 
     @Override
     public synchronized void start() throws Exception {

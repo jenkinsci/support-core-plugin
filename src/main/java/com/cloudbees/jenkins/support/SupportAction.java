@@ -249,7 +249,7 @@ public class SupportAction implements RootAction {
                 try {
                     SupportPlugin.writeBundle(servletOutputStream, components, json.get("description"));
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, e.getMessage(), e);
+                    logger.log(Level.FINE, e.getMessage(), e);
                 } finally {
                     SecurityContextHolder.setContext(old);
                 }
