@@ -247,7 +247,7 @@ public class SupportAction implements RootAction {
             try {
                 SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                 try {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
+                    SupportPlugin.writeBundle(servletOutputStream, components, json.get("description"));
                 } catch (IOException e) {
                     logger.log(Level.WARNING, e.getMessage(), e);
                 } finally {

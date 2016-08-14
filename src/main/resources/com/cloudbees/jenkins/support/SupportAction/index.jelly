@@ -59,6 +59,10 @@
               </f:entry>
             </j:forEach>
             <f:entry>
+              <h3>Description of issue:</h3>
+              <f:textbox name="description" field="description"/>
+            </f:entry>
+            <f:entry>
               <f:submit value="${%Generate Bundle}"/>
             </f:entry>
           </f:form>

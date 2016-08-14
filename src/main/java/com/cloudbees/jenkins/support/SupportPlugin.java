@@ -264,11 +264,17 @@ public class SupportPlugin extends Plugin {
         return Helper.getActiveInstance().getExtensionList(Component.class);
     }
 
+    @Deprecated
     public static void writeBundle(OutputStream outputStream) throws IOException {
         writeBundle(outputStream, getComponents());
     }
 
+    @Deprecated
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
+        writeBundle(outputStream, components, null);
+    }
+
+    public static void writeBundle(OutputStream outputStream, final List<Component> components, Object description) throws IOException {
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
         final Set<String> names = new TreeSet<String>();
@@ -329,6 +335,11 @@ public class SupportPlugin extends Plugin {
             }
         }
         toProcess.add(new StringContent("manifest.md", manifest.toString()));
+
+        if (description != null) {
+            toProcess.add(new StringContent("description.txt", (String) description));
+        }
+
         try {
             ZipOutputStream zip = new ZipOutputStream(outputStream);
             try {
