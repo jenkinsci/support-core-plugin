@@ -68,6 +68,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
 import org.jenkinsci.remoting.RoleChecker;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
@@ -404,11 +406,11 @@ public class SupportPlugin extends Plugin {
 
     private static final boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
     private static final int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
-    private static boolean milestonesCompleted = false;
 
-    @Initializer(after =  InitMilestone.COMPLETED)
+    @Deprecated
+    @Restricted(NoExternalUse.class)
     public static void completedMilestones() throws IOException {
-        milestonesCompleted = true;
+        // Do nothing
     }
 
     @Initializer(after = InitMilestone.STARTED)
@@ -427,7 +429,11 @@ public class SupportPlugin extends Plugin {
         Thread t = new Thread("Support core plugin startup diagnostics") {
             @Override
             public void run() {
-                while (!milestonesCompleted) {
+                while (true) {
+                    final Jenkins jenkins =Jenkins.getInstance();
+                    if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
+                        continue;
+                    }
                     PrintStream ps = null;
                     FileOutputStream fileOutputStream = null;
                     try {
