@@ -25,7 +25,12 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 /**
  * Content added to the support bundle that should be truncated.

@@ -104,8 +104,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static com.codahale.metrics.MetricRegistry.name;
-
 /**
  * Main entry point for the support plugin.
  *

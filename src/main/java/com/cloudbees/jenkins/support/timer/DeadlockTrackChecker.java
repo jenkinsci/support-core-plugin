@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.Helper;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
-import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.PrintWriter;

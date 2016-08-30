@@ -16,7 +16,6 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;

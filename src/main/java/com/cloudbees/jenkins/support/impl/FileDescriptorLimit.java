@@ -8,7 +8,6 @@ import com.cloudbees.jenkins.support.util.Helper;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
@@ -17,6 +16,10 @@ import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+import org.jenkinsci.remoting.RoleChecker;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,10 +36,6 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
-
-import jenkins.model.Jenkins;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * @author schristou88
