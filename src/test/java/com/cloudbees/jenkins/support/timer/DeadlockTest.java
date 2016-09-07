@@ -23,16 +23,17 @@
  */
 package com.cloudbees.jenkins.support.timer;
 
+import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author schristou88

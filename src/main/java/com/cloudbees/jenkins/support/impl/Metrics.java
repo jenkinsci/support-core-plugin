@@ -9,9 +9,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
 import hudson.remoting.Callable;
-import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
-import hudson.util.IOException2;
 import jenkins.model.Jenkins;
 import org.jenkinsci.remoting.RoleChecker;
 

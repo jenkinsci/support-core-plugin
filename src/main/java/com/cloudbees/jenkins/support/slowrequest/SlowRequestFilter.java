@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import hudson.Extension;
 import hudson.init.Initializer;
 import hudson.util.PluginServletFilter;
-import jenkins.model.Jenkins;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

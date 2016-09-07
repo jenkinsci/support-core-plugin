@@ -5,12 +5,13 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.security.Permission;
+import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
 
 /**
  * {@link Component} that attaches files inside {@link FileListCap} into a support bundle.

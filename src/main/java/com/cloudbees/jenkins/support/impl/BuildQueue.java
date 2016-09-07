@@ -37,7 +37,11 @@ import hudson.model.queue.QueueTaskDispatcher;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;

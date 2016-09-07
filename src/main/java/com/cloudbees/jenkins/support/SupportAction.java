@@ -41,6 +41,7 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -113,14 +114,11 @@ public class SupportAction implements RootAction {
         return SupportPlugin.getComponents();
     }
 
+    @RequirePOST
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
-        if (!"POST".equals(req.getMethod())) {
-            rsp.sendRedirect2(".");
-            return;
-        }
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -169,7 +167,7 @@ public class SupportAction implements RootAction {
                 try {
                     SupportPlugin.writeBundle(servletOutputStream, components);
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, e.getMessage(), e);
+                    logger.log(Level.FINE, e.getMessage(), e);
                 } finally {
                     SecurityContextHolder.setContext(old);
                 }

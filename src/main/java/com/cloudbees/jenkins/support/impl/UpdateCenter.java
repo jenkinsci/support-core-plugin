@@ -13,8 +13,11 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import jenkins.plugins.asynchttpclient.AHCUtils;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
 

@@ -7,12 +7,13 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
 
 /**
  * Basic information about the user's authentication.

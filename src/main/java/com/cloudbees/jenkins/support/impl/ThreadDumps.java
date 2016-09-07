@@ -14,6 +14,10 @@ import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
+import jenkins.model.Jenkins;
+import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
+import org.jenkinsci.remoting.RoleChecker;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,9 +39,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * Thread dumps from the nodes.
