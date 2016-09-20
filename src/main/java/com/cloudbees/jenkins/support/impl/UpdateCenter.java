@@ -68,12 +68,14 @@ public class UpdateCenter extends Component {
 
                             out.println("=== Proxy ===");
                             ProxyServer proxyServer = AHCUtils.getProxyServer();
-                            out.println(" - Host: " + proxyServer.getHost());
-                            out.println(" - Port: " + proxyServer.getPort());
+                            if (proxyServer != null) {
+                                out.println(" - Host: " + proxyServer.getHost());
+                                out.println(" - Port: " + proxyServer.getPort());
 
-                            out.println(" - No Proxy Hosts: ");
-                            for (String noHost : proxyServer.getNonProxyHosts()) {
-                                out.println(" * " + noHost);
+                                out.println(" - No Proxy Hosts: ");
+                                for (String noHost : proxyServer.getNonProxyHosts()) {
+                                    out.println(" * " + noHost);
+                                }
                             }
                         } finally {
                             out.flush();
