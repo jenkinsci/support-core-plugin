@@ -54,6 +54,7 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.ComputerListener;
+import hudson.slaves.OfflineCause;
 import hudson.util.IOUtils;
 import hudson.util.TimeUnit2;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
@@ -72,6 +73,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -646,6 +648,7 @@ public class SupportPlugin extends Plugin {
 
     @Extension
     public static class ComputerListenerImpl extends ComputerListener {
+        private static final Logger LOGGER = Logger.getLogger(ComputerListenerImpl.class.getCanonicalName());
         @Override
         public void onOnline(Computer c, TaskListener listener) throws IOException, InterruptedException {
             final Node node = c.getNode();
@@ -666,6 +669,29 @@ public class SupportPlugin extends Plugin {
             } catch (RuntimeException e) {
                 Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING,
                         "Could not install root log handler on node: " + c.getName(), e);
+            }
+        }
+
+        @Override
+        public void onOffline(@Nonnull Computer c, @CheckForNull OfflineCause cause) {
+            if (Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".generateOnOfflineNode")) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+                final String bundlePrefix = "support";
+                File file = new File(SupportPlugin.getRootDirectory(),
+                        bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(file);
+                    SupportPlugin.writeBundle(fos);
+                } catch (FileNotFoundException e) {
+                    Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
+                } catch (IOException e) {
+                    Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
+                } finally {
+                    IOUtils.closeQuietly(fos);
+                }
             }
         }
     }
