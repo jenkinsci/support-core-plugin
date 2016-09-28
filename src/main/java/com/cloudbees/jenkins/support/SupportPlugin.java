@@ -101,6 +101,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -675,25 +677,39 @@ public class SupportPlugin extends Plugin {
         @Override
         public void onOffline(@Nonnull Computer c, @CheckForNull OfflineCause cause) {
             if (Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".generateOnOfflineNode")) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-                final String bundlePrefix = "support";
-                File file = new File(SupportPlugin.getRootDirectory(),
-                        bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
-                FileOutputStream fos = null;
+                boolean locked = false;
                 try {
-                    fos = new FileOutputStream(file);
-                    SupportPlugin.writeBundle(fos);
-                } catch (FileNotFoundException e) {
-                    Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
-                } catch (IOException e) {
+                    locked = lock.tryLock();
+                    if (locked) {
+                        Thread.sleep(TimeUnit2.MINUTES.toMillis(1));
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+                        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+                        final String bundlePrefix = "support";
+                        File file = new File(SupportPlugin.getRootDirectory(),
+                                bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(file);
+                            SupportPlugin.writeBundle(fos);
+                        } catch (FileNotFoundException e) {
+                            Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
+                        } catch (IOException e) {
+                            Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
+                        } finally {
+                            IOUtils.closeQuietly(fos);
+                        }
+                    }
+                } catch (InterruptedException e) {
                     Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
                 } finally {
-                    IOUtils.closeQuietly(fos);
+                    if (locked)
+                        lock.unlock();
                 }
             }
         }
+
+        private final Lock lock = new ReentrantLock();
     }
 
     @Extension
