@@ -60,6 +60,7 @@ import hudson.util.TimeUnit2;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import jenkins.util.Timer;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
@@ -74,6 +75,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -676,20 +678,26 @@ public class SupportPlugin extends Plugin {
         @Override
         public void onOffline(@Nonnull Computer c, @CheckForNull OfflineCause cause) {
             if (Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".generateOnOfflineNode")) {
-                boolean locked = false;
-                try {
-                    locked = lock.tryLock();
-                    if (locked) {
-                        PeriodicWork.all().get(PeriodicWorkImpl.class).doRun();
+                Timer.get().schedule(new java.util.concurrent.Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        boolean locked = false;
+                        try {
+                            locked = lock.tryLock();
+                            if (locked) {
+                                PeriodicWork.all().get(PeriodicWorkImpl.class).doRun();
+                            }
+                        } catch (Exception e) {
+                            Logger.getLogger(SupportPlugin.class.getName())
+                                    .log(Level.WARNING,
+                                            "Error when generating support bundle while on offline node", e);
+                        } finally {
+                            if (locked)
+                                lock.unlock();
+                        }
+                        return null;
                     }
-                } catch (Exception e) {
-                    Logger.getLogger(SupportPlugin.class.getName())
-                            .log(Level.WARNING,
-                            "Error when generating support bundle while on offline node", e);
-                } finally {
-                    if (locked)
-                        lock.unlock();
-                }
+                }, 1, TimeUnit.MINUTES);
             }
         }
 
