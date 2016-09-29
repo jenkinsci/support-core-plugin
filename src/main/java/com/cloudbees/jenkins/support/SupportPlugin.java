@@ -681,27 +681,10 @@ public class SupportPlugin extends Plugin {
                 try {
                     locked = lock.tryLock();
                     if (locked) {
-                        Thread.sleep(TimeUnit2.MINUTES.toMillis(1));
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-                        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-                        final String bundlePrefix = "support";
-                        File file = new File(SupportPlugin.getRootDirectory(),
-                                bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
-                        FileOutputStream fos = null;
-                        try {
-                            fos = new FileOutputStream(file);
-                            SupportPlugin.writeBundle(fos);
-                        } catch (FileNotFoundException e) {
-                            Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
-                        } catch (IOException e) {
-                            Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
-                        } finally {
-                            IOUtils.closeQuietly(fos);
-                        }
+                        PeriodicWork.all().get(PeriodicWorkImpl.class).doRun();
                     }
-                } catch (InterruptedException e) {
-                    Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING, e.getMessage(), e);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 } finally {
                     if (locked)
                         lock.unlock();
