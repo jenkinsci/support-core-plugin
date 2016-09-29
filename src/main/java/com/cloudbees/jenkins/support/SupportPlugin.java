@@ -677,7 +677,7 @@ public class SupportPlugin extends Plugin {
 
         @Override
         public void onOffline(@Nonnull Computer c, @CheckForNull OfflineCause cause) {
-            if (Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".generateOnOfflineNode")) {
+            if (Boolean.getBoolean(SupportPlugin.class.getName() + ".generateOnOfflineNode")) {
                 Timer.get().schedule(new java.util.concurrent.Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
