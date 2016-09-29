@@ -683,7 +683,9 @@ public class SupportPlugin extends Plugin {
                         PeriodicWork.all().get(PeriodicWorkImpl.class).doRun();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.getLogger(SupportPlugin.class.getName())
+                            .log(Level.WARNING,
+                            "Error when generating support bundle while on offline node", e);
                 } finally {
                     if (locked)
                         lock.unlock();
