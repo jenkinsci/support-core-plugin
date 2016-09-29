@@ -676,7 +676,7 @@ public class SupportPlugin extends Plugin {
         }
 
         @Override
-        public void onOffline(@Nonnull Computer c, @CheckForNull OfflineCause cause) {
+        public void onOffline(@Nonnull final Computer c, @CheckForNull OfflineCause cause) {
             if (Boolean.getBoolean(SupportPlugin.class.getName() + ".generateOnOfflineNode")) {
                 Timer.get().schedule(new java.util.concurrent.Callable<Void>() {
                     @Override
@@ -686,6 +686,14 @@ public class SupportPlugin extends Plugin {
                             locked = lock.tryLock();
                             if (locked) {
                                 PeriodicWork.all().get(PeriodicWorkImpl.class).doRun();
+                                Logger.getLogger(SupportPlugin.class.getName())
+                                        .log(Level.INFO,
+                                                "Node: " +
+                                                        c.getDisplayName() +
+                                                        " went offline. A new support bundle" +
+                                                        " was generated. Please check: " +
+                                                        SupportPlugin.getRootDirectory().getAbsolutePath() +
+                                                        " at this time.");
                             }
                         } catch (Exception e) {
                             Logger.getLogger(SupportPlugin.class.getName())
