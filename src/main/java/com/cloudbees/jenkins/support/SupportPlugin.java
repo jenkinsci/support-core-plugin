@@ -650,7 +650,6 @@ public class SupportPlugin extends Plugin {
 
     @Extension
     public static class ComputerListenerImpl extends ComputerListener {
-        private static final Logger LOGGER = Logger.getLogger(ComputerListenerImpl.class.getCanonicalName());
         @Override
         public void onOnline(Computer c, TaskListener listener) throws IOException, InterruptedException {
             final Node node = c.getNode();
