@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.util.Helper;
 import com.ning.http.client.ProxyServer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -66,15 +67,18 @@ public class UpdateCenter extends Component {
                                 out.println("Last updated: " + updateCenter.getLastUpdatedString());
                             }
 
-                            out.println("=== Proxy ===");
-                            ProxyServer proxyServer = AHCUtils.getProxyServer();
-                            if (proxyServer != null) {
-                                out.println(" - Host: " + proxyServer.getHost());
-                                out.println(" - Port: " + proxyServer.getPort());
+                            // Only do this part of the async-http-client plugin is installed.
+                            if (Helper.getActiveInstance().getPlugin("async-http-client") != null) {
+                                out.println("=== Proxy ===");
+                                ProxyServer proxyServer = AHCUtils.getProxyServer();
+                                if (proxyServer != null) {
+                                    out.println(" - Host: " + proxyServer.getHost());
+                                    out.println(" - Port: " + proxyServer.getPort());
 
-                                out.println(" - No Proxy Hosts: ");
-                                for (String noHost : proxyServer.getNonProxyHosts()) {
-                                    out.println(" * " + noHost);
+                                    out.println(" - No Proxy Hosts: ");
+                                    for (String noHost : proxyServer.getNonProxyHosts()) {
+                                        out.println(" * " + noHost);
+                                    }
                                 }
                             }
                         } finally {
