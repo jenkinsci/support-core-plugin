@@ -677,7 +677,8 @@ public class SupportPlugin extends Plugin {
 
         @Override
         public void onOffline(@Nonnull final Computer c, @CheckForNull OfflineCause cause) {
-            if (Boolean.getBoolean(SupportPlugin.class.getName() + ".generateOnOfflineNode")) {
+            if (Boolean.getBoolean(SupportPlugin.class.getName() + ".generateOnOfflineNode")
+                    && cause != null && cause.getClass().getName().contains("RestartCause")) {
                 Timer.get().schedule(new java.util.concurrent.Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
