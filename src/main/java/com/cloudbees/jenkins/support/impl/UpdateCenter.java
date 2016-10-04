@@ -69,17 +69,7 @@ public class UpdateCenter extends Component {
 
                             // Only do this part of the async-http-client plugin is installed.
                             if (Helper.getActiveInstance().getPlugin("async-http-client") != null) {
-                                out.println("=== Proxy ===");
-                                ProxyServer proxyServer = AHCUtils.getProxyServer();
-                                if (proxyServer != null) {
-                                    out.println(" - Host: " + proxyServer.getHost());
-                                    out.println(" - Port: " + proxyServer.getPort());
-
-                                    out.println(" - No Proxy Hosts: ");
-                                    for (String noHost : proxyServer.getNonProxyHosts()) {
-                                        out.println(" * " + noHost);
-                                    }
-                                }
+                                addProxyInformation(out);
                             }
                         } finally {
                             out.flush();
@@ -87,5 +77,19 @@ public class UpdateCenter extends Component {
                     }
                 }
         );
+    }
+
+    private void addProxyInformation(PrintWriter out) {
+        out.println("=== Proxy ===");
+        ProxyServer proxyServer = AHCUtils.getProxyServer();
+        if (proxyServer != null) {
+            out.println(" - Host: " + proxyServer.getHost());
+            out.println(" - Port: " + proxyServer.getPort());
+
+            out.println(" - No Proxy Hosts: ");
+            for (String noHost : proxyServer.getNonProxyHosts()) {
+                out.println(" * " + noHost);
+            }
+        }
     }
 }
