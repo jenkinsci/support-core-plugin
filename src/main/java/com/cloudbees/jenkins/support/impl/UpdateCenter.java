@@ -70,6 +70,8 @@ public class UpdateCenter extends Component {
                             // Only do this part of the async-http-client plugin is installed.
                             if (Helper.getActiveInstance().getPlugin("async-http-client") != null) {
                                 addProxyInformation(out);
+                            } else {
+                                out.println("Proxy: 'async-http-client' not installed so proxy info available.");
                             }
                         } finally {
                             out.flush();
