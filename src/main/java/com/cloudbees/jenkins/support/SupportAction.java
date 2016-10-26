@@ -33,11 +33,14 @@ import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -47,7 +50,9 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -66,6 +71,7 @@ import java.util.logging.Logger;
 public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
+    private static final String  BUNDLE_COLLECTION_NAME = "BundleCollection";
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
@@ -179,9 +185,123 @@ public class SupportAction implements RootAction {
         }
     }
 
+    @Restricted(NoExternalUse.class)
+    public void doDownloadOrDelete(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+
+        JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
+
+        if("download".equals(goal)){
+            doDownloadBundles(req,rsp);
+        }
+        else{
+            doDeleteBundles(req,rsp);
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        if (!"POST".equals(req.getMethod())) {
+            rsp.sendRedirect2(".");
+            return;
+        }
+        JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
+
+        if (!json.has("components")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        List<Integer> indexList = getSelectedIndices(req);
+        rsp.setContentType("application/zip");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        rsp.addHeader("Content-Disposition", "inline; filename="+BUNDLE_COLLECTION_NAME+"_"+dateFormat.format(new Date())+".zip;");
+        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    SupportPlugin.writeBundleCollection(servletOutputStream,bundleBrowser.getSelectedFiles(indexList));
+                } catch (IOException e) {
+                    logger.log(Level.FINE, e.getMessage(), e);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
+            } finally {
+                SupportPlugin.clearRequesterAuthentication();
+            }
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        if (!"POST".equals(req.getMethod())) {
+            rsp.sendRedirect2(".");
+            return;
+        }
+        JSONObject json = req.getSubmittedForm();
+        if (!json.has("components")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        List<Integer> indexList = getSelectedIndices(req);
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        bundleBrowser.deleteBundle(indexList);
+        PrintWriter out = rsp.getWriter();
+        out.println("</script>");
+        rsp.forwardToPreviousPage(req);
+
+        rsp.setContentType("text/html");
+        out.println("<script type=\"text/javascript\">");
+        out.println("alert('Bundle(s) Deleted!');");
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+            SecurityContextHolder.setContext(old);
+            SupportPlugin.clearRequesterAuthentication();
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public List<File> getList() throws IOException {
+        BundleBrowser bundleBrowser = BundleBrowser.getBundleBrowser();
+        return bundleBrowser.getZipFileList();
+    }
+
     public boolean selectedByDefault(Component c) {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
         return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getId()));
+    }
+
+    private List<Integer> getSelectedIndices(StaplerRequest req) throws ServletException {
+        ArrayList<Integer> selectedFileIndices = new ArrayList<Integer>();
+        JSONObject json = req.getSubmittedForm();
+        try{
+            req.getSubmittedForm().getJSONObject("components");
+            selectedFileIndices.add(0);
+        }catch (Exception e) {
+            JSONArray jsonArray = json.getJSONArray("components");
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                String isSelected = jsonArray.getJSONObject(i).get("selected").toString();
+                if ("true".equals(isSelected)) {
+                    selectedFileIndices.add(i);
+                }
+            }
+        }
+        return selectedFileIndices;
     }
 
     public static class Selection {
