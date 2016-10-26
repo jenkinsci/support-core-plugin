@@ -418,6 +418,46 @@ public class SupportPlugin extends Plugin {
         //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
     }
 
+    public static void writeBundleFromDisk(OutputStream outputStream,File file) throws IOException {
+        byte[] buffer ;
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        FileInputStream in = new FileInputStream(file);
+
+        try {
+            ZipEntry ze = new ZipEntry(file.getName());
+            zipOutputStream.putNextEntry(ze);
+            int len;
+            buffer = new byte[1024*1024];
+            while ((len = in.read(buffer)) > 0) {
+                zipOutputStream.write(buffer, 0, len);
+            }
+            in.close();
+        }finally{
+            zipOutputStream.flush();
+            zipOutputStream.close();
+            outputStream.flush();
+            outputStream.close();
+        }
+        //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
+    }
+
+    public static FileOutputStream writeToDisk(List<Component> components) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        final File bundleDir = getRootDirectory();
+        final String bundlePrefix = "support";
+
+        File file = new File(bundleDir,
+                bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            writeBundle(fos,components);
+        }finally {
+            return fos;
+        }
+    }
+
     public List<LogRecord> getAllLogRecords() {
         return handler.getRecent();
     }

@@ -71,6 +71,7 @@ import java.util.logging.Logger;
 public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
+    public static boolean isBundleReady = false;
     private static final String  BUNDLE_COLLECTION_NAME = "BundleCollection";
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
@@ -185,6 +186,44 @@ public class SupportAction implements RootAction {
         }
     }
 
+    @RequirePOST
+    public void doDownloadLatest(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
+        logger.fine("Preparing response...");
+        rsp.setContentType("application/zip");
+
+        String filename = "support"; // default bundle filename
+        if (supportPlugin != null) {
+            SupportProvider supportProvider = supportPlugin.getSupportProvider();
+            if (supportProvider != null) {
+                // let the provider name it
+                filename = supportProvider.getName();
+            }
+        }
+
+        File file = getLastModifiedFile(SupportPlugin.getRootDirectory().getPath());
+        rsp.addHeader("Content-Disposition", "inline; filename=" + ((file != null) ? file.getName() : filename));
+        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    if(file != null)
+                        SupportPlugin.writeBundleFromDisk(servletOutputStream,file);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
+            } finally {
+                SupportPlugin.clearRequesterAuthentication();
+            }
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
     @Restricted(NoExternalUse.class)
     public void doDownloadOrDelete(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
@@ -198,6 +237,52 @@ public class SupportAction implements RootAction {
         }
         else{
             doDeleteBundles(req,rsp);
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public void doCreateAndDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+
+        JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
+
+        if (!json.has("components")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        logger.fine("Parsing request...");
+        Set<String> remove = new HashSet<String>();
+        for (Selection s : req.bindJSONToList(Selection.class, json.get("components"))) {
+            if (!s.isSelected()) {
+                logger.log(Level.FINER, "Excluding ''{0}'' from list of components to include", s.getName());
+                remove.add(s.getName());
+            }
+        }
+        logger.fine("Selecting components...");
+        final List<Component> components = new ArrayList<Component>(getComponents());
+        for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
+            Component c = iterator.next();
+            if (remove.contains(c.getId()) || !c.isEnabled()) {
+                iterator.remove();
+            }
+        }
+
+        if("generateBundle".equals(goal)){
+            SupportPlugin.writeToDisk(components);
+            isBundleReady = true;
+            rsp.forwardToPreviousPage(req);
+        }
+        else{
+            if(isBundleReady) {
+                doDownloadLatest(req, rsp);
+                isBundleReady = false;
+            }
+            else{
+                SupportPlugin.writeToDisk(components);
+                doDownload(req,rsp);
+            }
         }
     }
 
@@ -272,6 +357,30 @@ public class SupportAction implements RootAction {
         } finally {
             logger.fine("Response completed");
         }
+    }
+
+    private File getLastModifiedFile(String filePath) {
+        File dir = new File(filePath);
+        ArrayList<File> zipFiles = new ArrayList<File>();
+        long lastModifiedTime;
+        File latestFile = null;
+        for(File file : dir.listFiles()){
+            if(file.getName().endsWith(".zip")){
+                zipFiles.add(file);
+            }
+        }
+        if(zipFiles.size() != 0) {
+            latestFile = zipFiles.get(0);
+            lastModifiedTime = latestFile.lastModified();
+
+            for (File file : zipFiles) {
+                if (lastModifiedTime < file.lastModified()) {
+                    lastModifiedTime = file.lastModified();
+                    latestFile = file;
+                }
+            }
+        }
+        return latestFile;
     }
 
     @Restricted(NoExternalUse.class)
