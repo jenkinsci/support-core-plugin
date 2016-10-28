@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 /***********************************************
@@ -46,6 +47,9 @@ import java.util.logging.LogRecord;
  * @author Stephen Connolly
  */
 public class SupportLogFormatter extends Formatter {
+
+    /** for testing */
+    static TimeZone timeZone;
     
     private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -63,7 +67,11 @@ public class SupportLogFormatter extends Formatter {
     )
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder();
-        builder.append(threadLocalDateFormat.get().format(new Date(record.getMillis())));
+        SimpleDateFormat format = threadLocalDateFormat.get();
+        if (timeZone != null) {
+            format.setTimeZone(timeZone);
+        }
+        builder.append(format.format(new Date(record.getMillis())));
         builder.append(" [id=").append(record.getThreadID()).append("]");
 
         builder.append("\t").append(record.getLevel().getName()).append("\t");

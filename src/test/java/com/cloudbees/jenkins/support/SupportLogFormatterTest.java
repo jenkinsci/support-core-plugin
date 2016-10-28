@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
 public class SupportLogFormatterTest {
 
     static {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        SupportLogFormatter.timeZone = TimeZone.getTimeZone("UTC");
     }
 
     @Test
