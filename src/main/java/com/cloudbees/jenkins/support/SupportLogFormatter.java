@@ -28,6 +28,7 @@ package com.cloudbees.jenkins.support;
  * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
  * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
  ***********************************************/
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -46,7 +47,7 @@ import java.util.logging.LogRecord;
  */
 public class SupportLogFormatter extends Formatter {
     
-    private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal() {
+    private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
@@ -56,7 +57,7 @@ public class SupportLogFormatter extends Formatter {
     private final Object[] args = new Object[6];
 
     @Override
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @SuppressFBWarnings(
             value = {"DE_MIGHT_IGNORE"},
             justification = "The exception wasn't thrown on our stack frame"
     )
@@ -86,7 +87,12 @@ public class SupportLogFormatter extends Formatter {
             builder.append(abbreviateClassName(sourceClass, 40));
         }
 
-        builder.append(": ").append(formatMessage(record));
+        String message = formatMessage(record);
+        if (message != null) {
+            builder.append(": ").append(message);
+        }
+
+        builder.append("\n");
 
         if (record.getThrown() != null) {
             try {
@@ -100,7 +106,6 @@ public class SupportLogFormatter extends Formatter {
             }
         }
 
-        builder.append("\n");
         return builder.toString();
     }
 
