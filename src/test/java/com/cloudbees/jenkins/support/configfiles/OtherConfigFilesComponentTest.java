@@ -67,7 +67,6 @@ public class OtherConfigFilesComponentTest {
 
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
-        //File file = new File(this.getClass().getResource("credentials.xml").getFile());
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml);
         File patchedFile = SecretHandler.findSecrets(file);
