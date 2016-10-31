@@ -23,7 +23,8 @@ public class OtherConfigFilesComponent extends Component {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
-        return Collections.singleton(Jenkins.ADMINISTER);    }
+        return Collections.singleton(Jenkins.ADMINISTER);
+    }
 
     @NonNull
     @Override
