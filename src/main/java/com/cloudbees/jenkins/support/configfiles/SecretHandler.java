@@ -27,7 +27,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  * Secret Handler for xml files to add to the support bundle.
- * We want to use a place holder instead of Secrets.
+ * We want to use a placeholder instead of Secrets.
  */
 public class SecretHandler {
 
@@ -37,7 +37,7 @@ public class SecretHandler {
     protected static final String SECRET_MARKER = "#secret#";
 
     /**
-     * fine the secret in the xml file and replace it with the place holder
+     * find the secret in the xml file and replace it with the place holder
      * @param xmlFile we want to parse
      * @return the patched xml files without secrets
      * @throws ParserConfigurationException
@@ -65,10 +65,10 @@ public class SecretHandler {
 
             @Override
             public void characters(char[] ch, int start, int length) throws SAXException {
-                if (!tagName.equals("")) {
+                if (!"".equals(tagName)) {
                     String value = new String(ch, start, length).trim();
                     //if it's a secret, then use a place holder
-                    if (!value.equals("") && Secret.decrypt(value) != null) {
+                    if (!"".equals(value) && Secret.decrypt(value) != null) {
                         ch = SECRET_MARKER.toCharArray();
                         start = 0;
                         length = ch.length;
