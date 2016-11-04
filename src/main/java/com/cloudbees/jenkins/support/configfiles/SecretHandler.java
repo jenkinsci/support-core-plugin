@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.plugins.credentials.SecretBytes;
+import hudson.remoting.Base64;
 import hudson.util.Secret;
 import org.apache.commons.io.FileUtils;
 import org.xml.sax.Attributes;
@@ -68,10 +70,12 @@ public class SecretHandler {
                 if (!"".equals(tagName)) {
                     String value = new String(ch, start, length).trim();
                     //if it's a secret, then use a place holder
-                    if (!"".equals(value) && Secret.decrypt(value) != null) {
-                        ch = SECRET_MARKER.toCharArray();
-                        start = 0;
-                        length = ch.length;
+                    if (!"".equals(value)) {
+                        if ((Secret.decrypt(value)) != null || isSecretBytes(value)) {
+                            ch = SECRET_MARKER.toCharArray();
+                            start = 0;
+                            length = ch.length;
+                        }
                     }
                 }
                 super.characters(ch, start, length);
@@ -86,5 +90,9 @@ public class SecretHandler {
         transformer.transform(src, res);
 
         return patchedFile;
+    }
+
+    private static boolean isSecretBytes(String value) {
+        return (SecretBytes.decrypt(Base64.decode(value.substring(1, value.length() - 1))) != null);
     }
 }
