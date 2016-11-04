@@ -67,10 +67,6 @@
     <tag>HEAD</tag>
   </scm>
 
-  <properties>
-    <jenkins.version>1.580.1</jenkins.version>
-  </properties>
-
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>

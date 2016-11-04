@@ -93,6 +93,9 @@ public class SecretHandler {
     }
 
     private static boolean isSecretBytes(String value) {
-        return (SecretBytes.decrypt(Base64.decode(value.substring(1, value.length() - 1))) != null);
+        if (value.length() > 8) {
+            return (SecretBytes.decrypt(Base64.decode(value.substring(1, value.length() - 1))) != null);
+        }
+        return false;
     }
 }
