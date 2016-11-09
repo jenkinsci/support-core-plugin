@@ -9,11 +9,14 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * GC Logs Retriever.
@@ -27,7 +30,11 @@ import java.util.logging.Logger;
 @Extension(ordinal = 90.0) // probably big too, see JenkinsLogs
 public class GCLogs extends Component {
 
-    static final String GCLOG_JRE_SWITCH = "-Xloggc:";
+    static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
+
+    static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
+
+    private static final String GCLOGS_BUNDLE_ROOT = "/nodes/master/logs/gc/";
 
     private static final Logger LOGGER = Logger.getLogger(GCLogs.class.getName());
 
@@ -71,26 +78,75 @@ public class GCLogs extends Component {
         String gcLogFileLocation = getGcLogFileLocation();
         assert gcLogFileLocation != null; // non nullable here 'cause isEnabled() already checks it
 
-        // TODO : log rotation improved logic
+        if (isGcLogRotationConfigured()) {
+            handleRotatedLogs(gcLogFileLocation, result);
+        } else {
+            File file = new File(gcLogFileLocation);
+            if (!file.exists()) {
+                LOGGER.warning("[Support Bundle] GC Logging apparently configured, " +
+                        "but file '" + gcLogFileLocation + "' not found");
+                return;
+            }
+            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file));
+        }
+    }
 
-        File file = new File(gcLogFileLocation);
-        if (!file.exists()) {
-            LOGGER.warning("[Support Bundle] GC Logging apparently configured, " +
-                    "but file '" + gcLogFileLocation + "' not found");
+    /**
+     * Two cases:
+     * <ul>
+     * <li>The file name contains <code>%t</code> or <code>%p</code> somewhere in the middle:
+     * then we are simply going to replace those by <code>.*</code> to find associated logs and match files by regex.
+     * This will match GC logs from the current JVM execution, or possibly previous ones.</li>
+     * <li>or that feature is not used, then we simply match by "starts with"</li>
+     * </ul>
+     *
+     * @param gcLogFileLocation the specified value after <code>-Xloggc:</code>
+     * @param result            the container where to add the found logs, if any.
+     * @see https://bugs.openjdk.java.net/browse/JDK-7164841
+     */
+    private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result) {
+        // always add .* in the end because this is where the numbering is going to happen
+        String regex = gcLogFileLocation.replaceAll("%[pt]", ".*") + ".*";
+        final Pattern gcLogFilesPattern = Pattern.compile(regex);
+
+        File parentDirectory = new File(gcLogFileLocation).getParentFile();
+
+        if (parentDirectory == null || !parentDirectory.exists()) {
+            LOGGER.warning("[Support Bundle] " + parentDirectory + " does not exist, cannot collect gc logging files.");
             return;
         }
-        result.add(new FileContent("/nodes/master/logs/gc.log", file));
+
+        File[] gcLogs = parentDirectory.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return gcLogFilesPattern.matcher(dir + "/" + name).matches();
+            }
+        });
+        if (gcLogs == null || gcLogs.length == 0) {
+            LOGGER.warning("No GC logging files found, although the VM argument was found. This is probably a bug.");
+            return;
+        }
+
+        LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
+        for (File gcLog : gcLogs) {
+            LOGGER.finest("Adding '" + gcLog.getName() + "' file");
+            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + gcLog.getName(), gcLog));
+        }
     }
 
     @CheckForNull
     private String getGcLogFileLocation() {
 
-        String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOG_JRE_SWITCH);
+        String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE_SWITCH);
         if (gcLogSwitch == null) {
-            LOGGER.fine("No GC Logging switch found, no GC logs will be gathered.");
+            LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
             return null;
         }
-        return gcLogSwitch.substring(GCLOG_JRE_SWITCH.length());
+        return gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+    }
+
+    private boolean isGcLogRotationConfigured() {
+        return vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
     }
 
     /**

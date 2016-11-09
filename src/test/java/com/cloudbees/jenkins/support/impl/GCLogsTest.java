@@ -17,20 +17,39 @@ import static org.mockito.Mockito.when;
 public class GCLogsTest {
 
     @Test
-    public void testSimpleFile() throws Exception {
+    public void simpleFile() throws Exception {
         File tmpFile = File.createTempFile("gclogs", "");
         Files.touch(tmpFile);
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        System.out.println(tmpFile.exists());
-        System.out.println(tmpFile);
-        when(finder.findVmArgument(GCLogs.GCLOG_JRE_SWITCH)).thenReturn(GCLogs.GCLOG_JRE_SWITCH + tmpFile.getAbsolutePath());
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tmpFile.getAbsolutePath());
 
         TestContainer container = new TestContainer();
 
         new GCLogs(finder).addContents(container);
 
         assertEquals(1, container.getContents().size());
+    }
+
+    @Test
+    public void rotatedFiles() throws Exception {
+        File tempDir = Files.createTempDir();
+        for (int count = 0; count < 10; count++) {
+            Files.touch(new File(tempDir, "gc5625.log" + count));
+        }
+        for (int count = 0; count < 5; count++) {
+            Files.touch(new File(tempDir, "gc3421.log" + count));
+        }
+
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc%p.log").getAbsolutePath());
+        when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
+
+        TestContainer container = new TestContainer();
+
+        new GCLogs(finder).addContents(container);
+
+        assertEquals(15, container.getContents().size());
     }
 
     private static class TestContainer extends Container {
@@ -44,6 +63,5 @@ public class GCLogsTest {
         public void add(@CheckForNull Content content) {
             contents.add(content);
         }
-
     }
 }
