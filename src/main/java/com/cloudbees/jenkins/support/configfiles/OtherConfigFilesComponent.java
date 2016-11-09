@@ -55,12 +55,12 @@ public class OtherConfigFilesComponent extends Component {
                             File patchedXmlFile = SecretHandler.findSecrets(configFile);
                             container.add(new FileContent("jenkins-root-configuration-files/" + configFile.getName(), patchedXmlFile));
                         } catch (IOException | ParserConfigurationException | XMLStreamException | SAXException | TransformerException e) {
-                            logger.log(Level.WARNING, "could not add the {0} configuration file to the support bundle because of: {1}", new Object[]{configFile.getName(), e});
+                            LOGGER.log(Level.WARNING, "could not add the {0} configuration file to the support bundle because of: {1}", new Object[]{configFile.getName(), e});
                         }
                     }
                 }
             } else {
-                logger.log(Level.WARNING, "Cannot list files in Jenkins root, probably something is wrong with the path");
+                LOGGER.log(Level.WARNING, "Cannot list files in Jenkins root, probably something is wrong with the path");
             }
         }
     }
@@ -70,6 +70,6 @@ public class OtherConfigFilesComponent extends Component {
         return false;
     }
 
-    private static final Logger logger = Logger.getLogger(OtherConfigFilesComponent.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(OtherConfigFilesComponent.class.getName());
 
 }
