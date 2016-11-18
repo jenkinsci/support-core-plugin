@@ -72,7 +72,7 @@ public class SecretHandler {
                     String value = new String(ch, start, length).trim();
                     //if it's a secret, then use a place holder
                     if (!"".equals(value)) {
-                        if ((Secret.decrypt(value)) != null || isSecretBytes(value)) {
+                        if ((Secret.decrypt(value)) != null || SecretBytes.iSecretBytes(value)) {
                             ch = SECRET_MARKER.toCharArray();
                             start = 0;
                             length = ch.length;
@@ -91,12 +91,5 @@ public class SecretHandler {
         transformer.transform(src, res);
 
         return patchedFile;
-    }
-
-    private static boolean isSecretBytes(String value) {
-        if (value.length() > 8) {
-            return (SecretBytes.decrypt(Base64.decode(value.substring(1, value.length() - 1))) != null);
-        }
-        return false;
     }
 }
