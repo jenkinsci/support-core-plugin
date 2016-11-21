@@ -36,7 +36,7 @@ public class ConfigFileComponent extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Jenkins Global Configuration File";
+        return "Jenkins Global Configuration File (secrets are filtered out unless saved in clear in the config.xml file)";
     }
 
     @Override
