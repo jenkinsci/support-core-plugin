@@ -28,10 +28,12 @@ package com.cloudbees.jenkins.support;
  * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
  * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
  ***********************************************/
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 /***********************************************
@@ -45,8 +47,11 @@ import java.util.logging.LogRecord;
  * @author Stephen Connolly
  */
 public class SupportLogFormatter extends Formatter {
+
+    /** for testing */
+    static TimeZone timeZone;
     
-    private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal() {
+    private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
@@ -56,13 +61,17 @@ public class SupportLogFormatter extends Formatter {
     private final Object[] args = new Object[6];
 
     @Override
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @SuppressFBWarnings(
             value = {"DE_MIGHT_IGNORE"},
             justification = "The exception wasn't thrown on our stack frame"
     )
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder();
-        builder.append(threadLocalDateFormat.get().format(new Date(record.getMillis())));
+        SimpleDateFormat format = threadLocalDateFormat.get();
+        if (timeZone != null) {
+            format.setTimeZone(timeZone);
+        }
+        builder.append(format.format(new Date(record.getMillis())));
         builder.append(" [id=").append(record.getThreadID()).append("]");
 
         builder.append("\t").append(record.getLevel().getName()).append("\t");
@@ -86,7 +95,12 @@ public class SupportLogFormatter extends Formatter {
             builder.append(abbreviateClassName(sourceClass, 40));
         }
 
-        builder.append(": ").append(formatMessage(record));
+        String message = formatMessage(record);
+        if (message != null) {
+            builder.append(": ").append(message);
+        }
+
+        builder.append("\n");
 
         if (record.getThrown() != null) {
             try {
@@ -100,7 +114,6 @@ public class SupportLogFormatter extends Formatter {
             }
         }
 
-        builder.append("\n");
         return builder.toString();
     }
 
