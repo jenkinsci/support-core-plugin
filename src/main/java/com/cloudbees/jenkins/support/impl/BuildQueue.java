@@ -101,6 +101,7 @@ public class BuildQueue extends Component {
               out.println("----");
               out.println();
             }
+            out.println("Is quieting down: " + Helper.getActiveInstance().isQuietingDown());
           } finally {
             out.flush();
           }
