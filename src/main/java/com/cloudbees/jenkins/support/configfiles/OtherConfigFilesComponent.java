@@ -35,7 +35,7 @@ public class OtherConfigFilesComponent extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Other Jenkins Configuration Files (secrets are filtered out unless saved in clear in the .xml files)";
+        return "Other Jenkins Configuration Files (Encrypted secrets are redacted)";
     }
 
     @Override

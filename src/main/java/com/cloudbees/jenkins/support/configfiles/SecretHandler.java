@@ -72,7 +72,7 @@ public class SecretHandler {
                     String value = new String(ch, start, length).trim();
                     //if it's a secret, then use a place holder
                     if (!"".equals(value)) {
-                        if ((Secret.decrypt(value)) != null || SecretBytes.iSecretBytes(value)) {
+                        if ((Secret.decrypt(value)) != null || SecretBytes.isSecretBytes(value)) {
                             ch = SECRET_MARKER.toCharArray();
                             start = 0;
                             length = ch.length;
