@@ -28,7 +28,7 @@ package com.cloudbees.jenkins.support;
  * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
  * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
  ***********************************************/
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings; // Acceptable because RetentionPolicy.CLASS
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
