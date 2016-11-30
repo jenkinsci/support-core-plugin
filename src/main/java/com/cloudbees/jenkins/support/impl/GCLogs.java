@@ -76,7 +76,9 @@ public class GCLogs extends Component {
     public void addContents(@NonNull Container result) {
         LOGGER.fine("Trying to gather GC logs for support bundle");
         String gcLogFileLocation = getGcLogFileLocation();
-        assert gcLogFileLocation != null; // non nullable here 'cause isEnabled() already checks it
+        if (gcLogFileLocation == null) {
+            return;
+        }
 
         if (isGcLogRotationConfigured()) {
             handleRotatedLogs(gcLogFileLocation, result);
