@@ -731,10 +731,6 @@ public class SupportPlugin extends Plugin {
                 }
                 try {
                     thread = new Thread(new Runnable() {
-                        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-                                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
-                                justification = "Best effort"
-                        )
                         public void run() {
                             nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
                             thread.setName(String.format("%s periodic bundle generator: since %s",
@@ -774,6 +770,11 @@ public class SupportPlugin extends Plugin {
             }
         }
 
+        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "IS2_INCONSISTENT_SYNC"},
+                justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, " +
+                        "IS2_INCONSISTENT_SYNC=only called from an already synchronized method"
+        )
         private void cleanupOldBundles(File bundleDir, File justGenerated) {
             thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
                     SupportPlugin.class.getSimpleName(), new Date()));
