@@ -10,12 +10,9 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
@@ -48,7 +45,7 @@ public class ConfigFileComponent extends Component {
             try {
                 patchedXmlFile = SecretHandler.findSecrets(configFile);
                 container.add(new FileContent("jenkins-root-configuration-files/" + configFile.getName(), patchedXmlFile));
-            } catch (IOException | ParserConfigurationException | XMLStreamException | SAXException | TransformerException e) {
+            } catch (IOException | SAXException | TransformerException e) {
                 LOGGER.log(Level.WARNING, "could not add the {0} configuration file to the support bundle because of: {1}", new Object[]{configFile.getName(), e});
             } finally {
                 //delete temporary file - we have copied it in the support bundle already so we do not need it anymore

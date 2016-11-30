@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 /**
  * GC Logs Retriever.
- * <p>
+ *
  * <p>Introspects the running VM for <code>-Xloggc:blah.log</code> option and so on to propose including those if
  * found</p>
  * <p>
