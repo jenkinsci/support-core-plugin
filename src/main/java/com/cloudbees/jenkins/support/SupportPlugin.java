@@ -725,30 +725,7 @@ public class SupportPlugin extends Plugin {
                                 } finally {
                                     IOUtils.closeQuietly(fos);
                                 }
-                                thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
-                                        SupportPlugin.class.getSimpleName(), new Date()));
-                                File[] files = bundleDir.listFiles(new FilenameFilter() {
-                                    public boolean accept(File dir, String name) {
-                                        return name.startsWith(bundlePrefix) && name.endsWith(".zip");
-                                    }
-                                });
-                                long pivot = System.currentTimeMillis();
-                                for (long l = 1; l * 2 > 0; l *= 2) {
-                                    boolean seen = false;
-                                    for (File f : files) {
-                                        if (!f.isFile() || f == file) {
-                                            continue;
-                                        }
-                                        long age = pivot - f.lastModified();
-                                        if (l <= age && age < l * 2) {
-                                            if (seen) {
-                                                f.delete();
-                                            } else {
-                                                seen = true;
-                                            }
-                                        }
-                                    }
-                                }
+                                cleanupOldBundles(bundleDir, file);
                             } catch (Throwable t) {
                                 logger.log(Level.WARNING, "Could not save support bundle", t);
                             } finally {
@@ -759,6 +736,33 @@ public class SupportPlugin extends Plugin {
                     thread.start();
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "Periodic bundle generating thread failed with error", t);
+                }
+            }
+        }
+
+        private void cleanupOldBundles(File bundleDir, File justGenerated) {
+            thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
+                    SupportPlugin.class.getSimpleName(), new Date()));
+            File[] files = bundleDir.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith(SupportPlugin.getBundlePrefix()) && name.endsWith(".zip");
+                }
+            });
+            long pivot = System.currentTimeMillis();
+            for (long l = 1; l * 2 > 0; l *= 2) {
+                boolean seen = false;
+                for (File f : files) {
+                    if (!f.isFile() || f == justGenerated) {
+                        continue;
+                    }
+                    long age = pivot - f.lastModified();
+                    if (l <= age && age < l * 2) {
+                        if (seen) {
+                            f.delete();
+                        } else {
+                            seen = true;
+                        }
+                    }
                 }
             }
         }
