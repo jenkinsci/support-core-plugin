@@ -25,7 +25,6 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.SupportProvider;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.remoting.Callable;
@@ -81,15 +80,7 @@ public class SupportCommand extends CLICommand {
         try {
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
-                String filename = "support";
-                SupportPlugin supportPlugin = SupportPlugin.getInstance();
-                if (supportPlugin != null) {
-                    SupportProvider supportProvider = supportPlugin.getSupportProvider();
-                    if (supportProvider != null) {
-                        filename = supportProvider.getName();
-                    }
-                }
-                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(filename)), selected);
+                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(SupportPlugin.getBundleFileName())), selected);
             } finally {
                 SecurityContextHolder.setContext(old);
             }
@@ -107,7 +98,7 @@ public class SupportCommand extends CLICommand {
         }
 
         public OutputStream call() throws IOException {
-            File f = File.createTempFile(filename, ".zip");
+            File f = File.createTempFile(filename, "");
             System.err.println("Creating: " + f);
             return new RemoteOutputStream(new FileOutputStream(f));
         }
