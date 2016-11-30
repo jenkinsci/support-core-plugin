@@ -594,6 +594,10 @@ public class SupportPlugin extends Plugin {
                 filename = supportProvider.getName();
             }
         }
+        final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
+        if (StringUtils.isNotBlank(instanceType)) {
+            filename = filename + "_"+instanceType;
+        }
         return filename;
     }
 
