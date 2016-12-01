@@ -943,8 +943,8 @@ public class AboutJenkins extends Component {
                     }
                 }
                 for (String resourcePath : Arrays.asList(
-                        "/WEB-INF/slave.jar",
-                        "/WEB-INF/remoting.jar",
+                        "/WEB-INF/slave.jar", // note that as of 2.33 this will not be present (anyway it is the same as war/WEB-INF/lib/remoting-*.jar, printed above)
+                        "/WEB-INF/remoting.jar", // ditto
                         "/WEB-INF/jenkins-cli.jar",
                         "/WEB-INF/web.xml")) {
                     try {
