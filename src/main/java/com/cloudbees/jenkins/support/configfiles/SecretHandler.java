@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.plugins.credentials.SecretBytes;
-import hudson.remoting.Base64;
 import hudson.util.Secret;
 import org.apache.commons.io.FileUtils;
 import org.xml.sax.Attributes;
@@ -10,8 +9,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -43,13 +40,11 @@ public class SecretHandler {
      * find the secret in the xml file and replace it with the place holder
      * @param xmlFile we want to parse
      * @return the patched xml files without secrets
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws IOException
-     * @throws XMLStreamException
-     * @throws TransformerException
+     * @throws SAXException if some XML parsing issue occurs.
+     * @throws IOException if some issue occurs while reading the providing file.
+     * @throws TransformerException if an issue occurs while writing the result.
      */
-    public static File findSecrets(File xmlFile) throws ParserConfigurationException, SAXException, IOException, XMLStreamException, TransformerException {
+    public static File findSecrets(File xmlFile) throws SAXException, IOException, TransformerException {
 
         XMLReader xr = new XMLFilterImpl(XMLReaderFactory.createXMLReader()) {
             private String tagName = "";
