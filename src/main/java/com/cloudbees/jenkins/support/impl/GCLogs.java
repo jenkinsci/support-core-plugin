@@ -66,17 +66,11 @@ public class GCLogs extends Component {
     }
 
     @Override
-    public boolean isEnabled() {
-        boolean gcLogsConfigured = getGcLogFileLocation() != null;
-        LOGGER.fine("GC logs configured: " + gcLogsConfigured);
-        return super.isEnabled() && gcLogsConfigured;
-    }
-
-    @Override
     public void addContents(@NonNull Container result) {
         LOGGER.fine("Trying to gather GC logs for support bundle");
         String gcLogFileLocation = getGcLogFileLocation();
         if (gcLogFileLocation == null) {
+            LOGGER.config("No GC logging enabled, nothing about it will be retrieved for support bundle.");
             return;
         }
 
