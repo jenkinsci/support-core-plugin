@@ -63,7 +63,6 @@ import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
@@ -74,6 +73,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
@@ -88,7 +88,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -148,7 +147,7 @@ public class SupportPlugin extends Plugin {
     private transient WeakHashMap<Node,List<LogRecord>> logRecords;
 
     private SupportProvider supportProvider;
-    
+
     /** class names of {@link Component} */
     private Set<String> excludedComponents;
 
@@ -278,6 +277,7 @@ public class SupportPlugin extends Plugin {
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
         final Set<String> names = new TreeSet<String>();
+
         Container container = new Container() {
             @Override
             public void add(@CheckForNull Content content) {
@@ -388,6 +388,46 @@ public class SupportPlugin extends Plugin {
             }
         } finally {
             outputStream.flush();
+        }
+    }
+
+    public static void writeBundleFromDisk(OutputStream outputStream,File file) throws IOException {
+        byte[] buffer ;
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        FileInputStream in = new FileInputStream(file);
+
+        try {
+            ZipEntry ze = new ZipEntry(file.getName());
+            zipOutputStream.putNextEntry(ze);
+            int len;
+            buffer = new byte[1024*1024];
+            while ((len = in.read(buffer)) > 0) {
+                zipOutputStream.write(buffer, 0, len);
+            }
+            in.close();
+        }finally{
+            zipOutputStream.flush();
+            zipOutputStream.close();
+            outputStream.flush();
+            outputStream.close();
+        }
+        //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
+    }
+
+    public static FileOutputStream writeToDisk(List<Component> components) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        final File bundleDir = getRootDirectory();
+        final String bundlePrefix = "support";
+
+        File file = new File(bundleDir,
+                bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            writeBundle(fos,components);
+        }finally {
+            return fos;
         }
     }
 

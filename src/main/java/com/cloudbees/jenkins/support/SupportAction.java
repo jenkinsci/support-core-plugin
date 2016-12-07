@@ -37,7 +37,14 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.IOUtils;
+import org.apache.tools.ant.taskdefs.Zip;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
+import org.apache.tools.zip.ZipOutputStream;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -47,10 +54,17 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -58,6 +72,10 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipInputStream;
+
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 /**
  * Main root action for generating support.
@@ -66,6 +84,7 @@ import java.util.logging.Logger;
 public class SupportAction implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
+    public static boolean isBundleReady = false;
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
@@ -118,8 +137,48 @@ public class SupportAction implements RootAction {
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
+        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
+        logger.fine("Preparing response...");
+        rsp.setContentType("application/zip");
+
+        String filename = "support"; // default bundle filename
+        if (supportPlugin != null) {
+            SupportProvider supportProvider = supportPlugin.getSupportProvider();
+            if (supportProvider != null) {
+                // let the provider name it
+                filename = supportProvider.getName();
+            }
+        }
+
+        File file = getLastModifiedFile(SupportPlugin.getRootDirectory().getPath());
+        rsp.addHeader("Content-Disposition", "inline; filename=" + ((file != null) ? file.getName() : filename));
+        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
+        try {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            try {
+                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                try {
+                    if(file != null)
+                        SupportPlugin.writeBundleFromDisk(servletOutputStream,file);
+                } finally {
+                    SecurityContextHolder.setContext(old);
+                }
+            } finally {
+                SupportPlugin.clearRequesterAuthentication();
+            }
+        } finally {
+            logger.fine("Response completed");
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public void doCreateOrDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        final Jenkins instance = Helper.getActiveInstance();
+        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
         JSONObject json = req.getSubmittedForm();
+        String goal = json.get("goalType").toString();
+
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
@@ -140,43 +199,46 @@ public class SupportAction implements RootAction {
                 iterator.remove();
             }
         }
-        final SupportPlugin supportPlugin = SupportPlugin.getInstance();
-        if (supportPlugin != null) {
-            supportPlugin.setExcludedComponents(remove);
-        }
-        logger.fine("Preparing response...");
-        rsp.setContentType("application/zip");
 
-        String filename = "support"; // default bundle filename
-        if (supportPlugin != null) {
-            SupportProvider supportProvider = supportPlugin.getSupportProvider();
-            if (supportProvider != null) {
-                // let the provider name it
-                filename = supportProvider.getName();
+        if("generateBundle".equals(goal)){
+            SupportPlugin.writeToDisk(components);
+            isBundleReady = true;
+            rsp.forwardToPreviousPage(req);
+        }
+        else{
+            if(isBundleReady) {
+                doDownload(req, rsp);
+                isBundleReady = false;
+            }
+            else{
+                SupportPlugin.writeToDisk(components);
+                doDownload(req,rsp);
             }
         }
+    }
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        rsp.addHeader("Content-Disposition", "inline; filename=" + filename + "_" + dateFormat.format(new Date()) + ".zip;");
-        final ServletOutputStream servletOutputStream = rsp.getOutputStream();
-        try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
-            try {
-                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                try {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
-                } catch (IOException e) {
-                    logger.log(Level.FINE, e.getMessage(), e);
-                } finally {
-                    SecurityContextHolder.setContext(old);
+    private File getLastModifiedFile(String filePath) {
+        File dir = new File(filePath);
+        ArrayList<File> zipFiles = new ArrayList<File>();
+        long lastModifiedTime;
+        File latestFile = null;
+        for(File file : dir.listFiles()){
+            if(file.getName().endsWith(".zip")){
+                zipFiles.add(file);
+            }
+        }
+        if(zipFiles.size() != 0) {
+            latestFile = zipFiles.get(0);
+            lastModifiedTime = latestFile.lastModified();
+
+            for (File file : zipFiles) {
+                if (lastModifiedTime < file.lastModified()) {
+                    lastModifiedTime = file.lastModified();
+                    latestFile = file;
                 }
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
             }
-        } finally {
-            logger.fine("Response completed");
         }
+        return latestFile;
     }
 
     public boolean selectedByDefault(Component c) {
