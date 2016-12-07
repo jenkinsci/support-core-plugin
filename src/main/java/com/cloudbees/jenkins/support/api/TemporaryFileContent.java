@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Temporal file content, auto-deleted after {@link #writeTo(OutputStream)}.
+ * Temporary file content, auto-deleted after {@link #writeTo(OutputStream)}.
  */
 public class TemporaryFileContent extends FileContent {
 
