@@ -74,6 +74,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
@@ -389,6 +390,32 @@ public class SupportPlugin extends Plugin {
         } finally {
             outputStream.flush();
         }
+    }
+
+    public static void writeBundleCollection(OutputStream outputStream,List<File>zipFileList) throws IOException {
+        byte[] buffer ;
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
+        try {
+            for (File file : zipFileList) {
+                ZipEntry ze = new ZipEntry(file.getName());
+                zipOutputStream.putNextEntry(ze);
+
+                FileInputStream in =
+                        new FileInputStream(file);
+
+                int len;
+                buffer = new byte[1024*1024];
+                while ((len = in.read(buffer)) > 0) {
+                    zipOutputStream.write(buffer, 0, len);
+                }
+                in.close();
+            }
+        }finally{
+            zipOutputStream.close();
+            outputStream.flush();
+            outputStream.close();
+        }
+        //TODO : wrap the for loop inside a try catch. no need to close. flush is enough. wrap the entire part in tr catch and close the outputstream
     }
 
     public List<LogRecord> getAllLogRecords() {
