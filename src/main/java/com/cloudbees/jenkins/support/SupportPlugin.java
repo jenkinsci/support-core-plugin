@@ -713,7 +713,7 @@ public class SupportPlugin extends Plugin {
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
                                 dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-                                final String bundlePrefix = "support";
+                                final String bundlePrefix = BundleNamePrefixProvider.getInstance().getPrefix();
                                 File file = new File(bundleDir,
                                         bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
                                 thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
