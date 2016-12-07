@@ -37,7 +37,7 @@
       <p>
         ${%detail}
       </p>
-      <f:form name="bundle-contents" method="POST" action="download">
+      <f:form name="bundle-contents" method="POST" action="createAndDownload">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">
             <div name="components">
@@ -58,8 +58,15 @@
             </div>
           </f:entry>
         </j:forEach>
+        <f:entry name="goalType"  field="goalType">
+          <select name="goalType">
+            <option value="generateBundle">${%Generate Bundle}</option>
+            <option value="download">${%Download Latest Bundle}</option>
+            <option value="download">${%Generate and Download}</option>
+          </select>
+        </f:entry>
         <f:entry>
-          <f:submit value="${%Generate Bundle}"/>
+          <f:submit value="${%OK}"/>
         </f:entry>
       </f:form>
     </l:main-panel>
