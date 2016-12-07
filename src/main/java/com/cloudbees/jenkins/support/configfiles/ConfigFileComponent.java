@@ -2,7 +2,7 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.api.TemporaryFileContent;
 import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -44,16 +44,9 @@ public class ConfigFileComponent extends Component {
             File patchedXmlFile = null;
             try {
                 patchedXmlFile = SecretHandler.findSecrets(configFile);
-                container.add(new FileContent("jenkins-root-configuration-files/" + configFile.getName(), patchedXmlFile));
+                container.add(new TemporaryFileContent("jenkins-root-configuration-files/" + configFile.getName(), patchedXmlFile));
             } catch (IOException | SAXException | TransformerException e) {
                 LOGGER.log(Level.WARNING, "could not add the {0} configuration file to the support bundle because of: {1}", new Object[]{configFile.getName(), e});
-            } finally {
-                //delete temporary file - we have copied it in the support bundle already so we do not need it anymore
-                if (patchedXmlFile != null) {
-                    if(!patchedXmlFile.delete()) {
-                        LOGGER.log(Level.WARNING, "Failed to delete tmp file {0}", new Object[]{ patchedXmlFile.getPath() });
-                    }
-                }
             }
         } else {
             //this should never happen..
