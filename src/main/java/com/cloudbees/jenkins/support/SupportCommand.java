@@ -36,6 +36,7 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,6 +51,9 @@ public class SupportCommand extends CLICommand {
 
     @Argument(metaVar = "COMPONENTS")
     public List<String> components = new ArrayList<String>();
+
+    @Argument(usage = "Location to put support bundle", metaVar = "LOCATION")
+    public File location = new File(System.getProperty("java.io.tmpdir"));
 
     @Override
     public String getShortDescription() {
@@ -89,7 +93,7 @@ public class SupportCommand extends CLICommand {
                         filename = supportProvider.getName();
                     }
                 }
-                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(filename)), selected);
+                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(location.getAbsolutePath() + filename)), selected);
             } finally {
                 SecurityContextHolder.setContext(old);
             }
@@ -107,7 +111,7 @@ public class SupportCommand extends CLICommand {
         }
 
         public OutputStream call() throws IOException {
-            File f = File.createTempFile(filename, ".zip");
+            File f = new File(filename, ".zip");
             System.err.println("Creating: " + f);
             return new RemoteOutputStream(new FileOutputStream(f));
         }
