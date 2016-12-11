@@ -75,7 +75,7 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
 
         final BundleNameInstanceTypeProvider chosen = all.get(0);
         if (extensionCount > 1) {
-            LOGGER.log(Level.INFO, "Using {0} as BundleNameInstanceTypeProvider implementation", chosen.getClass().getName());
+            LOGGER.log(Level.FINE, "Using {0} as BundleNameInstanceTypeProvider implementation", chosen.getClass().getName());
         }
         return chosen;
     }
