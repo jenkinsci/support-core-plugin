@@ -97,7 +97,7 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
     public abstract String getInstanceType();
 
     // We want this to be always picked up last in case others are found Double.MIN_VALUE does NOT work
-    @Extension(ordinal = -1000000)
+    @Extension(ordinal = Integer.MIN_VALUE)
     public static final class DEFAULT_STRATEGY extends BundleNameInstanceTypeProvider {
 
         @Override
