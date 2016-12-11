@@ -27,13 +27,12 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.remoting.Callable;
 import hudson.remoting.RemoteOutputStream;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.args4j.Argument;
 
 import java.io.File;
@@ -90,7 +89,7 @@ public class SupportCommand extends CLICommand {
         return 0;
     }
 
-    private static class SaveBundle implements Callable<OutputStream, IOException> {
+    private static class SaveBundle extends MasterToSlaveCallable<OutputStream, IOException> {
         private final String filename;
 
         SaveBundle(String filename) {
@@ -102,11 +101,11 @@ public class SupportCommand extends CLICommand {
             System.err.println("Creating: " + f);
             return new RemoteOutputStream(new FileOutputStream(f));
         }
-
-        /** {@inheritDoc} */
         @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
+        public OutputStream call() throws IOException {
+            Path path = Files.createFile(Paths.get(System.getProperty("java.io.tmpDir"), filename));
+            System.err.println("Creating: " + path);
+            return new RemoteOutputStream(new FileOutputStream(path.toFile()));
         }
     }
 
