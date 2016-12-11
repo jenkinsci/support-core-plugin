@@ -81,12 +81,14 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
     }
 
     /**
-     * Returns the <strong>non-null</strong> instance type to be used for generated support bundle names.
-     * Aims to provide informational data about the generated bundles.
-     * <p>
-     * <p>
-     * <p><b>Will be used for file name generation, so avoid funky characters.
-     * Please stay in <code>[a-zA-Z-_]</code></b>. Also consider the file name length, you probably want to be defensive
+     * Returns the <strong>non-null</strong> and non empty (default value is empty) instance type to be used for
+     * generated support bundle names.
+     *
+     * <p>Aims to provide informational data about the generated bundles.</p>
+     * <p><strong>Will be used for file name generation, so avoid funky characters.
+     * Please ideally stay in <code>[a-zA-Z-_.]</code></strong>.
+     *
+     * Also consider the file name length, you probably want to be defensive
      * and not return crazily long strings. Something below 20 characters or so might sound reasonable.</p>
      *
      * @return the instance type specification to be used for generated support bundles.
