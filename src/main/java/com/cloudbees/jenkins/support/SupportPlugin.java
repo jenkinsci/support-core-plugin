@@ -780,7 +780,7 @@ public class SupportPlugin extends Plugin {
                     SupportPlugin.class.getSimpleName(), new Date()));
             File[] files = bundleDir.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
-                    return name.startsWith(SupportPlugin.getBundlePrefix()) && name.endsWith(".zip");
+                    return name.endsWith(".zip");
                 }
             });
             long pivot = System.currentTimeMillis();
