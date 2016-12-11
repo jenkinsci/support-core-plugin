@@ -35,11 +35,13 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.kohsuke.args4j.Argument;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,14 +98,9 @@ public class SupportCommand extends CLICommand {
             this.filename = filename;
         }
 
-        public OutputStream call() throws IOException {
-            File f = File.createTempFile(filename, "");
-            System.err.println("Creating: " + f);
-            return new RemoteOutputStream(new FileOutputStream(f));
-        }
         @Override
         public OutputStream call() throws IOException {
-            Path path = Files.createFile(Paths.get(System.getProperty("java.io.tmpDir"), filename));
+            Path path = Files.createFile(Paths.get(System.getProperty("java.io.tmpdir"), filename));
             System.err.println("Creating: " + path);
             return new RemoteOutputStream(new FileOutputStream(path.toFile()));
         }
