@@ -136,7 +136,7 @@ public class SlaveLogs extends Component {
                                         }
                                     } catch (Throwable e) {
                                         out.println();
-                                        out.print(SupportLogFormatter.printThrowable(e));
+                                        SupportLogFormatter.printStackTrace(e, out);
                                     }
                                 }
                                 out.flush();

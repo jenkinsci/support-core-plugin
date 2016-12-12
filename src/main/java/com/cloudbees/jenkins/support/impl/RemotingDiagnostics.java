@@ -44,7 +44,7 @@ public class RemotingDiagnostics extends Component {
                     Method m = Channel.class.getMethod("dumpDiagnosticsForAll", PrintWriter.class);
                     m.invoke(null,out);
                 } catch (Exception e) {
-                    out.print(SupportLogFormatter.printThrowable(e));
+                    SupportLogFormatter.printStackTrace(e, out);
                 }
             }
         });

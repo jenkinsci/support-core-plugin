@@ -77,7 +77,7 @@ public class FileContent extends Content {
                 try {
                     pw.println("--- WARNING: Could not attach " + file + " as it cannot currently be found ---");
                     pw.println();
-                    pw.print(SupportLogFormatter.printThrowable(e));
+                    SupportLogFormatter.printStackTrace(e, pw);
                 } finally {
                     pw.flush();
                 }

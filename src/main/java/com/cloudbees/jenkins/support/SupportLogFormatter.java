@@ -29,6 +29,7 @@ package com.cloudbees.jenkins.support;
  * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
  ***********************************************/
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -212,5 +213,11 @@ public class SupportLogFormatter extends Formatter {
         }
     }
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    public static void printStackTrace(Throwable t, PrintWriter pw) {
+        pw.println(printThrowable(t).trim());
+    }
+    public static void printStackTrace(Throwable t, PrintStream ps) {
+        ps.println(printThrowable(t).trim());
+    }
 
 }

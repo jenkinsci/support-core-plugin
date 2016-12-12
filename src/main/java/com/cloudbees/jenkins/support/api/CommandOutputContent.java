@@ -43,7 +43,7 @@ public class CommandOutputContent extends StringContent {
                 Process proc = new ProcessBuilder().command(command).redirectErrorStream(true).start();
                 IOUtils.copy(proc.getInputStream(), pw);
             } catch (Exception e) {
-                pw.print(SupportLogFormatter.printThrowable(e));
+                SupportLogFormatter.printStackTrace(e, pw);
             }
             pw.flush();
             return bos.toString();

@@ -95,7 +95,7 @@ public class FileDescriptorLimit extends Component {
                             try {
                                 out.println(getUlimit(node));
                             } catch (IOException e) {
-                                out.print(SupportLogFormatter.printThrowable(e));
+                                SupportLogFormatter.printStackTrace(e, out);
                             } finally {
                                 out.flush();
                             }
@@ -127,17 +127,17 @@ public class FileDescriptorLimit extends Component {
             try {
                 getUlimit(pw);
             } catch (Exception e) {
-                pw.print(SupportLogFormatter.printThrowable(e));
+                SupportLogFormatter.printStackTrace(e, pw);
             }
             try {
                 getOpenFileDescriptorCount(pw);
             } catch (Exception e) {
-                pw.print(SupportLogFormatter.printThrowable(e));
+                SupportLogFormatter.printStackTrace(e, pw);
             }
             try {
                 listAllOpenFileDescriptors(pw);
             } catch (Exception e) {
-                pw.print(SupportLogFormatter.printThrowable(e));
+                SupportLogFormatter.printStackTrace(e, pw);
             }
             pw.flush();
             return bos.toString();

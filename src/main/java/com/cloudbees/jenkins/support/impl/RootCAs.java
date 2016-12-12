@@ -105,9 +105,9 @@ public class RootCAs extends Component {
                 try {
                   out.println(getRootCA(node));
                 } catch (IOException e) {
-                  out.print(SupportLogFormatter.printThrowable(e));
+                  SupportLogFormatter.printStackTrace(e, out);
                 } catch (InterruptedException e) {
-                  out.print(SupportLogFormatter.printThrowable(e));
+                  SupportLogFormatter.printStackTrace(e, out);
                 } finally {
                   out.flush();
                 }
