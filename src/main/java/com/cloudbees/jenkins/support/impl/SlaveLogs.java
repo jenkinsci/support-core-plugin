@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -135,7 +136,7 @@ public class SlaveLogs extends Component {
                                         }
                                     } catch (Throwable e) {
                                         out.println();
-                                        e.printStackTrace(out);
+                                        out.print(SupportLogFormatter.printThrowable(e));
                                     }
                                 }
                                 out.flush();

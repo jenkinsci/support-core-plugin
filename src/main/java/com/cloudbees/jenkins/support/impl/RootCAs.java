@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -104,9 +105,9 @@ public class RootCAs extends Component {
                 try {
                   out.println(getRootCA(node));
                 } catch (IOException e) {
-                  e.printStackTrace(out);
+                  out.print(SupportLogFormatter.printThrowable(e));
                 } catch (InterruptedException e) {
-                  e.printStackTrace(out);
+                  out.print(SupportLogFormatter.printThrowable(e));
                 } finally {
                   out.flush();
                 }

@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
@@ -42,7 +43,7 @@ public class CommandOutputContent extends StringContent {
                 Process proc = new ProcessBuilder().command(command).redirectErrorStream(true).start();
                 IOUtils.copy(proc.getInputStream(), pw);
             } catch (Exception e) {
-                e.printStackTrace(pw);
+                pw.print(SupportLogFormatter.printThrowable(e));
             }
             pw.flush();
             return bos.toString();
