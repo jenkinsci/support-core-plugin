@@ -783,6 +783,11 @@ public class SupportPlugin extends Plugin {
                     return name.endsWith(".zip");
                 }
             });
+            if (files == null) {
+                logger.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
+                           bundleDir.getAbsolutePath());
+                return;
+            }
             long pivot = System.currentTimeMillis();
             for (long l = 1; l * 2 > 0; l *= 2) {
                 boolean seen = false;
