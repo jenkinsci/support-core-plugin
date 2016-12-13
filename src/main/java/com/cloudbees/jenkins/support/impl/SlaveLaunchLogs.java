@@ -49,6 +49,11 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  */
 public class SlaveLaunchLogs extends Component{
 
+    /**
+     * Max agent file size of 500mb.
+     */
+    public /*static final*/ long max_file_size = Long.getLong(SlaveLaunchLogs.class.getCanonicalName() + ".max_file_size", 5 * 100000);
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -164,7 +169,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
+                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, max_file_size));
                 }
         }
     }
