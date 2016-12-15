@@ -48,14 +48,11 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -147,18 +144,7 @@ public class SupportAction implements RootAction {
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
 
-        String filename = "support"; // default bundle filename
-        if (supportPlugin != null) {
-            SupportProvider supportProvider = supportPlugin.getSupportProvider();
-            if (supportProvider != null) {
-                // let the provider name it
-                filename = supportProvider.getName();
-            }
-        }
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        rsp.addHeader("Content-Disposition", "inline; filename=" + filename + "_" + dateFormat.format(new Date()) + ".zip;");
+        rsp.addHeader("Content-Disposition", "inline; filename=" + SupportPlugin.getBundleFileName() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());

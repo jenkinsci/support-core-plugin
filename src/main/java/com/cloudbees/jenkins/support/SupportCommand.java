@@ -25,23 +25,23 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.SupportProvider;
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.remoting.Callable;
 import hudson.remoting.RemoteOutputStream;
 import hudson.security.ACL;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.args4j.Argument;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,15 +81,7 @@ public class SupportCommand extends CLICommand {
         try {
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
-                String filename = "support";
-                SupportPlugin supportPlugin = SupportPlugin.getInstance();
-                if (supportPlugin != null) {
-                    SupportProvider supportProvider = supportPlugin.getSupportProvider();
-                    if (supportProvider != null) {
-                        filename = supportProvider.getName();
-                    }
-                }
-                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(filename)), selected);
+                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(SupportPlugin.getBundleFileName())), selected);
             } finally {
                 SecurityContextHolder.setContext(old);
             }
@@ -99,23 +91,18 @@ public class SupportCommand extends CLICommand {
         return 0;
     }
 
-    private static class SaveBundle implements Callable<OutputStream, IOException> {
+    private static class SaveBundle extends MasterToSlaveCallable<OutputStream, IOException> {
         private final String filename;
 
         SaveBundle(String filename) {
             this.filename = filename;
         }
 
-        public OutputStream call() throws IOException {
-            File f = File.createTempFile(filename, ".zip");
-            System.err.println("Creating: " + f);
-            return new RemoteOutputStream(new FileOutputStream(f));
-        }
-
-        /** {@inheritDoc} */
         @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
+        public OutputStream call() throws IOException {
+            Path path = Files.createFile(Paths.get(System.getProperty("java.io.tmpdir"), filename));
+            System.err.println("Creating: " + path);
+            return new RemoteOutputStream(new FileOutputStream(path.toFile()));
         }
     }
 
