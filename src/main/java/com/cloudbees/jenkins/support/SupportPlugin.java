@@ -327,7 +327,7 @@ public class SupportPlugin extends Plugin {
                         MessageFormat.format("Could not get content from ''{0}'' for support bundle", cDisplayName));
                 errorWriter.println("-----------------------------------------------------------------------");
                 errorWriter.println();
-                e.printStackTrace(errorWriter);
+                SupportLogFormatter.printStackTrace(e, errorWriter);
                 errorWriter.println();
 
             }
@@ -363,7 +363,7 @@ public class SupportPlugin extends Plugin {
                         errorWriter.println(MessageFormat.format("Could not attach ''{0}'' to support bundle", name));
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
-                        e.printStackTrace(errorWriter);
+                        SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
                         bos.flush();

@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
@@ -43,7 +44,7 @@ public class RemotingDiagnostics extends Component {
                     Method m = Channel.class.getMethod("dumpDiagnosticsForAll", PrintWriter.class);
                     m.invoke(null,out);
                 } catch (Exception e) {
-                    e.printStackTrace(out);
+                    SupportLogFormatter.printStackTrace(e, out);
                 }
             }
         });

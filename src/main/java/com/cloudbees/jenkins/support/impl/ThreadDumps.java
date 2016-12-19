@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -93,7 +94,7 @@ public class ThreadDumps extends Component {
                 logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
                 final StringWriter sw = new StringWriter();
                 PrintWriter out = new PrintWriter(sw);
-                e.printStackTrace(out);
+                SupportLogFormatter.printStackTrace(e, out);
                 out.close();
                 result.add(
                         new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", sw.toString()));
@@ -130,17 +131,17 @@ public class ThreadDumps extends Component {
                                         logger.log(Level.WARNING,
                                                 "Could not record thread dump for " + node.getNodeName(),
                                                 e);
-                                        e.printStackTrace(out);
+                                        SupportLogFormatter.printStackTrace(e, out);
                                     } catch (ExecutionException e) {
                                         logger.log(Level.WARNING,
                                                 "Could not record thread dump for " + node.getNodeName(),
                                                 e);
-                                        e.printStackTrace(out);
+                                        SupportLogFormatter.printStackTrace(e, out);
                                     } catch (TimeoutException e) {
                                         logger.log(Level.WARNING,
                                                 "Could not record thread dump for " + node.getNodeName(),
                                                 e);
-                                        e.printStackTrace(out);
+                                        SupportLogFormatter.printStackTrace(e, out);
                                         threadDump.cancel(true);
                                     }
                                     if (content != null) {
@@ -232,7 +233,7 @@ public class ThreadDumps extends Component {
         try {
             threads = mbean.dumpAllThreads(mbean.isObjectMonitorUsageSupported(), mbean.isSynchronizerUsageSupported());
         } catch (UnsupportedOperationException x) {
-            x.printStackTrace(writer);
+            SupportLogFormatter.printStackTrace(x, writer);
             threads = new ThreadInfo[0];
         }
 
@@ -245,7 +246,7 @@ public class ThreadDumps extends Component {
         try {
             deadLocks = mbean.findDeadlockedThreads();
         } catch (UnsupportedOperationException x) {
-            x.printStackTrace(writer);
+            SupportLogFormatter.printStackTrace(x, writer);
             deadLocks = null;
         }
         if (deadLocks != null && deadLocks.length != 0) {
@@ -282,7 +283,7 @@ public class ThreadDumps extends Component {
             long threadUserTime = mbean.getThreadUserTime(t.getThreadId());
             cpuPercentage = (cpuTime == 0) ? 0: 100 * threadUserTime / cpuTime;
         } catch (UnsupportedOperationException x) {
-            x.printStackTrace(writer);
+            SupportLogFormatter.printStackTrace(x, writer);
             cpuPercentage = 0;
         }
         writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",

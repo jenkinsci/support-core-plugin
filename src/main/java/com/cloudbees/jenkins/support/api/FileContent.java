@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.util.IOUtils;
 
 import java.io.File;
@@ -76,7 +77,7 @@ public class FileContent extends Content {
                 try {
                     pw.println("--- WARNING: Could not attach " + file + " as it cannot currently be found ---");
                     pw.println();
-                    e.printStackTrace(pw);
+                    SupportLogFormatter.printStackTrace(e, pw);
                 } finally {
                     pw.flush();
                 }
