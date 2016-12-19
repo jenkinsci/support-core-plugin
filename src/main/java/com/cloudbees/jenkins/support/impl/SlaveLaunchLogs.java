@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Node;
@@ -48,7 +49,6 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  *
  */
 public class SlaveLaunchLogs extends Component{
-
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -164,7 +164,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f));
+                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
     }
