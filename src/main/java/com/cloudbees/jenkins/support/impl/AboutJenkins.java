@@ -574,6 +574,7 @@ public class AboutJenkins extends Component {
             out.println("  * Security realm: " + getDescriptorName(jenkins.getSecurityRealm()));
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
             out.println("  * CSRF Protection: "  + Helper.getActiveInstance().isUseCrumbs());
+            out.println("  * Initialization Milestone: " + Helper.getActiveInstance().getInitLevel());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");
