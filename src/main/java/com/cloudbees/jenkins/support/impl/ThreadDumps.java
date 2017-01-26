@@ -36,10 +36,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.util.Timer;
 
 /**
  * Thread dumps from the nodes.
@@ -76,6 +78,17 @@ public class ThreadDumps extends Component {
                             out.println();
                         } finally {
                             out.flush();
+                        }
+                        try {
+                            Timer.get().submit(new Runnable() {
+                                @Override
+                                public void run() {/* OK */}
+                            }).get(10, TimeUnit.SECONDS);
+                        } catch (ExecutionException | InterruptedException x) {
+                            logger.log(Level.WARNING, null, x);
+                        } catch (TimeoutException x) {
+                            ScheduledThreadPoolExecutor timer = (ScheduledThreadPoolExecutor) Timer.get();
+                            out.println("*WARNING*: jenkins.util.Timer is unresponsive; pool size " + timer.getPoolSize() + " vs. active count " + timer.getActiveCount());
                         }
                         try {
                             threadDump(os);
