@@ -26,13 +26,16 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.model.BuildQueue;
 import com.cloudbees.jenkins.support.util.Helper;
+import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Cause;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -53,7 +56,7 @@ import java.util.Set;
  * @author schristou88
  */
 @Extension
-public class BuildQueue extends Component {
+public class BuildQueueComponent extends Component {
   @NonNull
   @Override
   public Set<Permission> getRequiredPermissions() {
@@ -70,37 +73,47 @@ public class BuildQueue extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    container.add(new Content("buildqueue.md") {
+    container.add(new Content("buildqueue.yaml") {
         @Override
         public void writeTo(OutputStream os) throws IOException {
           PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
           try {
             List<Queue.Item> items = Helper.getActiveInstance().getQueue().getApproximateItemsQuickly();
-            out.println("Current build queue has " +  items.size() + " item(s).");
-            out.println("---------------");
+            BuildQueue bq = new BuildQueue();
+            bq.setSize(items.size());
 
             for (Queue.Item item : items) {
+              BuildQueue.Item bqItem = new BuildQueue.Item();
               if (item instanceof Item) {
-                out.println(" * Name of item: " + ((Item) item).getFullName());
+                bqItem.setFullName( ((Item) item).getFullName());
               }
               else {
-                out.println(" * Name of item: " + Functions.escape(item.task.getFullDisplayName()));
+                bqItem.setFullName(Functions.escape(item.task.getFullDisplayName()));
               }
-              out.println("    - In queue for: " + item.getInQueueForString());
-              out.println("    - Is blocked: " + item.isBlocked());
-              out.println("    - Why in queue: " + item.getWhy());
+
+              bqItem.setQueueTime(item.getInQueueForString());
+              bqItem.setBlocked(item.isBlocked());
+              bqItem.setWhyInQueue(item.getWhy());
 
               for (Cause cause : item.getCauses()) {
-                out.println("    - Current queue trigger cause: " + cause.getShortDescription());
+                BuildQueue.Item.Cause c = new BuildQueue.Item.Cause();
+                c.setDescription(cause.getShortDescription());
+                bqItem.addCause(c);
               }
 
               for (QueueTaskDispatcher taskDispatcher : QueueTaskDispatcher.all()) {
-                  out.println("  * Task Dispatcher: " + taskDispatcher);
-                  out.println("    - Can run: " + taskDispatcher.canRun(item));
+                BuildQueue.Item.TaskDispatcher td = new BuildQueue.Item.TaskDispatcher();
+                td.setName(taskDispatcher.toString());
+                CauseOfBlockage causeOfBlockage = taskDispatcher.canRun(item);
+                td.setCanRun((causeOfBlockage == null) ? "null" : causeOfBlockage.toString());
+
+                bqItem.addTaskDispatcher(td);
               }
-              out.println("----");
-              out.println();
+
+              bq.addItem(bqItem);
             }
+
+            out.println(SupportUtils.toString(bq));
           } finally {
             out.flush();
           }

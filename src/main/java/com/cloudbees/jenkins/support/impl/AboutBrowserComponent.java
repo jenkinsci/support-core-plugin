@@ -12,6 +12,7 @@ import hudson.security.Permission;
 import hudson.util.Area;
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
+import net.sf.uadetector.UserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.kohsuke.stapler.Stapler;
@@ -49,36 +50,51 @@ public class AboutBrowserComponent extends Component {
                 protected void printTo(PrintWriter out) throws IOException {
                     AboutBrowser browser = new AboutBrowser();
 
-                    Area screenResolution = Functions.getScreenResolution();
-                    if (screenResolution != null) {
-                        browser.setScreenSize(screenResolution.toString());
-                    }
+                    browser.setScreenSize(getScreenResolution());
+
                     UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
                     String userAgent = currentRequest.getHeader("User-Agent");
                     ReadableUserAgent agent = parser.parse(userAgent);
-                    OperatingSystem operatingSystem = agent.getOperatingSystem();
 
-                    AboutBrowser.UserAgent ua = new AboutBrowser.UserAgent();
-                    ua.setType(agent.getType().getName());
-                    ua.setName(agent.getName());
+                    browser.setUserAgent(getUserAgent(agent, userAgent));
 
-                    ua.setFamily(agent.getFamily().toString());
-                    ua.setProducer(agent.getProducer());
-                    ua.setVersion(agent.getVersionNumber().toVersionString());
-                    ua.setRaw(userAgent.replaceAll("`", "&#96;"));
+                    browser.setOperatingSystem(getOperatingSystem(agent.getOperatingSystem()));
 
-                    browser.setUserAgent(ua);
-
-                    AboutBrowser.OperatingSystem os = new AboutBrowser.OperatingSystem();
-                    os.setName(operatingSystem.getName());
-
-                    os.setFamily(operatingSystem.getFamily().toString());
-                    os.setProducer(operatingSystem.getProducer());
-                    os.setVersion(operatingSystem.getVersionNumber().toVersionString());
                     out.println(SupportUtils.toString(browser));
-
                 }
             });
         }
+    }
+
+    private AboutBrowser.OperatingSystem getOperatingSystem(OperatingSystem operatingSystem) {
+        AboutBrowser.OperatingSystem os = new AboutBrowser.OperatingSystem();
+        os.setName(operatingSystem.getName());
+
+        os.setFamily(operatingSystem.getFamily().toString());
+        os.setProducer(operatingSystem.getProducer());
+        os.setVersion(operatingSystem.getVersionNumber().toVersionString());
+
+        return os;
+    }
+
+    private AboutBrowser.UserAgent getUserAgent(ReadableUserAgent agent, String userAgent) {
+        AboutBrowser.UserAgent ua = new AboutBrowser.UserAgent();
+        ua.setType(agent.getType().getName());
+        ua.setName(agent.getName());
+
+        ua.setFamily(agent.getFamily().toString());
+        ua.setProducer(agent.getProducer());
+        ua.setVersion(agent.getVersionNumber().toVersionString());
+        ua.setRaw(userAgent.replaceAll("`", "&#96;"));
+        return ua;
+    }
+
+    private String getScreenResolution() {
+        Area screenResolution = Functions.getScreenResolution();
+        if (screenResolution != null) {
+            return screenResolution.toString();
+        }
+
+        return null;
     }
 }

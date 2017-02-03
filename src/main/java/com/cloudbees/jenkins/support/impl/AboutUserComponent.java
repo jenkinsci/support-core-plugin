@@ -4,6 +4,9 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.model.AboutUser;
+import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -12,7 +15,9 @@ import org.acegisecurity.GrantedAuthority;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,7 +26,7 @@ import java.util.Set;
  * @author Stephen Connolly
  */
 @Extension
-public class AboutUser extends Component {
+public class AboutUserComponent extends Component {
     @Override
     @NonNull
     public String getDisplayName() {
@@ -37,30 +42,28 @@ public class AboutUser extends Component {
     public void addContents(@NonNull Container result) {
         final Authentication authentication = SupportPlugin.getRequesterAuthentication();
         if (authentication != null) {
-            result.add(new PrintedContent("user.md") {
+            result.add(new PrintedContent("user.yaml") {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
-                    out.println("User");
-                    out.println("====");
-                    out.println();
-                    out.println("Authentication");
-                    out.println("--------------");
-                    out.println();
-                    out.println("  * Authenticated: " + authentication.isAuthenticated());
-                    out.println("  * Name: " + authentication.getName());
-                    GrantedAuthority[] authorities = authentication.getAuthorities();
-                    if (authorities != null) {
-                        out.println("  * Authorities ");
-                        for (GrantedAuthority authority : authorities) {
-                            out.println(
-                                    "      - " + (authority == null ? "null" : "`" + authority.toString().replaceAll(
-                                            "`", "&#96;") + "`"));
-                        }
-                    }
-                    out.println("  * Raw: `" + authentication.toString().replaceAll("`", "&#96;") + "`");
-                    out.println();
+                    AboutUser user = new AboutUser();
+                    user.setAuthenticated(authentication.isAuthenticated());
+                    user.setName(authentication.getName());
+
+                    user.setAuthorities(getAuthorities(authentication));
+
+                    user.setRaw(authentication.toString());
+                    out.println(SupportUtils.toString(user));
                 }
             });
         }
+    }
+
+    private List<GrantedAuthority> getAuthorities(Authentication authentication) {
+        List<GrantedAuthority> authoritiesList = new ArrayList<GrantedAuthority>();
+        GrantedAuthority[] authorities = authentication.getAuthorities();
+        if (authorities != null) {
+            Collections.addAll(authoritiesList, authorities);
+        }
+        return authoritiesList;
     }
 }

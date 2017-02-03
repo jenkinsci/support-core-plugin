@@ -27,6 +27,8 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.model.AdminMonitors;
+import com.cloudbees.jenkins.support.util.SupportUtils;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
@@ -47,7 +49,7 @@ import java.util.TreeMap;
 /**
  * Warns if any administrative monitors are currently active.
  */
-@Extension public final class AdministrativeMonitors extends Component {
+@Extension public final class AdministrativeMonitorsComponent extends Component {
 
     @Override public String getDisplayName() {
         return "Administrative monitors";
@@ -60,62 +62,56 @@ import java.util.TreeMap;
     @Override public void addContents(Container result) {
         final Map<String,AdministrativeMonitor> activated = new TreeMap<String,AdministrativeMonitor>();
         for (AdministrativeMonitor monitor : AdministrativeMonitor.all()) {
+
             if (monitor instanceof ReverseProxySetupMonitor) {
                 // This one is pretty special: always activated, but may or may not show anything in message.jelly.
                 continue;
             }
+
             if (monitor.isActivated() && monitor.isEnabled()) {
                 activated.put(monitor.id, monitor);
             }
+
             // disabled monitors could include RekeySecretAdminMonitor; no reason to show it
         }
+
         if (!activated.isEmpty()) {
-            result.add(new PrintedContent("admin-monitors.md") {
+            result.add(new PrintedContent("admin-monitors.yaml") {
                 @Override protected void printTo(PrintWriter out) throws IOException {
-                    out.println("Monitors");
-                    out.println("========");
-                    for (AdministrativeMonitor monitor : activated.values()) {
-                        out.println();
-                        out.println("`" + monitor.id + "`");
-                        out.println("--------------");
-                        if (monitor instanceof OldDataMonitor && !suffersFromJENKINS24358()) {
-                            OldDataMonitor odm = (OldDataMonitor) monitor;
-                            for (Map.Entry<Saveable,OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
-                                out.println("  * Problematic object: `" + entry.getKey() + "`");
-                                OldDataMonitor.VersionRange value = entry.getValue();
-                                String range = value.toString();
-                                if (!range.isEmpty()) {
-                                    out.println("    - " + range);
-                                }
-                                String extra = value.extra;
-                                if (!StringUtils.isBlank(extra)) {
-                                    out.println("    - " + extra); // TODO could be a multiline stack trace, quote it
-                                }
-                            }
-                        } else {
-                            // No specific content we can show; message.jelly is for HTML only.
-                            out.println("(active and enabled)");
-                        }
-                    }
+                    out.println(SupportUtils.toString(getAdminMonitors(activated)));
                 }
             });
         }
     }
 
-    private static boolean suffersFromJENKINS24358() {
-        VersionNumber version = Jenkins.getVersion();
-        if (version == null) {
-            return false;
-        } else if (version.compareTo(/*JENKINS-19544*/new VersionNumber("1.557")) >=0 && version.compareTo(new VersionNumber(/*JENKINS-24358*/"1.578")) < 0) {
-            if (version.toString().startsWith("1.565.") && version.compareTo(new VersionNumber(/* predicting JENKINS-24358 to be backported here */"1.565.3")) >=0) {
-                return false;
+    private AdminMonitors getAdminMonitors(Map<String, AdministrativeMonitor> activated) {
+        AdminMonitors monitors = new AdminMonitors();
+
+        for (AdministrativeMonitor monitor : activated.values()) {
+
+            if (monitor instanceof OldDataMonitor) {
+                AdminMonitors.OldDataMonitor olddm = new AdminMonitors.OldDataMonitor();
+                OldDataMonitor odm = (OldDataMonitor) monitor;
+                for (Map.Entry<Saveable,OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
+
+                    AdminMonitors.OldDataMonitor.OldData data = new AdminMonitors.OldDataMonitor.OldData();
+                    data.setProblematicObject(entry.getKey().toString());
+
+                    OldDataMonitor.VersionRange value = entry.getValue();
+                    data.setRange(value.toString());
+                    data.setExtra(value.extra);
+                }
+                olddm.setActive(true);
+                monitors.addMonitor(olddm);
             } else {
-                return true;
+                // No specific content we can show; message.jelly is for HTML only.
+                AdminMonitors.AdminMonitor mon = new AdminMonitors.AdminMonitor();
+                mon.setId(monitor.id);
+                mon.setActive(true);
+                monitors.addMonitor(mon);
             }
-        } else if (version.toString().startsWith(/* JENKINS-19544 backported to 1.554.1 */"1.554.")) {
-            return true;
-        } else { // before regression or after fix
-            return false;
         }
+
+        return monitors;
     }
 }
