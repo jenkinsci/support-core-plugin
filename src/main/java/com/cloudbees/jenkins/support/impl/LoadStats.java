@@ -191,7 +191,7 @@ public class LoadStats extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             out.print("time");
             int maxLen = 0;

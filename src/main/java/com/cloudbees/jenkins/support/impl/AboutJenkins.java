@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
@@ -427,8 +428,10 @@ public class AboutJenkins extends Component {
                 result.append(maj).append(" Process ID: ").append(processId).append(" (0x")
                         .append(Integer.toHexString(processId)).append(")\n");
             }
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            f.setTimeZone(TimeZone.getTimeZone("UTC"));
             result.append(maj).append(" Process started: ")
-                    .append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date(mBean.getStartTime())))
+                    .append(f.format(new Date(mBean.getStartTime())))
                     .append('\n');
             result.append(maj).append(" Process uptime: ")
                     .append(Util.getTimeSpanString(mBean.getUptime())).append('\n');
@@ -616,6 +619,7 @@ public class AboutJenkins extends Component {
             Map<String,Stats> containerStats = new HashMap<String,Stats>();
             // RunMap.createDirectoryFilter protected, so must do it by hand:
             DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            // historically did not use a consistent time zone, so use default
             for (Item i : jenkins.getAllItems()) {
                 String key = i.getClass().getName();
                 Integer cnt = containerCounts.get(key);

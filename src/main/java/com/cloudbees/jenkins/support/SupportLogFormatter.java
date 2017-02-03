@@ -51,13 +51,12 @@ import java.util.logging.LogRecord;
  */
 public class SupportLogFormatter extends Formatter {
 
-    /** for testing */
-    static TimeZone timeZone;
-    
     private final static ThreadLocal<SimpleDateFormat> threadLocalDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            f.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return f;
         }
     };
 
@@ -71,9 +70,6 @@ public class SupportLogFormatter extends Formatter {
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder();
         SimpleDateFormat format = threadLocalDateFormat.get();
-        if (timeZone != null) {
-            format.setTimeZone(timeZone);
-        }
         builder.append(format.format(new Date(record.getMillis())));
         builder.append(" [id=").append(record.getThreadID()).append("]");
 
