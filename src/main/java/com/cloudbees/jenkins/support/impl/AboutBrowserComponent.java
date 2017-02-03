@@ -3,6 +3,8 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.model.AboutBrowser;
+import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -26,7 +28,7 @@ import java.util.Set;
  * @author Stephen Connolly
  */
 @Extension
-public class AboutBrowser extends Component {
+public class AboutBrowserComponent extends Component {
     @Override
     @NonNull
     public String getDisplayName() {
@@ -42,34 +44,39 @@ public class AboutBrowser extends Component {
     public void addContents(@NonNull Container result) {
         final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         if (currentRequest != null) {
-            result.add(new PrintedContent("browser.md") {
+            result.add(new PrintedContent("browser.yaml") {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
-                    out.println("Browser");
-                    out.println("=======");
-                    out.println();
+                    AboutBrowser browser = new AboutBrowser();
 
                     Area screenResolution = Functions.getScreenResolution();
                     if (screenResolution != null) {
-                        out.println("  * Screen size: " + screenResolution.toString());
+                        browser.setScreenSize(screenResolution.toString());
                     }
                     UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
                     String userAgent = currentRequest.getHeader("User-Agent");
                     ReadableUserAgent agent = parser.parse(userAgent);
                     OperatingSystem operatingSystem = agent.getOperatingSystem();
-                    out.println("  * User Agent");
-                    out.println("      - Type:     " + agent.getType().getName());
-                    out.println("      - Name:     " + agent.getName());
-                    out.println("      - Family:   " + agent.getFamily());
-                    out.println("      - Producer: " + agent.getProducer());
-                    out.println("      - Version:  " + agent.getVersionNumber().toVersionString());
-                    out.println("      - Raw:      `" + userAgent.replaceAll("`", "&#96;") + '`');
-                    out.println("  * Operating System");
-                    out.println("      - Name:     " + operatingSystem.getName());
-                    out.println("      - Family:   " + operatingSystem.getFamily());
-                    out.println("      - Producer: " + operatingSystem.getProducer());
-                    out.println("      - Version:  " + operatingSystem.getVersionNumber().toVersionString());
-                    out.println();
+
+                    AboutBrowser.UserAgent ua = new AboutBrowser.UserAgent();
+                    ua.setType(agent.getType().getName());
+                    ua.setName(agent.getName());
+
+                    ua.setFamily(agent.getFamily().toString());
+                    ua.setProducer(agent.getProducer());
+                    ua.setVersion(agent.getVersionNumber().toVersionString());
+                    ua.setRaw(userAgent.replaceAll("`", "&#96;"));
+
+                    browser.setUserAgent(ua);
+
+                    AboutBrowser.OperatingSystem os = new AboutBrowser.OperatingSystem();
+                    os.setName(operatingSystem.getName());
+
+                    os.setFamily(operatingSystem.getFamily().toString());
+                    os.setProducer(operatingSystem.getProducer());
+                    os.setVersion(operatingSystem.getVersionNumber().toVersionString());
+                    out.println(SupportUtils.toString(browser));
+
                 }
             });
         }
