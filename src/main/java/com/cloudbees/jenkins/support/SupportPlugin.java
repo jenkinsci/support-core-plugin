@@ -63,7 +63,6 @@ import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
@@ -88,7 +87,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -329,7 +327,7 @@ public class SupportPlugin extends Plugin {
                         MessageFormat.format("Could not get content from ''{0}'' for support bundle", cDisplayName));
                 errorWriter.println("-----------------------------------------------------------------------");
                 errorWriter.println();
-                e.printStackTrace(errorWriter);
+                SupportLogFormatter.printStackTrace(e, errorWriter);
                 errorWriter.println();
 
             }
@@ -365,7 +363,7 @@ public class SupportPlugin extends Plugin {
                         errorWriter.println(MessageFormat.format("Could not attach ''{0}'' to support bundle", name));
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
-                        e.printStackTrace(errorWriter);
+                        SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
                         bos.flush();
@@ -563,6 +561,46 @@ public class SupportPlugin extends Plugin {
         return Collections.emptyList();
     }
 
+    /**
+     * Returns the full bundle name.
+     *
+     * @return the full bundle name.
+     */
+    @NonNull
+    public static String getBundleFileName() {
+        StringBuilder filename = new StringBuilder();
+        filename.append(getBundlePrefix());
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        filename.append("_").append(dateFormat.format(new Date()));
+
+        filename.append(".zip");
+        return filename.toString();
+    }
+
+    /**
+     * Returns the prefix of the bundle name.
+     *
+     * @return the prefix of the bundle name.
+     */
+    private static String getBundlePrefix() {
+        String filename = "support"; // default bundle filename
+        final SupportPlugin instance = getInstance();
+        if (instance != null) {
+            SupportProvider supportProvider = instance.getSupportProvider();
+            if (supportProvider != null) {
+                // let the provider name it
+                filename = supportProvider.getName();
+            }
+        }
+        final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
+        if (StringUtils.isNotBlank(instanceType)) {
+            filename = filename + "_"+instanceType;
+        }
+        return filename;
+    }
+
     public static class LogHolder {
         private static final SupportLogHandler SLAVE_LOG_HANDLER = new SupportLogHandler(256, 2048, 8);
     }
@@ -693,10 +731,6 @@ public class SupportPlugin extends Plugin {
                 }
                 try {
                     thread = new Thread(new Runnable() {
-                        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-                                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
-                                justification = "Best effort"
-                        )
                         public void run() {
                             nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
                             thread.setName(String.format("%s periodic bundle generator: since %s",
@@ -710,12 +744,8 @@ public class SupportPlugin extends Plugin {
                                         return;
                                     }
                                 }
-                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-                                dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-                                final String bundlePrefix = "support";
-                                File file = new File(bundleDir,
-                                        bundlePrefix + "_" + dateFormat.format(new Date()) + ".zip");
+                                File file = new File(bundleDir, SupportPlugin.getBundleFileName());
                                 thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
                                         SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                                 FileOutputStream fos = null;
@@ -725,30 +755,7 @@ public class SupportPlugin extends Plugin {
                                 } finally {
                                     IOUtils.closeQuietly(fos);
                                 }
-                                thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
-                                        SupportPlugin.class.getSimpleName(), new Date()));
-                                File[] files = bundleDir.listFiles(new FilenameFilter() {
-                                    public boolean accept(File dir, String name) {
-                                        return name.startsWith(bundlePrefix) && name.endsWith(".zip");
-                                    }
-                                });
-                                long pivot = System.currentTimeMillis();
-                                for (long l = 1; l * 2 > 0; l *= 2) {
-                                    boolean seen = false;
-                                    for (File f : files) {
-                                        if (!f.isFile() || f == file) {
-                                            continue;
-                                        }
-                                        long age = pivot - f.lastModified();
-                                        if (l <= age && age < l * 2) {
-                                            if (seen) {
-                                                f.delete();
-                                            } else {
-                                                seen = true;
-                                            }
-                                        }
-                                    }
-                                }
+                                cleanupOldBundles(bundleDir, file);
                             } catch (Throwable t) {
                                 logger.log(Level.WARNING, "Could not save support bundle", t);
                             } finally {
@@ -759,6 +766,43 @@ public class SupportPlugin extends Plugin {
                     thread.start();
                 } catch (Throwable t) {
                     logger.log(Level.SEVERE, "Periodic bundle generating thread failed with error", t);
+                }
+            }
+        }
+
+        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "IS2_INCONSISTENT_SYNC"},
+                justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, " +
+                        "IS2_INCONSISTENT_SYNC=only called from an already synchronized method"
+        )
+        private void cleanupOldBundles(File bundleDir, File justGenerated) {
+            thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
+                    SupportPlugin.class.getSimpleName(), new Date()));
+            File[] files = bundleDir.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".zip");
+                }
+            });
+            if (files == null) {
+                logger.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
+                           bundleDir.getAbsolutePath());
+                return;
+            }
+            long pivot = System.currentTimeMillis();
+            for (long l = 1; l * 2 > 0; l *= 2) {
+                boolean seen = false;
+                for (File f : files) {
+                    if (!f.isFile() || f == justGenerated) {
+                        continue;
+                    }
+                    long age = pivot - f.lastModified();
+                    if (l <= age && age < l * 2) {
+                        if (seen) {
+                            f.delete();
+                        } else {
+                            seen = true;
+                        }
+                    }
                 }
             }
         }

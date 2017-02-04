@@ -28,11 +28,14 @@ package com.cloudbees.jenkins.support;
  * DO NOT INCLUDE ANY NON JDK CLASSES IN HERE.
  * IT CAN DEADLOCK REMOTING - SEE JENKINS-32622
  ***********************************************/
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings; // Acceptable because RetentionPolicy.CLASS
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
@@ -104,11 +107,7 @@ public class SupportLogFormatter extends Formatter {
 
         if (record.getThrown() != null) {
             try {
-                StringWriter writer = new StringWriter();
-                PrintWriter out = new PrintWriter(writer);
-                record.getThrown().printStackTrace(out);
-                out.close();
-                builder.append(writer.toString());
+                builder.append(printThrowable(record.getThrown()));
             } catch (Exception e) {
                 // ignore
             }
@@ -153,4 +152,72 @@ public class SupportLogFormatter extends Formatter {
         }
         return buf.toString();
     }
+
+    // Copied from hudson.Functions, but with external references removed:
+    public static String printThrowable(Throwable t) {
+        if (t == null) {
+            return "No Exception details";
+        }
+        StringBuilder s = new StringBuilder();
+        doPrintStackTrace(s, t, null, "", new HashSet<Throwable>());
+        return s.toString();
+    }
+    private static void doPrintStackTrace(StringBuilder s, Throwable t, Throwable higher, String prefix, Set<Throwable> encountered) {
+        if (!encountered.add(t)) {
+            s.append("<cycle to ").append(t).append(">\n");
+            return;
+        }
+        try {
+            if (!t.getClass().getMethod("printStackTrace", PrintWriter.class).equals(Throwable.class.getMethod("printStackTrace", PrintWriter.class))) {
+                StringWriter sw = new StringWriter();
+                t.printStackTrace(new PrintWriter(sw));
+                s.append(sw.toString());
+                return;
+            }
+        } catch (NoSuchMethodException x) {
+            x.printStackTrace(); // err on the conservative side here
+        }
+        Throwable lower = t.getCause();
+        if (lower != null) {
+            doPrintStackTrace(s, lower, t, prefix, encountered);
+        }
+        for (Throwable suppressed : t.getSuppressed()) {
+            s.append(prefix).append("Also:   ");
+            doPrintStackTrace(s, suppressed, t, prefix + "\t", encountered);
+        }
+        if (lower != null) {
+            s.append(prefix).append("Caused: ");
+        }
+        String summary = t.toString();
+        if (lower != null) {
+            String suffix = ": " + lower;
+            if (summary.endsWith(suffix)) {
+                summary = summary.substring(0, summary.length() - suffix.length());
+            }
+        }
+        s.append(summary).append(LINE_SEPARATOR);
+        StackTraceElement[] trace = t.getStackTrace();
+        int end = trace.length;
+        if (higher != null) {
+            StackTraceElement[] higherTrace = higher.getStackTrace();
+            while (end > 0) {
+                int higherEnd = end + higherTrace.length - trace.length;
+                if (higherEnd <= 0 || !higherTrace[higherEnd - 1].equals(trace[end - 1])) {
+                    break;
+                }
+                end--;
+            }
+        }
+        for (int i = 0; i < end; i++) {
+            s.append(prefix).append("\tat ").append(trace[i]).append(LINE_SEPARATOR);
+        }
+    }
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    public static void printStackTrace(Throwable t, PrintWriter pw) {
+        pw.println(printThrowable(t).trim());
+    }
+    public static void printStackTrace(Throwable t, PrintStream ps) {
+        ps.println(printThrowable(t).trim());
+    }
+
 }

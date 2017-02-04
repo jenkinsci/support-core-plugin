@@ -574,6 +574,7 @@ public class AboutJenkins extends Component {
             out.println("  * Security realm: " + getDescriptorName(jenkins.getSecurityRealm()));
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
             out.println("  * CSRF Protection: "  + Helper.getActiveInstance().isUseCrumbs());
+            out.println("  * Initialization Milestone: " + Helper.getActiveInstance().getInitLevel());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");
@@ -943,8 +944,8 @@ public class AboutJenkins extends Component {
                     }
                 }
                 for (String resourcePath : Arrays.asList(
-                        "/WEB-INF/slave.jar",
-                        "/WEB-INF/remoting.jar",
+                        "/WEB-INF/slave.jar", // note that as of 2.33 this will not be present (anyway it is the same as war/WEB-INF/lib/remoting-*.jar, printed above)
+                        "/WEB-INF/remoting.jar", // ditto
                         "/WEB-INF/jenkins-cli.jar",
                         "/WEB-INF/web.xml")) {
                     try {
