@@ -61,7 +61,7 @@ public class BuildQueueTest {
     String assignedLabel = "foo";
     FreeStyleProject p = j.createFreeStyleProject("bar");
     p.setAssignedLabel(new LabelAtom(assignedLabel));
-    BuildQueue queue = new BuildQueue();
+    BuildQueueComponent queue = new BuildQueueComponent();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     // When
