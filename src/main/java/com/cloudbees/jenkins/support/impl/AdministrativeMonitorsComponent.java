@@ -24,23 +24,16 @@
 
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.*;
 import com.cloudbees.jenkins.support.model.AdminMonitors;
-import com.cloudbees.jenkins.support.util.SupportUtils;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
 import hudson.security.Permission;
-import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -76,11 +69,10 @@ import java.util.TreeMap;
         }
 
         if (!activated.isEmpty()) {
-            result.add(new PrintedContent("admin-monitors.yaml") {
-                @Override protected void printTo(PrintWriter out) throws IOException {
-                    out.println(SupportUtils.toString(getAdminMonitors(activated)));
-                }
-            });
+            AdminMonitors monitors = getAdminMonitors(activated);
+
+            result.add(new YamlContent("admin-monitors.yaml", monitors));
+            result.add(new MarkdownContent("admin-monitors.yaml", monitors));
         }
     }
 

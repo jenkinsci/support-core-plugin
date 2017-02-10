@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.model;
 
 import lombok.Data;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,9 +11,10 @@ import java.util.List;
  * Created by stevenchristou on 2/3/17.
  */
 @Data
-public class BuildQueue implements Serializable {
+public class BuildQueue implements Serializable, MarkdownFile {
     List<Item> buildQueue;
     int size;
+    boolean isQuietingDown;
 
     public void addItem(Item item) {
         buildQueue.add(item);
@@ -45,5 +47,32 @@ public class BuildQueue implements Serializable {
             String name;
             String canRun;
         }
+    }
+
+    @Override
+    public void toMarkdown(PrintWriter out) {
+        out.println("Current build queue has " +  size + " item(s).");
+        out.println("---------------");
+
+        for (Item item : buildQueue) {
+                out.println(" * Name of item: " + item.getFullName());
+
+            out.println("    - In queue for: " + item.getQueueTime());
+            out.println("    - Is blocked: " + item.isBlocked());
+            out.println("    - Why in queue: " + item.getWhyInQueue());
+
+            for (Item.Cause cause : item.getCauseList()) {
+                out.println("    - Current queue trigger cause: " + cause.getDescription());
+            }
+
+            for (Item.TaskDispatcher taskDispatcher : item.getTaskDispatcherList()) {
+                out.println("  * Task Dispatcher: " + taskDispatcher);
+                out.println("    - Can run: " + taskDispatcher.getCanRun());
+            }
+            out.println("----");
+            out.println();
+        }
+
+        out.println("Is quieting down: " + isQuietingDown());
     }
 }

@@ -1,10 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.*;
 import com.cloudbees.jenkins.support.model.AboutBrowser;
-import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -12,14 +9,11 @@ import hudson.security.Permission;
 import hudson.util.Area;
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
-import net.sf.uadetector.UserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
 
@@ -45,24 +39,20 @@ public class AboutBrowserComponent extends Component {
     public void addContents(@NonNull Container result) {
         final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         if (currentRequest != null) {
-            result.add(new PrintedContent("browser.yaml") {
-                @Override
-                protected void printTo(PrintWriter out) throws IOException {
-                    AboutBrowser browser = new AboutBrowser();
+            final AboutBrowser browser = new AboutBrowser();
 
-                    browser.setScreenSize(getScreenResolution());
+            browser.setScreenSize(getScreenResolution());
 
-                    UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
-                    String userAgent = currentRequest.getHeader("User-Agent");
-                    ReadableUserAgent agent = parser.parse(userAgent);
+            UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
+            String userAgent = currentRequest.getHeader("User-Agent");
+            ReadableUserAgent agent = parser.parse(userAgent);
 
-                    browser.setUserAgent(getUserAgent(agent, userAgent));
+            browser.setUserAgent(getUserAgent(agent, userAgent));
 
-                    browser.setOperatingSystem(getOperatingSystem(agent.getOperatingSystem()));
+            browser.setOperatingSystem(getOperatingSystem(agent.getOperatingSystem()));
 
-                    out.println(SupportUtils.toString(browser));
-                }
-            });
+            result.add(new YamlContent("browser.yaml", browser));
+            result.add(new MarkdownContent("browser.md", browser));
         }
     }
 

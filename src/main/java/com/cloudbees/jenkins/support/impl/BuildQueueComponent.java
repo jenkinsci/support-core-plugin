@@ -23,12 +23,9 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.*;
 import com.cloudbees.jenkins.support.model.BuildQueue;
 import com.cloudbees.jenkins.support.util.Helper;
-import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -40,11 +37,6 @@ import hudson.model.queue.QueueTaskDispatcher;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -73,52 +65,42 @@ public class BuildQueueComponent extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    container.add(new Content("buildqueue.yaml") {
-        @Override
-        public void writeTo(OutputStream os) throws IOException {
-          PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
-          try {
-            List<Queue.Item> items = Helper.getActiveInstance().getQueue().getApproximateItemsQuickly();
-            BuildQueue bq = new BuildQueue();
-            bq.setSize(items.size());
+    List<Queue.Item> items = Helper.getActiveInstance().getQueue().getApproximateItemsQuickly();
+    BuildQueue bq = new BuildQueue();
+    bq.setSize(items.size());
 
-            for (Queue.Item item : items) {
-              BuildQueue.Item bqItem = new BuildQueue.Item();
-              if (item instanceof Item) {
-                bqItem.setFullName( ((Item) item).getFullName());
-              }
-              else {
-                bqItem.setFullName(Functions.escape(item.task.getFullDisplayName()));
-              }
-
-              bqItem.setQueueTime(item.getInQueueForString());
-              bqItem.setBlocked(item.isBlocked());
-              bqItem.setWhyInQueue(item.getWhy());
-
-              for (Cause cause : item.getCauses()) {
-                BuildQueue.Item.Cause c = new BuildQueue.Item.Cause();
-                c.setDescription(cause.getShortDescription());
-                bqItem.addCause(c);
-              }
-
-              for (QueueTaskDispatcher taskDispatcher : QueueTaskDispatcher.all()) {
-                BuildQueue.Item.TaskDispatcher td = new BuildQueue.Item.TaskDispatcher();
-                td.setName(taskDispatcher.toString());
-                CauseOfBlockage causeOfBlockage = taskDispatcher.canRun(item);
-                td.setCanRun((causeOfBlockage == null) ? "null" : causeOfBlockage.toString());
-
-                bqItem.addTaskDispatcher(td);
-              }
-
-              bq.addItem(bqItem);
-            }
-
-            out.println(SupportUtils.toString(bq));
-          } finally {
-            out.flush();
-          }
-        }
+    for (Queue.Item item : items) {
+      BuildQueue.Item bqItem = new BuildQueue.Item();
+      if (item instanceof Item) {
+        bqItem.setFullName( ((Item) item).getFullName());
       }
-    );
+      else {
+        bqItem.setFullName(Functions.escape(item.task.getFullDisplayName()));
+      }
+
+      bqItem.setQueueTime(item.getInQueueForString());
+      bqItem.setBlocked(item.isBlocked());
+      bqItem.setWhyInQueue(item.getWhy());
+
+      for (Cause cause : item.getCauses()) {
+        BuildQueue.Item.Cause c = new BuildQueue.Item.Cause();
+        c.setDescription(cause.getShortDescription());
+        bqItem.addCause(c);
+      }
+
+      for (QueueTaskDispatcher taskDispatcher : QueueTaskDispatcher.all()) {
+        BuildQueue.Item.TaskDispatcher td = new BuildQueue.Item.TaskDispatcher();
+        td.setName(taskDispatcher.toString());
+        CauseOfBlockage causeOfBlockage = taskDispatcher.canRun(item);
+        td.setCanRun((causeOfBlockage == null) ? "null" : causeOfBlockage.toString());
+
+        bqItem.addTaskDispatcher(td);
+      }
+
+      bq.addItem(bqItem);
+    }
+
+    container.add(new YamlContent("buildqueue.yaml", bq));
+    container.add(new MarkdownContent("buildqueue.md", bq));
   }
 }
