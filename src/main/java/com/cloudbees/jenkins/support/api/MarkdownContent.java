@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.model.MarkdownFile;
+import org.jfree.io.IOUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,6 +21,9 @@ public class MarkdownContent extends Content {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        mdFile.toMarkdown(new PrintWriter(os));
+        try (PrintWriter pw = new PrintWriter(os)){
+            mdFile.toMarkdown(pw);
+            pw.flush();
+        }
     }
 }

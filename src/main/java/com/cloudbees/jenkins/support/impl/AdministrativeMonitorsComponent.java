@@ -72,7 +72,7 @@ import java.util.TreeMap;
             AdminMonitors monitors = getAdminMonitors(activated);
 
             result.add(new YamlContent("admin-monitors.yaml", monitors));
-            result.add(new MarkdownContent("admin-monitors.yaml", monitors));
+            result.add(new MarkdownContent("admin-monitors.md", monitors));
         }
     }
 

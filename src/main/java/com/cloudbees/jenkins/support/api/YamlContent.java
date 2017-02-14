@@ -22,9 +22,11 @@ public class YamlContent extends Content {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        YAMLFactory yf = new YAMLFactory();
-        ObjectMapper om = new ObjectMapper(yf);
-        PrintWriter pw = new PrintWriter(os);
-        pw.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(yamlFile));
+        try (PrintWriter pw = new PrintWriter(os)){
+            YAMLFactory yf = new YAMLFactory();
+            ObjectMapper om = new ObjectMapper(yf);
+            pw.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(yamlFile));
+            pw.flush();
+        }
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Data
 public class BuildQueue implements Serializable, MarkdownFile {
-    List<Item> buildQueue;
+    List<Item> buildQueue = new ArrayList<>();
     int size;
     boolean isQuietingDown;
 
@@ -26,7 +26,7 @@ public class BuildQueue implements Serializable, MarkdownFile {
         boolean isBlocked;
         String queueTime;
         String whyInQueue;
-        List<Cause> causeList;
+        List<Cause> causeList = new ArrayList<>();
         List<TaskDispatcher> taskDispatcherList = new ArrayList<>();
 
         public void addCause(Cause cause) {
