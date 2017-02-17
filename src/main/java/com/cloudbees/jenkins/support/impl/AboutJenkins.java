@@ -65,7 +65,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
@@ -536,6 +538,8 @@ public class AboutJenkins extends Component {
     }
 
     private static class AboutContent extends PrintedContent {
+        private static final Random RANDOM = new Random(System.currentTimeMillis());
+
         AboutContent() {
             super("about.md");
         }
@@ -543,6 +547,7 @@ public class AboutJenkins extends Component {
             final Jenkins jenkins = Helper.getActiveInstance();
             out.println("Jenkins");
             out.println("=======");
+            out.println("Report ID: " + getReportId());
             out.println();
             out.println("Version details");
             out.println("---------------");
@@ -601,6 +606,14 @@ public class AboutJenkins extends Component {
                     }
                 }
             }
+        }
+
+        private String getReportId() {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String utcNow = df.format(new Date());
+
+            return Jenkins.getActiveInstance().getLegacyInstanceId() + "-" + utcNow + "-" + RANDOM.nextInt(1000);
         }
     }
 
