@@ -45,8 +45,11 @@ public class TemporaryFileContent extends FileContent {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        super.writeTo(os);
-        delete();
+        try {
+            super.writeTo(os);
+        } finally {
+            delete();
+        }
     }
 
     private void delete() {
