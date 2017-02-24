@@ -24,9 +24,8 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.*;
+import com.cloudbees.jenkins.support.model.Network;
 import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -35,6 +34,7 @@ import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
@@ -46,13 +46,17 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author schristou88
  */
 @Extension
 public class NetworkInterfaces extends Component {
-    private final WeakHashMap<Node, String> networkInterfaceCache = new WeakHashMap<Node, String>();
+    private final Logger LOGGER = Logger.getLogger(NetworkInterfaces.class.getName());
+
+    private final WeakHashMap<Node, Network> networkInterfaceCache = new WeakHashMap<Node, Network>();
 
     @NonNull
     @Override
@@ -68,81 +72,79 @@ public class NetworkInterfaces extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new Content("nodes/master/networkInterface.md") {
-                    @Override
-                    public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes("UTF-8"));
-                    }
-                }
-        );
+
+        Network mni = getNetworkInterface(Jenkins.getActiveInstance());
+        result.add(new MarkdownContent("nodes/master/networkInterface.md", mni));
+        result.add(new YamlContent("nodes/master/networkInterface.yaml", mni));
 
         for (final Node node : Helper.getActiveInstance().getNodes()) {
-            result.add(
-                    new Content("nodes/slave/" + node.getNodeName() + "/networkInterface.md") {
-                        @Override
-                        public void writeTo(OutputStream os) throws IOException {
-                            os.write(getNetworkInterface(node).getBytes("UTF-8"));
-                        }
-                    }
-            );
+            Network sni = getNetworkInterface(node);
+            result.add(new MarkdownContent("nodes/slave/" + node.getNodeName() + "/networkInterface.md", sni));
+            result.add(new YamlContent("nodes/slave/" + node.getNodeName() + "/networkInterface.yaml", sni));
         }
     }
 
-    public String getNetworkInterface(Node node) throws IOException {
-        return AsyncResultCache.get(node,
-                networkInterfaceCache,
-                new GetNetworkInterfaces(),
-                "network interfaces",
-                "N/A: No connection to node, or no cache.");
+    /**
+     *
+     * @return Empty network configuration if there was an error going to the slave machine to get information.
+     */
+    private Network getNetworkInterface(Node node) {
+        try {
+            return AsyncResultCache.get(node,
+                    networkInterfaceCache,
+                    new GetNetworkInterfaces(),
+                    "network interfaces");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Issue obtaining network interfaces from node: " + node.getDisplayName(), e);
+        }
+
+        return new Network();
     }
 
-    private static final class GetNetworkInterfaces implements Callable<String, RuntimeException> {
-        public String call() {
-            StringBuilder bos = new StringBuilder();
-
+    private static final class GetNetworkInterfaces extends MasterToSlaveCallable<Network, RuntimeException> {
+        public Network call() {
+            Network network = new Network();
             try {
                 Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
                 while (networkInterfaces.hasMoreElements()) {
-                    bos.append("-----------\n");
+                    Network.NetworkInterface networkInterface = new Network.NetworkInterface();
 
                     NetworkInterface ni = networkInterfaces.nextElement();
-                    bos.append(" * Name ").append(ni.getDisplayName()).append("\n");
+                    networkInterface.setDisplayName(ni.getDisplayName());
 
                     byte[] hardwareAddress = ni.getHardwareAddress();
 
                     // Do not have permissions or address does not exist
                     if (hardwareAddress != null && hardwareAddress.length != 0)
-                        bos.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
+                        networkInterface.setHardwareAddress(Util.toHexString(hardwareAddress));
 
-                    bos.append(" ** Index - ").append(ni.getIndex()).append("\n");
+                    networkInterface.setIndex(ni.getIndex());
+
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                     while (inetAddresses.hasMoreElements()) {
                         InetAddress inetAddress =  inetAddresses.nextElement();
-                        bos.append(" ** InetAddress - ").append(inetAddress).append("\n");
+
+                        Network.NetworkInterface.InetAddress address = new Network.NetworkInterface.InetAddress();
+                        address.setInetAddress(inetAddress.toString());
+                        networkInterface.addInetAddress(address);
                     }
-                    bos.append(" ** MTU - ").append(ni.getMTU()).append("\n");
-                    bos.append(" ** Is Up - ").append(ni.isUp()).append("\n");
-                    bos.append(" ** Is Virtual - ").append(ni.isVirtual()).append("\n");
-                    bos.append(" ** Is Loopback - ").append(ni.isLoopback()).append("\n");
-                    bos.append(" ** Is Point to Point - ").append(ni.isPointToPoint()).append("\n");
-                    bos.append(" ** Supports multicast - ").append(ni.supportsMulticast()).append("\n");
+
+                    networkInterface.setMtu(ni.getMTU());
+                    networkInterface.setUp(ni.isUp());
+                    networkInterface.setVirtual(ni.isVirtual());
+                    networkInterface.setLoopback(ni.isLoopback());
+                    networkInterface.setPointToPoint(ni.isPointToPoint());
+                    networkInterface.setSupportsMultiCast(ni.supportsMulticast());
 
                     if (ni.getParent() != null) {
-                        bos.append(" ** Child of - ").append(ni.getParent().getDisplayName()).append("\n");
+                        networkInterface.setChildOfDisplayName(ni.getParent().getDisplayName());
                     }
                 }
             } catch (SocketException e) {
-                bos.append(e.getMessage());
+                throw new RuntimeException(e);
             }
 
-            return bos.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
+            return network;
         }
     }
 }
