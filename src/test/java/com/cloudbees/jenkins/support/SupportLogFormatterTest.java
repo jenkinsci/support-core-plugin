@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support;
 
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import javax.annotation.CheckForNull;
@@ -33,10 +32,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class SupportLogFormatterTest {
-
-    static {
-        SupportLogFormatter.timeZone = TimeZone.getTimeZone("UTC");
-    }
 
     @Test
     public void smokes() {
