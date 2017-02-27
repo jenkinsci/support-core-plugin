@@ -2,7 +2,9 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.MarkdownContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.YamlContent;
 import com.cloudbees.jenkins.support.model.LoggerManager;
 import com.cloudbees.jenkins.support.util.SupportUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -43,21 +45,23 @@ public class LoggerManagerComponent extends Component {
     @Override
     public void addContents(@NonNull Container container) {
         LoggerManager lm = new LoggerManager();
-        container.add(new PrintedContent("loggers.md") {
-            @Override
-            protected void printTo(PrintWriter out) throws IOException {
-                LogManager logManager = LogManager.getLogManager();
-                Enumeration<String> loggerNames = logManager.getLoggerNames();
-                while (loggerNames.hasMoreElements()) {
-                    String loggerName =  loggerNames.nextElement();
-                    Logger loggerByName = logManager.getLogger(loggerName);
-                    if (loggerByName != null) {
-                        LoggerManager.Logger l = new LoggerManager.Logger();
-                        l.setName(loggerName);
-                        l.setLevel(SupportUtils.trimToEmpty(loggerByName.getLevel()));
-                    }
+        LogManager logManager = LogManager.getLogManager();
+        Enumeration<String> loggerNames = logManager.getLoggerNames();
+        while (loggerNames.hasMoreElements()) {
+            String loggerName =  loggerNames.nextElement();
+            Logger loggerByName = logManager.getLogger(loggerName);
+            if (loggerByName != null) {
+                Level level = loggerByName.getLevel();
+                if ( level!= null) {
+                    LoggerManager.Logger l = new LoggerManager.Logger();
+                    l.setName(loggerName);
+                    l.setLevel(SupportUtils.trimToEmpty(level));
+                    lm.addLogger(l);
                 }
             }
-        });
+        }
+
+        container.add(new MarkdownContent("loggers.md", lm));
+        container.add(new YamlContent("loggers.yaml", lm));
     }
 }
