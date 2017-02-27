@@ -43,7 +43,7 @@ public class NetworkInterfacesTest {
         });
 
         String masterNetworkInterfaces = baos.toString();
-
+        System.out.println(masterNetworkInterfaces);
         assertThat("Should at least contain one network interface.",
                 masterNetworkInterfaces,
                 containsString(expectedName));

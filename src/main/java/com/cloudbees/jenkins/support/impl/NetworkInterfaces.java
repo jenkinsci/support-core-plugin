@@ -73,7 +73,7 @@ public class NetworkInterfaces extends Component {
     @Override
     public void addContents(@NonNull Container result) {
 
-        Network mni = getNetworkInterface(Jenkins.getActiveInstance());
+        Network mni = getNetworkInterface(Jenkins.getInstance());
         result.add(new MarkdownContent("nodes/master/networkInterface.md", mni));
         result.add(new YamlContent("nodes/master/networkInterface.yaml", mni));
 
@@ -93,12 +93,12 @@ public class NetworkInterfaces extends Component {
             return AsyncResultCache.get(node,
                     networkInterfaceCache,
                     new GetNetworkInterfaces(),
-                    "network interfaces");
+                    "network interfaces", new Network());
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Issue obtaining network interfaces from node: " + node.getDisplayName(), e);
+            return new Network();
         }
 
-        return new Network();
     }
 
     private static final class GetNetworkInterfaces extends MasterToSlaveCallable<Network, RuntimeException> {
@@ -139,6 +139,8 @@ public class NetworkInterfaces extends Component {
                     if (ni.getParent() != null) {
                         networkInterface.setChildOfDisplayName(ni.getParent().getDisplayName());
                     }
+
+                    network.addNetworkInterface(networkInterface);
                 }
             } catch (SocketException e) {
                 throw new RuntimeException(e);

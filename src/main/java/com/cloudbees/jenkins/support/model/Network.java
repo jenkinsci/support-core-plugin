@@ -19,6 +19,10 @@ import java.util.List;
 public class Network implements Serializable, MarkdownFile {
     List<NetworkInterface> networkInterfaceList = new ArrayList<>();
 
+    public void addNetworkInterface(NetworkInterface ni) {
+        networkInterfaceList.add(ni);
+    }
+
     @Data
     public static class NetworkInterface {
         String hardwareAddress;
