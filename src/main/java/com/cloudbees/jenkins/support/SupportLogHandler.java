@@ -78,7 +78,7 @@ public class SupportLogHandler extends Handler {
         this.fileSize = fileSize;
         setFormatter(new SupportLogFormatter());
         dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public void setDirectory(File directory, String namePrefix) {

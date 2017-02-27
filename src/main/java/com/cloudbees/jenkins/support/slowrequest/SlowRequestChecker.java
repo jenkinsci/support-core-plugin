@@ -17,6 +17,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,6 +59,9 @@ public class SlowRequestChecker extends PeriodicWork {
     final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"slow-requests"), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
+    {
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     @Override
     public long getRecurrencePeriod() {

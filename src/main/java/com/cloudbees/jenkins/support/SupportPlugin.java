@@ -294,8 +294,10 @@ public class SupportPlugin extends Plugin {
         manifest.append(bundleName).append('\n');
         manifest.append(StringUtils.repeat("=", bundleName.length())).append('\n');
         manifest.append("\n");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
         manifest.append("Generated on ")
-                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ").format(new Date()))
+                .append(f.format(new Date()))
                 .append("\n");
         manifest.append("\n");
         manifest.append("Requested components:\n\n");
@@ -413,6 +415,7 @@ public class SupportPlugin extends Plugin {
     public static void threadDumpStartup() throws Exception {
         if (!logStartupPerformanceIssues) return;
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date())+ ".txt");
         if (!f.exists()) {
             try {
@@ -572,7 +575,7 @@ public class SupportPlugin extends Plugin {
         filename.append(getBundlePrefix());
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         filename.append("_").append(dateFormat.format(new Date()));
 
         filename.append(".zip");

@@ -12,6 +12,7 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,6 +22,9 @@ import java.util.concurrent.TimeUnit;
 public class DeadlockTrackChecker extends PeriodicWork {
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
+    {
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
     final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"deadlocks"), 50);
 
     @Override
