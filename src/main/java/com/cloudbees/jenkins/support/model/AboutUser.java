@@ -5,6 +5,7 @@ import org.acegisecurity.GrantedAuthority;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,10 +15,10 @@ import java.util.List;
 public class AboutUser implements Serializable, MarkdownFile {
     boolean isAuthenticated;
     String name;
-    List<GrantedAuthority> authorities;
+    List<String> authorities = new ArrayList<>();
     String raw;
 
-    public void addAuthority(GrantedAuthority authority) {
+    public void addAuthority(String authority) {
         authorities.add(authority);
     }
 
@@ -34,8 +35,8 @@ public class AboutUser implements Serializable, MarkdownFile {
 
         if (authorities != null) {
             out.println("  * Authorities ");
-            for (GrantedAuthority authority : authorities) {
-                out.println("      - " + (authority == null ? "null" : "`" + authority.toString().replaceAll("`", "&#96;") + "`"));
+            for (String authority : authorities) {
+                out.println("      - " + (authority == null ? "null" : "`" + authority.replaceAll("`", "&#96;") + "`"));
             }
         }
 

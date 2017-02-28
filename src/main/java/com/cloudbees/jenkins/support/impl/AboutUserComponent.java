@@ -49,12 +49,15 @@ public class AboutUserComponent extends Component {
         }
     }
 
-    private List<GrantedAuthority> getAuthorities(Authentication authentication) {
-        List<GrantedAuthority> authoritiesList = new ArrayList<GrantedAuthority>();
+    private List<String> getAuthorities(Authentication authentication) {
+        List<String> authoritiesList = new ArrayList<String>();
         GrantedAuthority[] authorities = authentication.getAuthorities();
         if (authorities != null) {
-            Collections.addAll(authoritiesList, authorities);
+            for (GrantedAuthority authority : authorities) {
+                authoritiesList.add(authority.getAuthority());
+            }
         }
+        
         return authoritiesList;
     }
 }
