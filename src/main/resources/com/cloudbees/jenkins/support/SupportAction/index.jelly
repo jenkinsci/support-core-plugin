@@ -37,7 +37,7 @@
       <p>
         ${%detail}
       </p>
-      <f:form name="bundle-contents" method="POST" action="download">
+      <f:form name="bundle-contents" method="POST" action="generateAllBundles">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">
             <div name="components">
@@ -62,6 +62,24 @@
           <f:submit value="${%Generate Bundle}"/>
         </f:entry>
       </f:form>
+      <f:section title="${%List existing Bundle}">
+
+      <f:form name="bundle-contents" method="POST" action="deleteBundles">
+        <j:forEach var="bundle" items="${it.bundles}">
+          <f:entry field="bundle">
+          <div name="bundles">
+          <f:checkbox name="selected" checked="false"
+                      title="${bundle}"/>
+            <input style="display:none" name="name" value="${bundle}"/>
+          </div>
+          </f:entry>
+        </j:forEach>
+        <f:entry>
+          <f:submit value="${%Delete Bundle}"/>
+        </f:entry>
+      </f:form>
+      </f:section>
+
     </l:main-panel>
   </l:layout>
 </j:jelly>

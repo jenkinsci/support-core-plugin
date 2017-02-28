@@ -47,12 +47,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,8 +109,54 @@ public class SupportAction implements RootAction {
         return SupportPlugin.getComponents();
     }
 
+    public List<String> getBundles() {
+        List<String> res = new ArrayList<>();
+        File rootDirectory = SupportPlugin.getRootDirectory();
+        File[] bundlesFiles = rootDirectory.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".zip") || name.endsWith(".log");
+            }
+        });
+        for (File bundleFile : bundlesFiles) {
+            res.add(bundleFile.getName());
+        }
+
+        return res;
+    }
+
     @RequirePOST
-    public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        JSONObject json = req.getSubmittedForm();
+        if (!json.has("bundles")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        Set<String> bundlesToDelete = new HashSet<>();
+        for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
+            if (s.isSelected()) {
+                bundlesToDelete.add(s.getName());
+            }
+        }
+        File rootDirectory = SupportPlugin.getRootDirectory();
+        for(String bundleToDelete : bundlesToDelete) {
+            File fileToDelete = new File(rootDirectory, bundleToDelete);
+            logger.fine("Trying to delete bundle file "+ fileToDelete.getAbsolutePath());
+            try {
+                if (fileToDelete.delete()) {
+                    logger.info("Bundle " + fileToDelete.getAbsolutePath() + " successfully delete.");
+                } else {
+                    logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath());
+                }
+            } catch (RuntimeException e) {
+                    logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
+            }
+        }
+        rsp.sendRedirect("");
+    }
+
+    @RequirePOST
+    public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
