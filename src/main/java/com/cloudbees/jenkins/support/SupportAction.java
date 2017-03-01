@@ -118,8 +118,10 @@ public class SupportAction implements RootAction {
                 return name.endsWith(".zip") || name.endsWith(".log");
             }
         });
-        for (File bundleFile : bundlesFiles) {
-            res.add(bundleFile.getName());
+        if (bundlesFiles != null) {
+            for (File bundleFile : bundlesFiles) {
+                res.add(bundleFile.getName());
+            }
         }
 
         return res;
