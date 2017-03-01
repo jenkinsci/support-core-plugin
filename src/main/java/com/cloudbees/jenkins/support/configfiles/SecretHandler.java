@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import org.apache.commons.io.FileUtils;
@@ -78,7 +77,7 @@ public class SecretHandler {
             }
         };
         Source src = new SAXSource(xr, new InputSource(new StringReader(FileUtils.readFileToString(xmlFile))));
-        File patchedFile = File.createTempFile("patched", ".xml", SupportPlugin.getRootDirectory());
+        File patchedFile = File.createTempFile("patched", ".xml");
         Result res = new StreamResult(new FileOutputStream(patchedFile));
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         //omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
