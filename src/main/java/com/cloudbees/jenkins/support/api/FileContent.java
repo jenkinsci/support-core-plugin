@@ -25,7 +25,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.SupportLogFormatter;
-import hudson.util.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,7 +44,7 @@ import java.io.PrintWriter;
  */
 public class FileContent extends Content {
 
-    private final File file;
+    protected final File file;
     private final long maxSize;
 
     public FileContent(String name, File file) {
@@ -60,10 +60,10 @@ public class FileContent extends Content {
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {
+            InputStream is = getInputStream();
             if (maxSize == -1) {
-                IOUtils.copy(file, os);
+                IOUtils.copy(is, os);
             } else {
-                InputStream is = new FileInputStream(file);
                 try {
                     IOUtils.copy(new TruncatedInputStream(is, maxSize), os);
                 } finally {
@@ -85,6 +85,15 @@ public class FileContent extends Content {
                 osw.flush();
             }
         }
+    }
+
+    /**
+     * Instantiates the {@link InputStream} for the {@link #file}.
+     * @return the {@link InputStream} for the {@link #file}.
+     * @throws IOException if something goes wrong while creating the stream for reading #file.
+     */
+    protected InputStream getInputStream() throws IOException {
+        return new FileInputStream(file);
     }
 
     @Override
