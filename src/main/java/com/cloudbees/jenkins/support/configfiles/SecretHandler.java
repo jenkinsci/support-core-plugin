@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import org.apache.commons.io.FileUtils;
@@ -17,8 +16,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -29,22 +28,23 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * Secret Handler for xml files to add to the support bundle.
  * We want to use a placeholder instead of Secrets.
  */
-public class SecretHandler {
+class SecretHandler {
 
     /**
      * our placeholder
      */
     protected static final String SECRET_MARKER = "#secret#";
+    public static final String OUTPUT_ENCODING = "UTF-8";
 
     /**
      * find the secret in the xml file and replace it with the place holder
      * @param xmlFile we want to parse
-     * @return the patched xml files without secrets
+     * @return the patched xml content with redacted secrets
      * @throws SAXException if some XML parsing issue occurs.
      * @throws IOException if some issue occurs while reading the providing file.
      * @throws TransformerException if an issue occurs while writing the result.
      */
-    public static File findSecrets(File xmlFile) throws SAXException, IOException, TransformerException {
+    public static String findSecrets(File xmlFile) throws SAXException, IOException, TransformerException {
 
         XMLReader xr = new XMLFilterImpl(XMLReaderFactory.createXMLReader()) {
             private String tagName = "";
@@ -78,13 +78,14 @@ public class SecretHandler {
             }
         };
         Source src = new SAXSource(xr, new InputSource(new StringReader(FileUtils.readFileToString(xmlFile))));
-        File patchedFile = File.createTempFile("patched", ".xml", SupportPlugin.getRootDirectory());
-        Result res = new StreamResult(new FileOutputStream(patchedFile));
+        final ByteArrayOutputStream result = new ByteArrayOutputStream();
+        Result res = new StreamResult(result);
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         //omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.setOutputProperty(OutputKeys.ENCODING, OUTPUT_ENCODING);
         transformer.transform(src, res);
 
-        return patchedFile;
+        return result.toString("UTF-8");
     }
 }

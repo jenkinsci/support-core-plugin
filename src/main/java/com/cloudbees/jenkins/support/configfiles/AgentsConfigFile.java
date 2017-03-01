@@ -25,21 +25,15 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.TemporaryFileContent;
 import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
@@ -76,15 +70,7 @@ public class AgentsConfigFile extends Component {
         }
         for(File agentDir : agentDirs) {
             File config = new File(agentDir, "config.xml");
-            try {
-                File patchedConfig = SecretHandler.findSecrets(config);
-                container.add(new TemporaryFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", patchedConfig));
-            } catch (IOException | SAXException | TransformerException e) {
-                LogRecord record = new LogRecord(Level.WARNING, "Could not add the {0} configuration file to the support bundle because of: {1}");
-                record.setParameters(new Object[]{ config.getAbsolutePath(), e });
-                record.setThrown(e);
-                LOGGER.log(record);
-            }
+            container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config));
         }
     }
 
