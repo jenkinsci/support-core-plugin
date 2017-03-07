@@ -5,11 +5,11 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.model.About;
 import com.cloudbees.jenkins.support.model.Nodes;
 import com.cloudbees.jenkins.support.util.Helper;
+import com.cloudbees.jenkins.support.util.SupportUtils;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import hudson.FilePath;
 import hudson.Util;
-import hudson.model.Describable;
 import hudson.model.Node;
 import hudson.model.Slave;
 import hudson.remoting.Launcher;
@@ -18,7 +18,6 @@ import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
 /**
  * Created by schristou88 on 2/13/17.
  */
-class NodesContent {
+public class NodesContent {
 
     private final WeakHashMap<Node,String> slaveVersionCache = new WeakHashMap<>();
     private final WeakHashMap<Node,About.VersionDetails> javaInfoCache = new WeakHashMap<>();
@@ -73,14 +72,6 @@ class NodesContent {
         return h;
     }
 
-    private static String getDescriptorName(@CheckForNull Describable<?> d) {
-        if (d == null) {
-            return "(none)";
-        }
-        return "`" + d.getClass().getName() + "`";
-    }
-
-
     private Nodes.MasterNode getMasterNodeInfo(Jenkins jenkins) {
         Nodes.MasterNode mn = new Nodes.MasterNode();
         mn.setDescription(Util.fixNull(jenkins.getNodeDescription()));
@@ -97,6 +88,7 @@ class NodesContent {
     private Nodes.Node getNodeInfo(Node node) {
         Nodes.Node n = new Nodes.Node();
         n.setName(node.getNodeName());
+        n.setDescriptor(SupportUtils.getDescriptorName(node));
         n.setDescription(node.getNodeDescription());
         n.setNumOfExecutors(node.getNumExecutors());
         FilePath rootPath = node.getRootPath();
@@ -112,8 +104,8 @@ class NodesContent {
 
         if (node instanceof Slave) {
             Slave slave = (Slave) node;
-            n.setLaunchMethod(getDescriptorName(slave.getLauncher()));
-            n.setAvailability(getDescriptorName(slave.getRetentionStrategy()));
+            n.setLaunchMethod(SupportUtils.getDescriptorName(slave.getLauncher()));
+            n.setAvailability(SupportUtils.getDescriptorName(slave.getRetentionStrategy()));
         }
 
         VirtualChannel channel = node.getChannel();

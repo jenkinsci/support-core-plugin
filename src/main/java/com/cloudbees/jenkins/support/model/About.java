@@ -19,10 +19,9 @@ import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -64,13 +63,13 @@ public class About implements Serializable, MarkdownFile {
             String home;
             String vendor;
             String version;
-            String maximum_memory;
-            String allocated_memory;
-            String free_memory;
-            String in_use_memory;
+            long maximum_memory;
+            long allocated_memory;
+            long free_memory;
+            long in_use_memory;
             String gc_strategy;
-            String permgen_used;
-            String permgen_max;
+            long permgen_used;
+            long permgen_max;
         }
 
         @Data
@@ -113,6 +112,79 @@ public class About implements Serializable, MarkdownFile {
                 return this;
             }
 
+        }
+
+        private static String humanReadableSize(long size) {
+            String measure = "B";
+            if (size < 1024) {
+                return size + " " + measure;
+            }
+            double number = size;
+            if (number >= 1024) {
+                number = number / 1024;
+                measure = "KB";
+                if (number >= 1024) {
+                    number = number / 1024;
+                    measure = "MB";
+                    if (number >= 1024) {
+                        number = number / 1024;
+                        measure = "GB";
+                    }
+                }
+            }
+            DecimalFormat format = new DecimalFormat("#0.00");
+            return format.format(number) + " " + measure + " (" + size + ")";
+        }
+
+
+        public String toMarkdown(String maj, String min) {
+            StringBuilder result = new StringBuilder();
+            result.append(maj).append(" Java\n");
+            result.append(min).append(" Home:           `").append(java.home.replaceAll("`", "&#96;")).append("`\n");
+            result.append(min).append(" Vendor:           ").append(java.vendor).append("\n");
+            result.append(min).append(" Version:          ").append(java.version).append("\n");
+            result.append(min).append(" Maximum memory:   ").append(humanReadableSize(java.maximum_memory)).append("\n");
+            result.append(min).append(" Allocated memory: ").append(humanReadableSize(java.allocated_memory)).append("\n");
+            result.append(min).append(" Free memory:      ").append(humanReadableSize(java.free_memory)).append("\n");
+            result.append(min).append(" In-use memory:    ").append(java.allocated_memory - java.free_memory).append("\n");
+
+            result.append(min).append(" PermGen used:     ").append(humanReadableSize(java.permgen_used)).append("\n");
+            result.append(min).append(" PermGen max:      ").append(humanReadableSize(java.permgen_max)).append("\n");
+
+            result.append(min).append(" GC strategy:      ").append(java.gc_strategy).append("\n");
+            result.append(maj).append(" Java Runtime Specification\n");
+            result.append(min).append(" Name:    ").append(javaRuntimeSpecification.name).append("\n");
+            result.append(min).append(" Vendor:  ").append(javaRuntimeSpecification.vendor).append("\n");
+            result.append(min).append(" Version: ").append(javaRuntimeSpecification.version).append("\n");
+            result.append(maj).append(" JVM Specification\n");
+            result.append(min).append(" Name:    ").append(jvmSpecification.name).append("\n");
+            result.append(min).append(" Vendor:  ").append(jvmSpecification.vendor).append("\n");
+            result.append(min).append(" Version: ").append(jvmSpecification.version).append("\n");
+            result.append(maj).append(" JVM Implementation\n");
+            result.append(min).append(" Name:    ").append(jvmImplementation.name).append("\n");
+            result.append(min).append(" Vendor:  ").append(jvmImplementation.vendor).append("\n");
+            result.append(min).append(" Version: ").append(jvmImplementation.version).append("\n");
+            result.append(maj).append(" Operating system\n");
+            result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
+            result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
+            result.append(min).append(" Version:      ").append(System.getProperty("os.version")).append("\n");
+
+            result.append(min).append(" Distribution: ").append(distribution).append("\n");
+            result.append(min).append(" LSB Modules:  `").append(LSB_modules).append("`\n");
+            result.append(maj).append(" Process ID: ").append(processID).append(" (0x").append(Integer.toHexString(processID)).append(")\n");
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            f.setTimeZone(TimeZone.getTimeZone("UTC"));
+            result.append(maj).append(" Process started: ").append(f.format(process_started)).append('\n');
+            result.append(maj).append(" Process uptime: ").append(process_uptime).append('\n');
+            result.append(maj).append(" JVM startup parameters:\n");
+            result.append(min).append(" Boot classpath: `").append(jvmStartupParameters.boot_classpath.replaceAll("`", "&#96;")).append("`\n");
+            result.append(min).append(" Classpath: `").append(jvmStartupParameters.classPath.replaceAll("`", "&#96;")).append("`\n");
+            result.append(min).append(" Library path: `").append(jvmStartupParameters.libraryClasspath.replaceAll("`", "&#96;")).append("`\n");
+            int count = 0;
+            for (String arg : jvmStartupParameters.args) {
+                result.append(min).append(" arg[").append(count++).append("]: `").append(arg.replaceAll("`", "&#96;")).append("`\n");
+            }
+            return result.toString();
         }
     }
 
@@ -157,17 +229,11 @@ public class About implements Serializable, MarkdownFile {
         out.println();
         out.println("  * Version: `" + versionDetails.getVersion().replaceAll("`", "&#96;") + "`");
         out.println("  * Mode:    " + versionDetails.getMode());
-
         out.println("  * Url:     " + (versionDetails.getUrl() != null ? versionDetails.getUrl() : "No JenkinsLocationConfiguration available"));
-        try {
-            out.println("  * Servlet container");
-            out.println("      - Specification: " + versionDetails.getContainer().getSpecification());
-            out.println(
-                    "      - Name:          `" + versionDetails.getContainer().getName().replaceAll("`", "&#96;") + "`");
-        } catch (NullPointerException e) {
-            // pity Stapler.getCurrent() throws an NPE when outside of a request
-        }
-        out.print(getVersionDetails());
+        out.println("  * Servlet container");
+        out.println("      - Specification: " + versionDetails.getContainer().getSpecification());
+        out.println("      - Name:          `" + versionDetails.getContainer().getName().replaceAll("`", "&#96;") + "`");
+        out.print(versionDetails.toMarkdown("  *", "      -"));
         out.println();
         out.println("Important configuration");
         out.println("---------------");
@@ -180,6 +246,7 @@ public class About implements Serializable, MarkdownFile {
         out.println("Active Plugins");
         out.println("--------------");
         out.println();
+
         for (ActivePlugins.Plugin w : activePlugins.activePlugins) {
             out.println("  * " + w.getName() + ":" + w.getVersion() + (w.isUpdates_available()
                     ? " *(update available)*"

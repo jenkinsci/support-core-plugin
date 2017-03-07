@@ -37,16 +37,16 @@ class GetJavaInfo extends MasterToSlaveCallable<About.VersionDetails, RuntimeExc
         long allocMem = runtime.totalMemory();
         long freeMem = runtime.freeMemory();
 
-        vd.getJava().setMaximum_memory(humanReadableSize(maxMem));
-        vd.getJava().setAllocated_memory(humanReadableSize(allocMem));
-        vd.getJava().setFree_memory(humanReadableSize(freeMem));
-        vd.getJava().setIn_use_memory(humanReadableSize(allocMem - freeMem));
+        vd.getJava().setMaximum_memory(maxMem);
+        vd.getJava().setAllocated_memory(allocMem);
+        vd.getJava().setFree_memory(freeMem);
+        vd.getJava().setIn_use_memory(allocMem - freeMem);
 
         for(MemoryPoolMXBean bean : ManagementFactory.getMemoryPoolMXBeans()) {
             if (bean.getName().toLowerCase().contains("perm gen")) {
                 MemoryUsage currentUsage = bean.getUsage();
-                vd.getJava().setPermgen_used(humanReadableSize(currentUsage.getUsed()));
-                vd.getJava().setPermgen_max(humanReadableSize(currentUsage.getMax()));
+                vd.getJava().setPermgen_used(currentUsage.getUsed());
+                vd.getJava().setPermgen_max(currentUsage.getMax());
                 break;
             }
         }
@@ -136,26 +136,5 @@ class GetJavaInfo extends MasterToSlaveCallable<About.VersionDetails, RuntimeExc
         return vd;
     }
 
-    private static String humanReadableSize(long size) {
-        String measure = "B";
-        if (size < 1024) {
-            return size + " " + measure;
-        }
-        double number = size;
-        if (number >= 1024) {
-            number = number / 1024;
-            measure = "KB";
-            if (number >= 1024) {
-                number = number / 1024;
-                measure = "MB";
-                if (number >= 1024) {
-                    number = number / 1024;
-                    measure = "GB";
-                }
-            }
-        }
-        DecimalFormat format = new DecimalFormat("#0.00");
-        return format.format(number) + " " + measure + " (" + size + ")";
-    }
     private static final Logger LOGGER = Logger.getLogger(GetJavaInfo.class.getCanonicalName());
 }
