@@ -148,11 +148,11 @@ public class About implements Serializable, MarkdownFile {
         }
 
         public Date getProcess_started() {
-            return process_started;
+            return new Date(process_started.getTime());
         }
 
         public void setProcess_started(Date process_started) {
-            this.process_started = process_started;
+            this.process_started = new Date(process_started.getTime());
         }
 
         public String getProcess_uptime() {
@@ -414,7 +414,7 @@ public class About implements Serializable, MarkdownFile {
             }
 
             public void setArchitecture(String architecture) {
-                architecture = architecture;
+                this.architecture = architecture;
             }
 
             public String getVersion() {
@@ -499,9 +499,9 @@ public class About implements Serializable, MarkdownFile {
             result.append(min).append(" Vendor:  ").append(jvmImplementation.vendor).append("\n");
             result.append(min).append(" Version: ").append(jvmImplementation.version).append("\n");
             result.append(maj).append(" Operating system\n");
-            result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
-            result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
-            result.append(min).append(" Version:      ").append(System.getProperty("os.version")).append("\n");
+            result.append(min).append(" Name:         ").append(operatingSystem.name).append("\n");
+            result.append(min).append(" Architecture: ").append(operatingSystem.architecture).append("\n");
+            result.append(min).append(" Version:      ").append(operatingSystem.version).append("\n");
 
             result.append(min).append(" Distribution: ").append(distribution).append("\n");
             result.append(min).append(" LSB Modules:  `").append(LSB_modules).append("`\n");

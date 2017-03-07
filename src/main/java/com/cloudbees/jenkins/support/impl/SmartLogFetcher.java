@@ -8,8 +8,8 @@ import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.Pipe;
 import hudson.remoting.VirtualChannel;
-import hudson.util.IOUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.remoting.RoleChecker;
 
@@ -120,8 +120,8 @@ class SmartLogFetcher {
                             is = read(remoteDir.child(entry.getKey()), localLength);
                             IOUtils.copy(is, fos);
                         } finally {
-                            IOUtils.closeQuietly(is);
                             IOUtils.closeQuietly(fos);
+                            IOUtils.closeQuietly(is);
                         }
                     }
                     result.put(entry.getKey(), local);
@@ -133,8 +133,8 @@ class SmartLogFetcher {
                         is = read(remoteDir.child(entry.getKey()), 0);
                         IOUtils.copy(is, fos);
                     } finally {
-                        IOUtils.closeQuietly(is);
                         IOUtils.closeQuietly(fos);
+                        IOUtils.closeQuietly(is);
                     }
                     result.put(entry.getKey(), local);
                 }

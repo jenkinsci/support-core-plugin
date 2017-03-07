@@ -92,6 +92,8 @@ import java.util.TreeMap;
                     OldDataMonitor.VersionRange value = entry.getValue();
                     data.setRange(value.toString());
                     data.setExtra(value.extra);
+                    
+                    olddm.addOldData(data);
                 }
                 olddm.setActive(true);
                 monitors.addMonitor(olddm);

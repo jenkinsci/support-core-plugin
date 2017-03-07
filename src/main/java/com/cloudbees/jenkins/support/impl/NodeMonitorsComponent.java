@@ -57,8 +57,11 @@ public class NodeMonitorsComponent extends Component{
                     NodeMonitors.NodeMonitor.Computer comp = new NodeMonitors.NodeMonitor.Computer();
                     comp.setDisplayName(c.getDisplayName());
                     comp.setData(SupportUtils.trimToEmpty(monitor.data(c)));
+                    nodeMonitor.addComputer(comp);
                 }
             }
+
+            monitors.addNodeMonitor(nodeMonitor);
         }
         container.add(new MarkdownContent("node-monitors.md", monitors));
         container.add(new YamlContent("node-monitors.yaml", monitors));

@@ -12,6 +12,10 @@ import java.util.List;
 public class NodeMonitors implements Serializable, MarkdownFile{
     List<NodeMonitor> monitorList = new ArrayList<>();
 
+    public void addNodeMonitor(NodeMonitor nodeMonitor) {
+        this.monitorList.add(nodeMonitor);
+    }
+
     public List<NodeMonitor> getMonitorList() {
         return monitorList;
     }
@@ -24,6 +28,10 @@ public class NodeMonitors implements Serializable, MarkdownFile{
         String columnCaption;
         boolean isIgnored;
         List<Computer> computersList;
+
+        public void addComputer(Computer computer) {
+            computersList.add(computer);
+        }
 
         public String getColumnCaption() {
             return columnCaption;
