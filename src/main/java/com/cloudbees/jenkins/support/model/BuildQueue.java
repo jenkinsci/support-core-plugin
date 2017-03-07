@@ -21,7 +21,7 @@ public class BuildQueue implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class Item {
+    public static class Item implements Serializable {
         String fullName;
         boolean isBlocked;
         String queueTime;
@@ -38,12 +38,12 @@ public class BuildQueue implements Serializable, MarkdownFile {
         }
 
         @Data
-        public static class Cause {
+        public static class Cause implements Serializable {
             String description;
         }
 
         @Data
-        public static class TaskDispatcher {
+        public static class TaskDispatcher implements Serializable {
             String name;
             String canRun;
         }

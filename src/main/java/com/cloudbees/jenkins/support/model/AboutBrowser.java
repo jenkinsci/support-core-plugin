@@ -15,7 +15,7 @@ public class AboutBrowser implements Serializable, MarkdownFile {
     OperatingSystem operatingSystem;
 
     @Data
-    public static class UserAgent {
+    public static class UserAgent implements Serializable {
         String type;
         String name;
         String family;
@@ -25,7 +25,7 @@ public class AboutBrowser implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class OperatingSystem {
+    public static class OperatingSystem implements Serializable {
         String name;
         String family;
         String producer;

@@ -24,7 +24,7 @@ public class Network implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class NetworkInterface {
+    public static class NetworkInterface implements Serializable {
         String hardwareAddress;
         String displayName;
         List<String> address = new ArrayList<>();
@@ -43,7 +43,7 @@ public class Network implements Serializable, MarkdownFile {
         }
 
         @Data
-        public static class InetAddress {
+        public static class InetAddress implements Serializable {
             String inetAddress;
         }
     }

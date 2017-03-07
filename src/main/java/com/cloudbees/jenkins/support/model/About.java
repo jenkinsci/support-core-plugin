@@ -35,7 +35,7 @@ public class About implements Serializable, MarkdownFile {
     PackagingDetails packagingDetails = new PackagingDetails();
 
     @Data
-    public static class VersionDetails {
+    public static class VersionDetails implements Serializable{
         String version;
         String mode;
         String url;
@@ -53,13 +53,13 @@ public class About implements Serializable, MarkdownFile {
         String LSB_modules;
 
         @Data
-        public static class ServletContainer {
+        public static class ServletContainer implements Serializable {
             String specification;
             String name;
         }
 
         @Data
-        public static class Java {
+        public static class Java implements Serializable{
             String home;
             String vendor;
             String version;
@@ -73,35 +73,35 @@ public class About implements Serializable, MarkdownFile {
         }
 
         @Data
-        public static class JavaRuntimeSpecification {
+        public static class JavaRuntimeSpecification implements Serializable {
             String name;
             String vendor;
             String version;
         }
 
         @Data
-        public static class JVMSpecification {
+        public static class JVMSpecification implements Serializable {
             String name;
             String vendor;
             String version;
         }
 
         @Data
-        public static class JVMImplementation {
+        public static class JVMImplementation implements Serializable {
             String name;
             String vendor;
             String version;
         }
 
         @Data
-        public static class OperatingSystem {
+        public static class OperatingSystem implements Serializable {
             String name;
             String Architecture;
             String version;
         }
 
         @Data
-        public static class JVMStartupParameters {
+        public static class JVMStartupParameters implements Serializable {
             String boot_classpath;
             String classPath;
             String libraryClasspath;
@@ -189,7 +189,7 @@ public class About implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class ImportantConfiguration {
+    public static class ImportantConfiguration implements Serializable {
         String securityRealm;
         String authorizationStrategy;
         boolean CSRF_protection;
@@ -197,7 +197,7 @@ public class About implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class ActivePlugins {
+    public static class ActivePlugins implements Serializable {
         List<Plugin> activePlugins = new ArrayList<>();
 
         public ActivePlugins addPlugin(Plugin plugin) {
@@ -206,7 +206,7 @@ public class About implements Serializable, MarkdownFile {
         }
 
         @Data
-        public static class Plugin {
+        public static class Plugin implements Serializable {
             String name;
             String version;
             boolean updates_available;
@@ -215,7 +215,7 @@ public class About implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class PackagingDetails {
+    public static class PackagingDetails implements Serializable {
         String details;
     }
 

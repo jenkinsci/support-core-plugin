@@ -19,7 +19,7 @@ public class Items implements Serializable, MarkdownFile{
     Stats jobTotal = new Stats();
 
     @Data
-    public static class Stats {
+    public static class Stats implements Serializable {
         private int s0 = 0;
         private long s1 = 0;
         private long s2 = 0;
@@ -76,7 +76,7 @@ public class Items implements Serializable, MarkdownFile{
     }
 
     @Data
-    public static class Item {
+    public static class Item implements Serializable {
         String name;
         String numberOfItems;
         String numofItemsOrBuilds;

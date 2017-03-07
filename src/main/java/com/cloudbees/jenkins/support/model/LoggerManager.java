@@ -19,7 +19,7 @@ public class LoggerManager implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class Logger {
+    public static class Logger implements Serializable {
         String name;
         String level;
     }

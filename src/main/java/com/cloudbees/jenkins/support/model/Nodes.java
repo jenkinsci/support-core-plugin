@@ -24,7 +24,7 @@ public class Nodes implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class Histogram {
+    public static class Histogram implements Serializable {
         double sampleSize;
         double median;
         double mean;
@@ -36,10 +36,10 @@ public class Nodes implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class MasterNode extends Node { }
+    public static class MasterNode extends Node implements Serializable { }
 
     @Data
-    public static class Node {
+    public static class Node implements Serializable {
         String name;
         String descriptor;
         String description;

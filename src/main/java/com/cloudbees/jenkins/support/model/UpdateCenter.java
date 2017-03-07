@@ -20,7 +20,7 @@ public class UpdateCenter implements Serializable, MarkdownFile {
         sitesList.add(us);
     }
 
-    @Data public static class Proxy {
+    @Data public static class Proxy implements Serializable {
         String host;
         int port;
         List<String> noProxyHosts = new ArrayList<>();
@@ -31,7 +31,7 @@ public class UpdateCenter implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class UpdateSite {
+    public static class UpdateSite implements Serializable {
         String url;
         String connectionCheckUrl;
         String implementationName;

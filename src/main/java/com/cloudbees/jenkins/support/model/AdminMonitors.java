@@ -20,7 +20,7 @@ public class AdminMonitors implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class OldDataMonitor extends AdminMonitor {
+    public static class OldDataMonitor extends AdminMonitor implements Serializable {
         List<OldData> olddata;
 
         public void addOldData(OldData data) {
@@ -28,7 +28,7 @@ public class AdminMonitors implements Serializable, MarkdownFile {
         }
 
         @Data
-        public static class OldData {
+        public static class OldData implements Serializable {
             String problematicObject;
             String range;
             String extra;
@@ -36,7 +36,7 @@ public class AdminMonitors implements Serializable, MarkdownFile {
     }
 
     @Data
-    public static class AdminMonitor {
+    public static class AdminMonitor implements Serializable {
         String id;
         boolean active;
     }

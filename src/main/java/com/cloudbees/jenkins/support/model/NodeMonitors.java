@@ -16,20 +16,20 @@ public class NodeMonitors implements Serializable, MarkdownFile{
 
 
     @Data
-    public static class NodeMonitor {
+    public static class NodeMonitor implements Serializable {
         String columnCaption;
         boolean isIgnored;
         List<Computer> computersList;
 
         @Data
-        public static class Computer {
+        public static class Computer implements Serializable {
             String displayName;
             String data;
         }
     }
 
     @Data
-    public static class DiskSpaceMonitor extends NodeMonitor {
+    public static class DiskSpaceMonitor extends NodeMonitor implements Serializable {
         String freeSpaceThreshold;
     }
 
