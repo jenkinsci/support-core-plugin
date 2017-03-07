@@ -1,7 +1,5 @@
 package com.cloudbees.jenkins.support.model;
 
-import lombok.Data;
-
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,7 +8,7 @@ import java.util.List;
 /**
  * Created by schristou88 on 2/21/17.
  */
-@Data
+
 public class UpdateCenter implements Serializable, MarkdownFile {
     String lastUpdatedString;
     List<UpdateSite> sitesList = new ArrayList<UpdateSite>();
@@ -20,7 +18,31 @@ public class UpdateCenter implements Serializable, MarkdownFile {
         sitesList.add(us);
     }
 
-    @Data public static class Proxy implements Serializable {
+    public String getLastUpdatedString() {
+        return lastUpdatedString;
+    }
+
+    public void setLastUpdatedString(String lastUpdatedString) {
+        this.lastUpdatedString = lastUpdatedString;
+    }
+
+    public List<UpdateSite> getSitesList() {
+        return sitesList;
+    }
+
+    public void setSitesList(List<UpdateSite> sitesList) {
+        this.sitesList = sitesList;
+    }
+
+    public Proxy getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(Proxy proxy) {
+        this.proxy = proxy;
+    }
+
+    public static class Proxy implements Serializable {
         String host;
         int port;
         List<String> noProxyHosts = new ArrayList<>();
@@ -28,13 +50,61 @@ public class UpdateCenter implements Serializable, MarkdownFile {
         public void addNoProxyHost(String noProxyHost) {
             noProxyHosts.add(noProxyHost);
         }
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public List<String> getNoProxyHosts() {
+            return noProxyHosts;
+        }
+
+        public void setNoProxyHosts(List<String> noProxyHosts) {
+            this.noProxyHosts = noProxyHosts;
+        }
     }
 
-    @Data
+
     public static class UpdateSite implements Serializable {
         String url;
         String connectionCheckUrl;
         String implementationName;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getConnectionCheckUrl() {
+            return connectionCheckUrl;
+        }
+
+        public void setConnectionCheckUrl(String connectionCheckUrl) {
+            this.connectionCheckUrl = connectionCheckUrl;
+        }
+
+        public String getImplementationName() {
+            return implementationName;
+        }
+
+        public void setImplementationName(String implementationName) {
+            this.implementationName = implementationName;
+        }
     }
 
     @Override

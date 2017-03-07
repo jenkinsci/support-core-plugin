@@ -1,21 +1,14 @@
 package com.cloudbees.jenkins.support.model;
 
-import hudson.Util;
-import lombok.Data;
-
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 /**
  * Created by schristou88 on 2/14/17.
  */
-@Data
+
 public class Network implements Serializable, MarkdownFile {
     List<NetworkInterface> networkInterfaceList = new ArrayList<>();
 
@@ -23,7 +16,14 @@ public class Network implements Serializable, MarkdownFile {
         networkInterfaceList.add(ni);
     }
 
-    @Data
+    public List<NetworkInterface> getNetworkInterfaceList() {
+        return networkInterfaceList;
+    }
+
+    public void setNetworkInterfaceList(List<NetworkInterface> networkInterfaceList) {
+        this.networkInterfaceList = networkInterfaceList;
+    }
+
     public static class NetworkInterface implements Serializable {
         String hardwareAddress;
         String displayName;
@@ -42,9 +42,112 @@ public class Network implements Serializable, MarkdownFile {
             inetAddressList.add(address);
         }
 
-        @Data
+        public String getHardwareAddress() {
+            return hardwareAddress;
+        }
+
+        public void setHardwareAddress(String hardwareAddress) {
+            this.hardwareAddress = hardwareAddress;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public List<String> getAddress() {
+            return address;
+        }
+
+        public void setAddress(List<String> address) {
+            this.address = address;
+        }
+
+        public boolean isUp() {
+            return isUp;
+        }
+
+        public void setUp(boolean up) {
+            isUp = up;
+        }
+
+        public int getMtu() {
+            return mtu;
+        }
+
+        public void setMtu(int mtu) {
+            this.mtu = mtu;
+        }
+
+        public boolean isVirtual() {
+            return isVirtual;
+        }
+
+        public void setVirtual(boolean virtual) {
+            isVirtual = virtual;
+        }
+
+        public boolean isLoopback() {
+            return isLoopback;
+        }
+
+        public void setLoopback(boolean loopback) {
+            isLoopback = loopback;
+        }
+
+        public boolean isPointToPoint() {
+            return isPointToPoint;
+        }
+
+        public void setPointToPoint(boolean pointToPoint) {
+            isPointToPoint = pointToPoint;
+        }
+
+        public boolean isSupportsMultiCast() {
+            return supportsMultiCast;
+        }
+
+        public void setSupportsMultiCast(boolean supportsMultiCast) {
+            this.supportsMultiCast = supportsMultiCast;
+        }
+
+        public String getChildOfDisplayName() {
+            return childOfDisplayName;
+        }
+
+        public void setChildOfDisplayName(String childOfDisplayName) {
+            this.childOfDisplayName = childOfDisplayName;
+        }
+
+        public List<InetAddress> getInetAddressList() {
+            return inetAddressList;
+        }
+
+        public void setInetAddressList(List<InetAddress> inetAddressList) {
+            this.inetAddressList = inetAddressList;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
         public static class InetAddress implements Serializable {
             String inetAddress;
+
+            public String getInetAddress() {
+                return inetAddress;
+            }
+
+            public void setInetAddress(String inetAddress) {
+                this.inetAddress = inetAddress;
+            }
         }
     }
 

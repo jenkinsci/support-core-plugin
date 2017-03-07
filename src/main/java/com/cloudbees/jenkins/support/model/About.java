@@ -1,40 +1,55 @@
 package com.cloudbees.jenkins.support.model;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.api.SupportProvider;
-import com.cloudbees.jenkins.support.impl.AboutJenkins;
-import com.cloudbees.jenkins.support.util.Helper;
-import hudson.PluginManager;
-import hudson.PluginWrapper;
-import hudson.lifecycle.Lifecycle;
-import jenkins.model.Jenkins;
-import jenkins.model.JenkinsLocationConfiguration;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-import org.kohsuke.stapler.Stapler;
-
-import javax.servlet.ServletContext;
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by schristou88 on 2/9/17.
  */
-@Data
 public class About implements Serializable, MarkdownFile {
     VersionDetails versionDetails = new VersionDetails();
     ImportantConfiguration importantConfiguration = new ImportantConfiguration();
     ActivePlugins activePlugins = new ActivePlugins();
     PackagingDetails packagingDetails = new PackagingDetails();
 
-    @Data
+    public VersionDetails getVersionDetails() {
+        return versionDetails;
+    }
+
+    public void setVersionDetails(VersionDetails versionDetails) {
+        this.versionDetails = versionDetails;
+    }
+
+    public ImportantConfiguration getImportantConfiguration() {
+        return importantConfiguration;
+    }
+
+    public void setImportantConfiguration(ImportantConfiguration importantConfiguration) {
+        this.importantConfiguration = importantConfiguration;
+    }
+
+    public ActivePlugins getActivePlugins() {
+        return activePlugins;
+    }
+
+    public void setActivePlugins(ActivePlugins activePlugins) {
+        this.activePlugins = activePlugins;
+    }
+
+    public PackagingDetails getPackagingDetails() {
+        return packagingDetails;
+    }
+
+    public void setPackagingDetails(PackagingDetails packagingDetails) {
+        this.packagingDetails = packagingDetails;
+    }
+
     public static class VersionDetails implements Serializable{
         String version;
         String mode;
@@ -52,13 +67,148 @@ public class About implements Serializable, MarkdownFile {
         String distribution;
         String LSB_modules;
 
-        @Data
+        public String getVersion() {
+            return version;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
+        }
+
+        public String getMode() {
+            return mode;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public ServletContainer getContainer() {
+            return container;
+        }
+
+        public void setContainer(ServletContainer container) {
+            this.container = container;
+        }
+
+        public Java getJava() {
+            return java;
+        }
+
+        public void setJava(Java java) {
+            this.java = java;
+        }
+
+        public JavaRuntimeSpecification getJavaRuntimeSpecification() {
+            return javaRuntimeSpecification;
+        }
+
+        public void setJavaRuntimeSpecification(JavaRuntimeSpecification javaRuntimeSpecification) {
+            this.javaRuntimeSpecification = javaRuntimeSpecification;
+        }
+
+        public JVMSpecification getJvmSpecification() {
+            return jvmSpecification;
+        }
+
+        public void setJvmSpecification(JVMSpecification jvmSpecification) {
+            this.jvmSpecification = jvmSpecification;
+        }
+
+        public JVMImplementation getJvmImplementation() {
+            return jvmImplementation;
+        }
+
+        public void setJvmImplementation(JVMImplementation jvmImplementation) {
+            this.jvmImplementation = jvmImplementation;
+        }
+
+        public OperatingSystem getOperatingSystem() {
+            return operatingSystem;
+        }
+
+        public void setOperatingSystem(OperatingSystem operatingSystem) {
+            this.operatingSystem = operatingSystem;
+        }
+
+        public int getProcessID() {
+            return processID;
+        }
+
+        public void setProcessID(int processID) {
+            this.processID = processID;
+        }
+
+        public Date getProcess_started() {
+            return process_started;
+        }
+
+        public void setProcess_started(Date process_started) {
+            this.process_started = process_started;
+        }
+
+        public String getProcess_uptime() {
+            return process_uptime;
+        }
+
+        public void setProcess_uptime(String process_uptime) {
+            this.process_uptime = process_uptime;
+        }
+
+        public JVMStartupParameters getJvmStartupParameters() {
+            return jvmStartupParameters;
+        }
+
+        public void setJvmStartupParameters(JVMStartupParameters jvmStartupParameters) {
+            this.jvmStartupParameters = jvmStartupParameters;
+        }
+
+        public String getDistribution() {
+            return distribution;
+        }
+
+        public void setDistribution(String distribution) {
+            this.distribution = distribution;
+        }
+
+        public String getLSB_modules() {
+            return LSB_modules;
+        }
+
+        public void setLSB_modules(String LSB_modules) {
+            this.LSB_modules = LSB_modules;
+        }
+
         public static class ServletContainer implements Serializable {
             String specification;
             String name;
+
+            public String getSpecification() {
+                return specification;
+            }
+
+            public void setSpecification(String specification) {
+                this.specification = specification;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
         }
 
-        @Data
+
         public static class Java implements Serializable{
             String home;
             String vendor;
@@ -70,37 +220,213 @@ public class About implements Serializable, MarkdownFile {
             String gc_strategy;
             long permgen_used;
             long permgen_max;
+
+            public String getHome() {
+                return home;
+            }
+
+            public void setHome(String home) {
+                this.home = home;
+            }
+
+            public String getVendor() {
+                return vendor;
+            }
+
+            public void setVendor(String vendor) {
+                this.vendor = vendor;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
+
+            public long getMaximum_memory() {
+                return maximum_memory;
+            }
+
+            public void setMaximum_memory(long maximum_memory) {
+                this.maximum_memory = maximum_memory;
+            }
+
+            public long getAllocated_memory() {
+                return allocated_memory;
+            }
+
+            public void setAllocated_memory(long allocated_memory) {
+                this.allocated_memory = allocated_memory;
+            }
+
+            public long getFree_memory() {
+                return free_memory;
+            }
+
+            public void setFree_memory(long free_memory) {
+                this.free_memory = free_memory;
+            }
+
+            public long getIn_use_memory() {
+                return in_use_memory;
+            }
+
+            public void setIn_use_memory(long in_use_memory) {
+                this.in_use_memory = in_use_memory;
+            }
+
+            public String getGc_strategy() {
+                return gc_strategy;
+            }
+
+            public void setGc_strategy(String gc_strategy) {
+                this.gc_strategy = gc_strategy;
+            }
+
+            public long getPermgen_used() {
+                return permgen_used;
+            }
+
+            public void setPermgen_used(long permgen_used) {
+                this.permgen_used = permgen_used;
+            }
+
+            public long getPermgen_max() {
+                return permgen_max;
+            }
+
+            public void setPermgen_max(long permgen_max) {
+                this.permgen_max = permgen_max;
+            }
         }
 
-        @Data
+
         public static class JavaRuntimeSpecification implements Serializable {
             String name;
             String vendor;
             String version;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getVendor() {
+                return vendor;
+            }
+
+            public void setVendor(String vendor) {
+                this.vendor = vendor;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
         }
 
-        @Data
+
         public static class JVMSpecification implements Serializable {
             String name;
             String vendor;
             String version;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getVendor() {
+                return vendor;
+            }
+
+            public void setVendor(String vendor) {
+                this.vendor = vendor;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
         }
 
-        @Data
+
         public static class JVMImplementation implements Serializable {
             String name;
             String vendor;
             String version;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getVendor() {
+                return vendor;
+            }
+
+            public void setVendor(String vendor) {
+                this.vendor = vendor;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
         }
 
-        @Data
+
         public static class OperatingSystem implements Serializable {
             String name;
-            String Architecture;
+            String architecture;
             String version;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getArchitecture() {
+                return architecture;
+            }
+
+            public void setArchitecture(String architecture) {
+                architecture = architecture;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
         }
 
-        @Data
+
         public static class JVMStartupParameters implements Serializable {
             String boot_classpath;
             String classPath;
@@ -112,30 +438,38 @@ public class About implements Serializable, MarkdownFile {
                 return this;
             }
 
-        }
-
-        private static String humanReadableSize(long size) {
-            String measure = "B";
-            if (size < 1024) {
-                return size + " " + measure;
+            public String getBoot_classpath() {
+                return boot_classpath;
             }
-            double number = size;
-            if (number >= 1024) {
-                number = number / 1024;
-                measure = "KB";
-                if (number >= 1024) {
-                    number = number / 1024;
-                    measure = "MB";
-                    if (number >= 1024) {
-                        number = number / 1024;
-                        measure = "GB";
-                    }
-                }
-            }
-            DecimalFormat format = new DecimalFormat("#0.00");
-            return format.format(number) + " " + measure + " (" + size + ")";
-        }
 
+            public void setBoot_classpath(String boot_classpath) {
+                this.boot_classpath = boot_classpath;
+            }
+
+            public String getClassPath() {
+                return classPath;
+            }
+
+            public void setClassPath(String classPath) {
+                this.classPath = classPath;
+            }
+
+            public String getLibraryClasspath() {
+                return libraryClasspath;
+            }
+
+            public void setLibraryClasspath(String libraryClasspath) {
+                this.libraryClasspath = libraryClasspath;
+            }
+
+            public List<String> getArgs() {
+                return args;
+            }
+
+            public void setArgs(List<String> args) {
+                this.args = args;
+            }
+        }
 
         public String toMarkdown(String maj, String min) {
             StringBuilder result = new StringBuilder();
@@ -186,17 +520,72 @@ public class About implements Serializable, MarkdownFile {
             }
             return result.toString();
         }
+
+        private static String humanReadableSize(long size) {
+            String measure = "B";
+            if (size < 1024) {
+                return size + " " + measure;
+            }
+            double number = size;
+            if (number >= 1024) {
+                number = number / 1024;
+                measure = "KB";
+                if (number >= 1024) {
+                    number = number / 1024;
+                    measure = "MB";
+                    if (number >= 1024) {
+                        number = number / 1024;
+                        measure = "GB";
+                    }
+                }
+            }
+
+            DecimalFormat format = new DecimalFormat("#0.00");
+            return format.format(number) + " " + measure + " (" + size + ")";
+        }
     }
 
-    @Data
+
     public static class ImportantConfiguration implements Serializable {
         String securityRealm;
         String authorizationStrategy;
         boolean CSRF_protection;
         String initializationMilestone;
+
+        public String getSecurityRealm() {
+            return securityRealm;
+        }
+
+        public void setSecurityRealm(String securityRealm) {
+            this.securityRealm = securityRealm;
+        }
+
+        public String getAuthorizationStrategy() {
+            return authorizationStrategy;
+        }
+
+        public void setAuthorizationStrategy(String authorizationStrategy) {
+            this.authorizationStrategy = authorizationStrategy;
+        }
+
+        public boolean isCSRF_protection() {
+            return CSRF_protection;
+        }
+
+        public void setCSRF_protection(boolean CSRF_protection) {
+            this.CSRF_protection = CSRF_protection;
+        }
+
+        public String getInitializationMilestone() {
+            return initializationMilestone;
+        }
+
+        public void setInitializationMilestone(String initializationMilestone) {
+            this.initializationMilestone = initializationMilestone;
+        }
     }
 
-    @Data
+
     public static class ActivePlugins implements Serializable {
         List<Plugin> activePlugins = new ArrayList<>();
 
@@ -205,18 +594,65 @@ public class About implements Serializable, MarkdownFile {
             return this;
         }
 
-        @Data
+        public List<Plugin> getActivePlugins() {
+            return activePlugins;
+        }
+
+        public void setActivePlugins(List<Plugin> activePlugins) {
+            this.activePlugins = activePlugins;
+        }
+
         public static class Plugin implements Serializable {
             String name;
             String version;
             boolean updates_available;
             String description;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getVersion() {
+                return version;
+            }
+
+            public void setVersion(String version) {
+                this.version = version;
+            }
+
+            public boolean isUpdates_available() {
+                return updates_available;
+            }
+
+            public void setUpdates_available(boolean updates_available) {
+                this.updates_available = updates_available;
+            }
+
+            public String getDescription() {
+                return description;
+            }
+
+            public void setDescription(String description) {
+                this.description = description;
+            }
         }
     }
 
-    @Data
+
     public static class PackagingDetails implements Serializable {
         String details;
+
+        public String getDetails() {
+            return details;
+        }
+
+        public void setDetails(String details) {
+            this.details = details;
+        }
     }
 
     @Override

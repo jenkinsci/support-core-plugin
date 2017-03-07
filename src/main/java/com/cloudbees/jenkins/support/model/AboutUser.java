@@ -1,8 +1,5 @@
 package com.cloudbees.jenkins.support.model;
 
-import lombok.Data;
-import org.acegisecurity.GrantedAuthority;
-
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,7 +8,7 @@ import java.util.List;
 /**
  * Created by stevenchristou on 2/3/17.
  */
-@Data
+
 public class AboutUser implements Serializable, MarkdownFile {
     boolean isAuthenticated;
     String name;
@@ -20,6 +17,38 @@ public class AboutUser implements Serializable, MarkdownFile {
 
     public void addAuthority(String authority) {
         authorities.add(authority);
+    }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
+    }
+
+    public void setAuthenticated(boolean authenticated) {
+        isAuthenticated = authenticated;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<String> getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(List<String> authorities) {
+        this.authorities = authorities;
+    }
+
+    public String getRaw() {
+        return raw;
+    }
+
+    public void setRaw(String raw) {
+        this.raw = raw;
     }
 
     @Override

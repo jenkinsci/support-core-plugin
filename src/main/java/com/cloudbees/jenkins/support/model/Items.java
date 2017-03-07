@@ -1,24 +1,53 @@
 package com.cloudbees.jenkins.support.model;
 
-import com.cloudbees.jenkins.support.impl.AboutJenkins;
-import lombok.Data;
-import org.apache.commons.jexl.context.HashMapContext;
-
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by schristou88 on 2/10/17.
  */
-@Data
+
 public class Items implements Serializable, MarkdownFile{
     Map<String, Integer> containerCounts = new TreeMap<>();
     Map<String, Stats> jobStats = new HashMap<>();
     Map<String, Stats> containerStats = new HashMap<>();
     Stats jobTotal = new Stats();
 
-    @Data
+    public Map<String, Integer> getContainerCounts() {
+        return containerCounts;
+    }
+
+    public void setContainerCounts(Map<String, Integer> containerCounts) {
+        this.containerCounts = containerCounts;
+    }
+
+    public Map<String, Stats> getJobStats() {
+        return jobStats;
+    }
+
+    public void setJobStats(Map<String, Stats> jobStats) {
+        this.jobStats = jobStats;
+    }
+
+    public Map<String, Stats> getContainerStats() {
+        return containerStats;
+    }
+
+    public void setContainerStats(Map<String, Stats> containerStats) {
+        this.containerStats = containerStats;
+    }
+
+    public Stats getJobTotal() {
+        return jobTotal;
+    }
+
+    public void setJobTotal(Stats jobTotal) {
+        this.jobTotal = jobTotal;
+    }
+
     public static class Stats implements Serializable {
         private int s0 = 0;
         private long s1 = 0;
@@ -75,11 +104,35 @@ public class Items implements Serializable, MarkdownFile{
         }
     }
 
-    @Data
+
     public static class Item implements Serializable {
         String name;
         String numberOfItems;
         String numofItemsOrBuilds;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getNumberOfItems() {
+            return numberOfItems;
+        }
+
+        public void setNumberOfItems(String numberOfItems) {
+            this.numberOfItems = numberOfItems;
+        }
+
+        public String getNumofItemsOrBuilds() {
+            return numofItemsOrBuilds;
+        }
+
+        public void setNumofItemsOrBuilds(String numofItemsOrBuilds) {
+            this.numofItemsOrBuilds = numofItemsOrBuilds;
+        }
     }
 
     @Override

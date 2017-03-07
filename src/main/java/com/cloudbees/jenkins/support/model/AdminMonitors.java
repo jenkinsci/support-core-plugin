@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.model;
 
-import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.PrintWriter;
@@ -11,7 +10,7 @@ import java.util.List;
 /**
  * Created by stevenchristou on 2/3/17.
  */
-@Data
+
 public class AdminMonitors implements Serializable, MarkdownFile {
     List<AdminMonitor> monitorList = new ArrayList<>();
 
@@ -19,7 +18,14 @@ public class AdminMonitors implements Serializable, MarkdownFile {
         monitorList.add(monitor);
     }
 
-    @Data
+    public List<AdminMonitor> getMonitorList() {
+        return monitorList;
+    }
+
+    public void setMonitorList(List<AdminMonitor> monitorList) {
+        this.monitorList = monitorList;
+    }
+
     public static class OldDataMonitor extends AdminMonitor implements Serializable {
         List<OldData> olddata;
 
@@ -27,18 +33,65 @@ public class AdminMonitors implements Serializable, MarkdownFile {
             olddata.add(data);
         }
 
-        @Data
+        public List<OldData> getOlddata() {
+            return olddata;
+        }
+
+        public void setOlddata(List<OldData> olddata) {
+            this.olddata = olddata;
+        }
+
         public static class OldData implements Serializable {
             String problematicObject;
             String range;
             String extra;
+
+            public String getProblematicObject() {
+                return problematicObject;
+            }
+
+            public void setProblematicObject(String problematicObject) {
+                this.problematicObject = problematicObject;
+            }
+
+            public String getRange() {
+                return range;
+            }
+
+            public void setRange(String range) {
+                this.range = range;
+            }
+
+            public String getExtra() {
+                return extra;
+            }
+
+            public void setExtra(String extra) {
+                this.extra = extra;
+            }
         }
     }
 
-    @Data
+
     public static class AdminMonitor implements Serializable {
         String id;
         boolean active;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public void setActive(boolean active) {
+            this.active = active;
+        }
     }
 
     @Override
