@@ -59,7 +59,9 @@ public class AboutContent {
         }
 
         final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
-        versionDetails.setUrl(jlc.getUrl());
+        if (jlc != null) {
+            versionDetails.setUrl(jlc.getUrl());
+        }
 
         versionDetails.setContainer(generateServletContainer());
 
