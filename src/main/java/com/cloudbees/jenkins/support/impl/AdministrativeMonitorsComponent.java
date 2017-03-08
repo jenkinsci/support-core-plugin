@@ -33,6 +33,7 @@ import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Collections;
 import java.util.Map;
@@ -91,7 +92,7 @@ import java.util.TreeMap;
 
                     OldDataMonitor.VersionRange value = entry.getValue();
                     data.setRange(value.toString());
-                    data.setExtra(value.extra);
+                    data.setExtra(StringUtils.isNotBlank(value.extra) ? value.extra : "");
                     
                     olddm.addOldData(data);
                 }
