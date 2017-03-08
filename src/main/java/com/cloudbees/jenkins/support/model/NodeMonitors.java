@@ -27,7 +27,7 @@ public class NodeMonitors implements Serializable, MarkdownFile{
     public static class NodeMonitor implements Serializable {
         String columnCaption;
         boolean isIgnored;
-        List<Computer> computersList;
+        List<Computer> computersList = new ArrayList<>();
 
         public void addComputer(Computer computer) {
             computersList.add(computer);
