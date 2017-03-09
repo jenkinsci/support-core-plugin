@@ -53,13 +53,13 @@ public class Items implements Serializable, MarkdownFile{
         private long s1 = 0;
         private long s2 = 0;
 
-        public synchronized void add(int x) {
+        public void add(int x) {
             s0++;
             s1 += x;
             s2 += x * (long) x;
         }
 
-        public synchronized double x() {
+        public double x() {
             return s1 / (double) s0;
         }
 
@@ -74,7 +74,7 @@ public class Items implements Serializable, MarkdownFile{
             return shifted / mag;
         }
 
-        public synchronized double s() {
+        public double s() {
             if (s0 >= 2) {
                 double v = Math.sqrt((s0 * (double) s2 - s1 * (double) s1) / s0 / (s0 - 1));
                 if (s0 <= 100) {
@@ -89,7 +89,7 @@ public class Items implements Serializable, MarkdownFile{
             }
         }
 
-        public synchronized String toString() {
+        public String toString() {
             if (s0 == 0) {
                 return "N/A";
             }
@@ -99,10 +99,10 @@ public class Items implements Serializable, MarkdownFile{
             return Double.toString(x()) + " [n=" + s0 + ", s=" + s() + "]";
         }
 
-        public synchronized int n() {
+        public int n() {
             return s0;
         }
-        
+
         public int getS0() {
             return s0;
         }
