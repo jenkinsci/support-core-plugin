@@ -98,7 +98,7 @@ public class GCLogs extends Component {
      *
      * @param gcLogFileLocation the specified value after <code>-Xloggc:</code>
      * @param result            the container where to add the found logs, if any.
-     * @see https://bugs.openjdk.java.net/browse/JDK-7164841
+     * @see <a href="https://bugs.openjdk.java.net/browse/JDK-7164841">JDK-7164841</a>
      */
     private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result) {
         // always add .* in the end because this is where the numbering is going to happen
