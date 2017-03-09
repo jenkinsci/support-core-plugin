@@ -3,10 +3,6 @@ package com.cloudbees.jenkins.support.model;
 import java.io.PrintWriter;
 import java.io.Serializable;
 
-/**
- * Created by schristou88 on 2/2/17.
- */
-
 public class AboutBrowser implements Serializable, MarkdownFile {
     String screenSize;
     UserAgent userAgent;

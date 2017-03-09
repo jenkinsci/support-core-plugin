@@ -6,10 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-/**
- * Created by schristou88 on 2/10/17.
- */
-
 public class Items implements Serializable, MarkdownFile{
     Map<String, Integer> containerCounts = new TreeMap<>();
     Map<String, Stats> jobStats = new HashMap<>();

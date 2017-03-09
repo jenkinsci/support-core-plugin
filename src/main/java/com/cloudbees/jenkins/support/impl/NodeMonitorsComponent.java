@@ -19,9 +19,6 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
 
-/**
- * Created by schristou88 on 11/4/16.
- */
 @Extension
 public class NodeMonitorsComponent extends Component{
     @NonNull

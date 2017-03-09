@@ -15,9 +15,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by schristou88 on 2/9/17.
- */
 public class AboutContent {
     protected About generate() {
         About about = new About();

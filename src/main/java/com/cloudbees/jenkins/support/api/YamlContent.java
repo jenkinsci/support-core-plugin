@@ -10,9 +10,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-/**
- * Created by schristou88 on 2/9/17.
- */
 public class YamlContent extends Content {
 
     MarkdownFile yamlFile;

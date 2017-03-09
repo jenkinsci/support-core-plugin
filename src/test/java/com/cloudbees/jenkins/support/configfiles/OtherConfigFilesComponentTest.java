@@ -12,9 +12,6 @@ import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by valentina on 28/10/16.
- */
 public class OtherConfigFilesComponentTest {
 
     @Rule

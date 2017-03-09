@@ -9,9 +9,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Created by schristou88 on 2/9/17.
- */
 public class MarkdownContent extends Content {
 
     MarkdownFile mdFile;

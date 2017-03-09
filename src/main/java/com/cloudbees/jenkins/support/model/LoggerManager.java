@@ -5,10 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by schristou88 on 2/21/17.
- */
-
 public class LoggerManager implements Serializable, MarkdownFile {
     List<Logger> loggerList = new ArrayList<>();
 

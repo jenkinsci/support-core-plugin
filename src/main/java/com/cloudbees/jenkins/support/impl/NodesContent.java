@@ -25,9 +25,6 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Created by schristou88 on 2/13/17.
- */
 public class NodesContent {
 
     private final WeakHashMap<Node,String> slaveVersionCache = new WeakHashMap<>();

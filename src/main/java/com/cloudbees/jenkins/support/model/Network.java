@@ -5,10 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by schristou88 on 2/14/17.
- */
-
 public class Network implements Serializable, MarkdownFile {
     List<NetworkInterface> networkInterfaceList = new ArrayList<>();
 

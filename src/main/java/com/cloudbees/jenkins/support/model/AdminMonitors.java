@@ -7,10 +7,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by stevenchristou on 2/3/17.
- */
-
 public class AdminMonitors implements Serializable, MarkdownFile {
     List<AdminMonitor> monitorList = new ArrayList<>();
 

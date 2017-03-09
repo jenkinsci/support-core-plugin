@@ -13,9 +13,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-/**
- * Created by schristou88 on 2/10/17.
- */
 class ItemsContent {
     Items generate() {
         Items items = new Items();

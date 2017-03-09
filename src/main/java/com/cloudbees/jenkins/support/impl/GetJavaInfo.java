@@ -16,9 +16,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by schristou88 on 2/10/17.
- */
 class GetJavaInfo extends MasterToSlaveCallable<About.VersionDetails, RuntimeException> {
     private static final long serialVersionUID = 1L;
     GetJavaInfo() {}

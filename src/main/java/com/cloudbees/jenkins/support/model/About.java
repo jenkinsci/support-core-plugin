@@ -9,9 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-/**
- * Created by schristou88 on 2/9/17.
- */
 public class About implements Serializable, MarkdownFile {
     VersionDetails versionDetails = new VersionDetails();
     ImportantConfiguration importantConfiguration = new ImportantConfiguration();

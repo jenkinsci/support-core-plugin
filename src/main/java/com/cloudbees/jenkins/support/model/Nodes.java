@@ -5,10 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by schristou88 on 2/13/17.
- */
-
 public class Nodes implements Serializable, MarkdownFile {
     Histogram nodesTotalCount;
     Histogram nodesOnlineCount;

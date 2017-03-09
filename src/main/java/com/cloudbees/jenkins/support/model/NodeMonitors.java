@@ -5,10 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by schristou88 on 2/17/17.
- */
-
 public class NodeMonitors implements Serializable, MarkdownFile{
     List<NodeMonitor> monitorList = new ArrayList<>();
 
