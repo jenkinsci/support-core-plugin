@@ -102,6 +102,30 @@ public class Items implements Serializable, MarkdownFile{
         public synchronized int n() {
             return s0;
         }
+        
+        public int getS0() {
+            return s0;
+        }
+
+        public void setS0(int s0) {
+            this.s0 = s0;
+        }
+
+        public long getS1() {
+            return s1;
+        }
+
+        public void setS1(long s1) {
+            this.s1 = s1;
+        }
+
+        public long getS2() {
+            return s2;
+        }
+
+        public void setS2(long s2) {
+            this.s2 = s2;
+        }
     }
 
 
