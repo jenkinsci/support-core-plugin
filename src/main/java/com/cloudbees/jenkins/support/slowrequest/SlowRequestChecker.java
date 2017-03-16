@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.cloudbees.jenkins.support.util.Helper;
 import com.google.inject.Inject;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.model.PeriodicWork;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
@@ -27,6 +28,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension
 public class SlowRequestChecker extends PeriodicWork {
+    final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"slow-requests"), 50);
+
     /**
      * How often to run the slow request checker
      * @since 2.12
@@ -56,13 +59,6 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     Jenkins jenkins;
 
-    final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"slow-requests"), 50);
-
-    final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
-    {
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
-
     @Override
     public long getRecurrencePeriod() {
         return TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
@@ -76,8 +72,6 @@ public class SlowRequestChecker extends PeriodicWork {
 
         final long now = System.currentTimeMillis();
 
-        long iota = System.currentTimeMillis();
-
         final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
         long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
                 recurrencePeriosMillis * 2 : THRESHOLD;
@@ -86,51 +80,12 @@ public class SlowRequestChecker extends PeriodicWork {
             long totalTime = now - req.startTime;
 
             if (totalTime> thresholdMillis) {
-                // if the thread has exited while we are taking the thread dump, ignore this.
                 if (req.ended)    continue;
 
-                PrintWriter w = null;
-                try {
-                    if (req.record==null) {
-                        req.record = logs.file(format.format(new Date(iota++)) + ".txt");
-                        logs.add(req.record);
-
-                        w = new PrintWriter(req.record,"UTF-8");
-                        req.writeHeader(w);
-                    } else {
-                        w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true),"UTF-8"));
-                        logs.touch(req.record);
-                    }
-
-                    if (req.record.length() >= FileListCapComponent.MAX_FILE_SIZE)
-                      continue;
-                    ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId(), Integer.MAX_VALUE);
-                    if (lockedThread != null ) {
-                        w.println(lockedThread);
-                        w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
-                        printThreadStackElements(lockedThread, w);
-
-                        long lockOwnerId = lockedThread.getLockOwnerId();
-                        if (lockOwnerId != -1) // If the thread is not locked, then getLockOwnerId returns -1.
-                        {
-                            ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId, Integer.MAX_VALUE);
-                            w.println(threadInfo);
-                            if (threadInfo != null) {
-                                printThreadStackElements(threadInfo, w);
-                            }
-                        }
-                    }
-                } finally {
-                    IOUtils.closeQuietly(w);
+                for(SlowRequest request : ExtensionList.lookup(SlowRequest.class)) {
+                    request.doRun(req, totalTime, logs);
                 }
             }
         }
     }
-
-    private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer) {
-        for (StackTraceElement element : threadinfo.getStackTrace()) {
-            writer.println("    " + element);
-        }
-    }
-
 }
