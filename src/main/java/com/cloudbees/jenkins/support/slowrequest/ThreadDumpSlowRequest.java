@@ -28,12 +28,10 @@ public class ThreadDumpSlowRequest extends SlowRequest {
 
     @Override
     public void doRun(InflightRequest req, long totalTime, FileListCap logs) throws IOException {
-        long iota = System.currentTimeMillis();
-
         PrintWriter w = null;
         try {
             if (req.record==null) {
-                req.record = logs.file(format.format(new Date(iota++)) + ".txt");
+                req.record = logs.file(format.format(new Date(System.currentTimeMillis())) + ".txt");
                 logs.add(req.record);
 
                 w = new PrintWriter(req.record,"UTF-8");
