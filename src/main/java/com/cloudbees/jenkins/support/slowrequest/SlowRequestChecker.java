@@ -82,7 +82,7 @@ public class SlowRequestChecker extends PeriodicWork {
             if (totalTime> thresholdMillis) {
                 if (req.ended)    continue;
 
-                for(SlowRequest request : ExtensionList.lookup(SlowRequest.class)) {
+                for(SlowRequest request : SlowRequest.all()) {
                     request.doRun(req, totalTime, logs);
                 }
             }

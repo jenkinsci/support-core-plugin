@@ -10,7 +10,7 @@ import java.util.List;
 public abstract class SlowRequest implements ExtensionPoint {
     abstract void doRun(InflightRequest req, long totalTime, FileListCap logs) throws IOException;
 
-    public List<SlowRequest> all() {
+    public static List<SlowRequest> all() {
         return ExtensionList.lookup(SlowRequest.class);
     }
 }
