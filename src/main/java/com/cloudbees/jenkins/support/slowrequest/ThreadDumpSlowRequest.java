@@ -15,9 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-/**
- * Created by stevenchristou on 3/14/17.
- */
 @Extension
 public class ThreadDumpSlowRequest extends SlowRequest {
 
