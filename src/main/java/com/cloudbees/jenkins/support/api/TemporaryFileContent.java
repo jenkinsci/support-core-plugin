@@ -45,15 +45,18 @@ public class TemporaryFileContent extends FileContent {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        super.writeTo(os);
-        delete();
+        try {
+            super.writeTo(os);
+        } finally {
+            delete();
+        }
     }
 
     private void delete() {
         try {
             Util.deleteFile(f);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to delete tmp file {0}", f.getAbsolutePath());
+            LOGGER.log(Level.WARNING, "Failed to delete tmp file " + f.getAbsolutePath(), e);
         }
     }
 
