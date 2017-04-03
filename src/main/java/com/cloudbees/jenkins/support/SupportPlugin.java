@@ -38,6 +38,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
+import hudson.Main;
 import hudson.Plugin;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -723,6 +724,9 @@ public class SupportPlugin extends Plugin {
 
         @Override
         protected synchronized void doRun() throws Exception {
+            if (Main.isUnitTest) {
+                return;
+            }
             final SupportPlugin plugin = getInstance();
             if (plugin == null) {
                 return;
