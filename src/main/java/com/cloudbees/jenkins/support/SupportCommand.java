@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import hudson.CloseProofOutputStream;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.remoting.RemoteOutputStream;
@@ -81,7 +82,13 @@ public class SupportCommand extends CLICommand {
         try {
             SecurityContext old = ACL.impersonate(ACL.SYSTEM);
             try {
-                SupportPlugin.writeBundle(checkChannel().call(new SaveBundle(SupportPlugin.getBundleFileName())), selected);
+                OutputStream os;
+                if (channel != null) { // Remoting mode
+                    os = channel.call(new SaveBundle(SupportPlugin.getBundleFileName()));
+                } else { // redirect output to a ZIP file yourself
+                    os = new CloseProofOutputStream(stdout);
+                }
+                SupportPlugin.writeBundle(os, selected);
             } finally {
                 SecurityContextHolder.setContext(old);
             }
