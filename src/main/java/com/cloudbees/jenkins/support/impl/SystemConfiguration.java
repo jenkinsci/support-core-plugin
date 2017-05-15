@@ -81,7 +81,7 @@ public class SystemConfiguration extends ProcFilesRetriever {
     }
 
     @Override
-    protected void addUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
+    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
         container.add(
                 CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
         container.add(CommandOutputContent.runOnNode(node, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "dmesg | tail -1000"));

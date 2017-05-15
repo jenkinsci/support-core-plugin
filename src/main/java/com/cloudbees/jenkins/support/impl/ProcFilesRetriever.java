@@ -88,10 +88,17 @@ public abstract class ProcFilesRetriever extends Component {
                                           new File(procDescriptor.getKey())));
         }
 
-        addUnixContents(container, node, name);
+        afterAddUnixContents(container, node, name);
     }
 
-    protected void addUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
+    /**
+     * Override this method if you want to hook some code after {@link #addUnixContents(Container, Node)}.
+     *
+     * @param container the support {@link Container}.
+     * @param node the node for which the method is called.
+     * @param name the node name, <em>"master"</em> if Master, and <em>slave/${nodeName}</em> if an agent.
+     */
+    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
     }
 
     public SystemPlatform getSystemPlatform(Node node) {
