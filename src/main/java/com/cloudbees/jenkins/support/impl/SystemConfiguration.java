@@ -65,6 +65,8 @@ public class SystemConfiguration extends ProcFilesRetriever {
         UNIX_PROC_CONTENTS.put("/proc/cpuinfo", "cpuinfo.txt");
         UNIX_PROC_CONTENTS.put("/proc/mounts", "mounts.txt");
         UNIX_PROC_CONTENTS.put("/proc/uptime", "system-uptime.txt");
+        UNIX_PROC_CONTENTS.put("/proc/net/rpc/nfs", "net/rpc/nfs.txt");
+        UNIX_PROC_CONTENTS.put("/proc/net/rpc/nfsd", "net/rpc/nfsd.txt");
     }
 
     @Override

@@ -23,6 +23,7 @@ public class JVMProcessSystemMetricsContents extends ProcFilesRetriever {
         UNIX_PROC_CONTENTS.put("/proc/self/cmdline", "self/cmdline");
         UNIX_PROC_CONTENTS.put("/proc/self/environ", "self/environ");
         UNIX_PROC_CONTENTS.put("/proc/self/limits", "self/limits.txt");
+        UNIX_PROC_CONTENTS.put("/proc/self/mountstats", "self/mountstats.txt");
     }
 
     @Override
