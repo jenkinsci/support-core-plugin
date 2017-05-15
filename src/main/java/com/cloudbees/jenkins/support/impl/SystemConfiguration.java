@@ -26,29 +26,19 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
-import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.StringContent;
-import com.cloudbees.jenkins.support.util.Helper;
-import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
-import hudson.security.Permission;
-import hudson.slaves.SlaveComputer;
-import jenkins.model.Jenkins;
 import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,9 +48,7 @@ import java.util.logging.Logger;
  * kernel messages and entropy)
  */
 @Extension
-public class SystemConfiguration extends Component {
-
-    private final WeakHashMap<Node,SystemPlatform> systemPlatformCache = new WeakHashMap<Node, SystemPlatform>();
+public class SystemConfiguration extends ProcFilesRetriever {
 
     private final WeakHashMap<Node,String> sysCtlCache = new WeakHashMap<Node, String>();
 
@@ -69,8 +57,8 @@ public class SystemConfiguration extends Component {
     private final WeakHashMap<Node,String> dmiCache = new WeakHashMap<Node, String>();
 
     private static final Logger LOGGER = Logger.getLogger(SystemConfiguration.class.getName());
+    private static final Map<String,String>  UNIX_PROC_CONTENTS;
 
-    static Map<String,String> UNIX_PROC_CONTENTS;
     static {
         UNIX_PROC_CONTENTS = new HashMap<String,String>();
         UNIX_PROC_CONTENTS.put("/proc/swaps", "swaps.txt");
@@ -80,64 +68,23 @@ public class SystemConfiguration extends Component {
     }
 
     @Override
+    public Map<String, String> getFilesToRetrieve() {
+        return UNIX_PROC_CONTENTS;
+    }
+
+    @Override
     @NonNull
     public String getDisplayName() {
         return "System configuration (Linux only)";
     }
 
-    @NonNull
     @Override
-    public Set<Permission> getRequiredPermissions() {
-        return Collections.singleton(Jenkins.ADMINISTER);
-    }
-
-    @Override
-    public void addContents(@NonNull Container container) {
-        Jenkins j = Helper.getActiveInstance();
-        addUnixContents(container, j);
-
-        for (Node node : j.getNodes()) {
-            addUnixContents(container, node);
-        }
-    }
-
-    private void addUnixContents(@NonNull Container container, final @NonNull Node node) {
-        Computer c = node.toComputer();
-        if (c == null) {
-            return;
-        }
-        // fast path bailout for Windows
-        if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
-            return;
-        }
-        SystemPlatform nodeSystemPlatform = getSystemPlatform(node);
-        if (!SystemPlatform.LINUX.equals(nodeSystemPlatform)) {
-            return;
-        }
-        String name;
-        if (node instanceof Jenkins) {
-            name = "master";
-        } else {
-            name = "slave/" + node.getNodeName();
-        }
-
-        for (Map.Entry<String, String> procDescriptor : UNIX_PROC_CONTENTS.entrySet()) {
-            container.add(new FileContent("nodes/" + name + "/proc/" + procDescriptor.getValue(), new File(procDescriptor.getKey())));
-        }
-
-        container.add(CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
+    protected void addUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
+        container.add(
+                CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
         container.add(CommandOutputContent.runOnNode(node, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "dmesg | tail -1000"));
         container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/" + name + "/userid.txt", "/bin/sh", "-c", "id -a"));
-        container.add(new StringContent( "nodes/" + name + "/dmi.txt", getDmiInfo(node)));
-    }
-
-    public SystemPlatform getSystemPlatform(Node node) {
-        try {
-            return AsyncResultCache.get(node, systemPlatformCache, new SystemPlatform.GetCurrentPlatform(), "platform", SystemPlatform.UNKNOWN);
-        } catch (IOException e) {
-            LOGGER.log(Level.FINE, "Could not retrieve command content from " + getNodeName(node), e);
-        }
-        return SystemPlatform.UNKNOWN;
+        container.add(new StringContent("nodes/" + name + "/dmi.txt", getDmiInfo(node)));
     }
 
     public String getDmiInfo(Node node) {
@@ -178,9 +125,5 @@ public class SystemConfiguration extends Component {
         public void checkRoles(RoleChecker checker) throws SecurityException {
             // TODO: do we have to verify some role?
         }
-    }
-
-    private static String getNodeName(Node node) {
-        return node instanceof Jenkins ? "master" : node.getNodeName();
     }
 }

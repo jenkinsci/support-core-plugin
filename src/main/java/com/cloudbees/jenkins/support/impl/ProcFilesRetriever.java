@@ -1,0 +1,109 @@
+package com.cloudbees.jenkins.support.impl;
+
+import com.cloudbees.jenkins.support.AsyncResultCache;
+import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.util.Helper;
+import com.cloudbees.jenkins.support.util.SystemPlatform;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Computer;
+import hudson.model.Node;
+import hudson.security.Permission;
+import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+/**
+ * Base class for gathering specified /proc files
+ */
+public abstract class ProcFilesRetriever extends Component {
+    private static final Logger LOGGER = Logger.getLogger(ProcFilesRetriever.class.getName());
+    private final WeakHashMap<Node, SystemPlatform> systemPlatformCache = new WeakHashMap<>();
+
+    protected static String getNodeName(Node node) {
+        return node instanceof Jenkins ? "master" : node.getNodeName();
+    }
+
+    /**
+     * Returns the map of files that should be retrieved.
+     * <p>
+     * <code>file name =&gt; path in the support bundle</code>.
+     * </p>
+     * <p>
+     * For example <code>/proc/meminfo =&gt; meminfo.txt</code>.
+     * </p>
+     *
+     * @return the map of files that should be retrieved and put in the support bundle.
+     */
+    abstract public Map<String, String> getFilesToRetrieve();
+
+    @NonNull
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.singleton(Jenkins.ADMINISTER);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container) {
+        Jenkins j = Helper.getActiveInstance();
+        addUnixContents(container, j);
+
+        for (Node node : j.getNodes()) {
+            addUnixContents(container, node);
+        }
+    }
+
+    protected void addUnixContents(@NonNull Container container, final @NonNull Node node) {
+        Computer c = node.toComputer();
+        if (c == null) {
+            return;
+        }
+        // fast path bailout for Windows
+        if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
+            return;
+        }
+        SystemPlatform nodeSystemPlatform = getSystemPlatform(node);
+        if (!SystemPlatform.LINUX.equals(nodeSystemPlatform)) {
+            return;
+        }
+        String name;
+        if (node instanceof Jenkins) {
+            name = "master";
+        } else {
+            name = "slave/" + node.getNodeName();
+        }
+
+        for (Map.Entry<String, String> procDescriptor : getFilesToRetrieve().entrySet()) {
+            container.add(new FileContent("nodes/" + name + "/proc/" + procDescriptor.getValue(),
+                                          new File(procDescriptor.getKey())));
+        }
+
+        addUnixContents(container, node, name);
+    }
+
+    protected void addUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
+    }
+
+    public SystemPlatform getSystemPlatform(Node node) {
+        try {
+            return AsyncResultCache.get(node, systemPlatformCache, new SystemPlatform.GetCurrentPlatform(), "platform",
+                                        SystemPlatform.UNKNOWN);
+        } catch (IOException e) {
+            final LogRecord record = new LogRecord(Level.FINE, "Could not retrieve system platform type from {0}");
+            record.setParameters(new Object[]{getNodeName(node)});
+            record.setThrown(e);
+            LOGGER.log(record);
+        }
+        return SystemPlatform.UNKNOWN;
+    }
+}
