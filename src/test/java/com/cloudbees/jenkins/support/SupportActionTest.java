@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.util.SystemPlatform;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -16,6 +17,8 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -71,6 +74,30 @@ public class SupportActionTest extends Assert {
             assertNotNull(z.getEntry("about.md"));
             assertNotNull(z.getEntry("nodes.md"));
             assertNotNull(z.getEntry("nodes/master/thread-dump.txt"));
+
+            if (SystemPlatform.LINUX == SystemPlatform.current()) {
+                List<String> files = Arrays.asList("proc/swaps.txt",
+                                                       "proc/cpuinfo.txt",
+                                                       "proc/mounts.txt",
+                                                       "proc/system-uptime.txt",
+                                                       "proc/net/rpc/nfs.txt",
+                                                       "proc/net/rpc/nfsd.txt",
+                                                       "proc/meminfo.txt",
+                                                       "proc/self/status.txt",
+                                                       "proc/self/cmdline",
+                                                       "proc/self/environ",
+                                                       "proc/self/limits.txt",
+                                                       "proc/self/mountstats.txt",
+                                                       "sysctl.txt",
+                                                       "dmesg.txt",
+                                                       "userid.txt",
+                                                       "dmi.txt");
+
+                for (String file : files) {
+                    assertNotNull(file +" was not found in the bundle",
+                                  z.getEntry("nodes/master/"+file));
+                }
+            }
         } finally {
             logger.removeHandler(checker);
             for (LogRecord r : checker.getView()) {
