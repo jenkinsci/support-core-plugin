@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
 
 /**
- * Adds slave launch logs, which captures the current and past running connections to the slave.
+ * Adds agent launch logs, which captures the current and past running connections to the agent.
  *
  */
 public class SlaveLaunchLogs extends Component{
@@ -58,7 +58,7 @@ public class SlaveLaunchLogs extends Component{
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Slave Launch Logs";
+        return "Agent Launch Logs";
     }
 
     @Override
@@ -69,7 +69,7 @@ public class SlaveLaunchLogs extends Component{
     /**
      *
      * <p>
-     * In the presence of {@link Cloud} plugins like EC2, we want to find past slaves, not just current ones.
+     * In the presence of {@link Cloud} plugins like EC2, we want to find past agents, not just current ones.
      * So we don't try to loop through {@link Node} here but just try to look at the file systems to find them
      * all.
      *
@@ -81,7 +81,7 @@ public class SlaveLaunchLogs extends Component{
     private void addSlaveLaunchLog(Container result) {
         class Slave implements Comparable<Slave> {
             /**
-             * Launch log directory of the slave: logs/slaves/NAME
+             * Launch log directory of the agent: logs/slaves/NAME
              */
             File dir;
             long time;
@@ -91,11 +91,11 @@ public class SlaveLaunchLogs extends Component{
                 this.time = lastLog.lastModified();
             }
 
-            /** Slave name */
+            /** Agent name */
             String getName() { return dir.getName(); }
 
             /**
-             * Use the primary log file's timestamp to compare newer slaves from older slaves.
+             * Use the primary log file's timestamp to compare newer agents from older agents.
              *
              * sort in descending order; newer ones first.
              */
@@ -134,7 +134,7 @@ public class SlaveLaunchLogs extends Component{
 
         List<Slave> all = new ArrayList<Slave>();
 
-        {// find all the slave launch log files and sort them newer ones first
+        {// find all the agent launch log files and sort them newer ones first
 
             File slaveLogsDir = new File(Helper.getActiveInstance().getRootDir(), "logs/slaves");
             File[] logs = slaveLogsDir.listFiles();

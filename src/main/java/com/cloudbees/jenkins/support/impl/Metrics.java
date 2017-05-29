@@ -76,7 +76,7 @@ public class Metrics extends Component {
         public byte[] call() throws RuntimeException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
-                // TODO pick up a per-slave metrics registry
+                // TODO pick up a per-agent metrics registry
                 new MetricsContent("", null).writeTo(bos);
             } catch (IOException e) {
                 throw new RuntimeException(e);

@@ -118,7 +118,7 @@ public class FileDescriptorLimit extends Component {
     }
 
     /**
-     * * For slave machines.
+     * * For agent machines.
      */
     private static final class GetUlimit implements Callable<String, RuntimeException> {
         public String call() {
