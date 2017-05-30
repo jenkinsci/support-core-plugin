@@ -42,7 +42,7 @@ public class DumpExportTable extends Component {
   @NonNull
   @Override
   public String getDisplayName() {
-    return "Dump slave export tables (could reveal some memory leaks)";
+    return "Dump agent export tables (could reveal some memory leaks)";
   }
 
   @Override

@@ -145,7 +145,7 @@ class SmartLogFetcher {
         private void evictDeadCache(Map<String, FileHash> hashes, Map<String, Long> offsets) {
             for (String key: hashes.keySet()) {
                 if (offsets.containsKey(key))
-                    continue;   // still exists on the slave
+                    continue;   // still exists on the agent
 
                 final File deadCacheFile = new File(cacheDir, key);
                 if (!deadCacheFile.delete()) {
