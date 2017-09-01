@@ -126,6 +126,15 @@ public class JenkinsLogs extends Component {
                 }
             }
         }
+        File taskLogs = new File(logs, "tasks");
+        if (taskLogs.isDirectory()) {
+            files = taskLogs.listFiles(ROTATED_LOGFILE_FILTER);
+            if (files != null) {
+                for (File f : files) {
+                    result.add(new FileContent("other-logs/" + f.getName(), f));
+                }
+            }
+        }
     }
 
     /**
