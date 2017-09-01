@@ -127,7 +127,7 @@ public class JenkinsLogs extends Component {
             }
         }
         File taskLogs = new File(logs, "tasks");
-        if (taskLogs.isDirectory()) {
+        if (taskLogs.exists() && taskLogs.isDirectory()) {
             files = taskLogs.listFiles(ROTATED_LOGFILE_FILTER);
             if (files != null) {
                 for (File f : files) {
