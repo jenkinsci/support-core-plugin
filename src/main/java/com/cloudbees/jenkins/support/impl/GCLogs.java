@@ -101,11 +101,13 @@ public class GCLogs extends Component {
      * @see https://bugs.openjdk.java.net/browse/JDK-7164841
      */
     private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result) {
+        File gcLogFile = new File(gcLogFileLocation);
+
         // always add .* in the end because this is where the numbering is going to happen
-        String regex = gcLogFileLocation.replaceAll("%[pt]", ".*") + ".*";
+        String regex = gcLogFile.getName().replaceAll("%[pt]", ".*") + ".*";
         final Pattern gcLogFilesPattern = Pattern.compile(regex);
 
-        File parentDirectory = new File(gcLogFileLocation).getParentFile();
+        File parentDirectory = gcLogFile.getParentFile();
 
         if (parentDirectory == null || !parentDirectory.exists()) {
             LOGGER.warning("[Support Bundle] " + parentDirectory + " does not exist, cannot collect gc logging files.");
@@ -115,7 +117,7 @@ public class GCLogs extends Component {
         File[] gcLogs = parentDirectory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return gcLogFilesPattern.matcher(dir + "/" + name).matches();
+                return gcLogFilesPattern.matcher(name).matches();
             }
         });
         if (gcLogs == null || gcLogs.length == 0) {
