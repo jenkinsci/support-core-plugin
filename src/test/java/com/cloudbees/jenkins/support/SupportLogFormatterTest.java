@@ -29,6 +29,8 @@ import java.util.logging.LogRecord;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.equalToIgnoringWhiteSpace;
 import static org.junit.Assert.*;
 
 public class SupportLogFormatterTest {
@@ -61,7 +63,7 @@ public class SupportLogFormatterTest {
         lr.setSourceClassName("some.pkg.Catcher");
         lr.setSourceMethodName("robust");
         lr.setMillis(0);
-        assertEquals(expected, new SupportLogFormatter().format(lr));
+        assertThat(new SupportLogFormatter().format(lr), equalToIgnoringWhiteSpace(expected));
     }
 
     private static class PhonyException extends Throwable {
