@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 @Extension
 public class HeapHisto extends Component {
     private static final int OFFSET = 3;
-    private static final int MAX = 500 + OFFSET;
+    private static final int MAX = 200 + OFFSET;
 
     private static final Logger logger = Logger.getLogger(HeapHisto.class.getName());
     private final WeakHashMap<Node, String> heapHistoCache = new WeakHashMap<Node, String>();
