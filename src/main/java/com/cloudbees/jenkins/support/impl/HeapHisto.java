@@ -75,7 +75,7 @@ public class HeapHisto extends Component {
             final StringBuilder bos = new StringBuilder();
 
             bos.append("Master Heap Histogram -histo:live");
-            for (int i=1; i<limit; i++) {
+            for (int i=0; i<limit; i++) {
                 bos.append(lines[i]).append('\n');
             }
 
@@ -91,7 +91,7 @@ public class HeapHisto extends Component {
         private String getRawLiveHistogram() {
             String result;
             try {
-                ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");;
+                ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
                 result = (String) ManagementFactory.getPlatformMBeanServer().invoke(objName, "gcClassHistogram", new Object[] {null}, new String[]{String[].class.getName()});
             }
             catch (InstanceNotFoundException | ReflectionException | MBeanException | MalformedObjectNameException e) {
