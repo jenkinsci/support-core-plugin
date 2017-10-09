@@ -34,11 +34,11 @@ import java.util.logging.Logger;
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class HeapHisto extends Component {
+public class HeapUsageHistogram extends Component {
     private static final int OFFSET = 3;
     private static final int MAX = 200 + OFFSET;
 
-    private static final Logger logger = Logger.getLogger(HeapHisto.class.getName());
+    private static final Logger logger = Logger.getLogger(HeapUsageHistogram.class.getName());
     private final WeakHashMap<Node, String> heapHistoCache = new WeakHashMap<Node, String>();
 
     @NonNull
