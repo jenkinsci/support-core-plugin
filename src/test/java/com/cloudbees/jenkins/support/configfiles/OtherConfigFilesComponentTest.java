@@ -10,7 +10,9 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 
+import static org.hamcrest.Matchers.equalToIgnoringWhiteSpace;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by valentina on 28/10/16.
@@ -88,7 +90,7 @@ public class OtherConfigFilesComponentTest {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml);
         String patchedXml = SecretHandler.findSecrets(file);
-        assertEquals(expectedXml, patchedXml);
+        assertThat(patchedXml, equalToIgnoringWhiteSpace(expectedXml));
     }
 }
 
