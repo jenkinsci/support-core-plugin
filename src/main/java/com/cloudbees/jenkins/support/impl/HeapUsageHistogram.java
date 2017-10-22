@@ -35,11 +35,10 @@ import java.util.logging.Logger;
 @Extension
 @Restricted(NoExternalUse.class)
 public class HeapUsageHistogram extends Component {
-    private static final int OFFSET = 3;
-    private static final int MAX = 200 + OFFSET;
+    // first 200 classes so 203 lines required because of the header
+    private static final int MAX = 203;
 
     private static final Logger logger = Logger.getLogger(HeapUsageHistogram.class.getName());
-    private final WeakHashMap<Node, String> heapHistoCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -66,50 +65,34 @@ public class HeapUsageHistogram extends Component {
     }
 
     private String getLiveHistogram(Node node) throws IOException {
-        return AsyncResultCache.get(node,
-                heapHistoCache,
-                new GetLiveHeapHistogram(),
-                "heap histogram",
-                "N/A: No connection to node, or no cache.");
+        final String raw = getRawLiveHistogram();
+        final String[] lines = raw.split("\n");
+        final int limit = MAX <= lines.length ? MAX : lines.length;
+
+        final StringBuilder bos = new StringBuilder();
+
+        bos.append("Master Heap Histogram");
+        for (int i=0; i<limit; i++) {
+            bos.append(lines[i]).append('\n');
+        }
+
+        return bos.toString();
     }
 
-    private static final class GetLiveHeapHistogram implements Callable<String, RuntimeException> {
-        public String call() {
-            final String raw = getRawLiveHistogram();
-            final String[] lines = raw.split("\n");
-            final int limit = MAX <= lines.length ? MAX : lines.length;
-
-            final StringBuilder bos = new StringBuilder();
-
-            bos.append("Master Heap Histogram");
-            for (int i=0; i<limit; i++) {
-                bos.append(lines[i]).append('\n');
+    private String getRawLiveHistogram() {
+        String result;
+        try {
+            ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
+            MBeanServer platform = ManagementFactory.getPlatformMBeanServer();
+            if (platform == null) {
+                return "N/A";
             }
-
-            return bos.toString();
+            result = (String) platform.invoke(objName, "gcClassHistogram", new Object[] {null}, new String[]{String[].class.getName()});
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
+        catch (InstanceNotFoundException | ReflectionException | MBeanException | MalformedObjectNameException e) {
+            logger.log(Level.WARNING,"Could not record heap live histogram.", e);
+            result = "N/A";
         }
-
-        private String getRawLiveHistogram() {
-            String result;
-            try {
-                ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
-                MBeanServer platform = ManagementFactory.getPlatformMBeanServer();
-                if (platform == null) {
-                    return "N/A";
-                }
-                result = (String) platform.invoke(objName, "gcClassHistogram", new Object[] {null}, new String[]{String[].class.getName()});
-            }
-            catch (InstanceNotFoundException | ReflectionException | MBeanException | MalformedObjectNameException e) {
-                logger.log(Level.WARNING,"Could not record heap live histogram.", e);
-                result = "N/A";
-            }
-            return result;
-        }
+        return result;
     }
 }
