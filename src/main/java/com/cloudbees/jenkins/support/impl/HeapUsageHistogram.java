@@ -58,21 +58,20 @@ public class HeapUsageHistogram extends Component {
             new Content("nodes/master/heap-histogram.txt") {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
-                    os.write(getLiveHistogram(Jenkins.getInstance()).getBytes("UTF-8"));
+                    os.write(getLiveHistogram().getBytes("UTF-8"));
                 }
             }
         );
     }
 
-    private String getLiveHistogram(Node node) throws IOException {
+    private String getLiveHistogram() throws IOException {
         final String raw = getRawLiveHistogram();
         final String[] lines = raw.split("\n");
         final int limit = MAX <= lines.length ? MAX : lines.length;
 
         final StringBuilder bos = new StringBuilder();
-
-        bos.append("Master Heap Histogram");
-        for (int i=0; i<limit; i++) {
+        //starting in 1 because of an empty line
+        for (int i=1; i<limit; i++) {
             bos.append(lines[i]).append('\n');
         }
 
