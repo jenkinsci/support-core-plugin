@@ -38,6 +38,7 @@ class SecretHandler {
      */
     protected static final String SECRET_MARKER = "#secret#";
     public static final String OUTPUT_ENCODING = "UTF-8";
+    public static final Pattern SECRET_PATTERN = Pattern.compile(">\\{(.*)\\}<|>(.*)\\=<");
 
     /**
      * find the secret in the xml file and replace it with the place holder
@@ -100,7 +101,7 @@ class SecretHandler {
 
 
     private static String findSecretFallback(String xml) {
-        Matcher matcher = Pattern.compile(">\\{(.*)\\}<|>(.*)\\=<").matcher(xml);
+        Matcher matcher = SECRET_PATTERN.matcher(xml);
         while(matcher.find()) {
             String secret = matcher.group();
             if(secret.length() > 1)
