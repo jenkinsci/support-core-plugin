@@ -41,6 +41,13 @@ class SecretHandler {
     public static final Pattern SECRET_PATTERN = Pattern.compile(">\\{(.*)\\}<|>(.*)\\=<");
 
     /**
+     * Enabled by default.
+     * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
+     * Otherwise will be enabled.
+     */
+    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
+
+    /**
      * find the secret in the xml file and replace it with the place holder
      * @param xmlFile we want to parse
      * @return the patched xml content with redacted secrets
@@ -95,7 +102,11 @@ class SecretHandler {
             transformer.transform(src, res);
             return result.toString("UTF-8");
         } catch (TransformerException e) {
-            return findSecretFallback(str);
+            if (ENABLE_FALLBACK) {
+                return findSecretFallback(str);
+            } else {
+                throw e;
+            }
         }
     }
 
