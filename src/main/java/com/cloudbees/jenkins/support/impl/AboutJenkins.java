@@ -62,6 +62,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -583,8 +584,7 @@ public class AboutJenkins extends Component {
             out.println("--------------");
             out.println();
             PluginManager pluginManager = jenkins.getPluginManager();
-            List<PluginWrapper> plugins = new ArrayList<PluginWrapper>(pluginManager.getPlugins());
-            Collections.sort(plugins);
+            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
@@ -705,8 +705,7 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
             PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
+            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
@@ -723,8 +722,7 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
             PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
+            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
             for (PluginWrapper w : plugins) {
                 if (!w.isActive()) {
                     out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
@@ -771,8 +769,7 @@ public class AboutJenkins extends Component {
 
             out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
 
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
+            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
 
             List<PluginWrapper> activated = new ArrayList<PluginWrapper>();
             List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
@@ -1010,4 +1007,15 @@ public class AboutJenkins extends Component {
         }
     }
 
+    /**
+     * Fixes JENKINS-47779 caused by JENKINS-47713
+     * Not using SortedSet because of PluginWrapper doesn't implements equals and hashCode.
+     * @param list original list, probably an unmodifiableList
+     * @return new copy of the list sorted
+     */
+    private static Iterable<PluginWrapper> getSorted(List<PluginWrapper> list) {
+        final List<PluginWrapper> sorted = new LinkedList<PluginWrapper>(list);
+        Collections.sort(sorted);
+        return sorted;
+    }
 }
