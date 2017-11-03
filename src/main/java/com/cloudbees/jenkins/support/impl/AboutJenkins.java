@@ -583,8 +583,7 @@ public class AboutJenkins extends Component {
             out.println("Active Plugins");
             out.println("--------------");
             out.println();
-            PluginManager pluginManager = jenkins.getPluginManager();
-            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
+            Iterable<PluginWrapper> plugins = getPluginsSorted();
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
@@ -704,8 +703,7 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
+            Iterable<PluginWrapper> plugins = getPluginsSorted();
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
@@ -721,8 +719,7 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
+            Iterable<PluginWrapper> plugins = getPluginsSorted();
             for (PluginWrapper w : plugins) {
                 if (!w.isActive()) {
                     out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
@@ -769,7 +766,7 @@ public class AboutJenkins extends Component {
 
             out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
 
-            Iterable<PluginWrapper> plugins = getSorted(pluginManager.getPlugins());
+            Iterable<PluginWrapper> plugins = getPluginsSorted(pluginManager);
 
             List<PluginWrapper> activated = new ArrayList<PluginWrapper>();
             List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
@@ -1010,11 +1007,20 @@ public class AboutJenkins extends Component {
     /**
      * Fixes JENKINS-47779 caused by JENKINS-47713
      * Not using SortedSet because of PluginWrapper doesn't implements equals and hashCode.
-     * @param list original list, probably an unmodifiableList
-     * @return new copy of the list sorted
+     * @return new copy of the PluginManager.getPlugins sorted
      */
-    private static Iterable<PluginWrapper> getSorted(List<PluginWrapper> list) {
-        final List<PluginWrapper> sorted = new LinkedList<PluginWrapper>(list);
+    private static Iterable<PluginWrapper> getPluginsSorted() {
+        PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
+        return getPluginsSorted(pluginManager);
+    }
+
+    private static Iterable<PluginWrapper> getPluginsSorted(PluginManager pluginManager) {
+        return listToSortedIterable(pluginManager.getPlugins());
+    }
+
+
+    private static <T extends Comparable<T>> Iterable<T> listToSortedIterable(List<T> list) {
+        final List<T> sorted = new LinkedList<T>(list);
         Collections.sort(sorted);
         return sorted;
     }
