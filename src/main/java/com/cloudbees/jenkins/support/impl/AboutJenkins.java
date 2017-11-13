@@ -62,6 +62,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -106,15 +107,19 @@ public class AboutJenkins extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(new AboutContent());
+        List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();
+        List<PluginWrapper> disabledPlugins = new ArrayList<PluginWrapper>();
+
+        populatePluginsLists(activePlugins, disabledPlugins);
+
+        container.add(new AboutContent(activePlugins));
         container.add(new ItemsContent());
         container.add(new NodesContent());
-        container.add(new ActivePlugins("plugins/active.txt"));
-        container.add(new DisabledPlugins());
+        container.add(new ActivePlugins(activePlugins));
+        container.add(new DisabledPlugins(disabledPlugins));
         container.add(new FailedPlugins());
 
-        // container.add(new ActivePlugins("docker/plugins.txt"));
-        container.add(new Dockerfile());
+        container.add(new Dockerfile(activePlugins, disabledPlugins));
 
         container.add(new MasterChecksumsContent());
         for (final Node node : Helper.getActiveInstance().getNodes()) {
@@ -539,8 +544,11 @@ public class AboutJenkins extends Component {
     }
 
     private static class AboutContent extends PrintedContent {
-        AboutContent() {
+        private final Iterable<PluginWrapper> plugins;
+
+        AboutContent(Iterable<PluginWrapper> plugins) {
             super("about.md");
+            this.plugins = plugins;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Helper.getActiveInstance();
@@ -582,9 +590,7 @@ public class AboutJenkins extends Component {
             out.println("Active Plugins");
             out.println("--------------");
             out.println();
-            PluginManager pluginManager = jenkins.getPluginManager();
-            List<PluginWrapper> plugins = new ArrayList<PluginWrapper>(pluginManager.getPlugins());
-            Collections.sort(plugins);
+
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
@@ -698,37 +704,33 @@ public class AboutJenkins extends Component {
     }
 
     private static class ActivePlugins extends PrintedContent {
-        public ActivePlugins(String path) {
-            super(path);
+        private final Iterable<PluginWrapper> plugins;
+
+        public ActivePlugins(Iterable<PluginWrapper> plugins) {
+            super("plugins/active.txt");
+            this.plugins = plugins;
         }
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
             for (PluginWrapper w : plugins) {
-                if (w.isActive()) {
-                    out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
-                }
+                out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
     }
 
     private static class DisabledPlugins extends PrintedContent {
-        public DisabledPlugins() {
+        private final Iterable<PluginWrapper> plugins;
+
+        public DisabledPlugins(Iterable<PluginWrapper> plugins) {
             super("plugins/disabled.txt");
+            this.plugins = plugins;
         }
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
             for (PluginWrapper w : plugins) {
-                if (!w.isActive()) {
-                    out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
-                }
+                out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
     }
@@ -750,8 +752,13 @@ public class AboutJenkins extends Component {
     }
 
     private static class Dockerfile extends PrintedContent {
-        public Dockerfile() {
+        private final List<PluginWrapper> activated;
+        private final List<PluginWrapper> disabled;
+
+        public Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled) {
             super("docker/Dockerfile");
+            this.activated = activated;
+            this.disabled = disabled;
         }
 
         @Override
@@ -770,20 +777,6 @@ public class AboutJenkins extends Component {
             }
 
             out.println("RUN mkdir -p /usr/share/jenkins/ref/plugins/");
-
-            List<PluginWrapper> plugins = pluginManager.getPlugins();
-            Collections.sort(plugins);
-
-            List<PluginWrapper> activated = new ArrayList<PluginWrapper>();
-            List<PluginWrapper> disabled = new ArrayList<PluginWrapper>();
-            for (PluginWrapper w : plugins) {
-                if (!w.isEnabled()) {
-                    disabled.add(w);
-                }
-                if (w.isActive()) {
-                    activated.add(w);
-                }
-            }
 
             out.println("RUN curl \\");
             Iterator<PluginWrapper> activatedIT = activated.iterator();
@@ -1010,4 +1003,33 @@ public class AboutJenkins extends Component {
         }
     }
 
+    /**
+     * Fixes JENKINS-47779 caused by JENKINS-47713
+     * Not using SortedSet because of PluginWrapper doesn't implements equals and hashCode.
+     * @return new copy of the PluginManager.getPlugins sorted
+     */
+    private static Iterable<PluginWrapper> getPluginsSorted() {
+        PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
+        return getPluginsSorted(pluginManager);
+    }
+
+    private static Iterable<PluginWrapper> getPluginsSorted(PluginManager pluginManager) {
+        return listToSortedIterable(pluginManager.getPlugins());
+    }
+
+    private static <T extends Comparable<T>> Iterable<T> listToSortedIterable(List<T> list) {
+        final List<T> sorted = new LinkedList<T>(list);
+        Collections.sort(sorted);
+        return sorted;
+    }
+
+    private static void populatePluginsLists(List<PluginWrapper> activePlugins, List<PluginWrapper> disabledPlugins) {
+        for(PluginWrapper plugin : getPluginsSorted()){
+            if(plugin.isActive()) {
+                activePlugins.add(plugin);
+            } else {
+                disabledPlugins.add(plugin);
+            }
+        }
+    }
 }
