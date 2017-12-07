@@ -1,5 +1,8 @@
 package com.cloudbees.jenkins.support;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import com.gargoylesoftware.htmlunit.Page;
@@ -8,15 +11,16 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.util.IOUtils;
 import hudson.util.RingBufferLogHandler;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.xml.sax.SAXException;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,7 +31,7 @@ import java.util.zip.ZipFile;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class SupportActionTest extends Assert {
+public class SupportActionTest {
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
@@ -37,6 +41,24 @@ public class SupportActionTest extends Assert {
     @Before
     public void setUp() {
         rule.jenkins.getInjector().injectMembers(this);
+    }
+
+    @Test
+    public void download() throws IOException, SAXException {
+        downloadBundle("/download?json={\"components\":1}");
+    }
+
+    @Test
+    public void generateAllBundles() throws IOException, SAXException {
+        downloadBundle("/generateAllBundles?json={\"components\":1}");
+    }
+
+    private void downloadBundle(String s) throws IOException, SAXException {
+        JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
+        File zipFile = File.createTempFile("test", "zip");
+        IOUtils.copy(jsonWebResponse.getContentAsStream(), zipFile);
+        ZipFile z = new ZipFile(zipFile);
+        // Zip file is valid
     }
 
     /**
