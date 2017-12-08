@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -87,8 +86,7 @@ public class ThreadDumps extends Component {
                         } catch (ExecutionException | InterruptedException x) {
                             logger.log(Level.WARNING, null, x);
                         } catch (TimeoutException x) {
-                            ScheduledThreadPoolExecutor timer = (ScheduledThreadPoolExecutor) Timer.get();
-                            out.println("*WARNING*: jenkins.util.Timer is unresponsive; pool size " + timer.getPoolSize() + " vs. active count " + timer.getActiveCount());
+                            out.println("*WARNING*: jenkins.util.Timer is unresponsive");
                         }
                         try {
                             threadDump(os);
