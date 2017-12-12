@@ -161,6 +161,18 @@ public class SupportAction implements RootAction {
         rsp.sendRedirect("");
     }
 
+    /**
+     * Generates a support bundle.
+     * @param req The stapler request
+     * @param rsp The stapler response
+     * @throws ServletException
+     * @throws IOException
+     */
+    @RequirePOST
+    public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        doGenerateAllBundles(req, rsp);
+    }
+
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         final Jenkins instance = Helper.getActiveInstance();
