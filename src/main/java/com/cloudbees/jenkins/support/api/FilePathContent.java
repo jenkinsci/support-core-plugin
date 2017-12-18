@@ -24,11 +24,10 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.FilePath;
-import hudson.util.IOException2;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * Content that is stored as a file on a remote disk
@@ -49,7 +48,25 @@ public class FilePathContent extends Content {
         try {
             file.copyTo(os);
         } catch (InterruptedException e) {
-            throw new IOException2(e);
+            throw new IOException(e);
+        } catch (IOException e) {
+            if (e instanceof FileNotFoundException || e.getCause() instanceof FileNotFoundException) {
+                OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8");
+                try {
+                    PrintWriter pw = new PrintWriter(osw, true);
+                    try {
+                        pw.println("--- WARNING: Could not attach " + file.getRemote() + " as it cannot currently be found ---");
+                        pw.println();
+                        SupportLogFormatter.printStackTrace(e, pw);
+                    } finally {
+                        pw.flush();
+                    }
+                } finally {
+                    osw.flush();
+                }
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -58,7 +75,7 @@ public class FilePathContent extends Content {
         try {
             return file.lastModified();
         } catch (InterruptedException e) {
-            throw new IOException2(e);
+            throw new IOException(e);
         }
     }
 }
