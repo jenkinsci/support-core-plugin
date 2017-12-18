@@ -6,7 +6,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -46,8 +45,8 @@ public class JenkinsLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(JenkinsLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(JenkinsLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
-    private final Map<String,LogRecorder> logRecorders = Helper.getActiveInstance().getLog().logRecorders;
-    private final File customLogs = new File(new File(Helper.getActiveInstance().getRootDir(), "logs"), "custom");
+    private final Map<String,LogRecorder> logRecorders = Jenkins.getInstance().getLog().logRecorders;
+    private final File customLogs = new File(new File(Jenkins.getInstance().getRootDir(), "logs"), "custom");
 
     @NonNull
     @Override
