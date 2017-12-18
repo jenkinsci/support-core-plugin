@@ -8,12 +8,10 @@ import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.RemotingDiagnostics;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,6 +27,7 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * JVM System properties from the nodes.
@@ -104,19 +103,13 @@ public class SystemProperties extends Component {
         return channel.call(new GetSystemProperties());
     }
 
-    private static final class GetSystemProperties implements Callable<Map<Object, Object>, RuntimeException> {
+    private static final class GetSystemProperties extends MasterToSlaveCallable<Map<Object, Object>, RuntimeException> {
         public Map<Object, Object> call() {
             return new TreeMap<Object, Object>(AccessController.doPrivileged(new PrivilegedAction<Properties>() {
                 public Properties run() {
                     return System.getProperties();
                 }
             }));
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;

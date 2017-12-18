@@ -2,16 +2,12 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import hudson.FilePath;
-import hudson.FilePath.FileCallable;
 import hudson.Util;
 import hudson.model.Node;
-import hudson.remoting.Callable;
-import hudson.remoting.Pipe;
 import hudson.remoting.VirtualChannel;
 import hudson.util.IOUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,8 +15,6 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,8 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import jenkins.MasterToSlaveFileCallable;
 
 /**
  * Efficient incremental retrieval of log files from {@link Node}, by taking advantages of
@@ -117,7 +110,7 @@ class SmartLogFetcher {
                         InputStream is = null;
                         try {
                             fos = new FileOutputStream(local, true);
-                            is = read(remoteDir.child(entry.getKey()), localLength);
+                            is = remoteDir.child(entry.getKey()).readFromOffset(localLength);
                             IOUtils.copy(is, fos);
                         } finally {
                             IOUtils.closeQuietly(is);
@@ -130,7 +123,7 @@ class SmartLogFetcher {
                     InputStream is = null;
                     try {
                         fos = new FileOutputStream(local, false);
-                        is = read(remoteDir.child(entry.getKey()), 0);
+                        is = remoteDir.child(entry.getKey()).read();
                         IOUtils.copy(is, fos);
                     } finally {
                         IOUtils.closeQuietly(is);
@@ -237,7 +230,7 @@ class SmartLogFetcher {
      * <p>
      * Returns the information as a tuple of (relative file name from the directory, offset that needs to be read)
      */
-    public static final class LogFileHashSlurper implements FileCallable<Map<String,Long>> {
+    public static final class LogFileHashSlurper extends MasterToSlaveFileCallable<Map<String,Long>> {
         /**
          * What we already cached on the master side.
          */
@@ -272,93 +265,6 @@ class SmartLogFetcher {
             return result;
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
-    }
-
-    /**
-     * Reads a file not from the beginning but from the given offset.
-     */
-    // TODO: switch to FilePath.readFromOffset() post 1.585
-    private static InputStream read(FilePath path, final long offset) throws IOException {
-        final VirtualChannel channel = path.getChannel();
-        final String remote = path.getRemote();
-        if(channel ==null) {
-            final RandomAccessFile raf = new RandomAccessFile(new File(remote), "r");
-            try {
-                raf.seek(offset);
-            } catch (IOException e) {
-                try {
-                    raf.close();
-                } catch (IOException e1) {
-                    // ignore
-                }
-                throw e;
-            }
-            return new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    return raf.read();
-                }
-
-                @Override
-                public void close() throws IOException {
-                    raf.close();
-                    super.close();
-                }
-
-                @Override
-                public int read(byte[] b, int off, int len) throws IOException {
-                    return raf.read(b, off, len);
-                }
-
-                @Override
-                public int read(byte[] b) throws IOException {
-                    return raf.read(b);
-                }
-            };
-        }
-
-        final Pipe p = Pipe.createRemoteToLocal();
-        channel.callAsync(new Callable<Void, IOException>() {
-            private static final long serialVersionUID = 1L;
-
-            public Void call() throws IOException {
-                final OutputStream out = new GZIPOutputStream(p.getOut(), 8192);
-                RandomAccessFile raf = null;
-                try {
-                    raf = new RandomAccessFile(new File(remote), "r");
-                    raf.seek(offset);
-                    byte[] buf = new byte[8192];
-                    int len;
-                    while ((len = raf.read(buf)) >= 0) {
-                        out.write(buf, 0, len);
-                    }
-                    return null;
-                } finally {
-                    IOUtils.closeQuietly(out);
-                    if (raf != null) {
-                        try {
-                            raf.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    }
-                }
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void checkRoles(RoleChecker checker) throws SecurityException {
-                // TODO: do we have to verify some role?
-            }
-        });
-
-        return new GZIPInputStream(p.getIn());
     }
 
     private static final Logger LOGGER = Logger.getLogger(SmartLogFetcher.class.getName());

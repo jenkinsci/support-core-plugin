@@ -8,10 +8,8 @@ import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,6 +17,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Metrics from the different nodes.
@@ -72,7 +71,7 @@ public class Metrics extends Component {
 
     }
 
-    private static class GetMetricsResult implements Callable<byte[], RuntimeException> {
+    private static class GetMetricsResult extends MasterToSlaveCallable<byte[], RuntimeException> {
         public byte[] call() throws RuntimeException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
@@ -82,12 +81,6 @@ public class Metrics extends Component {
                 throw new RuntimeException(e);
             }
             return bos.toByteArray();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 

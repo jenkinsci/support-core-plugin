@@ -32,10 +32,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,6 +44,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -97,7 +96,7 @@ public class NetworkInterfaces extends Component {
                 "N/A: No connection to node, or no cache.");
     }
 
-    private static final class GetNetworkInterfaces implements Callable<String, RuntimeException> {
+    private static final class GetNetworkInterfaces extends MasterToSlaveCallable<String, RuntimeException> {
         public String call() {
             StringBuilder bos = new StringBuilder();
 
@@ -137,12 +136,6 @@ public class NetworkInterfaces extends Component {
             }
 
             return bos.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 }

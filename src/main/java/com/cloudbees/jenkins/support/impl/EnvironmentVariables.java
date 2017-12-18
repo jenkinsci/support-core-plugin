@@ -8,11 +8,9 @@ import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,6 +23,7 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Environment variables on the nodes.
@@ -102,7 +101,7 @@ public class EnvironmentVariables extends Component {
         return channel.call(new GetEnvironmentVariables());
     }
 
-    private static final class GetEnvironmentVariables implements Callable<Map<String, String>, RuntimeException> {
+    private static final class GetEnvironmentVariables extends MasterToSlaveCallable<Map<String, String>, RuntimeException> {
         public Map<String, String> call() {
             return new TreeMap<String, String>(AccessController.doPrivileged(
                     new PrivilegedAction<Map<String, String>>() {
@@ -110,12 +109,6 @@ public class EnvironmentVariables extends Component {
                             return System.getenv();
                         }
                     }));
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;
