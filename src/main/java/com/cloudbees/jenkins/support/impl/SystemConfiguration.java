@@ -37,6 +37,7 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -47,8 +48,29 @@ import java.util.logging.Logger;
  * System configuration data (CPU information, swap configuration, mount points,
  * kernel messages and entropy)
  */
-@Extension
-public class SystemConfiguration extends ProcFilesRetriever {
+public abstract class SystemConfiguration extends ProcFilesRetriever {
+    @Extension
+    public static class Master extends SystemConfiguration {
+        @Override
+        @NonNull
+        public String getDisplayName() {
+            return "Master system configuration (Linux only)";
+        }
+    }
+
+    @Extension
+    public static class Agents extends SystemConfiguration {
+        @Override
+        @NonNull
+        public String getDisplayName() {
+            return "Agent system configuration (Linux only)";
+        }
+
+        @Override
+        public boolean isSelectedByDefault() {
+            return false;
+        }
+    }
 
     private final WeakHashMap<Node,String> sysCtlCache = new WeakHashMap<Node, String>();
 
@@ -60,24 +82,19 @@ public class SystemConfiguration extends ProcFilesRetriever {
     private static final Map<String,String>  UNIX_PROC_CONTENTS;
 
     static {
-        UNIX_PROC_CONTENTS = new HashMap<String,String>();
-        UNIX_PROC_CONTENTS.put("/proc/swaps", "swaps.txt");
-        UNIX_PROC_CONTENTS.put("/proc/cpuinfo", "cpuinfo.txt");
-        UNIX_PROC_CONTENTS.put("/proc/mounts", "mounts.txt");
-        UNIX_PROC_CONTENTS.put("/proc/uptime", "system-uptime.txt");
-        UNIX_PROC_CONTENTS.put("/proc/net/rpc/nfs", "net/rpc/nfs.txt");
-        UNIX_PROC_CONTENTS.put("/proc/net/rpc/nfsd", "net/rpc/nfsd.txt");
+        Map<String, String> contents = new HashMap<String,String>();
+        contents.put("/proc/swaps", "swaps.txt");
+        contents.put("/proc/cpuinfo", "cpuinfo.txt");
+        contents.put("/proc/mounts", "mounts.txt");
+        contents.put("/proc/uptime", "system-uptime.txt");
+        contents.put("/proc/net/rpc/nfs", "net/rpc/nfs.txt");
+        contents.put("/proc/net/rpc/nfsd", "net/rpc/nfsd.txt");
+        UNIX_PROC_CONTENTS = Collections.unmodifiableMap(contents);
     }
 
     @Override
     public Map<String, String> getFilesToRetrieve() {
         return UNIX_PROC_CONTENTS;
-    }
-
-    @Override
-    @NonNull
-    public String getDisplayName() {
-        return "System configuration (Linux only)";
     }
 
     @Override
