@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -110,6 +111,7 @@ public final class SlaveCommandStatistics extends Component {
             return IRRELEVANT.matcher(cmd.toString()).replaceFirst("");
         }
 
+        @SuppressFBWarnings(value="UC_USELESS_OBJECT_STACK", justification="Maybe FindBugs is just confused? The TreeMap _is_ being used.")
         private void print(PrintWriter out) {
             out.println("# Totals");
             out.printf("* Writes: %d%n** sent %.1fMb%n", writeInvocations.values().stream().mapToLong(LongAdder::sum).sum(), writeBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
