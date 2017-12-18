@@ -3,11 +3,9 @@ package com.cloudbees.jenkins.support.api;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,6 +14,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Content of a command output. You can only instantiate this content with
@@ -29,7 +28,7 @@ public class CommandOutputContent extends StringContent {
         super(name, value);
     }
 
-    public static class CommandLauncher implements Callable<String, RuntimeException> {
+    public static class CommandLauncher extends MasterToSlaveCallable<String, RuntimeException> {
         final String[] command;
 
         private CommandLauncher(String... command) {
@@ -47,12 +46,6 @@ public class CommandOutputContent extends StringContent {
             }
             pw.flush();
             return bos.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 

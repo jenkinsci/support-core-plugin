@@ -11,13 +11,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -40,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 import jenkins.util.Timer;
 
 /**
@@ -186,7 +185,7 @@ public class ThreadDumps extends Component {
         return channel.call(new GetThreadDump());
     }
 
-    private static final class GetThreadDump implements Callable<String, RuntimeException> {
+    private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
         @edu.umd.cs.findbugs.annotations.SuppressWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
                 justification = "Best effort"
@@ -199,12 +198,6 @@ public class ThreadDumps extends Component {
             } catch (UnsupportedEncodingException e) {
                 return bos.toString();
             }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;

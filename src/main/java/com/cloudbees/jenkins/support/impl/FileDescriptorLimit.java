@@ -13,13 +13,11 @@ import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,6 +35,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -120,7 +119,7 @@ public class FileDescriptorLimit extends Component {
     /**
      * * For agent machines.
      */
-    private static final class GetUlimit implements Callable<String, RuntimeException> {
+    private static final class GetUlimit extends MasterToSlaveCallable<String, RuntimeException> {
         public String call() {
             StringWriter bos = new StringWriter();
             PrintWriter pw = new PrintWriter(bos);
@@ -141,12 +140,6 @@ public class FileDescriptorLimit extends Component {
             }
             pw.flush();
             return bos.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 
