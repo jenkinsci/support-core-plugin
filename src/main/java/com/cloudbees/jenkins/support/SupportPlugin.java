@@ -47,7 +47,6 @@ import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.PeriodicWork;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
@@ -67,7 +66,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -102,6 +100,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Main entry point for the support plugin.
@@ -609,7 +608,7 @@ public class SupportPlugin extends Plugin {
         private static final SupportLogHandler SLAVE_LOG_HANDLER = new SupportLogHandler(256, 2048, 8);
     }
 
-    private static class LogInitializer implements Callable<Void, RuntimeException> {
+    private static class LogInitializer extends MasterToSlaveCallable<Void, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private static final Logger ROOT_LOGGER = Logger.getLogger("");
         private final FilePath rootPath;
@@ -640,30 +639,18 @@ public class SupportPlugin extends Plugin {
             return null;
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
     }
 
-    public static class LogFetcher implements Callable<List<LogRecord>, RuntimeException> {
+    public static class LogFetcher extends MasterToSlaveCallable<List<LogRecord>, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
         public List<LogRecord> call() throws RuntimeException {
             return new ArrayList<LogRecord>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
     }
 
-    public static class LogUpdater implements Callable<Void, RuntimeException> {
+    public static class LogUpdater extends MasterToSlaveCallable<Void, RuntimeException> {
 
         private static final long serialVersionUID = 1L;
 
@@ -676,12 +663,6 @@ public class SupportPlugin extends Plugin {
         public Void call() throws RuntimeException {
             LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
             return null;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
     }

@@ -1,16 +1,12 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -25,7 +21,6 @@ import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

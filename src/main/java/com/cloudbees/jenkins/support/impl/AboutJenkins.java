@@ -28,7 +28,6 @@ import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Slave;
-import hudson.remoting.Callable;
 import hudson.remoting.Launcher;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
@@ -36,7 +35,6 @@ import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.Stapler;
 
 import javax.annotation.CheckForNull;
@@ -75,6 +73,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Contributes basic information about Jenkins.
@@ -260,7 +259,7 @@ public class AboutJenkins extends Component {
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }
 
-    private static final class GetSlaveDigest implements Callable<String, RuntimeException> {
+    private static final class GetSlaveDigest extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String rootPathName;
 
@@ -284,15 +283,9 @@ public class AboutJenkins extends Component {
             }
             return result.toString();
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
     }
 
-    private static class GetSlaveVersion implements Callable<String, RuntimeException> {
+    private static class GetSlaveVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
         @edu.umd.cs.findbugs.annotations.SuppressWarnings(
@@ -317,15 +310,9 @@ public class AboutJenkins extends Component {
                 IOUtils.closeQuietly(is);
             }
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
     }
 
-    private static class GetJavaInfo implements Callable<String, RuntimeException> {
+    private static class GetJavaInfo extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String maj;
         private final String min;
@@ -455,12 +442,6 @@ public class AboutJenkins extends Component {
                         .append("`\n");
             }
             return result.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
     }

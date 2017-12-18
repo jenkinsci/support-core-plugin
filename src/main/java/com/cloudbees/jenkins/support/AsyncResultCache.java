@@ -26,14 +26,14 @@ public class AsyncResultCache<T> implements Runnable {
     private final Node node;
     private final String name;
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, Callable<V,T> operation, String name, V defaultIfNull)
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name, V defaultIfNull)
 
             throws IOException {
         V result = get(node, cache, operation, name);
         return result == null ? defaultIfNull : result;
     }
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, Callable<V,T> operation, String name)
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name)
 
             throws IOException {
         if (node == null) return null;

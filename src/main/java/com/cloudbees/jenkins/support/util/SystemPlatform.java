@@ -1,9 +1,8 @@
 package com.cloudbees.jenkins.support.util;
 
-import hudson.remoting.Callable;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.util.Locale;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * System platform
@@ -26,16 +25,10 @@ public enum SystemPlatform {
         }
     }
 
-    static public class GetCurrentPlatform implements Callable<SystemPlatform, Exception> {
+    static public class GetCurrentPlatform extends MasterToSlaveCallable<SystemPlatform, Exception> {
         private static final long serialVersionUID = 1L;
         public SystemPlatform call() {
             return current();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 }
