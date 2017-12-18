@@ -26,8 +26,11 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.PrintedContent;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.remoting.Channel;
@@ -36,14 +39,21 @@ import hudson.remoting.Request;
 import hudson.remoting.Response;
 import hudson.security.Permission;
 import hudson.slaves.ComputerListener;
-import hudson.slaves.OfflineCause;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 
 @Extension
-public class SlaveCommandStatistics extends Component {
+public final class SlaveCommandStatistics extends Component {
+
+    private final Map<String, Statistics> statistics = Collections.synchronizedSortedMap(new TreeMap<>());
 
     @Override
     public String getDisplayName() {
@@ -57,40 +67,74 @@ public class SlaveCommandStatistics extends Component {
 
     @Override
     public void addContents(Container container) {
-        // TODO record contents
+        statistics.forEach((name, stats) -> container.add(new PrintedContent("nodes/slave/" + name + "/command-stats.md") {
+            @Override
+            protected void printTo(PrintWriter out) throws IOException {
+                stats.print(out);
+            }
+        }));
     }
 
-    @Extension
-    public static class ComputerListenerImpl extends ComputerListener {
+    private static final class Statistics extends Channel.Listener {
+
+        private final Map<String, LongAdder> writeInvocations = new ConcurrentHashMap<>();
+        private final Map<String, LongAdder> writeBytes = new ConcurrentHashMap<>();
+        private final Map<String, LongAdder> readInvocations = new ConcurrentHashMap<>();
+        private final Map<String, LongAdder> readBytes = new ConcurrentHashMap<>();
+        private final Map<String, LongAdder> responseInvocations = new ConcurrentHashMap<>();
+        private final Map<String, LongAdder> responseNanoseconds = new ConcurrentHashMap<>();
 
         @Override
-        public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
-            channel.addListener(new Channel.Listener() {
-
-                @Override
-                public void onWrite(Channel channel, Command cmd, long blockSize) {
-                    // TODO
-                }
-
-                @Override
-                public void onRead(Channel channel, Command cmd, long blockSize) {
-                    // TODO
-                    if (cmd instanceof Response) {
-                        Response rsp = (Response) cmd;
-                        Request req = rsp.getRequest();
-                        long totalTime = rsp.getTotalTime();
-                        if (req != null && totalTime != 0) {
-                            // TODO
-                        }
-                    }
-                }
-
-            });
+        public void onWrite(Channel channel, Command cmd, long blockSize) {
+            String type = classify(cmd);
+            writeInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
+            writeBytes.computeIfAbsent(type, k -> new LongAdder()).add(blockSize);
         }
 
         @Override
-        public void onOffline(Computer c, OfflineCause cause) {
-            // TODO
+        public void onRead(Channel channel, Command cmd, long blockSize) {
+            String type = classify(cmd);
+            readInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
+            readBytes.computeIfAbsent(type, k -> new LongAdder()).add(blockSize);
+        }
+
+        @Override
+        public void onResponse(Channel channel, Request<?, ?> req, Response<?, ?> rsp, long totalTime) {
+            String type = classify(req);
+            responseInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
+            responseNanoseconds.computeIfAbsent(type, k -> new LongAdder()).add(totalTime);
+        }
+
+        private static final Pattern IRRELEVANT = Pattern.compile("(@[a-f0-9]+|[(][^)]+[)])+$");
+        private static String classify(Command cmd) {
+            return IRRELEVANT.matcher(cmd.toString()).replaceFirst("");
+        }
+
+        private void print(PrintWriter out) {
+            out.println("# Totals");
+            out.printf("* Writes: %d%n** sent %.1fMb%n", writeInvocations.values().stream().mapToLong(LongAdder::sum).sum(), writeBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
+            out.printf("* Reads: %d%n** received %.1fMb%n", readInvocations.values().stream().mapToLong(LongAdder::sum).sum(), readBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
+            out.printf("* Responses: %d%n** waited %s%n", responseInvocations.values().stream().mapToLong(LongAdder::sum).sum(), Util.getTimeSpanString(responseNanoseconds.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000));
+            out.println();
+            out.println("# Commands sent");
+            // TODO perhaps sort by invocations descending?
+            new TreeMap<>(writeInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** sent %.1fMb%n", type, tot.sum(), writeBytes.get(type).sum() / 1_000_000.0));
+            out.println();
+            out.println("# Commands received");
+            new TreeMap<>(readInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** received %.1fMb%n", type, tot.sum(), readBytes.get(type).sum() / 1_000_000.0));
+            out.println();
+            out.println("# Responses received");
+            new TreeMap<>(responseInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** waited %s%n", type, tot.sum(), Util.getTimeSpanString(responseNanoseconds.get(type).sum() / 1_000_000)));
+        }
+
+    }
+
+    @Extension
+    public static final class ComputerListenerImpl extends ComputerListener {
+
+        @Override
+        public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
+            channel.addListener(ExtensionList.lookupSingleton(SlaveCommandStatistics.class).statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
         }
 
     }
