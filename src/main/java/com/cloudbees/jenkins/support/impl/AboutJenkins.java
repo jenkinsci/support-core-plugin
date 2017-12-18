@@ -558,7 +558,7 @@ public class AboutJenkins extends Component {
             out.println("Version details");
             out.println("---------------");
             out.println();
-            out.println("  * Version: `" + Jenkins.getVersion().toString().replaceAll("`", "&#96;") + "`");
+            out.println("  * Version: `" + Jenkins.VERSION.replaceAll("`", "&#96;") + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -765,7 +765,7 @@ public class AboutJenkins extends Component {
         protected void printTo(PrintWriter out) throws IOException {
 
             PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            String fullVersion = Jenkins.getVersion().toString();
+            String fullVersion = Jenkins.VERSION;
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
                 out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));

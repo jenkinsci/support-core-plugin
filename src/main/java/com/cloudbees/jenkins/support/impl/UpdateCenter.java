@@ -3,13 +3,11 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.util.Helper;
 import com.ning.http.client.ProxyServer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.UpdateSite;
-import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import jenkins.plugins.asynchttpclient.AHCUtils;
@@ -50,22 +48,17 @@ public class UpdateCenter extends Component {
                     public void writeTo(OutputStream os) throws IOException {
                         PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                         try {
-                            Jenkins instance = Jenkins.getInstance();
-                            if (instance == null) {
-                                out.println("Jenkins has not started yet. No update center information is available.");
-                            } else {
-                                hudson.model.UpdateCenter updateCenter = instance.getUpdateCenter();
-                                out.println("=== Sites ===");
-                                for (UpdateSite c : updateCenter.getSiteList()) {
-                                    out.println(" - Url: " + c.getUrl());
-                                    out.println(" - Connection Url: " + c.getConnectionCheckUrl());
-                                    out.println(" - Implementation Type: " + c.getClass().getName());
-                                }
-
-                                out.println("======");
-
-                                out.println("Last updated: " + updateCenter.getLastUpdatedString());
+                            hudson.model.UpdateCenter updateCenter = Jenkins.getInstance().getUpdateCenter();
+                            out.println("=== Sites ===");
+                            for (UpdateSite c : updateCenter.getSiteList()) {
+                                out.println(" - Url: " + c.getUrl());
+                                out.println(" - Connection Url: " + c.getConnectionCheckUrl());
+                                out.println(" - Implementation Type: " + c.getClass().getName());
                             }
+
+                            out.println("======");
+
+                            out.println("Last updated: " + updateCenter.getLastUpdatedString());
 
                             // Only do this part of the async-http-client plugin is installed.
                             if (Helper.getActiveInstance().getPlugin("async-http-client") != null) {

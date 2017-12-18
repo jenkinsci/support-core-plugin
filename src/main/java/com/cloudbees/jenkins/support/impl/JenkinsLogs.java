@@ -106,11 +106,6 @@ public class JenkinsLogs extends Component {
      */
     private void addOtherMasterLogs(Container result) {
         final Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
-            return;
-        }
-
         File[] files = jenkins.getRootDir().listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
@@ -170,12 +165,6 @@ public class JenkinsLogs extends Component {
                 return SupportPlugin.getInstance().getAllLogRecords();
             }
         });
-
-        final Jenkins jenkins = Jenkins.getInstance();
-        if (jenkins == null) {
-            LOGGER.log(Level.WARNING, "Cannot add master logs to the bundle. Jenkins instance is not ready");
-            return;
-        }
 
         final File[] julLogFiles = SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter());
         if (julLogFiles == null) {
