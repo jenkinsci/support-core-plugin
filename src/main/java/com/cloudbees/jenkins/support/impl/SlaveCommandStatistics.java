@@ -114,19 +114,19 @@ public final class SlaveCommandStatistics extends Component {
         @SuppressFBWarnings(value="UC_USELESS_OBJECT_STACK", justification="Maybe FindBugs is just confused? The TreeMap _is_ being used.")
         private void print(PrintWriter out) {
             out.println("# Totals");
-            out.printf("* Writes: %d%n** sent %.1fMb%n", writeInvocations.values().stream().mapToLong(LongAdder::sum).sum(), writeBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
-            out.printf("* Reads: %d%n** received %.1fMb%n", readInvocations.values().stream().mapToLong(LongAdder::sum).sum(), readBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
-            out.printf("* Responses: %d%n** waited %s%n", responseInvocations.values().stream().mapToLong(LongAdder::sum).sum(), Util.getTimeSpanString(responseNanoseconds.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000));
+            out.printf("* Writes: %d%n  * sent %.1fMb%n", writeInvocations.values().stream().mapToLong(LongAdder::sum).sum(), writeBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
+            out.printf("* Reads: %d%n  * received %.1fMb%n", readInvocations.values().stream().mapToLong(LongAdder::sum).sum(), readBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
+            out.printf("* Responses: %d%n  * waited %s%n", responseInvocations.values().stream().mapToLong(LongAdder::sum).sum(), Util.getTimeSpanString(responseNanoseconds.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000));
             out.println();
             out.println("# Commands sent");
             // TODO perhaps sort by invocations descending?
-            new TreeMap<>(writeInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** sent %.1fMb%n", type, tot.sum(), writeBytes.get(type).sum() / 1_000_000.0));
+            new TreeMap<>(writeInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * sent %.1fMb%n", type, tot.sum(), writeBytes.get(type).sum() / 1_000_000.0));
             out.println();
             out.println("# Commands received");
-            new TreeMap<>(readInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** received %.1fMb%n", type, tot.sum(), readBytes.get(type).sum() / 1_000_000.0));
+            new TreeMap<>(readInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * received %.1fMb%n", type, tot.sum(), readBytes.get(type).sum() / 1_000_000.0));
             out.println();
             out.println("# Responses received");
-            new TreeMap<>(responseInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n** waited %s%n", type, tot.sum(), Util.getTimeSpanString(responseNanoseconds.get(type).sum() / 1_000_000)));
+            new TreeMap<>(responseInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * waited %s%n", type, tot.sum(), Util.getTimeSpanString(responseNanoseconds.get(type).sum() / 1_000_000)));
         }
 
     }
