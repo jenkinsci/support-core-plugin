@@ -40,7 +40,7 @@ public class Metrics extends Component {
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
         /* TODO pick up a per-agent metrics registry
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,
                     metricsCache));
         }

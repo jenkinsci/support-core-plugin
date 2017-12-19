@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -52,13 +51,11 @@ public class EnvironmentVariables extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new PrintedContent("nodes/master/environment.txt") {
+        result.add(new PrintedContent("nodes/master/environment.txt") {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
-                            for (Map.Entry<String, String> entry : getEnvironmentVariables(
-                                    Helper.getActiveInstance()).entrySet()) {
+                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance()).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -67,7 +64,7 @@ public class EnvironmentVariables extends Component {
                     }
                 }
         );
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
                     new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
                         @Override

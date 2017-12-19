@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -64,7 +63,7 @@ public class AgentsConfigFile extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        File[] agentDirs = new File(Helper.getActiveInstance().getRootDir(), "nodes").listFiles();
+        File[] agentDirs = new File(Jenkins.getInstance().getRootDir(), "nodes").listFiles();
         if (agentDirs == null) {
             return;
         }

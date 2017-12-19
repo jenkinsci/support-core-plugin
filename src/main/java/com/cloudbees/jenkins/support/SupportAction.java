@@ -27,7 +27,6 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 
-import com.cloudbees.jenkins.support.util.Helper;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
@@ -175,7 +174,7 @@ public class SupportAction implements RootAction {
 
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        final Jenkins instance = Helper.getActiveInstance();
+        final Jenkins instance = Jenkins.getInstance();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
         JSONObject json = req.getSubmittedForm();
