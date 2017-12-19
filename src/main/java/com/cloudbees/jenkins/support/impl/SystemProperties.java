@@ -4,16 +4,13 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.RemotingDiagnostics;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,6 +26,7 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * JVM System properties from the nodes.
@@ -56,14 +54,13 @@ public class SystemProperties extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new Content("nodes/master/system.properties") {
+        result.add(new Content("nodes/master/system.properties") {
                     @Override
                     public void writeTo(OutputStream os) {
                         try {
                             Properties properties = new SortedProperties();
                             properties.putAll(RemotingDiagnostics
-                                    .getSystemProperties(Helper.getActiveInstance().getChannel()));
+                                    .getSystemProperties(Jenkins.getInstance().getChannel()));
                             properties.store(os, null);
                         } catch (IOException e) {
                             logger.log(Level.WARNING, "Could not record system properties for master", e);
@@ -73,7 +70,7 @@ public class SystemProperties extends Component {
                     }
                 }
         );
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
                     new Content("nodes/slave/" + node.getNodeName() + "/system.properties") {
                         @Override
@@ -104,19 +101,13 @@ public class SystemProperties extends Component {
         return channel.call(new GetSystemProperties());
     }
 
-    private static final class GetSystemProperties implements Callable<Map<Object, Object>, RuntimeException> {
+    private static final class GetSystemProperties extends MasterToSlaveCallable<Map<Object, Object>, RuntimeException> {
         public Map<Object, Object> call() {
             return new TreeMap<Object, Object>(AccessController.doPrivileged(new PrivilegedAction<Properties>() {
                 public Properties run() {
                     return System.getProperties();
                 }
             }));
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;

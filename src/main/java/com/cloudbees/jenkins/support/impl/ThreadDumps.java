@@ -6,18 +6,15 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -40,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 import jenkins.util.Timer;
 
 /**
@@ -96,7 +94,7 @@ public class ThreadDumps extends Component {
                     }
                 }
         );
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
             final Future<String> threadDump;
             try {
@@ -186,7 +184,7 @@ public class ThreadDumps extends Component {
         return channel.call(new GetThreadDump());
     }
 
-    private static final class GetThreadDump implements Callable<String, RuntimeException> {
+    private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
         @edu.umd.cs.findbugs.annotations.SuppressWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
                 justification = "Best effort"
@@ -199,12 +197,6 @@ public class ThreadDumps extends Component {
             } catch (UnsupportedEncodingException e) {
                 return bos.toString();
             }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;

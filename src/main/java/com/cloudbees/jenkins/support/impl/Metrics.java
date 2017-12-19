@@ -1,24 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 /**
  * Metrics from the different nodes.
@@ -28,9 +18,11 @@ import java.util.WeakHashMap;
 @Extension
 public class Metrics extends Component {
 
+    /*
     private static final String UNAVAILABLE = "\"N/A\"";
 
     private final WeakHashMap<Node, byte[]> metricsCache = new WeakHashMap<Node, byte[]>();
+    */
 
     @Override
     @NonNull
@@ -47,12 +39,15 @@ public class Metrics extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        /* TODO pick up a per-agent metrics registry
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,
                     metricsCache));
         }
+        */
     }
 
+    /*
     private static class RemoteMetricsContent extends Content {
 
         private final Node node;
@@ -72,23 +67,17 @@ public class Metrics extends Component {
 
     }
 
-    private static class GetMetricsResult implements Callable<byte[], RuntimeException> {
+    private static class GetMetricsResult extends MasterToSlaveCallable<byte[], RuntimeException> {
         public byte[] call() throws RuntimeException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
-                // TODO pick up a per-agent metrics registry
-                new MetricsContent("", null).writeTo(bos);
+                new MetricsContent("", somethingHere).writeTo(bos);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             return bos.toByteArray();
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
     }
+    */
 
 }

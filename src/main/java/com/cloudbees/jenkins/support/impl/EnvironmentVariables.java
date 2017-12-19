@@ -4,15 +4,12 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,6 +22,7 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Environment variables on the nodes.
@@ -53,13 +51,11 @@ public class EnvironmentVariables extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new PrintedContent("nodes/master/environment.txt") {
+        result.add(new PrintedContent("nodes/master/environment.txt") {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
-                            for (Map.Entry<String, String> entry : getEnvironmentVariables(
-                                    Helper.getActiveInstance()).entrySet()) {
+                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance()).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -68,7 +64,7 @@ public class EnvironmentVariables extends Component {
                     }
                 }
         );
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
                     new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
                         @Override
@@ -102,7 +98,7 @@ public class EnvironmentVariables extends Component {
         return channel.call(new GetEnvironmentVariables());
     }
 
-    private static final class GetEnvironmentVariables implements Callable<Map<String, String>, RuntimeException> {
+    private static final class GetEnvironmentVariables extends MasterToSlaveCallable<Map<String, String>, RuntimeException> {
         public Map<String, String> call() {
             return new TreeMap<String, String>(AccessController.doPrivileged(
                     new PrivilegedAction<Map<String, String>>() {
@@ -110,12 +106,6 @@ public class EnvironmentVariables extends Component {
                             return System.getenv();
                         }
                     }));
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         private static final long serialVersionUID = 1L;

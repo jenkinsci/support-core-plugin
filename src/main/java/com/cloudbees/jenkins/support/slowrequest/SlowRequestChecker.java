@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -56,7 +55,7 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     Jenkins jenkins;
 
-    final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"slow-requests"), 50);
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {

@@ -11,7 +11,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -28,7 +27,6 @@ import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Slave;
-import hudson.remoting.Callable;
 import hudson.remoting.Launcher;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
@@ -36,7 +34,6 @@ import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.apache.commons.io.FileUtils;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.Stapler;
 
 import javax.annotation.CheckForNull;
@@ -75,6 +72,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Contributes basic information about Jenkins.
@@ -122,7 +120,7 @@ public class AboutJenkins extends Component {
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
         container.add(new MasterChecksumsContent());
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             container.add(new NodeChecksumsContent(node));
         }
     }
@@ -260,7 +258,7 @@ public class AboutJenkins extends Component {
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }
 
-    private static final class GetSlaveDigest implements Callable<String, RuntimeException> {
+    private static final class GetSlaveDigest extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String rootPathName;
 
@@ -284,15 +282,9 @@ public class AboutJenkins extends Component {
             }
             return result.toString();
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
     }
 
-    private static class GetSlaveVersion implements Callable<String, RuntimeException> {
+    private static class GetSlaveVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
         @edu.umd.cs.findbugs.annotations.SuppressWarnings(
@@ -317,15 +309,9 @@ public class AboutJenkins extends Component {
                 IOUtils.closeQuietly(is);
             }
         }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
     }
 
-    private static class GetJavaInfo implements Callable<String, RuntimeException> {
+    private static class GetJavaInfo extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String maj;
         private final String min;
@@ -457,12 +443,6 @@ public class AboutJenkins extends Component {
             return result.toString();
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
     }
 
     private static String humanReadableSize(long size) {
@@ -551,14 +531,14 @@ public class AboutJenkins extends Component {
             this.plugins = plugins;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Helper.getActiveInstance();
+            final Jenkins jenkins = Jenkins.getInstance();
             out.println("Jenkins");
             out.println("=======");
             out.println();
             out.println("Version details");
             out.println("---------------");
             out.println();
-            out.println("  * Version: `" + Jenkins.getVersion().toString().replaceAll("`", "&#96;") + "`");
+            out.println("  * Version: `" + Jenkins.VERSION.replaceAll("`", "&#96;") + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -584,8 +564,8 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("  * Security realm: " + getDescriptorName(jenkins.getSecurityRealm()));
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
-            out.println("  * CSRF Protection: "  + Helper.getActiveInstance().isUseCrumbs());
-            out.println("  * Initialization Milestone: " + Helper.getActiveInstance().getInitLevel());
+            out.println("  * CSRF Protection: "  + Jenkins.getInstance().isUseCrumbs());
+            out.println("  * Initialization Milestone: " + Jenkins.getInstance().getInitLevel());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");
@@ -618,7 +598,7 @@ public class AboutJenkins extends Component {
             super("items.md");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Helper.getActiveInstance();
+            final Jenkins jenkins = Jenkins.getInstance();
             Map<String,Integer> containerCounts = new TreeMap<String,Integer>();
             Map<String,Stats> jobStats = new HashMap<String,Stats>();
             Stats jobTotal = new Stats();
@@ -742,7 +722,7 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
             List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
             // no need to sort
             for (PluginManager.FailedPlugin w : plugins) {
@@ -764,8 +744,8 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
 
-            PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
-            String fullVersion = Jenkins.getVersion().toString();
+            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            String fullVersion = Jenkins.VERSION;
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
                 out.println("FROM cloudbees/jenkins:" + fullVersion.substring(0, s));
@@ -822,7 +802,7 @@ public class AboutJenkins extends Component {
             return r.isEmpty() ? "(none)" : r;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Helper.getActiveInstance();
+            final Jenkins jenkins = Jenkins.getInstance();
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
             if (supportPlugin != null) {
                 out.println("Node statistics");
@@ -908,7 +888,7 @@ public class AboutJenkins extends Component {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Helper.getActiveInstance();
+            final Jenkins jenkins = Jenkins.getInstance();
             if (jenkins == null) {
                 // Lifecycle.get() depends on Jenkins instance, hence this method won't work in any case
                 throw new IOException("Jenkins has not been started, or was already shut down");
@@ -1009,7 +989,7 @@ public class AboutJenkins extends Component {
      * @return new copy of the PluginManager.getPlugins sorted
      */
     private static Iterable<PluginWrapper> getPluginsSorted() {
-        PluginManager pluginManager = Helper.getActiveInstance().getPluginManager();
+        PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
         return getPluginsSorted(pluginManager);
     }
 

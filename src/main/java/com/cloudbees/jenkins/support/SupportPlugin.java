@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -47,7 +46,6 @@ import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.PeriodicWork;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
@@ -67,7 +65,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipOutputStream;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -102,6 +99,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Main entry point for the support plugin.
@@ -160,7 +158,7 @@ public class SupportPlugin extends Plugin {
     public SupportProvider getSupportProvider() {
         if (supportProvider == null) {
             // if this is not set, pick the first one that we can get our hands on
-            for (Descriptor<SupportProvider> d : Helper.getActiveInstance().getDescriptorList(SupportProvider.class)) {
+            for (Descriptor<SupportProvider> d : Jenkins.getInstance().getDescriptorList(SupportProvider.class)) {
                 if (d instanceof SupportProviderDescriptor) {
                     try {
                         supportProvider = ((SupportProviderDescriptor) (d)).newDefaultInstance();
@@ -179,7 +177,7 @@ public class SupportPlugin extends Plugin {
      * @return the wrking directory that the support-core plugin uses to write out files.
      */
     public static File getRootDirectory() {
-        return new File(Helper.getActiveInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
+        return new File(Jenkins.getInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
     }
 
 
@@ -245,7 +243,7 @@ public class SupportPlugin extends Plugin {
     public static void setLogLevel(Level level) {
         SupportPlugin instance = getInstance();
         instance.handler.setLevel(level);
-        for (Node n : Helper.getActiveInstance().getNodes()) {
+        for (Node n : Jenkins.getInstance().getNodes()) {
             Computer c = n.toComputer();
             if (c == null) {
                 continue;
@@ -262,11 +260,11 @@ public class SupportPlugin extends Plugin {
     }
 
     public static SupportPlugin getInstance() {
-        return Helper.getActiveInstance().getPlugin(SupportPlugin.class);
+        return Jenkins.getInstance().getPlugin(SupportPlugin.class);
     }
 
     public static ExtensionList<Component> getComponents() {
-        return Helper.getActiveInstance().getExtensionList(Component.class);
+        return Jenkins.getInstance().getExtensionList(Component.class);
     }
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
@@ -609,7 +607,7 @@ public class SupportPlugin extends Plugin {
         private static final SupportLogHandler SLAVE_LOG_HANDLER = new SupportLogHandler(256, 2048, 8);
     }
 
-    private static class LogInitializer implements Callable<Void, RuntimeException> {
+    private static class LogInitializer extends MasterToSlaveCallable<Void, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private static final Logger ROOT_LOGGER = Logger.getLogger("");
         private final FilePath rootPath;
@@ -640,30 +638,18 @@ public class SupportPlugin extends Plugin {
             return null;
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
     }
 
-    public static class LogFetcher implements Callable<List<LogRecord>, RuntimeException> {
+    public static class LogFetcher extends MasterToSlaveCallable<List<LogRecord>, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
         public List<LogRecord> call() throws RuntimeException {
             return new ArrayList<LogRecord>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
-        }
-
     }
 
-    public static class LogUpdater implements Callable<Void, RuntimeException> {
+    public static class LogUpdater extends MasterToSlaveCallable<Void, RuntimeException> {
 
         private static final long serialVersionUID = 1L;
 
@@ -676,12 +662,6 @@ public class SupportPlugin extends Plugin {
         public Void call() throws RuntimeException {
             LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
             return null;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
     }
@@ -820,7 +800,7 @@ public class SupportPlugin extends Plugin {
     public static class GlobalConfigurationImpl extends GlobalConfiguration {
 
         public boolean isSelectable() {
-            return Helper.getActiveInstance().getDescriptorList(SupportProvider.class).size() > 1;
+            return Jenkins.getInstance().getDescriptorList(SupportProvider.class).size() > 1;
         }
 
         public SupportProvider getSupportProvider() {

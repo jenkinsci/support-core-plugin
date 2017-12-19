@@ -28,16 +28,13 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,6 +48,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -79,7 +77,7 @@ public class RootCAs extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    Jenkins j = Helper.getActiveInstance();
+    Jenkins j = Jenkins.getInstance();
     addContents(container, j);
     for (Node node : j.getNodes()) {
       addContents(container, node);
@@ -122,7 +120,7 @@ public class RootCAs extends Component {
   }
 
 
-  private static final class GetRootCA implements Callable<String, RuntimeException> {
+  private static final class GetRootCA extends MasterToSlaveCallable<String, RuntimeException> {
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
@@ -131,12 +129,6 @@ public class RootCAs extends Component {
       StringWriter writer = new StringWriter();
       getRootCAList(writer);
       return writer.toString();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void checkRoles(RoleChecker checker) throws SecurityException {
-      // TODO: do we have to verify some role?
     }
 
     private static final long serialVersionUID = 1L;

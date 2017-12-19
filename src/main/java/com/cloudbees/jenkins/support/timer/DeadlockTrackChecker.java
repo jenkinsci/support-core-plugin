@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
-import com.cloudbees.jenkins.support.util.Helper;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 
@@ -14,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import jenkins.model.Jenkins;
 
 /**
  * @author Steven Chrisou
@@ -25,7 +25,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
-    final FileListCap logs = new FileListCap(new File(Helper.getActiveInstance().getRootDir(),"deadlocks"), 50);
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
 
     @Override
     public long getRecurrencePeriod() {

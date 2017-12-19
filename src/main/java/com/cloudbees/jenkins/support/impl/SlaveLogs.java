@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -45,7 +44,6 @@ import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
 import hudson.util.RingBufferLogHandler;
 import jenkins.model.Jenkins;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,6 +68,7 @@ import java.util.logging.Logger;
 import static com.cloudbees.jenkins.support.SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS;
 import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.LOG_FORMATTER;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Adds the agent logs from all of the machines
@@ -105,7 +104,7 @@ public class SlaveLogs extends Component {
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
         final boolean needHack = SlaveLogFetcher.isRequired();
 
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
                         new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
@@ -251,7 +250,7 @@ public class SlaveLogs extends Component {
         }
     }
 
-    private static class SlaveLogFetcher implements hudson.remoting.Callable<List<LogRecord>, RuntimeException> {
+    private static class SlaveLogFetcher extends MasterToSlaveCallable<List<LogRecord>, RuntimeException> {
 
         public static boolean isRequired() {
             try {
@@ -290,12 +289,6 @@ public class SlaveLogs extends Component {
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
 
         public static hudson.remoting.Future<List<LogRecord>> getLogRecords(@NonNull VirtualChannel channel) throws IOException {

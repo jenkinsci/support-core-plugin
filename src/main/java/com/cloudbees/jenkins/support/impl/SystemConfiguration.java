@@ -32,8 +32,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
-import hudson.remoting.Callable;
-import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +41,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * System configuration data (CPU information, swap configuration, mount points,
@@ -116,7 +115,7 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
     }
 
     @edu.umd.cs.findbugs.annotations.SuppressWarnings({"DMI_HARDCODED_ABSOLUTE_FILENAME"})
-    static public class GetDmiInfo implements Callable<String, Exception> {
+    static public class GetDmiInfo extends MasterToSlaveCallable<String, Exception> {
         private static final long serialVersionUID = 1L;
         public String call() {
             StringBuilder sb = new StringBuilder();
@@ -137,12 +136,6 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
                 }
             }
             return sb.toString();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // TODO: do we have to verify some role?
         }
     }
 }
