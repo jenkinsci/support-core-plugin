@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Computer;
@@ -55,7 +54,7 @@ public abstract class ProcFilesRetriever extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Helper.getActiveInstance();
+        Jenkins j = Jenkins.getInstance();
         addUnixContents(container, j);
 
         for (Node node : j.getNodes()) {

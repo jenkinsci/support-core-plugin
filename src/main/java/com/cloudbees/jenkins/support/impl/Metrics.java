@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -46,7 +45,7 @@ public class Metrics extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,
                     metricsCache));
         }

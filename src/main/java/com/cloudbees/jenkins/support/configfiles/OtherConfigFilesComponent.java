@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -34,7 +33,7 @@ public class OtherConfigFilesComponent extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins jenkins = Helper.getActiveInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
             File[] files = dir.listFiles(new FilenameFilter() {

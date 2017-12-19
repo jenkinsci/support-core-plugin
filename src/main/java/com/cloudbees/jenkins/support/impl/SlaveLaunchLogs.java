@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Node;
 import hudson.security.Permission;
@@ -136,7 +135,7 @@ public class SlaveLaunchLogs extends Component{
 
         {// find all the agent launch log files and sort them newer ones first
 
-            File slaveLogsDir = new File(Helper.getActiveInstance().getRootDir(), "logs/slaves");
+            File slaveLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
             File[] logs = slaveLogsDir.listFiles();
             if (logs!=null) {
                 for (File dir : logs) {
@@ -151,9 +150,8 @@ public class SlaveLaunchLogs extends Component{
 
             Collections.sort(all);
         }
-
         {// this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Helper.getActiveInstance().getNodes().size() * 5);
+            int acceptableSize = Math.max(256, Jenkins.getInstance().getNodes().size() * 5);
 
             if (all.size() > acceptableSize)
                 all = all.subList(0, acceptableSize);

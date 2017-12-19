@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Computer;
@@ -51,7 +50,7 @@ public class NodeMonitors extends Component{
                         }
                         if (!monitor.isIgnored()) {
                             out.println(" - Computers:");
-                            for (Computer c : Helper.getActiveInstance().getComputers()) {
+                            for (Computer c : Jenkins.getInstance().getComputers()) {
                                 out.println("   * " + c.getDisplayName() + ": " + monitor.data(c));
                             }
                         }
