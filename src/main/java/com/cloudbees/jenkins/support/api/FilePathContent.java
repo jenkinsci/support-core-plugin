@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.FilePath;
 
 import java.io.*;
+import java.nio.file.NoSuchFileException;
 
 /**
  * Content that is stored as a file on a remote disk
@@ -35,6 +36,10 @@ import java.io.*;
  * @author Stephen Connolly
  */
 public class FilePathContent extends Content {
+
+    private static boolean isFileNotFound(Throwable e) {
+        return e instanceof FileNotFoundException || e instanceof NoSuchFileException;
+    }
 
     private final FilePath file;
 
@@ -50,7 +55,7 @@ public class FilePathContent extends Content {
         } catch (InterruptedException e) {
             throw new IOException(e);
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException || e.getCause() instanceof FileNotFoundException) {
+            if (isFileNotFound(e) || isFileNotFound(e.getCause())) {
                 OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8");
                 try {
                     PrintWriter pw = new PrintWriter(osw, true);
