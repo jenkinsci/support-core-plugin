@@ -31,20 +31,26 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.SlaveComputer;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
 import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
 
 public class SlaveCommandStatisticsTest {
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logging = new LoggerRule().record(SlaveComputer.class, Level.FINEST);
 
     @Test
     public void smokes() throws Exception {
