@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Label;
@@ -91,7 +90,7 @@ public class LoadStats extends Component {
      */
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins jenkins = Helper.getActiveInstance();
+        Jenkins jenkins = Jenkins.getInstance();
         add(container, "no-label", jenkins.unlabeledLoad);
         add(container, "overall", jenkins.overallLoad);
         for (Label l : jenkins.getLabels()) {

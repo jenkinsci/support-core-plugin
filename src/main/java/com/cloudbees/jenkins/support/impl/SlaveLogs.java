@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -105,7 +104,7 @@ public class SlaveLogs extends Component {
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
         final boolean needHack = SlaveLogFetcher.isRequired();
 
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
                         new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {

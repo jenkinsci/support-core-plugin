@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -55,14 +54,13 @@ public class SystemProperties extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new Content("nodes/master/system.properties") {
+        result.add(new Content("nodes/master/system.properties") {
                     @Override
                     public void writeTo(OutputStream os) {
                         try {
                             Properties properties = new SortedProperties();
                             properties.putAll(RemotingDiagnostics
-                                    .getSystemProperties(Helper.getActiveInstance().getChannel()));
+                                    .getSystemProperties(Jenkins.getInstance().getChannel()));
                             properties.store(os, null);
                         } catch (IOException e) {
                             logger.log(Level.WARNING, "Could not record system properties for master", e);
@@ -72,7 +70,7 @@ public class SystemProperties extends Component {
                     }
                 }
         );
-        for (final Node node : Helper.getActiveInstance().getNodes()) {
+        for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
                     new Content("nodes/slave/" + node.getNodeName() + "/system.properties") {
                         @Override

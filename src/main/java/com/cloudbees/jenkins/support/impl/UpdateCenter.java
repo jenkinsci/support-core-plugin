@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.ning.http.client.ProxyServer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -42,8 +41,7 @@ public class UpdateCenter extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(
-                new Content("update-center.md") {
+        container.add(new Content("update-center.md") {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
                         PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
@@ -61,7 +59,7 @@ public class UpdateCenter extends Component {
                             out.println("Last updated: " + updateCenter.getLastUpdatedString());
 
                             // Only do this part of the async-http-client plugin is installed.
-                            if (Helper.getActiveInstance().getPlugin("async-http-client") != null) {
+                            if (Jenkins.getInstance().getPlugin("async-http-client") != null) {
                                 addProxyInformation(out);
                             } else {
                                 out.println("Proxy: 'async-http-client' not installed, so no proxy info available.");

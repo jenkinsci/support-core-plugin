@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import com.cloudbees.jenkins.support.util.Helper;
 import com.google.inject.Injector;
 import hudson.Extension;
 import hudson.init.Initializer;
@@ -16,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import jenkins.model.Jenkins;
 
 /**
  * Marks the beginning and the end of the request processing so that {@link SlowRequestChecker} can find them.
@@ -50,7 +50,7 @@ public class SlowRequestFilter implements Filter {
 
     @Initializer
     public static void init() throws ServletException {
-        Injector inj = Helper.getActiveInstance().getInjector();
+        Injector inj = Jenkins.getInstance().getInjector();
         if (inj == null) {
             return;
         }

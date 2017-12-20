@@ -5,7 +5,6 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -59,7 +58,7 @@ public class FileDescriptorLimit extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Helper.getActiveInstance();
+        Jenkins j = Jenkins.getInstance();
         addContents(container, j);
         for (Node node : j.getNodes()) {
             addContents(container, node);

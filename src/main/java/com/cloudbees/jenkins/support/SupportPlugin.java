@@ -31,7 +31,6 @@ import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
-import com.cloudbees.jenkins.support.util.Helper;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -159,7 +158,7 @@ public class SupportPlugin extends Plugin {
     public SupportProvider getSupportProvider() {
         if (supportProvider == null) {
             // if this is not set, pick the first one that we can get our hands on
-            for (Descriptor<SupportProvider> d : Helper.getActiveInstance().getDescriptorList(SupportProvider.class)) {
+            for (Descriptor<SupportProvider> d : Jenkins.getInstance().getDescriptorList(SupportProvider.class)) {
                 if (d instanceof SupportProviderDescriptor) {
                     try {
                         supportProvider = ((SupportProviderDescriptor) (d)).newDefaultInstance();
@@ -178,7 +177,7 @@ public class SupportPlugin extends Plugin {
      * @return the wrking directory that the support-core plugin uses to write out files.
      */
     public static File getRootDirectory() {
-        return new File(Helper.getActiveInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
+        return new File(Jenkins.getInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
     }
 
 
@@ -244,7 +243,7 @@ public class SupportPlugin extends Plugin {
     public static void setLogLevel(Level level) {
         SupportPlugin instance = getInstance();
         instance.handler.setLevel(level);
-        for (Node n : Helper.getActiveInstance().getNodes()) {
+        for (Node n : Jenkins.getInstance().getNodes()) {
             Computer c = n.toComputer();
             if (c == null) {
                 continue;
@@ -261,11 +260,11 @@ public class SupportPlugin extends Plugin {
     }
 
     public static SupportPlugin getInstance() {
-        return Helper.getActiveInstance().getPlugin(SupportPlugin.class);
+        return Jenkins.getInstance().getPlugin(SupportPlugin.class);
     }
 
     public static ExtensionList<Component> getComponents() {
-        return Helper.getActiveInstance().getExtensionList(Component.class);
+        return Jenkins.getInstance().getExtensionList(Component.class);
     }
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
@@ -801,7 +800,7 @@ public class SupportPlugin extends Plugin {
     public static class GlobalConfigurationImpl extends GlobalConfiguration {
 
         public boolean isSelectable() {
-            return Helper.getActiveInstance().getDescriptorList(SupportProvider.class).size() > 1;
+            return Jenkins.getInstance().getDescriptorList(SupportProvider.class).size() > 1;
         }
 
         public SupportProvider getSupportProvider() {
