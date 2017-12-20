@@ -43,11 +43,10 @@ import hudson.slaves.ComputerListener;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 
@@ -78,32 +77,48 @@ public final class SlaveCommandStatistics extends Component {
 
     private static final class Statistics extends Channel.Listener {
 
-        private final Map<String, LongAdder> writeInvocations = new ConcurrentHashMap<>();
-        private final Map<String, LongAdder> writeBytes = new ConcurrentHashMap<>();
-        private final Map<String, LongAdder> readInvocations = new ConcurrentHashMap<>();
-        private final Map<String, LongAdder> readBytes = new ConcurrentHashMap<>();
-        private final Map<String, LongAdder> responseInvocations = new ConcurrentHashMap<>();
-        private final Map<String, LongAdder> responseNanoseconds = new ConcurrentHashMap<>();
+        /** Represents a tally of both the number of times some event occurred, and some integral metric associated with each event which should be summed. */
+        private static final class CountSum {
+            long count;
+            long sum;
+            void tally(long value) {
+                count++;
+                sum += value;
+            }
+            long count() {
+                return count;
+            }
+            long sum() {
+                return sum;
+            }
+        }
+        private final Map<String, CountSum> writes = new HashMap<>();
+        private final Map<String, CountSum> reads = new HashMap<>();
+        private final Map<String, CountSum> responses = new HashMap<>();
 
         @Override
         public void onWrite(Channel channel, Command cmd, long blockSize) {
             String type = classify(cmd);
-            writeInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
-            writeBytes.computeIfAbsent(type, k -> new LongAdder()).add(blockSize);
+            // Synchronization probably unnecessary for tallying (since each channel processes commands sequentially), but printing could happen at any time anyway.
+            synchronized (writes) {
+                writes.computeIfAbsent(type, k -> new CountSum()).tally(blockSize);
+            }
         }
 
         @Override
         public void onRead(Channel channel, Command cmd, long blockSize) {
             String type = classify(cmd);
-            readInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
-            readBytes.computeIfAbsent(type, k -> new LongAdder()).add(blockSize);
+            synchronized (reads) {
+                reads.computeIfAbsent(type, k -> new CountSum()).tally(blockSize);
+            }
         }
 
         @Override
         public void onResponse(Channel channel, Request<?, ?> req, Response<?, ?> rsp, long totalTime) {
             String type = classify(req);
-            responseInvocations.computeIfAbsent(type, k -> new LongAdder()).increment();
-            responseNanoseconds.computeIfAbsent(type, k -> new LongAdder()).add(totalTime);
+            synchronized (responses) {
+                responses.computeIfAbsent(type, k -> new CountSum()).tally(totalTime);
+            }
         }
 
         private static final Pattern IRRELEVANT = Pattern.compile("(@[a-f0-9]+|[(][^)]+[)])+$");
@@ -114,19 +129,19 @@ public final class SlaveCommandStatistics extends Component {
         @SuppressFBWarnings(value="UC_USELESS_OBJECT_STACK", justification="Maybe FindBugs is just confused? The TreeMap _is_ being used.")
         private void print(PrintWriter out) {
             out.println("# Totals");
-            out.printf("* Writes: %d%n  * sent %.1fMb%n", writeInvocations.values().stream().mapToLong(LongAdder::sum).sum(), writeBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
-            out.printf("* Reads: %d%n  * received %.1fMb%n", readInvocations.values().stream().mapToLong(LongAdder::sum).sum(), readBytes.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000.0);
-            out.printf("* Responses: %d%n  * waited %s%n", responseInvocations.values().stream().mapToLong(LongAdder::sum).sum(), Util.getTimeSpanString(responseNanoseconds.values().stream().mapToLong(LongAdder::sum).sum() / 1_000_000));
+            out.printf("* Writes: %d%n  * sent %.1fMb%n", writes.values().stream().mapToLong(CountSum::count).sum(), writes.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
+            out.printf("* Reads: %d%n  * received %.1fMb%n", reads.values().stream().mapToLong(CountSum::count).sum(), reads.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
+            out.printf("* Responses: %d%n  * waited %s%n", responses.values().stream().mapToLong(CountSum::count).sum(), Util.getTimeSpanString(responses.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000));
             out.println();
             out.println("# Commands sent");
-            // TODO perhaps sort by invocations descending?
-            new TreeMap<>(writeInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * sent %.1fMb%n", type, tot.sum(), writeBytes.get(type).sum() / 1_000_000.0));
+            // TODO perhaps sort by count descending?
+            new TreeMap<>(writes).forEach((type, cs) -> out.printf("* `%s`: %d%n  * sent %.1fMb%n", type, cs.count, cs.sum / 1_000_000.0));
             out.println();
             out.println("# Commands received");
-            new TreeMap<>(readInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * received %.1fMb%n", type, tot.sum(), readBytes.get(type).sum() / 1_000_000.0));
+            new TreeMap<>(reads).forEach((type, cs) -> out.printf("* `%s`: %d%n  * received %.1fMb%n", type, cs.count, cs.sum / 1_000_000.0));
             out.println();
             out.println("# Responses received");
-            new TreeMap<>(responseInvocations).forEach((type, tot) -> out.printf("* `%s`: %d%n  * waited %s%n", type, tot.sum(), Util.getTimeSpanString(responseNanoseconds.get(type).sum() / 1_000_000)));
+            new TreeMap<>(responses).forEach((type, cs) -> out.printf("* `%s`: %d%n  * waited %s%n", type, cs.count, Util.getTimeSpanString(cs.sum / 1_000_000)));
         }
 
     }
