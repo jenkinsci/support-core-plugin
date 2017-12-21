@@ -69,8 +69,8 @@
   </scm>
 
   <properties>
-    <jenkins-core.version>2.97-20171218.215530-1</jenkins-core.version> <!-- TODO https://github.com/jenkinsci/jenkins/pull/3071 -->
-    <jenkins-war.version>2.97-20171218.215604-1</jenkins-war.version>
+    <jenkins-core.version>2.98-20171221.142226-1</jenkins-core.version> <!-- TODO https://github.com/jenkinsci/jenkins/pull/3071 -->
+    <jenkins-war.version>2.98-20171221.142332-1</jenkins-war.version>
     <java.level>8</java.level>
   </properties>
 

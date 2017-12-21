@@ -40,10 +40,12 @@ import hudson.remoting.Request;
 import hudson.remoting.Response;
 import hudson.security.Permission;
 import hudson.slaves.ComputerListener;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -96,6 +98,8 @@ public final class SlaveCommandStatistics extends Component {
         private final Map<String, CountSum> reads = new HashMap<>();
         private final Map<String, CountSum> responses = new HashMap<>();
 
+        private final Set<File> jars = new LinkedHashSet<>();
+
         @Override
         public void onWrite(Channel channel, Command cmd, long blockSize) {
             String type = classify(cmd);
@@ -121,6 +125,13 @@ public final class SlaveCommandStatistics extends Component {
             }
         }
 
+        @Override
+        public void onJar(Channel channel, File jar) {
+            synchronized (jars) {
+                jars.add(jar);
+            }
+        }
+
         private static final Pattern IRRELEVANT = Pattern.compile("(@[a-f0-9]+|[(][^)]+[)])+$");
         private static String classify(Command cmd) {
             return IRRELEVANT.matcher(cmd.toString()).replaceFirst("");
@@ -142,6 +153,9 @@ public final class SlaveCommandStatistics extends Component {
             out.println();
             out.println("# Responses received");
             new TreeMap<>(responses).forEach((type, cs) -> out.printf("* `%s`: %d%n  * waited %s%n", type, cs.count, Util.getTimeSpanString(cs.sum / 1_000_000)));
+            out.println();
+            out.println("# JARs sent");
+            jars.forEach(jar -> out.printf("* `%s`: %db%n", jar.getName(), jar.length()));
         }
 
     }
