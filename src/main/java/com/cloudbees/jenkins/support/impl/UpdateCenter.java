@@ -41,10 +41,15 @@ public class UpdateCenter extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(new Content("update-center.md") {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        container.add(new Content("update-center.md", shouldAnonymize) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                        PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                         try {
                             hudson.model.UpdateCenter updateCenter = Jenkins.getInstance().getUpdateCenter();
                             out.println("=== Sites ===");

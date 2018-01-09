@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.timer;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
+import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -13,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import jenkins.model.Jenkins;
 
 /**
  * @author Steven Chrisou

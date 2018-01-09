@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support;
 
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
@@ -25,16 +26,25 @@ public class AsyncResultCache<T> implements Runnable {
     private final Future<T> future;
     private final Node node;
     private final String name;
+    private final boolean shouldAnonymize;
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name, V defaultIfNull)
-
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V, T> operation, String name, V defaultIfNull)
             throws IOException {
-        V result = get(node, cache, operation, name);
+        return get(node, cache, false, operation, name, defaultIfNull);
+    }
+
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, boolean shouldAnonymize, /*MasterToSlave*/Callable<V, T> operation, String name, V defaultIfNull)
+            throws IOException {
+        V result = get(node, cache, shouldAnonymize, operation, name);
         return result == null ? defaultIfNull : result;
     }
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name)
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V, T> operation, String name)
+            throws IOException {
+        return get(node, cache, false, operation, name);
+    }
 
+    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, boolean shouldAnonymize, /*MasterToSlave*/Callable<V, T> operation, String name)
             throws IOException {
         if (node == null) return null;
         VirtualChannel channel = node.getChannel();
@@ -52,7 +62,7 @@ public class AsyncResultCache<T> implements Runnable {
             return result;
         } catch (InterruptedException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e);
             LOGGER.log(lr);
             synchronized (cache) {
@@ -60,7 +70,7 @@ public class AsyncResultCache<T> implements Runnable {
             }
         } catch (ExecutionException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e);
             LOGGER.log(lr);
             synchronized (cache) {
@@ -68,25 +78,33 @@ public class AsyncResultCache<T> implements Runnable {
             }
         } catch (TimeoutException e) {
             final LogRecord lr = new LogRecord(Level.FINER, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e);
             LOGGER.log(lr);
-            Computer.threadPoolForRemoting.submit(new AsyncResultCache<V>(node, cache, future, name));
+            Computer.threadPoolForRemoting.submit(new AsyncResultCache<V>(node, cache, future, name, shouldAnonymize));
             synchronized (cache) {
                 return cache.get(node);
             }
         }
     }
 
-    private static String getNodeName(Node node) {
+    private static String getNodeName(Node node, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return node instanceof Jenkins ? "master" : Anonymizer.anonymize(node.getNodeName());
+        }
         return node instanceof Jenkins ? "master" : node.getNodeName();
     }
 
     public AsyncResultCache(Node node, WeakHashMap<Node, T> cache, Future<T> future, String name) {
+        this(node, cache, future, name, false);
+    }
+
+    public AsyncResultCache(Node node, WeakHashMap<Node, T> cache, Future<T> future, String name, boolean shouldAnonymize) {
         this.node = node;
         this.cache = cache;
         this.future = future;
         this.name = name;
+        this.shouldAnonymize = shouldAnonymize;
     }
 
     public void run() {
@@ -98,17 +116,17 @@ public class AsyncResultCache<T> implements Runnable {
             }
         } catch (InterruptedException e1) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e1);
             LOGGER.log(lr);
         } catch (ExecutionException e1) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e1);
             LOGGER.log(lr);
         } catch (TimeoutException e1) {
             final LogRecord lr = new LogRecord(Level.INFO, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[]{name, getNodeName(node, shouldAnonymize)});
             lr.setThrown(e1);
             LOGGER.log(lr);
             future.cancel(true);

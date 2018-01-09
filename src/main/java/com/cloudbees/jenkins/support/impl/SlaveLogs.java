@@ -44,6 +44,7 @@ import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
 import hudson.util.RingBufferLogHandler;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +69,6 @@ import java.util.logging.Logger;
 import static com.cloudbees.jenkins.support.SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS;
 import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.LOG_FORMATTER;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Adds the agent logs from all of the machines
@@ -94,10 +94,13 @@ public class SlaveLogs extends Component {
         return false;
     }
 
-
-
     @Override
     public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         // expensive remote computation are pooled together and executed later concurrently across all the agents
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
         SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
@@ -107,7 +110,7 @@ public class SlaveLogs extends Component {
         for (final Node node : Jenkins.getInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
-                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
+                        new PrintedContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/jenkins.log", shouldAnonymize) {
                             @Override
                             protected void printTo(PrintWriter out) throws IOException {
                                 Computer computer = node.toComputer();
@@ -145,8 +148,8 @@ public class SlaveLogs extends Component {
                 );
             }
 
-            addSlaveJulLogRecords(container, tasks, node, logFetcher);
-            addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
+            addSlaveJulLogRecords(container, tasks, node, logFetcher, shouldAnonymize);
+            addWinsStdoutStderrLog(tasks, node, winswLogFetcher, shouldAnonymize);
         }
 
         // execute all the expensive computations in parallel to speed up the time
@@ -188,7 +191,7 @@ public class SlaveLogs extends Component {
      *
      * @see JenkinsLogs#addMasterJulLogRecords(Container)
      */
-    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher, boolean shouldAnonymize) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
@@ -200,8 +203,8 @@ public class SlaveLogs extends Component {
                         final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
                         for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                             result.add(new FileContent(
-                                    "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
-                                    entry.getValue())
+                                    "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/" + entry.getKey(),
+                                    entry.getValue(), shouldAnonymize)
                             );
                         }
                     }
@@ -215,7 +218,7 @@ public class SlaveLogs extends Component {
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new LogRecordContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
+        result.add(new LogRecordContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/all_memory_buffer.log", shouldAnonymize) {
             @Override
             public Iterable<LogRecord> getLogRecords() throws IOException {
                 try {
@@ -230,7 +233,7 @@ public class SlaveLogs extends Component {
     /**
      * Captures stdout/stderr log files produced by winsw.
      */
-    private void addWinsStdoutStderrLog(List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+    private void addWinsStdoutStderrLog(List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher, boolean shouldAnonymize) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
@@ -240,8 +243,8 @@ public class SlaveLogs extends Component {
                     final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
-                                "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
-                                entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
+                                "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/winsw/" + entry.getKey(),
+                                entry.getValue(), shouldAnonymize, FileListCapComponent.MAX_FILE_SIZE)
                         );
                     }
                     return result;

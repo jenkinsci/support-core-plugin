@@ -58,6 +58,12 @@
             </div>
           </f:entry>
         </j:forEach>
+        <!-- TODO:  This should probably be moved, all UI parts of this need discussion -->
+        <f:entry field="anonymized">
+          <div name="anonymizeOption">
+            <f:checkbox name="selected" checked="false" title="Anonymize bundle"/>
+          </div>
+        </f:entry>
         <f:entry>
           <f:submit value="${%Generate Bundle}"/>
         </f:entry>

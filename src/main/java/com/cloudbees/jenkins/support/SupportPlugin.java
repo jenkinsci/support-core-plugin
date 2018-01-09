@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
+import com.cloudbees.jenkins.support.util.AnonymizedPrintWriter;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -58,6 +59,7 @@ import hudson.util.TimeUnit2;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
@@ -99,7 +101,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Main entry point for the support plugin.
@@ -272,6 +273,10 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
+        writeBundle(outputStream, components, false);
+    }
+
+    public static void writeBundle(OutputStream outputStream, final List<Component> components, boolean shouldAnonymize) throws IOException {
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
         final Set<String> names = new TreeSet<String>();
@@ -302,12 +307,17 @@ public class SupportPlugin extends Plugin {
         manifest.append("Requested components:\n\n");
 
         StringWriter errors = new StringWriter();
-        PrintWriter errorWriter = new PrintWriter(errors);
+        PrintWriter errorWriter;
+        if (shouldAnonymize) {
+            errorWriter = new AnonymizedPrintWriter(errors);
+        } else {
+            errorWriter = new PrintWriter(errors);
+        }
         for (Component c : components) {
             try {
                 manifest.append("  * ").append(c.getDisplayName()).append("\n\n");
                 names.clear();
-                c.addContents(container);
+                c.addContents(container, shouldAnonymize);
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
                 }
@@ -333,7 +343,7 @@ public class SupportPlugin extends Plugin {
 
             }
         }
-        toProcess.add(new StringContent("manifest.md", manifest.toString()));
+        toProcess.add(new StringContent("manifest.md", manifest.toString(), shouldAnonymize));
         try {
             ZipOutputStream zip = new ZipOutputStream(outputStream);
             try {

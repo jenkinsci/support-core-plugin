@@ -4,15 +4,28 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.util.Anonymizer;
+import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Stephen Connolly
  */
 public class AboutJenkinsTest {
+    @Rule public JenkinsRule jenkins = new JenkinsRule();
 
     @Test
     public void mayBeDateSmokes() throws Exception {
@@ -48,5 +61,33 @@ public class AboutJenkinsTest {
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-60"), is(false));
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-0-"), is(false));
         assertThat("valid", AboutJenkins.mayBeDate("2014-03-24_12-48-41"), is(true));
+    }
+
+    @Test
+    public void anonymized() throws Exception {
+        jenkins.createSlave("slave1", "test", null);
+        jenkins.createSlave("slave2", "test", null);
+        Anonymizer.refresh();
+
+        List<Content> contents = new ArrayList<>();
+        Component aboutJenkins = new AboutJenkins();
+        aboutJenkins.addContents(new Container() {
+            @Override
+            public void add(Content content) {
+                if (content != null) {
+                    contents.add(content);
+                }
+            }
+        }, true);
+
+        for (Content content : contents) {
+            if (content.getName().equals("nodes.md")) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                content.writeTo(baos);
+                String toString = baos.toString();
+                assertThat(toString, not(containsString("slave1")));
+                assertThat(toString, not(containsString("slave2")));
+            }
+        }
     }
 }

@@ -69,10 +69,16 @@ public class BuildQueue extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    container.add(new Content("buildqueue.md") {
+    addContents(container, false);
+  }
+
+  @Override
+  public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+    // TODO:  Should this and other similar cases be `PrintedContent` instead?  They're doing basically the same thing
+    container.add(new Content("buildqueue.md", shouldAnonymize) {
         @Override
         public void writeTo(OutputStream os) throws IOException {
-          PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+          PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
           try {
             List<Queue.Item> items = Jenkins.getInstance().getQueue().getApproximateItemsQuickly();
             out.println("Current build queue has " +  items.size() + " item(s).");

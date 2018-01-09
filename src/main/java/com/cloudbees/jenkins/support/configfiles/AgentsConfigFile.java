@@ -63,13 +63,18 @@ public class AgentsConfigFile extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         File[] agentDirs = new File(Jenkins.getInstance().getRootDir(), "nodes").listFiles();
         if (agentDirs == null) {
             return;
         }
         for(File agentDir : agentDirs) {
             File config = new File(agentDir, "config.xml");
-            container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config));
+            container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config, shouldAnonymize));
         }
     }
 

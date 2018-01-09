@@ -66,7 +66,12 @@ public class GCLogs extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         LOGGER.fine("Trying to gather GC logs for support bundle");
         String gcLogFileLocation = getGcLogFileLocation();
         if (gcLogFileLocation == null) {
@@ -75,7 +80,7 @@ public class GCLogs extends Component {
         }
 
         if (isGcLogRotationConfigured()) {
-            handleRotatedLogs(gcLogFileLocation, result);
+            handleRotatedLogs(gcLogFileLocation, result, shouldAnonymize);
         } else {
             File file = new File(gcLogFileLocation);
             if (!file.exists()) {
@@ -83,7 +88,7 @@ public class GCLogs extends Component {
                         "but file '" + gcLogFileLocation + "' not found");
                 return;
             }
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file));
+            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file, shouldAnonymize));
         }
     }
 
@@ -100,7 +105,7 @@ public class GCLogs extends Component {
      * @param result            the container where to add the found logs, if any.
      * @see https://bugs.openjdk.java.net/browse/JDK-7164841
      */
-    private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result) {
+    private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result, boolean shouldAnonymize) {
         File gcLogFile = new File(gcLogFileLocation);
 
         // always add .* in the end because this is where the numbering is going to happen
@@ -128,7 +133,7 @@ public class GCLogs extends Component {
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
             LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + gcLog.getName(), gcLog));
+            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + gcLog.getName(), gcLog, shouldAnonymize));
         }
     }
 

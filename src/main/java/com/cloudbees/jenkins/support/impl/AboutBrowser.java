@@ -39,10 +39,15 @@ public class AboutBrowser extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         if (currentRequest != null) {
-            result.add(new PrintedContent("browser.md") {
+            result.add(new PrintedContent("browser.md", shouldAnonymize) {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     out.println("Browser");

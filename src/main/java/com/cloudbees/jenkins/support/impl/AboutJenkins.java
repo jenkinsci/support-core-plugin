@@ -33,6 +33,7 @@ import hudson.security.Permission;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
 
@@ -72,7 +73,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Contributes basic information about Jenkins.
@@ -105,23 +105,28 @@ public class AboutJenkins extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();
         List<PluginWrapper> disabledPlugins = new ArrayList<PluginWrapper>();
 
         populatePluginsLists(activePlugins, disabledPlugins);
 
-        container.add(new AboutContent(activePlugins));
-        container.add(new ItemsContent());
-        container.add(new NodesContent());
-        container.add(new ActivePlugins(activePlugins));
-        container.add(new DisabledPlugins(disabledPlugins));
-        container.add(new FailedPlugins());
+        container.add(new AboutContent(activePlugins, shouldAnonymize));
+        container.add(new ItemsContent(shouldAnonymize));
+        container.add(new NodesContent(shouldAnonymize));
+        container.add(new ActivePlugins(activePlugins, shouldAnonymize));
+        container.add(new DisabledPlugins(disabledPlugins, shouldAnonymize));
+        container.add(new FailedPlugins(shouldAnonymize));
 
-        container.add(new Dockerfile(activePlugins, disabledPlugins));
+        container.add(new Dockerfile(activePlugins, disabledPlugins, shouldAnonymize));
 
-        container.add(new MasterChecksumsContent());
+        container.add(new MasterChecksumsContent(shouldAnonymize));
         for (final Node node : Jenkins.getInstance().getNodes()) {
-            container.add(new NodeChecksumsContent(node));
+            container.add(new NodeChecksumsContent(node, shouldAnonymize));
         }
     }
 
@@ -526,8 +531,8 @@ public class AboutJenkins extends Component {
     private static class AboutContent extends PrintedContent {
         private final Iterable<PluginWrapper> plugins;
 
-        AboutContent(Iterable<PluginWrapper> plugins) {
-            super("about.md");
+        AboutContent(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
+            super("about.md", shouldAnonymize);
             this.plugins = plugins;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
@@ -594,8 +599,8 @@ public class AboutJenkins extends Component {
     }
 
     private static class ItemsContent extends PrintedContent {
-        ItemsContent() {
-            super("items.md");
+        ItemsContent(boolean shouldAnonymize) {
+            super("items.md", shouldAnonymize);
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
@@ -686,8 +691,8 @@ public class AboutJenkins extends Component {
     private static class ActivePlugins extends PrintedContent {
         private final Iterable<PluginWrapper> plugins;
 
-        public ActivePlugins(Iterable<PluginWrapper> plugins) {
-            super("plugins/active.txt");
+        public ActivePlugins(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
+            super("plugins/active.txt", shouldAnonymize);
             this.plugins = plugins;
         }
 
@@ -702,8 +707,8 @@ public class AboutJenkins extends Component {
     private static class DisabledPlugins extends PrintedContent {
         private final Iterable<PluginWrapper> plugins;
 
-        public DisabledPlugins(Iterable<PluginWrapper> plugins) {
-            super("plugins/disabled.txt");
+        public DisabledPlugins(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
+            super("plugins/disabled.txt", shouldAnonymize);
             this.plugins = plugins;
         }
 
@@ -716,8 +721,8 @@ public class AboutJenkins extends Component {
     }
 
     private static class FailedPlugins extends PrintedContent {
-        public FailedPlugins() {
-            super("plugins/failed.txt");
+        public FailedPlugins(boolean shouldAnonymize) {
+            super("plugins/failed.txt", shouldAnonymize);
         }
 
         @Override
@@ -735,8 +740,8 @@ public class AboutJenkins extends Component {
         private final List<PluginWrapper> activated;
         private final List<PluginWrapper> disabled;
 
-        public Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled) {
-            super("docker/Dockerfile");
+        public Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled, boolean shouldAnonymize) {
+            super("docker/Dockerfile", shouldAnonymize);
             this.activated = activated;
             this.disabled = disabled;
         }
@@ -794,8 +799,8 @@ public class AboutJenkins extends Component {
     }
 
     private class NodesContent extends PrintedContent {
-        NodesContent() {
-            super("nodes.md");
+        NodesContent(boolean shouldAnonymize) {
+            super("nodes.md", shouldAnonymize);
         }
         private String getLabelString(Node n) {
             String r = n.getLabelString();
@@ -833,7 +838,7 @@ public class AboutJenkins extends Component {
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
+                out.println("  * " + getNodeName(node, shouldAnonymize) + " (" + getDescriptorName(node) + ")");
                 out.println("      - Description:    _" + Util.fixNull(node.getNodeDescription()).replaceAll("_", "&#95;") + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
@@ -858,24 +863,24 @@ public class AboutJenkins extends Component {
                     out.println("      - Status:         on-line");
                     try {
                         out.println("      - Version:        " +
-                                AsyncResultCache.get(node, slaveVersionCache, new GetSlaveVersion(),
+                                AsyncResultCache.get(node, slaveVersionCache, shouldAnonymize, new GetSlaveVersion(),
                                         "slave.jar version", "(timeout with no cache available)"));
                     } catch (IOException e) {
                         logger.log(Level.WARNING,
-                                "Could not get slave.jar version for " + node.getNodeName(), e);
+                                "Could not get slave.jar version for " + getNodeName(node, shouldAnonymize), e);
                     }
                     try {
-                        final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
+                        final String javaInfo = AsyncResultCache.get(node, javaInfoCache, shouldAnonymize,
                                 new GetJavaInfo("      -", "          +"), "Java info");
                         if (javaInfo == null) {
                             logger.log(Level.FINE,
                                     "Could not get Java info for {0} and no cached value available",
-                                    node.getNodeName());
+                                    getNodeName(node, shouldAnonymize));
                         } else {
                             out.print(javaInfo);
                         }
                     } catch (IOException e) {
-                        logger.log(Level.WARNING, "Could not get Java info for " + node.getNodeName(), e);
+                        logger.log(Level.WARNING, "Could not get Java info for " + getNodeName(node, shouldAnonymize), e);
                     }
                 }
                 out.println();
@@ -884,8 +889,8 @@ public class AboutJenkins extends Component {
     }
 
     private static class MasterChecksumsContent extends PrintedContent {
-        MasterChecksumsContent() {
-            super("nodes/master/checksums.md5");
+        MasterChecksumsContent(boolean shouldAnonymize) {
+            super("nodes/master/checksums.md5", shouldAnonymize);
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
@@ -965,20 +970,20 @@ public class AboutJenkins extends Component {
 
     private class NodeChecksumsContent extends PrintedContent {
         private final Node node;
-        NodeChecksumsContent(Node node) {
-            super("nodes/slave/" + node.getNodeName() + "/checksums.md5");
+        NodeChecksumsContent(Node node, boolean shouldAnonymize) {
+            super("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/checksums.md5", shouldAnonymize);
             this.node = node;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             try {
                 final FilePath rootPath = node.getRootPath();
                 String slaveDigest = rootPath == null ? "N/A" :
-                        AsyncResultCache.get(node, slaveDigestCache, new GetSlaveDigest(rootPath),
+                        AsyncResultCache.get(node, slaveDigestCache, shouldAnonymize, new GetSlaveDigest(rootPath),
                                 "checksums", "N/A");
                 out.println(slaveDigest);
             } catch (IOException e) {
                 logger.log(Level.WARNING,
-                        "Could not compute checksums on slave " + node.getNodeName(), e);
+                        "Could not compute checksums on slave " + getNodeName(node, shouldAnonymize), e);
             }
         }
     }

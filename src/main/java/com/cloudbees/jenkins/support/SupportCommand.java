@@ -88,7 +88,7 @@ public class SupportCommand extends CLICommand {
                 } else { // redirect output to a ZIP file yourself
                     os = new CloseProofOutputStream(stdout);
                 }
-                SupportPlugin.writeBundle(os, selected);
+                SupportPlugin.writeBundle(os, selected, false);
             } finally {
                 SecurityContextHolder.setContext(old);
             }

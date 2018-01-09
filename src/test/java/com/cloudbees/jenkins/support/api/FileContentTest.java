@@ -24,10 +24,12 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,19 +39,61 @@ import static org.junit.Assert.assertEquals;
 public class FileContentTest {
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    @Rule public JenkinsRule jenkins = new JenkinsRule();
 
     @Test public void truncation() throws Exception {
         File f = tmp.newFile();
         FileUtils.writeStringToFile(f, "hello world\n");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new FileContent("-", f).writeTo(baos);
+        new FileContent("-", f, false).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
         baos.reset();
-        new FileContent("-", f, 10).writeTo(baos);
+        new FileContent("-", f, false, 10).writeTo(baos);
         assertEquals("hello worl", baos.toString());
         baos.reset();
-        new FileContent("-", f, 20).writeTo(baos);
+        new FileContent("-", f, false, 20).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
     }
 
+    @Test
+    public void anonymization() throws Exception {
+        jenkins.createFreeStyleProject("foo");
+        jenkins.createFreeStyleProject("foo/bar");
+        jenkins.createFreeStyleProject("foo/bar/baz");
+        jenkins.createFreeStyleProject("foo bar");
+        Anonymizer.refresh();
+        String foo = Anonymizer.anonymize("foo");
+        String foobar = Anonymizer.anonymize("foo/bar");
+        String foobarbaz = Anonymizer.anonymize("foo/bar/baz");
+        String foobarSpace = Anonymizer.anonymize("foo bar");
+
+        File file = tmp.newFile();
+        FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new FileContent("-", file, true).writeTo(out);
+        assertEquals(foo + "\n" + foobar + "\n" + foobarbaz + "\n" + foobarSpace + "\nfoobar\n",
+                out.toString());
+
+        File file2 = tmp.newFile();
+        FileUtils.writeStringToFile(file2, "foo foo/bar foo/bar/baz foo bar foobar\n");
+        out.reset();
+        new FileContent("-", file2, true).writeTo(out);
+        assertEquals(foo + " " + foobar + " " + foobarbaz + " " + foobarSpace + " foobar\n", out.toString());
+    }
+
+    @Test
+    public void unanonymized() throws Exception {
+        jenkins.createFreeStyleProject("foo");
+        jenkins.createFreeStyleProject("foo/bar");
+        jenkins.createFreeStyleProject("foo/bar/baz");
+        jenkins.createFreeStyleProject("foo bar");
+
+        File file = tmp.newFile();
+        FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new FileContent("-", file, false).writeTo(out);
+        assertEquals("foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n", out.toString());
+    }
 }

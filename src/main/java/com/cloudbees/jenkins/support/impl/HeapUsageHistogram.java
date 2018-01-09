@@ -59,8 +59,13 @@ public class HeapUsageHistogram extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
+        addContents(result, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-            new Content("nodes/master/heap-histogram.txt") {
+            new Content("nodes/master/heap-histogram.txt", shouldAnonymize) {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
                     os.write(getLiveHistogram().getBytes("UTF-8"));

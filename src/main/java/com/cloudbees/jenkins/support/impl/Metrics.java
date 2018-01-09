@@ -37,8 +37,13 @@ public class Metrics extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
-        result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry()));
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
+        result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry(), shouldAnonymize));
         /* TODO pick up a per-agent metrics registry
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,

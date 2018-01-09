@@ -39,7 +39,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -90,19 +90,27 @@ public class LoadStats extends Component {
      */
     @Override
     public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         Jenkins jenkins = Jenkins.getInstance();
-        add(container, "no-label", jenkins.unlabeledLoad);
-        add(container, "overall", jenkins.overallLoad);
+        add(container, "no-label", jenkins.unlabeledLoad, shouldAnonymize);
+        add(container, "overall", jenkins.overallLoad, shouldAnonymize);
         for (Label l : jenkins.getLabels()) {
             try {
-                add(container, String.format("label/%s", URLEncoder.encode(l.getName(), "UTF-8")), l.loadStatistics);
+                add(container, String.format("label/%s", URLEncoder.encode(l.getName(), "UTF-8")), l.loadStatistics, shouldAnonymize);
             } catch (UnsupportedEncodingException e) {
                 // ignore UTF-8 is required by JLS specification
             }
         }
     }
 
-    private void add(@NonNull Container container, String name, LoadStatistics stats) {
+    private void add(@NonNull Container container, String name, LoadStatistics stats, boolean shouldAnonymize) {
         // A headless environment may be missing the fonts required for these graphs, so even though
         // we should be able to generate graphs from a headless environment we will skip the graphs
         // if headless
@@ -111,21 +119,21 @@ public class LoadStats extends Component {
             String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
             if (!headless) {
                 BufferedImage image = stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
-                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scaleName), image));
+                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scaleName), image, shouldAnonymize));
             }
-            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scaleName), stats, scale));
+            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scaleName), stats, scale, shouldAnonymize));
         }
         // on the other hand, if headless we should give an easy way to generate the graphs
         if (headless) {
-            container.add(new GnuPlotScript(String.format("load-stats/%s/gnuplot", name)));
+            container.add(new GnuPlotScript(String.format("load-stats/%s/gnuplot", name), shouldAnonymize));
         }
     }
 
     private static class ImageContent extends Content {
         private final BufferedImage image;
 
-        public ImageContent(String name, BufferedImage image) {
-            super(name);
+        public ImageContent(String name, BufferedImage image, boolean shouldAnonymize) {
+            super(name, shouldAnonymize);
             this.image = image;
         }
 
@@ -164,8 +172,8 @@ public class LoadStats extends Component {
         private final long clock;
 
         public CsvContent(String name, LoadStatistics stats,
-                          MultiStageTimeSeries.TimeScale scale) {
-            super(name);
+                          MultiStageTimeSeries.TimeScale scale, boolean shouldAnonymize) {
+            super(name, shouldAnonymize);
             time = System.currentTimeMillis();
             clock = scale.tick;
             data = new TreeMap<String, float[]>();
@@ -215,8 +223,8 @@ public class LoadStats extends Component {
 
     private static class GnuPlotScript extends PrintedContent {
 
-        public GnuPlotScript(String name) {
-            super(name);
+        public GnuPlotScript(String name, boolean shouldAnonymize) {
+            super(name, shouldAnonymize);
         }
 
         @Override

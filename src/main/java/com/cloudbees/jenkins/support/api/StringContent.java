@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.util.Anonymizer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -37,8 +39,16 @@ public class StringContent extends Content {
     private final String value;
 
     public StringContent(String name, String value) {
-        super(name);
-        this.value = value;
+        this(name, value, false);
+    }
+
+    public StringContent(String name, String value, boolean shouldAnonymize) {
+        super(name, shouldAnonymize);
+        if (shouldAnonymize) {
+            this.value = Anonymizer.anonymize(value);
+        } else {
+            this.value = value;
+        }
     }
 
     @Override

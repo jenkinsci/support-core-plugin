@@ -11,6 +11,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.util.RemotingDiagnostics;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,7 +27,6 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * JVM System properties from the nodes.
@@ -53,8 +53,13 @@ public class SystemProperties extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
-        result.add(new Content("nodes/master/system.properties") {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
+        result.add(new Content("nodes/master/system.properties", shouldAnonymize) {
                     @Override
                     public void writeTo(OutputStream os) {
                         try {
@@ -72,15 +77,15 @@ public class SystemProperties extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + node.getNodeName() + "/system.properties") {
+                    new Content("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/system.properties", shouldAnonymize) {
                         @Override
                         public void writeTo(OutputStream os) {
                             try {
                                 Properties properties = new SortedProperties();
-                                properties.putAll(getSystemProperties(node));
+                                properties.putAll(getSystemProperties(node, shouldAnonymize));
                                 properties.store(os, null);
                             } catch (IOException e) {
-                                logger.log(Level.WARNING, "Could not record system properties for " + node.getNodeName(), e);
+                                logger.log(Level.WARNING, "Could not record system properties for " + getNodeName(node, shouldAnonymize), e);
                             }
                         }
                     }
@@ -89,7 +94,11 @@ public class SystemProperties extends Component {
     }
 
     public Map<Object, Object> getSystemProperties(Node node) throws IOException  {
-        return AsyncResultCache.get(node, systemPropertyCache, new GetSystemProperties(), "system properties", UNAVAILABLE);
+        return getSystemProperties(node, false);
+    }
+
+    public Map<Object, Object> getSystemProperties(Node node, boolean shouldAnonymize) throws IOException  {
+        return AsyncResultCache.get(node, systemPropertyCache, shouldAnonymize, new GetSystemProperties(), "system properties", UNAVAILABLE);
     }
 
     @Deprecated

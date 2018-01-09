@@ -36,7 +36,12 @@ public class RemotingDiagnostics extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(new PrintedContent("channel-diagnostics.md") {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        container.add(new PrintedContent("channel-diagnostics.md", shouldAnonymize) {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 // this method is new in remoting. see JENKINS-39150 change in remoting

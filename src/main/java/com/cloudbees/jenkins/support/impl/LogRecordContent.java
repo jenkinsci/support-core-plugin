@@ -18,7 +18,11 @@ import java.util.logging.LogRecord;
  */
 public abstract class LogRecordContent extends PrintedContent {
     public LogRecordContent(String name) {
-        super(name);
+        this(name, false);
+    }
+
+    public LogRecordContent(String name, boolean shouldAnonymize) {
+        super(name, shouldAnonymize);
     }
 
     /**

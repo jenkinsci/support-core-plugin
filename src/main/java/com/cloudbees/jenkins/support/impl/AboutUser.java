@@ -34,10 +34,15 @@ public class AboutUser extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         final Authentication authentication = SupportPlugin.getRequesterAuthentication();
         if (authentication != null) {
-            result.add(new PrintedContent("user.md") {
+            result.add(new PrintedContent("user.md", shouldAnonymize) {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     out.println("User");

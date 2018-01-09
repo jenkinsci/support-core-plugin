@@ -62,7 +62,12 @@ public class SlaveLaunchLogs extends Component{
 
     @Override
     public void addContents(@NonNull Container container) {
-        addSlaveLaunchLog(container);
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        addSlaveLaunchLog(container, shouldAnonymize);
     }
 
     /**
@@ -77,7 +82,7 @@ public class SlaveLaunchLogs extends Component{
      * will be full of old files that are not very interesting. Use some heuristics to cut off logs
      * that are old.
      */
-    private void addSlaveLaunchLog(Container result) {
+    private void addSlaveLaunchLog(Container result, boolean shouldAnonymize) {
         class Slave implements Comparable<Slave> {
             /**
              * Launch log directory of the agent: logs/slaves/NAME
@@ -162,7 +167,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, FileListCapComponent.MAX_FILE_SIZE));
+                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, shouldAnonymize, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
     }

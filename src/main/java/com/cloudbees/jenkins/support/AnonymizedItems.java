@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2013, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,48 +21,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support;
 
-import hudson.Util;
+import com.cloudbees.jenkins.support.util.Anonymizer;
+import hudson.Extension;
+import hudson.model.ManagementLink;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import java.util.Set;
 
 /**
- * Temporary file content, auto-deleted after {@link #writeTo(OutputStream)}.
+ * Action for viewing anonymized items mapping.
  */
-public class TemporaryFileContent extends FileContent {
+@Extension
+public class AnonymizedItems extends ManagementLink {
 
-    private File f;
-
-    public TemporaryFileContent(String name, File file) {
-        this(name, file, false);
+    @CheckForNull
+    @Override
+    public String getIconFileName() {
+        // TODO:  New icon?
+        return "/plugin/support-core/images/24x24/support.png";
     }
 
-    public TemporaryFileContent(String name, File file, boolean shouldAnonymize) {
-        super(name, file, shouldAnonymize);
-        f = file;
+    @CheckForNull
+    @Override
+    public String getDisplayName() {
+        return Messages.AnonymizedItems_DisplayName();
+    }
+
+    @CheckForNull
+    @Override
+    public String getUrlName() {
+        return "anonymizedItems";
     }
 
     @Override
-    public void writeTo(OutputStream os) throws IOException {
-        try {
-            super.writeTo(os);
-        } finally {
-            delete();
-        }
+    public String getDescription() {
+        return Messages.AnonymizedItems_Description();
     }
 
-    private void delete() {
-        try {
-            Util.deleteFile(f);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to delete tmp file " + f.getAbsolutePath(), e);
-        }
+    public Set<String> getAnon() {
+        return Anonymizer.getDisplayItems();
     }
-
-    private static final Logger LOGGER = Logger.getLogger(TemporaryFileContent.class.getName());
 }

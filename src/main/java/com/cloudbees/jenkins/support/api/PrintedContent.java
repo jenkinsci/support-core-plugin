@@ -36,13 +36,18 @@ import java.io.PrintWriter;
  * @author Stephen Connolly
  */
 public abstract class PrintedContent extends GenerateOnDemandContent {
+
     public PrintedContent(String name) {
-        super(name);
+        this(name, false);
+    }
+
+    public PrintedContent(String name, boolean shouldAnonymize) {
+        super(name, shouldAnonymize);
     }
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+        PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
         try {
             printTo(out);
         } finally {

@@ -16,6 +16,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import java.io.BufferedReader;
@@ -34,7 +35,6 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -58,14 +58,19 @@ public class FileDescriptorLimit extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         Jenkins j = Jenkins.getInstance();
-        addContents(container, j);
+        addContents(container, j, shouldAnonymize);
         for (Node node : j.getNodes()) {
-            addContents(container, node);
+            addContents(container, node, shouldAnonymize);
         }
     }
 
-    private void addContents(@NonNull Container container, final @NonNull Node node) {
+    private void addContents(@NonNull Container container, final @NonNull Node node, boolean shouldAnonymize) {
         Computer c = node.toComputer();
         if (c == null) {
             return;
@@ -80,18 +85,19 @@ public class FileDescriptorLimit extends Component {
             if (node instanceof Jenkins) {
                 name = "master";
             } else {
-                name = "slave/" + node.getNodeName();
+                name = "slave/" + getNodeName(node, shouldAnonymize);
             }
+            // TODO:  Should this be PrintedContent instead?
             container.add(
-                    new Content("nodes/" + name + "/file-descriptors.txt") {
+                    new Content("nodes/" + name + "/file-descriptors.txt", shouldAnonymize) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                            PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                             out.println(node.getDisplayName());
                             out.println("======");
                             out.println();
                             try {
-                                out.println(getUlimit(node));
+                                out.println(getUlimit(node, shouldAnonymize));
                             } catch (IOException e) {
                                 SupportLogFormatter.printStackTrace(e, out);
                             } finally {
@@ -102,8 +108,8 @@ public class FileDescriptorLimit extends Component {
             );
     }
 
-    public String getUlimit(Node node) throws IOException {
-        return AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(), "file descriptor info",
+    public String getUlimit(Node node, boolean shouldAnonymize) throws IOException {
+        return AsyncResultCache.get(node, fileDescriptorCache, shouldAnonymize, new GetUlimit(), "file descriptor info",
                 "N/A: Either no connection to node or no cached result");
     }
 

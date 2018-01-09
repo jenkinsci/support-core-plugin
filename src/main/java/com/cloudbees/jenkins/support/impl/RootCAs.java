@@ -35,6 +35,7 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -48,7 +49,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -77,14 +77,19 @@ public class RootCAs extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
+    addContents(container, false);
+  }
+
+  @Override
+  public void addContents(@NonNull Container container, boolean shouldAnonymize) {
     Jenkins j = Jenkins.getInstance();
-    addContents(container, j);
+    addContents(container, j, shouldAnonymize);
     for (Node node : j.getNodes()) {
-      addContents(container, node);
+      addContents(container, node, shouldAnonymize);
     }
   }
 
-  private void addContents(@NonNull Container container, final @NonNull Node node) {
+  private void addContents(@NonNull Container container, final @NonNull Node node, boolean shouldAnonymize) {
     Computer c = node.toComputer();
     if (c == null) {
       return;
@@ -93,15 +98,15 @@ public class RootCAs extends Component {
     if (node instanceof Jenkins) {
       name = "master";
     } else {
-      name = "slave/" + node.getNodeName();
+      name = "slave/" + getNodeName(node, shouldAnonymize);
     }
     container.add(
-            new Content("nodes/" + name + "/RootCA.txt") {
+            new Content("nodes/" + name + "/RootCA.txt", shouldAnonymize) {
               @Override
               public void writeTo(OutputStream os) throws IOException {
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                 try {
-                  out.println(getRootCA(node));
+                  out.println(getRootCA(node, shouldAnonymize));
                 } catch (IOException e) {
                   SupportLogFormatter.printStackTrace(e, out);
                 } catch (InterruptedException e) {
@@ -115,7 +120,11 @@ public class RootCAs extends Component {
   }
 
   public String getRootCA(Node node) throws IOException, InterruptedException {
-    return AsyncResultCache.get(node, certCache, new GetRootCA(), "Root CA info",
+    return getRootCA(node, false);
+  }
+
+  public String getRootCA(Node node, boolean shouldAnonymize) throws IOException, InterruptedException {
+    return AsyncResultCache.get(node, certCache, shouldAnonymize, new GetRootCA(), "Root CA info",
             "N/A: Either no connection to node, or no cached result");
   }
 

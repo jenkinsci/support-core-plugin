@@ -23,7 +23,11 @@ public class MetricsContent extends Content {
     private ObjectMapper objectMapper;
 
     public MetricsContent(String name, MetricRegistry metricsRegistry) {
-        super(name);
+        this(name, metricsRegistry, false);
+    }
+
+    public MetricsContent(String name, MetricRegistry metricsRegistry, boolean shouldAnonymize) {
+        super(name, shouldAnonymize);
         this.registry = metricsRegistry;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new MetricsModule(TimeUnit.MINUTES, TimeUnit.SECONDS, true));
@@ -31,6 +35,7 @@ public class MetricsContent extends Content {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    // TODO:  Needs anonymization?
     @Override
     public void writeTo(OutputStream os) throws IOException {
         objectMapper.writer().writeValue(os, registry);

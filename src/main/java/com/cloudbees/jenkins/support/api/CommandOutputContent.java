@@ -4,7 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
-import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -14,7 +14,6 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Content of a command output. You can only instantiate this content with
@@ -24,8 +23,8 @@ public class CommandOutputContent extends StringContent {
 
     private static final Logger LOGGER = Logger.getLogger(CommandOutputContent.class.getName());
 
-    private CommandOutputContent(String name, String value) {
-        super(name, value);
+    private CommandOutputContent(String name, String value, boolean shouldAnonymize) {
+        super(name, value, shouldAnonymize);
     }
 
     public static class CommandLauncher extends MasterToSlaveCallable<String, RuntimeException> {
@@ -49,11 +48,11 @@ public class CommandOutputContent extends StringContent {
         }
     }
 
-    private static String getNodeName(Node node) {
-        return node instanceof Jenkins ? "master" : node.getNodeName();
+    public static CommandOutputContent runOnNode(Node node, String name, String... command) {
+        return runOnNode(node, false, name, command);
     }
 
-    public static CommandOutputContent runOnNode(Node node, String name, String... command) {
+    public static CommandOutputContent runOnNode(Node node, boolean shouldAnonymize, String name, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         VirtualChannel chan = node.getChannel();
@@ -64,33 +63,37 @@ public class CommandOutputContent extends StringContent {
                 content = chan.call(new CommandLauncher(command));
             } catch (IOException e) {
                 final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve command content from {0}");
-                lr.setParameters(new Object[]{getNodeName(node)});
+                lr.setParameters(new Object[]{getNodeName(node, shouldAnonymize)});
                 lr.setThrown(e);
                 LOGGER.log(lr);
             } catch (InterruptedException e) {
                 final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve command content from {0}");
-                lr.setParameters(new Object[]{getNodeName(node)});
+                lr.setParameters(new Object[]{getNodeName(node, shouldAnonymize)});
                 lr.setThrown(e);
                 LOGGER.log(lr);
             }
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, content, shouldAnonymize);
     }
 
     public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String... command) {
+        return runOnNodeAndCache(cache, node, false, name, command);
+    }
+
+    public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, boolean shouldAnonymize, String name, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         try {
-            content = AsyncResultCache.get(node, cache, new CommandLauncher(command), "sysctl info",
+            content = AsyncResultCache.get(node, cache, shouldAnonymize, new CommandLauncher(command), "sysctl info",
                     "N/A: Either no connection to node or no cached result");
         } catch (IOException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve sysctl content from {0}");
-            lr.setParameters(new Object[]{getNodeName(node)});
+            lr.setParameters(new Object[]{getNodeName(node, shouldAnonymize)});
             lr.setThrown(e);
             LOGGER.log(lr);
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, content, shouldAnonymize);
     }
 }

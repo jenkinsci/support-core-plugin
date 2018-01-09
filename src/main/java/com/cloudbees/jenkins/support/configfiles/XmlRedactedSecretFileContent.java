@@ -12,7 +12,11 @@ import java.io.InputStream;
 class XmlRedactedSecretFileContent extends FileContent {
 
     public XmlRedactedSecretFileContent(String name, File file) {
-        super(name, file);
+        this(name, file, false);
+    }
+
+    public XmlRedactedSecretFileContent(String name, File file, boolean shouldAnonymize) {
+        super(name, file, shouldAnonymize);
     }
 
     @Override

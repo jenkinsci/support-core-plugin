@@ -48,14 +48,22 @@ public class FilePathContent extends Content {
     private final FilePath file;
 
     public FilePathContent(String name, FilePath file) {
-        super(name);
+        this(name, file, false);
+    }
+
+    public FilePathContent(String name, FilePath file, boolean shouldAnonymize) {
+        super(name, shouldAnonymize);
         this.file = file;
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {
-            file.copyTo(os);
+            if (shouldAnonymize) {
+                FileContent.anonymizeOutput(os, file.read(), -1);
+            } else {
+                file.copyTo(os);
+            }
         } catch (InterruptedException e) {
             throw new IOException(e);
         } catch (IOException e) {

@@ -33,6 +33,7 @@ import hudson.Util;
 import hudson.model.Node;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -43,7 +44,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -65,22 +65,27 @@ public class NetworkInterfaces extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-                new Content("nodes/master/networkInterface.md") {
+                new Content("nodes/master/networkInterface.md", shouldAnonymize) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes("UTF-8"));
+                        os.write(getNetworkInterface(Jenkins.getInstance(), shouldAnonymize).getBytes("UTF-8"));
                     }
                 }
         );
 
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + node.getNodeName() + "/networkInterface.md") {
+                    new Content("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/networkInterface.md", shouldAnonymize) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
-                            os.write(getNetworkInterface(node).getBytes("UTF-8"));
+                            os.write(getNetworkInterface(node, shouldAnonymize).getBytes("UTF-8"));
                         }
                     }
             );
@@ -88,8 +93,13 @@ public class NetworkInterfaces extends Component {
     }
 
     public String getNetworkInterface(Node node) throws IOException {
+        return getNetworkInterface(node, false);
+    }
+
+    public String getNetworkInterface(Node node, boolean shouldAnonymize) throws IOException {
         return AsyncResultCache.get(node,
                 networkInterfaceCache,
+                shouldAnonymize,
                 new GetNetworkInterfaces(),
                 "network interfaces",
                 "N/A: No connection to node, or no cache.");
