@@ -27,7 +27,11 @@ package com.cloudbees.jenkins.support.api;
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.FilePath;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.file.NoSuchFileException;
 
 /**
