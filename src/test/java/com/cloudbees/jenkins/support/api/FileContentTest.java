@@ -96,4 +96,9 @@ public class FileContentTest {
         new FileContent("-", file, false).writeTo(out);
         assertEquals("foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n", out.toString());
     }
+
+    @Test
+    public void anonymizedTruncation() throws Exception {
+        // TODO
+    }
 }

@@ -87,6 +87,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -149,9 +150,24 @@ public class SupportPlugin extends Plugin {
     
     /** class names of {@link Component} */
     private Set<String> excludedComponents;
+    private Set<String> excludedWordsFromAnonymization = new HashSet<>();
 
     public SupportPlugin() {
         super();
+        // TODO:  Where should this actually go?  Here?  Elsewhere?  I don't think that these particular strings should
+        // be modifiable by users
+        excludedWordsFromAnonymization.add("a");
+        excludedWordsFromAnonymization.add("the");
+        excludedWordsFromAnonymization.add("all");
+        excludedWordsFromAnonymization.add("master");
+        excludedWordsFromAnonymization.add("jenkins");
+        excludedWordsFromAnonymization.add("node");
+        excludedWordsFromAnonymization.add("computer");
+        excludedWordsFromAnonymization.add("item");
+        excludedWordsFromAnonymization.add("label");
+        excludedWordsFromAnonymization.add("view");
+        excludedWordsFromAnonymization.add("user");
+        excludedWordsFromAnonymization.add("");
         handler.setLevel(getLogLevel());
         handler.setDirectory(getRootDirectory(), "all");
     }
@@ -215,6 +231,15 @@ public class SupportPlugin extends Plugin {
     public void setExcludedComponents(Set<String> excludedComponents) throws IOException {
         this.excludedComponents = excludedComponents;
         save();
+    }
+
+    public void addExcludedWordsFromAnonymization(Set<String> excludedWordsFromAnonymization) throws IOException {
+        this.excludedWordsFromAnonymization.addAll(excludedWordsFromAnonymization);
+        save();
+    }
+
+    public Set<String> getExcludedWordsFromAnonymization() {
+        return excludedWordsFromAnonymization;
     }
 
     public Histogram getJenkinsExecutorTotalCount() {

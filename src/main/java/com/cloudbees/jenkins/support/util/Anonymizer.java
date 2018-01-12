@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.util;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Item;
@@ -57,7 +58,6 @@ public class Anonymizer {
     private static final Logger LOGGER = Logger.getLogger(Anonymizer.class.getName());
     private static final RandomNameGenerator GENERATOR = new RandomNameGenerator();
     private static final Set<String> SEPARATORS = new CopyOnWriteArraySet<>();
-    private static final Set<String> EXCLUSIONS = new CopyOnWriteArraySet<>();
     private static final Map<String, String> ANON_MAP = new ConcurrentHashMap<>();
     private static final Set<String> ORDER = new ConcurrentSkipListSet<>(Comparator.comparingInt(String::length).reversed().thenComparing(s -> s));
     private static final Set<String> DISPLAY = new ConcurrentSkipListSet<>();
@@ -68,26 +68,7 @@ public class Anonymizer {
     static {
         // Full names can have this separator
         SEPARATORS.add(" » ");
-
-        addExcludedWords();
         refresh();
-    }
-
-    // TODO:  This should live in an external resources file, just here temporarily.  There should also likely be a
-    // place where the customer can modify this locally (maybe just adds?)
-    private static void addExcludedWords() {
-        EXCLUSIONS.add("a");
-        EXCLUSIONS.add("the");
-        EXCLUSIONS.add("all");
-        EXCLUSIONS.add("master");
-        EXCLUSIONS.add("jenkins");
-        EXCLUSIONS.add("node");
-        EXCLUSIONS.add("computer");
-        EXCLUSIONS.add("item");
-        EXCLUSIONS.add("label");
-        EXCLUSIONS.add("view");
-        EXCLUSIONS.add("user");
-        EXCLUSIONS.add("");
     }
 
     @SuppressWarnings("unchecked")
@@ -174,7 +155,7 @@ public class Anonymizer {
     }
 
     private static String anonymizeName(String original, String prefix, String newPath, boolean save) {
-        if (EXCLUSIONS.contains(original.toLowerCase(Locale.ENGLISH))) {
+        if (SupportPlugin.getInstance().getExcludedWordsFromAnonymization().contains(original.toLowerCase(Locale.ENGLISH))) {
             return original;
         } else if (!ANON_MAP.containsKey(original)) {
             ORDER.add(original);
