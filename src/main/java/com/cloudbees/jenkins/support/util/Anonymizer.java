@@ -88,28 +88,41 @@ public class Anonymizer {
             }
         }
 
-        for (Label label : instance.getLabels()) {
-            anonymizeName(label.getName(), "label", "", false);
+        SupportPlugin plugin = SupportPlugin.getInstance();
+        if (plugin.shouldAnonymizeLabels()) {
+            for (Label label : instance.getLabels()) {
+                anonymizeName(label.getName(), "label", "", false);
+            }
         }
 
-        for (Item item : instance.getAllItems()) {
-            anonymizePath(item.getFullName(), "item", false);
+        if (plugin.shouldAnonymizeItems()) {
+            for (Item item : instance.getAllItems()) {
+                anonymizePath(item.getFullName(), "item", false);
+            }
         }
 
-        for (View view : instance.getViews()) {
-            anonymizeName(view.getViewName(), "view", "", false);
+        if (plugin.shouldAnonymizeViews()) {
+            for (View view : instance.getViews()) {
+                anonymizeName(view.getViewName(), "view", "", false);
+            }
         }
 
-        for (Node node : instance.getNodes()) {
-            anonymizeName(node.getDisplayName(), "node", "", false);
+        if (plugin.shouldAnonymizeNodes()) {
+            for (Node node : instance.getNodes()) {
+                anonymizeName(node.getDisplayName(), "node", "", false);
+            }
         }
 
-        for (Computer computer : instance.getComputers()) {
-            anonymizeName(computer.getDisplayName(), "computer", "", false);
+        if (plugin.shouldAnonymizeComputers()) {
+            for (Computer computer : instance.getComputers()) {
+                anonymizeName(computer.getDisplayName(), "computer", "", false);
+            }
         }
 
-        for (User user : User.getAll()) {
-            anonymizeName(user.getDisplayName(), "user", "", false);
+        if (plugin.shouldAnonymizeUsers()) {
+            for (User user : User.getAll()) {
+                anonymizeName(user.getDisplayName(), "user", "", false);
+            }
         }
 
         save();

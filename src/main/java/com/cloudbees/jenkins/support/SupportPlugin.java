@@ -150,24 +150,11 @@ public class SupportPlugin extends Plugin {
     
     /** class names of {@link Component} */
     private Set<String> excludedComponents;
-    private Set<String> excludedWordsFromAnonymization = new HashSet<>();
+
+    private AnonymizationSettings anonymizationSettings = new AnonymizationSettings();
 
     public SupportPlugin() {
         super();
-        // TODO:  Where should this actually go?  Here?  Elsewhere?  I don't think that these particular strings should
-        // be modifiable by users
-        excludedWordsFromAnonymization.add("a");
-        excludedWordsFromAnonymization.add("the");
-        excludedWordsFromAnonymization.add("all");
-        excludedWordsFromAnonymization.add("master");
-        excludedWordsFromAnonymization.add("jenkins");
-        excludedWordsFromAnonymization.add("node");
-        excludedWordsFromAnonymization.add("computer");
-        excludedWordsFromAnonymization.add("item");
-        excludedWordsFromAnonymization.add("label");
-        excludedWordsFromAnonymization.add("view");
-        excludedWordsFromAnonymization.add("user");
-        excludedWordsFromAnonymization.add("");
         handler.setLevel(getLogLevel());
         handler.setDirectory(getRootDirectory(), "all");
     }
@@ -234,12 +221,36 @@ public class SupportPlugin extends Plugin {
     }
 
     public void addExcludedWordsFromAnonymization(Set<String> excludedWordsFromAnonymization) throws IOException {
-        this.excludedWordsFromAnonymization.addAll(excludedWordsFromAnonymization);
+        anonymizationSettings.excludedWords.addAll(excludedWordsFromAnonymization);
         save();
     }
 
     public Set<String> getExcludedWordsFromAnonymization() {
-        return excludedWordsFromAnonymization;
+        return anonymizationSettings.excludedWords;
+    }
+
+    public boolean shouldAnonymizeLabels() {
+        return anonymizationSettings.anonymizeLabels;
+    }
+
+    public boolean shouldAnonymizeItems() {
+        return anonymizationSettings.anonymizeItems;
+    }
+
+    public boolean shouldAnonymizeViews() {
+        return anonymizationSettings.anonymizeViews;
+    }
+
+    public boolean shouldAnonymizeNodes() {
+        return anonymizationSettings.anonymizeNodes;
+    }
+
+    public boolean shouldAnonymizeComputers() {
+        return anonymizationSettings.anonymizeComputers;
+    }
+
+    public boolean shouldAnonymizeUsers() {
+        return anonymizationSettings.anonymizeUsers;
     }
 
     public Histogram getJenkinsExecutorTotalCount() {
@@ -856,4 +867,33 @@ public class SupportPlugin extends Plugin {
         }
     }
 
+
+    public static class AnonymizationSettings {
+        private Set<String> excludedWords = new HashSet<>();
+
+        // TODO:  Provide a way to set these
+        private boolean anonymizeLabels = true;
+        private boolean anonymizeItems = true;
+        private boolean anonymizeViews = true;
+        private boolean anonymizeNodes = true;
+        private boolean anonymizeComputers = true;
+        private boolean anonymizeUsers = true;
+
+        public AnonymizationSettings() {
+            // TODO:  Where should this actually go?  Here?  Elsewhere?  I don't think that these particular strings
+            // should be modifiable by users
+            excludedWords.add("a");
+            excludedWords.add("the");
+            excludedWords.add("all");
+            excludedWords.add("master");
+            excludedWords.add("jenkins");
+            excludedWords.add("node");
+            excludedWords.add("computer");
+            excludedWords.add("item");
+            excludedWords.add("label");
+            excludedWords.add("view");
+            excludedWords.add("user");
+            excludedWords.add("");
+        }
+    }
 }
