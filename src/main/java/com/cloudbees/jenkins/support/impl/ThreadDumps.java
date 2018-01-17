@@ -8,13 +8,11 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.Functions;
 import hudson.model.Node;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +28,6 @@ import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -208,27 +205,11 @@ public class ThreadDumps extends Component {
      * @param out an output stream.
      * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
-    public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
-        try {
-            threadDumpModern(out);
-        } catch (LinkageError e) {
-            threadDumpLegacy(out);
-        }
-
-    }
-
-    /**
-     * Dumps all of the threads' current information to an output stream.
-     *
-     * @param out an output stream.
-     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
-     */
-    @IgnoreJRERequirement
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
             value = {"VA_FORMAT_STRING_USES_NEWLINE"},
             justification = "We don't want platform specific"
     )
-    public static void threadDumpModern(OutputStream out) throws UnsupportedEncodingException {
+    public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
 
         ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
@@ -350,37 +331,16 @@ public class ThreadDumps extends Component {
         }
     }
 
-    /**
-     * Dumps all of the threads' current information to an output stream.
-     *
-     * @param out an output stream.
-     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
-     */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
-            justification = "We don't want platform specific"
-    )
+    /** @deprecated use {@link #threadDump} */
+    @Deprecated
+    public static void threadDumpModern(OutputStream out) throws UnsupportedEncodingException {
+        threadDump(out);
+    }
+
+    /** @deprecated use {@link #threadDump} */
+    @Deprecated
     public static void threadDumpLegacy(OutputStream out) throws UnsupportedEncodingException {
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
-        for (Map.Entry<Thread, StackTraceElement[]> entry : Functions.dumpAllThreads().entrySet()) {
-            final Thread t = entry.getKey();
-            writer.printf("\"%s\" id=%d (0x%x) state=%s",
-                    t.getName(),
-                    t.getId(),
-                    t.getId(),
-                    t.getState());
-            writer.println();
-
-            final StackTraceElement[] elements = entry.getValue();
-
-            for (final StackTraceElement element : elements) {
-                writer.printf("    at %s\n", element);
-            }
-            writer.println();
-        }
-
-        writer.println();
-        writer.flush();
+        threadDump(out);
     }
 
 }
