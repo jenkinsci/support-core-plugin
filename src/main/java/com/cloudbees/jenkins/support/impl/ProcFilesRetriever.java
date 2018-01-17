@@ -3,16 +3,15 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.api.FilePathContent;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
-import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -64,11 +63,11 @@ public abstract class ProcFilesRetriever extends Component {
 
     protected void addUnixContents(@NonNull Container container, final @NonNull Node node) {
         Computer c = node.toComputer();
-        if (c == null) {
+        if (c == null || c.isOffline()) {
             return;
         }
         // fast path bailout for Windows
-        if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
+        if (!Boolean.TRUE.equals(c.isUnix())) {
             return;
         }
         SystemPlatform nodeSystemPlatform = getSystemPlatform(node);
@@ -83,8 +82,8 @@ public abstract class ProcFilesRetriever extends Component {
         }
 
         for (Map.Entry<String, String> procDescriptor : getFilesToRetrieve().entrySet()) {
-            container.add(new FileContent("nodes/" + name + "/proc/" + procDescriptor.getValue(),
-                                          new File(procDescriptor.getKey())));
+            container.add(new FilePathContent("nodes/" + name + "/proc/" + procDescriptor.getValue(),
+                    new FilePath(c.getChannel(), procDescriptor.getKey())));
         }
 
         afterAddUnixContents(container, node, name);

@@ -15,8 +15,8 @@ import hudson.logging.LogRecorder;
 import hudson.model.PeriodicWork;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteList;
-import hudson.util.io.ReopenableFileOutputStream;
-import hudson.util.io.ReopenableRotatingFileOutputStream;
+import hudson.util.io.RewindableFileOutputStream;
+import hudson.util.io.RewindableRotatingFileOutputStream;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -180,13 +180,13 @@ public class JenkinsLogs extends Component {
 
     @SuppressWarnings(value="SIC_INNER_SHOULD_BE_STATIC_NEEDS_THIS", justification="customLogs is not static, so this is a bug in FB")
     private final class LogFile {
-        private final ReopenableFileOutputStream stream;
+        private final RewindableRotatingFileOutputStream stream;
         private final Handler handler;
         private int count;
         @SuppressWarnings(value="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification="if mkdirs fails, will just get a stack trace later")
         LogFile(String name) throws IOException {
             customLogs.mkdirs();
-            stream = new ReopenableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
+            stream = new RewindableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
             // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just truncated
             stream.rewind();
             handler = new StreamHandler(stream, new SupportLogFormatter());
@@ -220,8 +220,8 @@ public class JenkinsLogs extends Component {
                 LogRecorder.class,
                 LogRecorder.Target.class,
                 LogFile.class,
-                ReopenableFileOutputStream.class,
-                ReopenableRotatingFileOutputStream.class,
+                RewindableFileOutputStream.class,
+                RewindableRotatingFileOutputStream.class,
                 StreamHandler.class,
                 SupportLogFormatter.class,
                 LogFlusher.class,
