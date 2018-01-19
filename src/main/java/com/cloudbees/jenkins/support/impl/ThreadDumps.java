@@ -27,7 +27,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -221,8 +223,14 @@ public class ThreadDumps extends Component {
             threads = new ThreadInfo[0];
         }
 
-        for (int ti = threads.length - 1; ti >= 0; ti--) {
-            printThreadInfo(writer, threads[ti], mbean);
+        Arrays.sort(threads, new Comparator<ThreadInfo>() {
+            @Override
+            public int compare(ThreadInfo t1, ThreadInfo t2) {
+                return t1.getThreadName().compareTo(t2.getThreadName());
+            }
+        });
+        for (ThreadInfo t : threads) {
+            printThreadInfo(writer, t, mbean);
         }
 
         // Print any information about deadlocks.
