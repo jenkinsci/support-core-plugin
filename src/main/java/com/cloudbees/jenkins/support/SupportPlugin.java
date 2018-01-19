@@ -438,7 +438,7 @@ public class SupportPlugin extends Plugin {
                         fileOutputStream = new FileOutputStream(f, true);
                         ps = new PrintStream(fileOutputStream, false, "UTF-8");
                         ps.println("=== Thread dump at " + new Date() + " ===");
-                        ThreadDumps.threadDumpModern(fileOutputStream);
+                        ThreadDumps.threadDump(fileOutputStream);
                         // Generate a thread dump every few seconds/minutes
                         ps.flush();
                         Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));

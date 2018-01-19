@@ -145,7 +145,7 @@ public class FileDescriptorLimit extends Component {
     /**
      * * Using OperatingSystemMXBean, we can obtain the total number of open file descriptors.
      */
-    @IgnoreJRERequirement
+    @IgnoreJRERequirement // UnixOperatingSystemMXBean
     private static void getOpenFileDescriptorCount(PrintWriter writer) throws UnsupportedEncodingException {
         try {
             OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
