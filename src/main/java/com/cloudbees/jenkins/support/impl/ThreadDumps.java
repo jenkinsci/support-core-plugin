@@ -217,7 +217,21 @@ public class ThreadDumps extends Component {
             justification = "We don't want platform specific"
     )
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
-        final PrintWriter writer = new AnonymizedPrintWriter(new OutputStreamWriter(out, "utf-8"), true);
+        threadDump(out, false);
+    }
+
+    /**
+     * Dumps all of the threads' current information to an output stream.
+     *
+     * @param out an output stream.
+     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
+            justification = "We don't want platform specific"
+    )
+    public static void threadDump(OutputStream out, boolean shouldAnonymize) throws UnsupportedEncodingException {
+        final PrintWriter writer = getPrintWriter(new OutputStreamWriter(out, "utf-8"), true, shouldAnonymize);
 
         ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] threads;

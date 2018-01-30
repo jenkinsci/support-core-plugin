@@ -61,11 +61,13 @@ public class Anonymizer {
     private static final Map<String, String> ANON_MAP = new ConcurrentHashMap<>();
     private static final Set<String> ORDER = new ConcurrentSkipListSet<>(Comparator.comparingInt(String::length).reversed().thenComparing(s -> s));
     private static final Set<String> DISPLAY = new ConcurrentSkipListSet<>();
-    private static File ANONYMIZED_NAMES_FILE = new File(Jenkins.getInstance().getRootDir(), "secrets/anonymized-names");
+    // Effectively final for non-test code
+    private static File ANONYMIZED_NAMES_FILE;
 
     private Anonymizer() { }
 
     static {
+        updateFile();
         // Full names can have this separator
         SEPARATORS.add(" » ");
         refresh();

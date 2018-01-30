@@ -70,7 +70,7 @@ public class FilePathContent extends Content {
             if (isFileNotFound(e) || isFileNotFound(e.getCause())) {
                 OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8");
                 try {
-                    PrintWriter pw = new PrintWriter(osw, true);
+                    PrintWriter pw = getPrintWriter(osw, true);
                     try {
                         pw.println("--- WARNING: Could not attach " + file.getRemote() + " as it cannot currently be found ---");
                         pw.println();
