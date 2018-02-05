@@ -25,11 +25,11 @@
 package com.cloudbees.jenkins.support.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.ExtensionPoint;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
-import org.apache.tools.ant.ExtensionPoint;
 
 import java.util.Collections;
 import java.util.Set;
@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * @author Stephen Connolly
  */
-public abstract class Component extends ExtensionPoint {
+public abstract class Component implements ExtensionPoint {
 
     /**
      * Returns the (possibly empty, never null) list of permissions that are required for the user to include this
