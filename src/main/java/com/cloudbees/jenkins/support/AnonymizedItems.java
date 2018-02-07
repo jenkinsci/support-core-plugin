@@ -28,7 +28,7 @@ import hudson.Extension;
 import hudson.model.ManagementLink;
 
 import javax.annotation.CheckForNull;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Action for viewing anonymized items mapping.
@@ -60,7 +60,7 @@ public class AnonymizedItems extends ManagementLink {
         return Messages.AnonymizedItems_Description();
     }
 
-    public Set<String> getAnon() {
+    public Map<String, String> getAnon() {
         return Anonymizer.getDisplayItems();
     }
 }

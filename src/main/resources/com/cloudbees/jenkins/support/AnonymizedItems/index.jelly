@@ -22,18 +22,23 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
-         xmlns:l="/lib/layout"
-         xmlns:f="/lib/form">
-  <l:layout title="${it.actionTitleText}" norefresh="true" permission="${it.CREATE_BUNDLE}">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+  <!-- TODO:  Fix title -->
+  <l:layout title="${it.displayName}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
-    <!-- TODO:  This is extraordinarily rudimentary, need to make it a better layout -->
     <l:main-panel>
-      <j:forEach var="anonymizedItem" items="${it.anon}">
-        <div name="item">
-          <f:entry title="${anonymizedItem}"></f:entry>
-        </div>
-      </j:forEach>
+      <table class="pane sortable bigtable">
+        <tr>
+          <th class="pane-header" initialSortDir="down">${%Actual name}</th>
+          <th class="pane-header">${%Anonymized Name}</th>
+        </tr>
+        <j:forEach var="e" items="${it.anon}">
+          <tr>
+            <td class="pane"><st:out value="${e.key}"/></td>
+            <td class="pane" style="white-space: normal"><l:breakable value="${e.value}"/></td>
+          </tr>
+        </j:forEach>
+      </table>
     </l:main-panel>
   </l:layout>
 </j:jelly>

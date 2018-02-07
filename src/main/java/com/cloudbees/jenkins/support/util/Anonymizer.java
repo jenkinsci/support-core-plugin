@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
@@ -60,9 +61,11 @@ public class Anonymizer {
     private static final Set<String> SEPARATORS = new CopyOnWriteArraySet<>();
     private static final Map<String, String> ANON_MAP = new ConcurrentHashMap<>();
     private static final Set<String> ORDER = new ConcurrentSkipListSet<>(Comparator.comparingInt(String::length).reversed().thenComparing(s -> s));
-    private static final Set<String> DISPLAY = new ConcurrentSkipListSet<>();
+    private static final Map<String, String> DISPLAY = new ConcurrentSkipListMap<>();
+    private static final long TIME_BETWEEN_REFRESH_FOR_DISPLAY_PURPOSES = 1000 * 60 * 10; // 10 mins
     // Effectively final for non-test code
     private static File ANONYMIZED_NAMES_FILE;
+    private static long LAST_REFRESH;
 
     private Anonymizer() { }
 
@@ -81,7 +84,7 @@ public class Anonymizer {
                 ANON_MAP.putAll((Map<String, String>) ois.readObject());
                 ORDER.addAll(ANON_MAP.keySet());
                 for (String key : ORDER) {
-                    DISPLAY.add(key + " - " + ANON_MAP.get(key));
+                    DISPLAY.put(key, ANON_MAP.get(key));
                 }
             } catch (IOException | ClassNotFoundException e) {
                 // Continuing has the potential of overwriting the saved relationships, which will make it extremely
@@ -142,8 +145,11 @@ public class Anonymizer {
         return Collections.unmodifiableMap(ANON_MAP);
     }
 
-    public static Set<String> getDisplayItems() {
-        return Collections.unmodifiableSet(DISPLAY);
+    public static Map<String, String> getDisplayItems() {
+        if (LAST_REFRESH + TIME_BETWEEN_REFRESH_FOR_DISPLAY_PURPOSES < System.currentTimeMillis()) {
+            refresh();
+        }
+        return DISPLAY;
     }
 
     // Package visible for tests
@@ -177,7 +183,7 @@ public class Anonymizer {
             String anonymized = newPath + prefix + "_" + GENERATOR.next();
             ANON_MAP.put(original, anonymized);
             ANON_MAP.put(Functions.escape(original), anonymized);
-            DISPLAY.add(original + " - " + anonymized);
+            DISPLAY.put(original, anonymized);
             for (String separator : SEPARATORS) {
                 String replaced = original.replaceAll("/", separator);
                 ANON_MAP.put(replaced, anonymized);
@@ -192,6 +198,7 @@ public class Anonymizer {
     }
 
     private static synchronized void save() {
+        LAST_REFRESH = System.currentTimeMillis();
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ANONYMIZED_NAMES_FILE))){
             oos.writeObject(ANON_MAP);
         } catch (IOException e) {
