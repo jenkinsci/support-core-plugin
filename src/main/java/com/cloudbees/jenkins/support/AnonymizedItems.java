@@ -26,8 +26,13 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.util.Anonymizer;
 import hudson.Extension;
 import hudson.model.ManagementLink;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
+import javax.servlet.ServletException;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -62,5 +67,11 @@ public class AnonymizedItems extends ManagementLink {
 
     public Map<String, String> getAnon() {
         return Anonymizer.getDisplayItems();
+    }
+
+    @RequirePOST
+    public void doUpdateNow(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        Anonymizer.refresh();
+        rsp.forwardToPreviousPage(req);
     }
 }

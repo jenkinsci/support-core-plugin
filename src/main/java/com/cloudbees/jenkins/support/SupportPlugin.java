@@ -151,10 +151,11 @@ public class SupportPlugin extends Plugin {
     /** class names of {@link Component} */
     private Set<String> excludedComponents;
 
-    private AnonymizationSettings anonymizationSettings = new AnonymizationSettings();
+    private AnonymizationSettings anonymizationSettings;
 
     public SupportPlugin() {
         super();
+        anonymizationSettings = new AnonymizationSettings();
         handler.setLevel(getLogLevel());
         handler.setDirectory(getRootDirectory(), "all");
     }

@@ -22,11 +22,12 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
   <!-- TODO:  Fix title -->
   <l:layout title="${it.displayName}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
     <l:main-panel>
+      <h1>${%Anonymized Items}</h1>
       <table class="pane sortable bigtable">
         <tr>
           <th class="pane-header" initialSortDir="down">${%Actual name}</th>
@@ -39,6 +40,11 @@
           </tr>
         </j:forEach>
       </table>
+      <div align="right" style="margin-top:0.5em">
+        <form method="post" action="updateNow">
+          <f:submit value="${%Refresh}"/>
+        </form>
+      </div>
     </l:main-panel>
   </l:layout>
 </j:jelly>
