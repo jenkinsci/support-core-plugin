@@ -24,6 +24,7 @@
 package com.cloudbees.jenkins.support.util;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import com.google.common.annotations.VisibleForTesting;
 import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Item;
@@ -152,7 +153,8 @@ public class Anonymizer {
         return DISPLAY;
     }
 
-    // Package visible for tests
+    // Package visible for tests.  DO NOT USE outside of test code.
+    @VisibleForTesting
     static void updateFile() {
         ANONYMIZED_NAMES_FILE = new File(Jenkins.getInstance().getRootDir(), "secrets/anonymized-names");
     }
