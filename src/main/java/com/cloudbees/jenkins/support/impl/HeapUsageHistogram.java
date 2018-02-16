@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -65,7 +66,7 @@ public class HeapUsageHistogram extends Component {
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-            new Content("nodes/master/heap-histogram.txt", shouldAnonymize) {
+            new Content(new ContentData("nodes/master/heap-histogram.txt", shouldAnonymize)) {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
                     os.write(getLiveHistogram().getBytes("UTF-8"));

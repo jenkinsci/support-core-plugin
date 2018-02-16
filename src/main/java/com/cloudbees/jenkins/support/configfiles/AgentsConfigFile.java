@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -74,7 +75,7 @@ public class AgentsConfigFile extends Component {
         }
         for(File agentDir : agentDirs) {
             File config = new File(agentDir, "config.xml");
-            container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config, shouldAnonymize));
+            container.add(new XmlRedactedSecretFileContent(new ContentData("nodes/slave/" + agentDir.getName() + "/config.xml", shouldAnonymize), config));
         }
     }
 

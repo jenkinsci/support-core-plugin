@@ -5,8 +5,8 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
-import com.cloudbees.jenkins.support.util.AnonymizedPrintWriter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -70,7 +70,7 @@ public class ThreadDumps extends Component {
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-                new Content("nodes/master/thread-dump.txt", shouldAnonymize) {
+                new Content(new ContentData("nodes/master/thread-dump.txt", shouldAnonymize)) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
                         PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
@@ -111,7 +111,7 @@ public class ThreadDumps extends Component {
                 SupportLogFormatter.printStackTrace(e, out);
                 out.close();
                 result.add(
-                        new StringContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", sw.toString(), shouldAnonymize));
+                        new StringContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize), sw.toString()));
                 continue;
             }
             if (threadDump == null) {
@@ -120,10 +120,10 @@ public class ThreadDumps extends Component {
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", buf.toString(), shouldAnonymize));
+                result.add(new StringContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize), buf.toString()));
             } else {
                 result.add(
-                        new Content("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize) {
+                        new Content(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize)) {
                             @Override
                             public void writeTo(OutputStream os) throws IOException {
                                 PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
@@ -140,12 +140,7 @@ public class ThreadDumps extends Component {
                                                 TimeUnit.SECONDS
                                                         .toMillis(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)
                                         ), TimeUnit.MILLISECONDS);
-                                    } catch (InterruptedException e) {
-                                        logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + getNodeName(node, shouldAnonymize),
-                                                e);
-                                        SupportLogFormatter.printStackTrace(e, out);
-                                    } catch (ExecutionException e) {
+                                    } catch (InterruptedException | ExecutionException e) {
                                         logger.log(Level.WARNING,
                                                 "Could not record thread dump for " + getNodeName(node, shouldAnonymize),
                                                 e);

@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import org.xml.sax.SAXException;
 
@@ -12,11 +13,11 @@ import java.io.InputStream;
 class XmlRedactedSecretFileContent extends FileContent {
 
     public XmlRedactedSecretFileContent(String name, File file) {
-        this(name, file, false);
+        this(new ContentData(name, false), file);
     }
 
-    public XmlRedactedSecretFileContent(String name, File file, boolean shouldAnonymize) {
-        super(name, file, shouldAnonymize);
+    public XmlRedactedSecretFileContent(ContentData contentData, File file) {
+        super(contentData, file);
     }
 
     @Override

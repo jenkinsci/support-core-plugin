@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -75,7 +76,7 @@ public class BuildQueue extends Component {
   @Override
   public void addContents(@NonNull Container container, boolean shouldAnonymize) {
     // TODO:  Should this and other similar cases be `PrintedContent` instead?  They're doing basically the same thing
-    container.add(new Content("buildqueue.md", shouldAnonymize) {
+    container.add(new Content(new ContentData("buildqueue.md", shouldAnonymize)) {
         @Override
         public void writeTo(OutputStream os) throws IOException {
           PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));

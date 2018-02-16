@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -42,8 +43,8 @@ public class ConfigFileComponent extends Component {
         File configFile = new File(jenkins.getRootDir(), "config.xml");
         if (configFile.exists()) {
             container.add(
-                    new XmlRedactedSecretFileContent("jenkins-root-configuration-files/" + configFile.getName(),
-                                                     configFile, shouldAnonymize));
+                    new XmlRedactedSecretFileContent(new ContentData("jenkins-root-configuration-files/" + configFile.getName(), shouldAnonymize),
+                                                     configFile));
         } else {
             //this should never happen..
             LOGGER.log(Level.WARNING, "Jenkins global config file does not exist.");

@@ -34,11 +34,11 @@ import java.io.OutputStream;
  */
 public abstract class GenerateOnDemandContent extends Content {
     public GenerateOnDemandContent(String name) {
-        this(name, false);
+        this(new ContentData(name, false));
     }
 
-    public GenerateOnDemandContent(String name, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public GenerateOnDemandContent(ContentData contentData) {
+        super(contentData);
     }
 
     public abstract void writeTo(OutputStream os) throws IOException;

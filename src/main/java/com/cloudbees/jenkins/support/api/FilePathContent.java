@@ -48,11 +48,11 @@ public class FilePathContent extends Content {
     private final FilePath file;
 
     public FilePathContent(String name, FilePath file) {
-        this(name, file, false);
+        this(new ContentData(name, false), file);
     }
 
-    public FilePathContent(String name, FilePath file, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public FilePathContent(ContentData contentData, FilePath file) {
+        super(contentData);
         this.file = file;
     }
 

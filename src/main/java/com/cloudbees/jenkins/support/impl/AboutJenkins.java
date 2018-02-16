@@ -9,6 +9,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.codahale.metrics.Histogram;
@@ -532,7 +533,7 @@ public class AboutJenkins extends Component {
         private final Iterable<PluginWrapper> plugins;
 
         AboutContent(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
-            super("about.md", shouldAnonymize);
+            super(new ContentData("about.md", shouldAnonymize));
             this.plugins = plugins;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
@@ -600,7 +601,7 @@ public class AboutJenkins extends Component {
 
     private static class ItemsContent extends PrintedContent {
         ItemsContent(boolean shouldAnonymize) {
-            super("items.md", shouldAnonymize);
+            super(new ContentData("items.md", shouldAnonymize));
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
@@ -692,7 +693,7 @@ public class AboutJenkins extends Component {
         private final Iterable<PluginWrapper> plugins;
 
         public ActivePlugins(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
-            super("plugins/active.txt", shouldAnonymize);
+            super(new ContentData("plugins/active.txt", shouldAnonymize));
             this.plugins = plugins;
         }
 
@@ -708,7 +709,7 @@ public class AboutJenkins extends Component {
         private final Iterable<PluginWrapper> plugins;
 
         public DisabledPlugins(Iterable<PluginWrapper> plugins, boolean shouldAnonymize) {
-            super("plugins/disabled.txt", shouldAnonymize);
+            super(new ContentData("plugins/disabled.txt", shouldAnonymize));
             this.plugins = plugins;
         }
 
@@ -722,7 +723,7 @@ public class AboutJenkins extends Component {
 
     private static class FailedPlugins extends PrintedContent {
         public FailedPlugins(boolean shouldAnonymize) {
-            super("plugins/failed.txt", shouldAnonymize);
+            super(new ContentData("plugins/failed.txt", shouldAnonymize));
         }
 
         @Override
@@ -741,7 +742,7 @@ public class AboutJenkins extends Component {
         private final List<PluginWrapper> disabled;
 
         public Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled, boolean shouldAnonymize) {
-            super("docker/Dockerfile", shouldAnonymize);
+            super(new ContentData("docker/Dockerfile", shouldAnonymize));
             this.activated = activated;
             this.disabled = disabled;
         }
@@ -800,7 +801,7 @@ public class AboutJenkins extends Component {
 
     private class NodesContent extends PrintedContent {
         NodesContent(boolean shouldAnonymize) {
-            super("nodes.md", shouldAnonymize);
+            super(new ContentData("nodes.md", shouldAnonymize));
         }
         private String getLabelString(Node n) {
             String r = n.getLabelString();
@@ -890,7 +891,7 @@ public class AboutJenkins extends Component {
 
     private static class MasterChecksumsContent extends PrintedContent {
         MasterChecksumsContent(boolean shouldAnonymize) {
-            super("nodes/master/checksums.md5", shouldAnonymize);
+            super(new ContentData("nodes/master/checksums.md5", shouldAnonymize));
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
@@ -971,7 +972,7 @@ public class AboutJenkins extends Component {
     private class NodeChecksumsContent extends PrintedContent {
         private final Node node;
         NodeChecksumsContent(Node node, boolean shouldAnonymize) {
-            super("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/checksums.md5", shouldAnonymize);
+            super(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/checksums.md5", shouldAnonymize));
             this.node = node;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {

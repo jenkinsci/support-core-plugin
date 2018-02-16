@@ -39,11 +39,11 @@ public class TemporaryFileContent extends FileContent {
     private File f;
 
     public TemporaryFileContent(String name, File file) {
-        this(name, file, false);
+        this(new ContentData(name, false), file);
     }
 
-    public TemporaryFileContent(String name, File file, boolean shouldAnonymize) {
-        super(name, file, shouldAnonymize);
+    public TemporaryFileContent(ContentData contentData, File file) {
+        super(contentData, file);
         f = file;
     }
 

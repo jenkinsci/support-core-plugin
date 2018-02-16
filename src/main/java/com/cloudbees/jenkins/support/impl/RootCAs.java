@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -101,15 +102,13 @@ public class RootCAs extends Component {
       name = "slave/" + getNodeName(node, shouldAnonymize);
     }
     container.add(
-            new Content("nodes/" + name + "/RootCA.txt", shouldAnonymize) {
+            new Content(new ContentData("nodes/" + name + "/RootCA.txt", shouldAnonymize)) {
               @Override
               public void writeTo(OutputStream os) throws IOException {
                 PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                 try {
                   out.println(getRootCA(node, shouldAnonymize));
-                } catch (IOException e) {
-                  SupportLogFormatter.printStackTrace(e, out);
-                } catch (InterruptedException e) {
+                } catch (IOException | InterruptedException e) {
                   SupportLogFormatter.printStackTrace(e, out);
                 } finally {
                   out.flush();

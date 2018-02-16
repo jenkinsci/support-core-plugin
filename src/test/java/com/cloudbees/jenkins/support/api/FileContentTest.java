@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class FileContentTest {
 
@@ -45,13 +46,13 @@ public class FileContentTest {
         File f = tmp.newFile();
         FileUtils.writeStringToFile(f, "hello world\n");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        new FileContent("-", f, false).writeTo(baos);
+        new FileContent(new ContentData("-", false), f).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
         baos.reset();
-        new FileContent("-", f, false, 10).writeTo(baos);
+        new FileContent(new ContentData("-", false), f, 10).writeTo(baos);
         assertEquals("hello worl", baos.toString());
         baos.reset();
-        new FileContent("-", f, false, 20).writeTo(baos);
+        new FileContent(new ContentData("-", false), f, 20).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
     }
 
@@ -71,14 +72,14 @@ public class FileContentTest {
         FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new FileContent("-", file, true).writeTo(out);
+        new FileContent(new ContentData("-", true), file).writeTo(out);
         assertEquals(foo + "\n" + foobar + "\n" + foobarbaz + "\n" + foobarSpace + "\nfoobar\n",
                 out.toString());
 
         File file2 = tmp.newFile();
         FileUtils.writeStringToFile(file2, "foo foo/bar foo/bar/baz foo bar foobar\n");
         out.reset();
-        new FileContent("-", file2, true).writeTo(out);
+        new FileContent(new ContentData("-", true), file2).writeTo(out);
         assertEquals(foo + " " + foobar + " " + foobarbaz + " " + foobarSpace + " foobar\n", out.toString());
     }
 
@@ -93,12 +94,12 @@ public class FileContentTest {
         FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new FileContent("-", file, false).writeTo(out);
+        new FileContent(new ContentData("-", false), file).writeTo(out);
         assertEquals("foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n", out.toString());
     }
 
     @Test
     public void anonymizedTruncation() throws Exception {
-        // TODO
+        fail("Implement this");
     }
 }

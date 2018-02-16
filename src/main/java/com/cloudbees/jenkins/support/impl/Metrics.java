@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -43,7 +44,7 @@ public class Metrics extends Component {
 
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
-        result.add(new MetricsContent("nodes/master/metrics.json", jenkins.metrics.api.Metrics.metricRegistry(), shouldAnonymize));
+        result.add(new MetricsContent(new ContentData("nodes/master/metrics.json", shouldAnonymize), jenkins.metrics.api.Metrics.metricRegistry()));
         /* TODO pick up a per-agent metrics registry
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(new RemoteMetricsContent("nodes/slave/" + node.getNodeName() + "/metrics.json", node,

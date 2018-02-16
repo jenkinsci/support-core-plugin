@@ -45,12 +45,12 @@ public abstract class Content {
     protected final boolean shouldAnonymize;
 
     protected Content(String name) {
-        this(name, false);
+        this(new ContentData(name, false));
     }
 
-    protected Content(String name, boolean shouldAnonymize) {
-        this.name = name;
-        this.shouldAnonymize = shouldAnonymize;
+    protected Content(ContentData contentData) {
+        name = contentData.getName();
+        shouldAnonymize = contentData.isShouldAnonymize();
     }
 
     public String getName() {

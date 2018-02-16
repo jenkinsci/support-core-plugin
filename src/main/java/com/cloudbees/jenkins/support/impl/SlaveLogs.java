@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
@@ -110,7 +111,7 @@ public class SlaveLogs extends Component {
         for (final Node node : Jenkins.getInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
-                        new PrintedContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/jenkins.log", shouldAnonymize) {
+                        new PrintedContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/jenkins.log", shouldAnonymize)) {
                             @Override
                             protected void printTo(PrintWriter out) throws IOException {
                                 Computer computer = node.toComputer();
@@ -195,21 +196,19 @@ public class SlaveLogs extends Component {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
-                public List<FileContent> call() throws Exception {
-                    List<FileContent> result = new ArrayList<FileContent>();
-                    FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
-                    if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
-                        for (Map.Entry<String, File> entry : logFiles.entrySet()) {
-                            result.add(new FileContent(
-                                    "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/" + entry.getKey(),
-                                    entry.getValue(), shouldAnonymize)
-                            );
-                        }
+            tasks.add(() -> {
+                List<FileContent> result1 = new ArrayList<>();
+                FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
+                if (supportPath.isDirectory()) {
+                    final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
+                    for (Map.Entry<String, File> entry : logFiles.entrySet()) {
+                        result1.add(new FileContent(new ContentData(
+                                "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/" + entry.getKey(), shouldAnonymize),
+                                entry.getValue())
+                        );
                     }
-                    return result;
                 }
+                return result1;
             });
         }
 
@@ -218,7 +217,7 @@ public class SlaveLogs extends Component {
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new LogRecordContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/all_memory_buffer.log", shouldAnonymize) {
+        result.add(new LogRecordContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/all_memory_buffer.log", shouldAnonymize)) {
             @Override
             public Iterable<LogRecord> getLogRecords() throws IOException {
                 try {
@@ -237,18 +236,16 @@ public class SlaveLogs extends Component {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
-                public List<FileContent> call() throws Exception {
-                    List<FileContent> result = new ArrayList<FileContent>();
-                    final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
-                    for (Map.Entry<String, File> entry : logFiles.entrySet()) {
-                        result.add(new FileContent(
-                                "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/winsw/" + entry.getKey(),
-                                entry.getValue(), shouldAnonymize, FileListCapComponent.MAX_FILE_SIZE)
-                        );
-                    }
-                    return result;
+            tasks.add(() -> {
+                List<FileContent> result = new ArrayList<>();
+                final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
+                for (Map.Entry<String, File> entry : logFiles.entrySet()) {
+                    result.add(new FileContent(new ContentData(
+                            "nodes/slave/" + getNodeName(node, shouldAnonymize) + "/logs/winsw/" + entry.getKey(), shouldAnonymize),
+                            entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
+                    );
                 }
+                return result;
             });
         }
     }

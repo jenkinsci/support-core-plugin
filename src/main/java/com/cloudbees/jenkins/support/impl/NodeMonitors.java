@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -40,7 +41,7 @@ public class NodeMonitors extends Component{
 
     @Override
     public void addContents(@NonNull Container container, boolean shouldAnonymize) {
-        container.add(new PrintedContent("node-monitors.md", shouldAnonymize) {
+        container.add(new PrintedContent(new ContentData("node-monitors.md", shouldAnonymize)) {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 out.println("Node monitors");

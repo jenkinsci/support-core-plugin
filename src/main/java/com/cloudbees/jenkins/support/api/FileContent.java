@@ -52,21 +52,21 @@ public class FileContent extends Content {
     private final long maxSize;
 
     public FileContent(String name, File file) {
-        this(name, file, false, -1);
+        this(new ContentData(name, false), file, -1);
     }
 
-    public FileContent(String name, File file, boolean shouldAnonymize) {
-        this(name, file, shouldAnonymize, -1);
+    public FileContent(ContentData contentData, File file) {
+        this(contentData, file, -1);
     }
 
     public FileContent(String name, File file, long maxSize) {
-        super(name, false);
+        super(new ContentData(name, false));
         this.file = file;
         this.maxSize = maxSize;
     }
 
-    public FileContent(String name, File file, boolean shouldAnonymize, long maxSize) {
-        super(name, shouldAnonymize);
+    public FileContent(ContentData contentData, File file, long maxSize) {
+        super(contentData);
         this.file = file;
         this.maxSize = maxSize;
     }

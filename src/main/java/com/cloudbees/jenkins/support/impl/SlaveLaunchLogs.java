@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -167,7 +168,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, shouldAnonymize, FileListCapComponent.MAX_FILE_SIZE));
+                    result.add(new FileContent(new ContentData("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName(), shouldAnonymize), f, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
     }

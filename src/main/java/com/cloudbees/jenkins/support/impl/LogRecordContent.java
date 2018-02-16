@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.google.common.collect.Lists;
 
@@ -18,11 +19,11 @@ import java.util.logging.LogRecord;
  */
 public abstract class LogRecordContent extends PrintedContent {
     public LogRecordContent(String name) {
-        this(name, false);
+        this(new ContentData(name, false));
     }
 
-    public LogRecordContent(String name, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public LogRecordContent(ContentData contentData) {
+        super(contentData);
     }
 
     /**

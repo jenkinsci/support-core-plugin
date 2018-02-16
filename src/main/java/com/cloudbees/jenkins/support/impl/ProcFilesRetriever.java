@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FilePathContent;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -87,8 +88,8 @@ public abstract class ProcFilesRetriever extends Component {
         }
 
         for (Map.Entry<String, String> procDescriptor : getFilesToRetrieve().entrySet()) {
-            container.add(new FilePathContent("nodes/" + name + "/proc/" + procDescriptor.getValue(),
-                    new FilePath(c.getChannel(), procDescriptor.getKey()), shouldAnonymize));
+            container.add(new FilePathContent(new ContentData("nodes/" + name + "/proc/" + procDescriptor.getValue(), shouldAnonymize),
+                    new FilePath(c.getChannel(), procDescriptor.getKey())));
         }
 
         afterAddUnixContents(container, node, name, shouldAnonymize);

@@ -38,11 +38,11 @@ import java.io.PrintWriter;
 public abstract class PrintedContent extends GenerateOnDemandContent {
 
     public PrintedContent(String name) {
-        this(name, false);
+        this(new ContentData(name, false));
     }
 
-    public PrintedContent(String name, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public PrintedContent(ContentData contentData) {
+        super(contentData);
     }
 
     @Override

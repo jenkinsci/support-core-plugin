@@ -23,8 +23,8 @@ public class CommandOutputContent extends StringContent {
 
     private static final Logger LOGGER = Logger.getLogger(CommandOutputContent.class.getName());
 
-    private CommandOutputContent(String name, String value, boolean shouldAnonymize) {
-        super(name, value, shouldAnonymize);
+    private CommandOutputContent(ContentData contentData, String value) {
+        super(contentData, value);
     }
 
     public static class CommandLauncher extends MasterToSlaveCallable<String, RuntimeException> {
@@ -61,12 +61,7 @@ public class CommandOutputContent extends StringContent {
         } else {
             try {
                 content = chan.call(new CommandLauncher(command));
-            } catch (IOException e) {
-                final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve command content from {0}");
-                lr.setParameters(new Object[]{getNodeName(node, shouldAnonymize)});
-                lr.setThrown(e);
-                LOGGER.log(lr);
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve command content from {0}");
                 lr.setParameters(new Object[]{getNodeName(node, shouldAnonymize)});
                 lr.setThrown(e);
@@ -74,7 +69,7 @@ public class CommandOutputContent extends StringContent {
             }
         }
 
-        return new CommandOutputContent(name, content, shouldAnonymize);
+        return new CommandOutputContent(new ContentData(name, shouldAnonymize), content);
     }
 
     public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String... command) {
@@ -94,6 +89,6 @@ public class CommandOutputContent extends StringContent {
             LOGGER.log(lr);
         }
 
-        return new CommandOutputContent(name, content, shouldAnonymize);
+        return new CommandOutputContent(new ContentData(name, shouldAnonymize), content);
     }
 }

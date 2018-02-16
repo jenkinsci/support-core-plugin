@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -89,7 +90,7 @@ public class FileDescriptorLimit extends Component {
             }
             // TODO:  Should this be PrintedContent instead?
             container.add(
-                    new Content("nodes/" + name + "/file-descriptors.txt", shouldAnonymize) {
+                    new Content(new ContentData("nodes/" + name + "/file-descriptors.txt", shouldAnonymize)) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
                             PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));

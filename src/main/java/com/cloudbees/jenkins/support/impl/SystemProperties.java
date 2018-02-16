@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -59,7 +60,7 @@ public class SystemProperties extends Component {
 
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
-        result.add(new Content("nodes/master/system.properties", shouldAnonymize) {
+        result.add(new Content(new ContentData("nodes/master/system.properties", shouldAnonymize)) {
                     @Override
                     public void writeTo(OutputStream os) {
                         try {
@@ -67,9 +68,7 @@ public class SystemProperties extends Component {
                             properties.putAll(RemotingDiagnostics
                                     .getSystemProperties(Jenkins.getInstance().getChannel()));
                             properties.store(os, null);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not record system properties for master", e);
-                        } catch (InterruptedException e) {
+                        } catch (IOException | InterruptedException e) {
                             logger.log(Level.WARNING, "Could not record system properties for master", e);
                         }
                     }
@@ -77,7 +76,7 @@ public class SystemProperties extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/system.properties", shouldAnonymize) {
+                    new Content(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/system.properties", shouldAnonymize)) {
                         @Override
                         public void writeTo(OutputStream os) {
                             try {

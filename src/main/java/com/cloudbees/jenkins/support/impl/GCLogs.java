@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -11,7 +12,6 @@ import jenkins.model.Jenkins;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
@@ -88,7 +88,7 @@ public class GCLogs extends Component {
                         "but file '" + gcLogFileLocation + "' not found");
                 return;
             }
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file, shouldAnonymize));
+            result.add(new FileContent(new ContentData(GCLOGS_BUNDLE_ROOT + "gc.log", shouldAnonymize), file));
         }
     }
 
@@ -119,12 +119,7 @@ public class GCLogs extends Component {
             return;
         }
 
-        File[] gcLogs = parentDirectory.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return gcLogFilesPattern.matcher(name).matches();
-            }
-        });
+        File[] gcLogs = parentDirectory.listFiles((dir, name) -> gcLogFilesPattern.matcher(name).matches());
         if (gcLogs == null || gcLogs.length == 0) {
             LOGGER.warning("No GC logging files found, although the VM argument was found. This is probably a bug.");
             return;
@@ -133,7 +128,7 @@ public class GCLogs extends Component {
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
             LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + gcLog.getName(), gcLog, shouldAnonymize));
+            result.add(new FileContent(new ContentData(GCLOGS_BUNDLE_ROOT + gcLog.getName(), shouldAnonymize), gcLog));
         }
     }
 

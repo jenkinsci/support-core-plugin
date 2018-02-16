@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
@@ -380,7 +381,7 @@ public class SupportPlugin extends Plugin {
 
             }
         }
-        toProcess.add(new StringContent("manifest.md", manifest.toString(), shouldAnonymize));
+        toProcess.add(new StringContent(new ContentData("manifest.md", shouldAnonymize), manifest.toString()));
         try {
             ZipOutputStream zip = new ZipOutputStream(outputStream);
             try {

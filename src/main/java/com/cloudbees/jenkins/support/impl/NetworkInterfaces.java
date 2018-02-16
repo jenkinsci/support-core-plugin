@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -72,7 +73,7 @@ public class NetworkInterfaces extends Component {
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-                new Content("nodes/master/networkInterface.md", shouldAnonymize) {
+                new Content(new ContentData("nodes/master/networkInterface.md", shouldAnonymize)) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
                         os.write(getNetworkInterface(Jenkins.getInstance(), shouldAnonymize).getBytes("UTF-8"));
@@ -82,7 +83,7 @@ public class NetworkInterfaces extends Component {
 
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/networkInterface.md", shouldAnonymize) {
+                    new Content(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/networkInterface.md", shouldAnonymize)) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
                             os.write(getNetworkInterface(node, shouldAnonymize).getBytes("UTF-8"));

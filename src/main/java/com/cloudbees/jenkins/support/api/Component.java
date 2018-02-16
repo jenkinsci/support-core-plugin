@@ -121,6 +121,10 @@ public abstract class Component implements ExtensionPoint {
 
     public abstract void addContents(@NonNull Container container);
 
+    /**
+     * This should be overwritten to get anonymization support.  It is not declared abstract so as to not break
+     * compatibility with dependents.
+     */
     public void addContents(@NonNull Container container, boolean shouldAnonymize) {
         addContents(container);
     }

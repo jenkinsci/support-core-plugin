@@ -39,11 +39,11 @@ public class StringContent extends Content {
     private final String value;
 
     public StringContent(String name, String value) {
-        this(name, value, false);
+        this(new ContentData(name, false), value);
     }
 
-    public StringContent(String name, String value, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public StringContent(ContentData contentData, String value) {
+        super(contentData);
         if (shouldAnonymize) {
             this.value = Anonymizer.anonymize(value);
         } else {

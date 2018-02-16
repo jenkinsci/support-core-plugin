@@ -46,15 +46,15 @@ public abstract class TruncatedContent extends Content {
   }
 
   public TruncatedContent(String name, int maxSize) {
-    this(name, false, maxSize);
+    this(new ContentData(name, false), maxSize);
   }
 
-  public TruncatedContent(String name, boolean shouldAnonymize) {
-    this(name, shouldAnonymize, FileListCapComponent.MAX_FILE_SIZE);
+  public TruncatedContent(ContentData contentData) {
+    this(contentData, FileListCapComponent.MAX_FILE_SIZE);
   }
 
-  public TruncatedContent(String name, boolean shouldAnonymize, int maxSize) {
-    super(name, shouldAnonymize);
+  public TruncatedContent(ContentData contentData, int maxSize) {
+    super(contentData);
     this.maxSize = maxSize;
   }
 

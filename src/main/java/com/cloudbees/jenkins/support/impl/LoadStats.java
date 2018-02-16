@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -119,21 +120,21 @@ public class LoadStats extends Component {
             String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
             if (!headless) {
                 BufferedImage image = stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
-                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scaleName), image, shouldAnonymize));
+                container.add(new ImageContent(new ContentData(String.format("load-stats/%s/%s.png", name, scaleName), shouldAnonymize), image));
             }
-            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scaleName), stats, scale, shouldAnonymize));
+            container.add(new CsvContent(new ContentData(String.format("load-stats/%s/%s.csv", name, scaleName), shouldAnonymize), stats, scale));
         }
         // on the other hand, if headless we should give an easy way to generate the graphs
         if (headless) {
-            container.add(new GnuPlotScript(String.format("load-stats/%s/gnuplot", name), shouldAnonymize));
+            container.add(new GnuPlotScript(new ContentData(String.format("load-stats/%s/gnuplot", name), shouldAnonymize)));
         }
     }
 
     private static class ImageContent extends Content {
         private final BufferedImage image;
 
-        public ImageContent(String name, BufferedImage image, boolean shouldAnonymize) {
-            super(name, shouldAnonymize);
+        public ImageContent(ContentData contentData, BufferedImage image) {
+            super(contentData);
             this.image = image;
         }
 
@@ -171,9 +172,9 @@ public class LoadStats extends Component {
         private final long time;
         private final long clock;
 
-        public CsvContent(String name, LoadStatistics stats,
-                          MultiStageTimeSeries.TimeScale scale, boolean shouldAnonymize) {
-            super(name, shouldAnonymize);
+        public CsvContent(ContentData contentData, LoadStatistics stats,
+                          MultiStageTimeSeries.TimeScale scale) {
+            super(contentData);
             time = System.currentTimeMillis();
             clock = scale.tick;
             data = new TreeMap<String, float[]>();
@@ -223,8 +224,8 @@ public class LoadStats extends Component {
 
     private static class GnuPlotScript extends PrintedContent {
 
-        public GnuPlotScript(String name, boolean shouldAnonymize) {
-            super(name, shouldAnonymize);
+        public GnuPlotScript(ContentData contentData) {
+            super(contentData);
         }
 
         @Override

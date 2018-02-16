@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -56,7 +57,7 @@ public class EnvironmentVariables extends Component {
 
     @Override
     public void addContents(@NonNull Container result, boolean shouldAnonymize) {
-        result.add(new PrintedContent("nodes/master/environment.txt", shouldAnonymize) {
+        result.add(new PrintedContent(new ContentData("nodes/master/environment.txt", shouldAnonymize)) {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
@@ -71,7 +72,7 @@ public class EnvironmentVariables extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new PrintedContent("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/environment.txt", shouldAnonymize) {
+                    new PrintedContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/environment.txt", shouldAnonymize)) {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {

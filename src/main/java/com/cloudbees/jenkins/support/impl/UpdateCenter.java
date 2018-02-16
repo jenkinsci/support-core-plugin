@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.ning.http.client.ProxyServer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -46,7 +47,7 @@ public class UpdateCenter extends Component {
 
     @Override
     public void addContents(@NonNull Container container, boolean shouldAnonymize) {
-        container.add(new Content("update-center.md", shouldAnonymize) {
+        container.add(new Content(new ContentData("update-center.md", shouldAnonymize)) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
                         PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));

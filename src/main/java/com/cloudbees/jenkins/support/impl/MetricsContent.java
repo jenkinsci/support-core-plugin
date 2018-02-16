@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.json.HealthCheckModule;
@@ -23,11 +24,11 @@ public class MetricsContent extends Content {
     private ObjectMapper objectMapper;
 
     public MetricsContent(String name, MetricRegistry metricsRegistry) {
-        this(name, metricsRegistry, false);
+        this(new ContentData(name, false), metricsRegistry);
     }
 
-    public MetricsContent(String name, MetricRegistry metricsRegistry, boolean shouldAnonymize) {
-        super(name, shouldAnonymize);
+    public MetricsContent(ContentData contentData, MetricRegistry metricsRegistry) {
+        super(contentData);
         this.registry = metricsRegistry;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new MetricsModule(TimeUnit.MINUTES, TimeUnit.SECONDS, true));

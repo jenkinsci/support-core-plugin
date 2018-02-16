@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -102,7 +103,7 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
                 CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, shouldAnonymize, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
         container.add(CommandOutputContent.runOnNode(node, shouldAnonymize, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
         container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, shouldAnonymize, "nodes/" + name + "/userid.txt", "/bin/sh", "-c", "id -a"));
-        container.add(new StringContent("nodes/" + name + "/dmi.txt", getDmiInfo(node, shouldAnonymize), shouldAnonymize));
+        container.add(new StringContent(new ContentData("nodes/" + name + "/dmi.txt", shouldAnonymize), getDmiInfo(node, shouldAnonymize)));
     }
 
     public String getDmiInfo(Node node, boolean shouldAnonymize) {
