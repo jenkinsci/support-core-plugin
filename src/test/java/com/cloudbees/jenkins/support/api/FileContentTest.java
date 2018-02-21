@@ -42,6 +42,21 @@ public class FileContentTest {
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     @Rule public JenkinsRule jenkins = new JenkinsRule();
 
+    @Test
+    public void unanonymized() throws Exception {
+        jenkins.createFreeStyleProject("foo");
+        jenkins.createFreeStyleProject("foo/bar");
+        jenkins.createFreeStyleProject("foo/bar/baz");
+        jenkins.createFreeStyleProject("foo bar");
+
+        File file = tmp.newFile();
+        FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new FileContent(new ContentData("-", false), file).writeTo(out);
+        assertEquals("foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n", out.toString());
+    }
+
     @Test public void truncation() throws Exception {
         File f = tmp.newFile();
         FileUtils.writeStringToFile(f, "hello world\n");
@@ -84,22 +99,26 @@ public class FileContentTest {
     }
 
     @Test
-    public void unanonymized() throws Exception {
-        jenkins.createFreeStyleProject("foo");
-        jenkins.createFreeStyleProject("foo/bar");
-        jenkins.createFreeStyleProject("foo/bar/baz");
-        jenkins.createFreeStyleProject("foo bar");
-
-        File file = tmp.newFile();
-        FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        new FileContent(new ContentData("-", false), file).writeTo(out);
-        assertEquals("foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n", out.toString());
-    }
-
-    @Test
     public void anonymizedTruncation() throws Exception {
-        fail("Implement this");
+        jenkins.createFreeStyleProject("hello");
+        Anonymizer.refresh();
+        String hello = Anonymizer.anonymize("hello");
+
+        File f = tmp.newFile();
+        FileUtils.writeStringToFile(f, "hello world\n");
+
+        String fullContent = hello + " world\n";
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new FileContent(new ContentData("-", true), f).writeTo(baos);
+        assertEquals(fullContent, baos.toString());
+        baos.reset();
+        new FileContent(new ContentData("-", true), f, 10).writeTo(baos);
+        assertEquals(fullContent.substring(0, 10), baos.toString());
+        baos.reset();
+        new FileContent(new ContentData("-", true), f, 20).writeTo(baos);
+        assertEquals(fullContent.substring(0, 20), baos.toString());
+        baos.reset();
+        new FileContent(new ContentData("-", true), f, 100).writeTo(baos);
+        assertEquals(fullContent, baos.toString());
     }
 }
