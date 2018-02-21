@@ -63,9 +63,10 @@ public class Anonymizer {
     private static final Map<String, String> ANON_MAP = new ConcurrentHashMap<>();
     private static final Set<String> ORDER = new ConcurrentSkipListSet<>(Comparator.comparingInt(String::length).reversed().thenComparing(s -> s));
     private static final Map<String, String> DISPLAY = new ConcurrentSkipListMap<>();
-    private static final long TIME_BETWEEN_REFRESH_FOR_DISPLAY_PURPOSES = 1000 * 60 * 10; // 10 mins
+    private static final long DISPLAY_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 mins
     // Effectively final for non-test code
     private static File ANONYMIZED_NAMES_FILE;
+
     private static long LAST_REFRESH;
 
     private Anonymizer() { }
@@ -147,7 +148,7 @@ public class Anonymizer {
     }
 
     public static Map<String, String> getDisplayItems() {
-        if (LAST_REFRESH + TIME_BETWEEN_REFRESH_FOR_DISPLAY_PURPOSES < System.currentTimeMillis()) {
+        if (LAST_REFRESH + DISPLAY_REFRESH_INTERVAL < System.currentTimeMillis()) {
             refresh();
         }
         return DISPLAY;
