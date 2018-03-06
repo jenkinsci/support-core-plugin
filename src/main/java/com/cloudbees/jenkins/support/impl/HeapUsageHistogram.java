@@ -33,6 +33,10 @@ public class HeapUsageHistogram extends Component {
     // first 200 classes so 203 lines required because of the header
     private static final int MAX = 203;
 
+    // disabled by default because of JENKINS-49931
+    // to be reviewed in the future.
+    private static /*final*/ boolean DISABLED = Boolean.parseBoolean(System.getProperty(HeapUsageHistogram.class.getCanonicalName() + ".DISABLED", "true"));
+
     private static final Logger logger = Logger.getLogger(HeapUsageHistogram.class.getName());
 
     @NonNull
@@ -46,6 +50,12 @@ public class HeapUsageHistogram extends Component {
     public String getDisplayName() {
         return "Master Heap Histogram";
     }
+
+    @Override
+    public boolean isSelectedByDefault() {
+        return false;
+    }
+
 
     @Override
     public void addContents(@NonNull Container result) {
@@ -74,6 +84,15 @@ public class HeapUsageHistogram extends Component {
     }
 
     private String getRawLiveHistogram() {
+        if (DISABLED) {
+            return new StringBuilder().append('\n')
+                    .append("Histogram generation is disabled. If you want to enable it, do either:")
+                    .append('\n')
+                    .append("* Add the system property: -Dcom.cloudbees.jenkins.support.impl.HeapUsageHistogram.DISABLED=false")
+                    .append('\n')
+                    .append("* Run from Script Console the line: com.cloudbees.jenkins.support.impl.HeapUsageHistogram.DISABLED=false")
+                    .toString();
+        }
         String result;
         try {
             ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
