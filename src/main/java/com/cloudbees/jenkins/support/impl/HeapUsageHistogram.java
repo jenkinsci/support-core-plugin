@@ -34,8 +34,7 @@ public class HeapUsageHistogram extends Component {
     private static final int MAX = 203;
 
     // disabled by default because of JENKINS-49931
-    // to be reviewed in the future.
-    private static /*final*/ boolean DISABLED = Boolean.parseBoolean(System.getProperty(HeapUsageHistogram.class.getCanonicalName() + ".DISABLED", "true"));
+    private static /*final*/ boolean FULLGC = Boolean.getBoolean(HeapUsageHistogram.class.getCanonicalName() + ".FULLGC");
 
     private static final Logger logger = Logger.getLogger(HeapUsageHistogram.class.getName());
 
@@ -84,15 +83,6 @@ public class HeapUsageHistogram extends Component {
     }
 
     private String getRawLiveHistogram() {
-        if (DISABLED) {
-            return new StringBuilder().append('\n')
-                    .append("Histogram generation is disabled. If you want to enable it, do either:")
-                    .append('\n')
-                    .append("* Add the system property: -Dcom.cloudbees.jenkins.support.impl.HeapUsageHistogram.DISABLED=false")
-                    .append('\n')
-                    .append("* Run from Script Console the line: com.cloudbees.jenkins.support.impl.HeapUsageHistogram.DISABLED=false")
-                    .toString();
-        }
         String result;
         try {
             ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
@@ -100,7 +90,9 @@ public class HeapUsageHistogram extends Component {
             if (platform == null) {
                 return "N/A";
             }
-            result = (String) platform.invoke(objName, "gcClassHistogram", new Object[] {null}, new String[]{String[].class.getName()});
+            String[] params = FULLGC ? null : new String[] {"-all"};
+
+            result = (String) platform.invoke(objName, "gcClassHistogram", new Object[] {params}, new String[]{String[].class.getName()});
         }
         catch (InstanceNotFoundException | ReflectionException | MBeanException | MalformedObjectNameException e) {
             logger.log(Level.WARNING,"Could not record heap live histogram.", e);
