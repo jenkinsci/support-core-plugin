@@ -33,9 +33,8 @@ public class HeapUsageHistogram extends Component {
     // first 200 classes so 203 lines required because of the header
     private static final int MAX = 203;
 
-    // disabled by default because of JENKINS-49931
-    // to be reviewed in the future.
-    private static /*final*/ boolean DISABLED = Boolean.parseBoolean(System.getProperty(HeapUsageHistogram.class.getCanonicalName() + ".DISABLED", "true"));
+    private static /*final*/ boolean FULLGC = Boolean.getBoolean(HeapUsageHistogram.class.getCanonicalName() + ".FULLGC");
+    private static /*final*/ boolean DISABLED = Boolean.getBoolean(HeapUsageHistogram.class.getCanonicalName() + ".DISABLED");
 
     private static final Logger logger = Logger.getLogger(HeapUsageHistogram.class.getName());
 
@@ -59,8 +58,10 @@ public class HeapUsageHistogram extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
+        final String file = FULLGC ? "nodes/master/heap-histogram-live.txt" : "nodes/master/heap-histogram.txt";
+
         result.add(
-            new Content("nodes/master/heap-histogram.txt") {
+            new Content(file) {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
                     os.write(getLiveHistogram().getBytes("UTF-8"));
@@ -93,19 +94,21 @@ public class HeapUsageHistogram extends Component {
                     .append("* Run from Script Console the line: com.cloudbees.jenkins.support.impl.HeapUsageHistogram.DISABLED=false")
                     .toString();
         }
-        String result;
+        StringBuilder result = new StringBuilder();
         try {
             ObjectName objName = new ObjectName("com.sun.management:type=DiagnosticCommand");
             MBeanServer platform = ManagementFactory.getPlatformMBeanServer();
             if (platform == null) {
-                return "N/A";
+                return new StringBuilder().append('\n').append("N/A").toString();
             }
-            result = (String) platform.invoke(objName, "gcClassHistogram", new Object[] {null}, new String[]{String[].class.getName()});
+            String[] params = FULLGC ? null : new String[] {"-all"};
+
+            result.append( (String) platform.invoke(objName, "gcClassHistogram", new Object[] {params}, new String[]{String[].class.getName()}));
         }
         catch (InstanceNotFoundException | ReflectionException | MBeanException | MalformedObjectNameException e) {
-            logger.log(Level.WARNING,"Could not record heap live histogram.", e);
-            result = "N/A";
+            logger.log(Level.WARNING,"Could not record heap histogram.", e);
+            result.append('\n').append("N/A");
         }
-        return result;
+        return result.toString();
     }
 }
