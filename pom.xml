@@ -69,11 +69,7 @@
   </scm>
 
   <properties>
-<<<<<<< HEAD
     <jenkins.version>2.107</jenkins.version>
-=======
-    <jenkins.version>2.60</jenkins.version>
->>>>>>> [JENKINS-21670] Add option to anonymize jobs, views, nodes, etc
     <java.level>8</java.level>
   </properties>
 
