@@ -24,8 +24,8 @@
 package com.cloudbees.jenkins.support.util;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.google.common.annotations.VisibleForTesting;
 import hudson.Functions;
+import hudson.XmlFile;
 import hudson.model.Computer;
 import hudson.model.Item;
 import hudson.model.Label;
@@ -38,11 +38,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.randname.RandomNameGenerator;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
@@ -64,15 +60,12 @@ public class Anonymizer {
     private static final Set<String> ORDER = new ConcurrentSkipListSet<>(Comparator.comparingInt(String::length).reversed().thenComparing(s -> s));
     private static final Map<String, String> DISPLAY = new ConcurrentSkipListMap<>();
     private static final long DISPLAY_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 mins
-    // Effectively final for non-test code
-    private static File ANONYMIZED_NAMES_FILE;
 
     private static long LAST_REFRESH;
 
     private Anonymizer() { }
 
     static {
-        updateFile();
         // Full names can have this separator
         SEPARATORS.add(" » ");
         refresh();
@@ -82,20 +75,7 @@ public class Anonymizer {
     public static void refresh() {
         LOGGER.log(Level.FINE, "Refreshing anonymized items");
         Jenkins instance = Jenkins.getInstance();
-        // TODO:  Ensure this is human readable
-        if (ANONYMIZED_NAMES_FILE.exists()) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ANONYMIZED_NAMES_FILE))) {
-                ANON_MAP.putAll((Map<String, String>) ois.readObject());
-                ORDER.addAll(ANON_MAP.keySet());
-                for (String key : ORDER) {
-                    DISPLAY.put(key, ANON_MAP.get(key));
-                }
-            } catch (IOException | ClassNotFoundException e) {
-                // Continuing has the potential of overwriting the saved relationships, which will make it extremely
-                // difficult to reverse the anonymization
-                throw new IllegalStateException("Could not load anonymized names", e);
-            }
-        }
+        load();
 
         SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
         if (settings.isAnonymizeLabels()) {
@@ -145,7 +125,7 @@ public class Anonymizer {
         return anonymized;
     }
 
-    public static Map<String, String> getAnonMap() {
+    public static Map<String, String> getAnonymizedItems() {
         return Collections.unmodifiableMap(ANON_MAP);
     }
 
@@ -154,12 +134,6 @@ public class Anonymizer {
             refresh();
         }
         return DISPLAY;
-    }
-
-    // Package visible for tests.  DO NOT USE outside of test code.
-    @VisibleForTesting
-    static void updateFile() {
-        ANONYMIZED_NAMES_FILE = new File(Jenkins.getInstance().getRootDir(), "secrets/anonymized-names");
     }
 
     private static String anonymizePath(String original, String prefix, boolean save) {
@@ -202,10 +176,30 @@ public class Anonymizer {
         return ANON_MAP.get(original);
     }
 
+    private static XmlFile getConfigXml() {
+        return new XmlFile(Jenkins.XSTREAM, new File(Jenkins.get().getRootDir(), "secrets/anonymized-names.xml"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static synchronized void load() {
+        XmlFile config = getConfigXml();
+        if (config.exists()) {
+            try {
+                ANON_MAP.clear();
+                ANON_MAP.putAll((Map<? extends String, ? extends String>) config.read());
+            } catch (IOException e) {
+//                // Continuing has the potential of overwriting the saved relationships, which will make it extremely
+//                // difficult to reverse the anonymization
+                throw new IllegalStateException("Could not load anonymized names", e);
+            }
+        }
+    }
+
     private static synchronized void save() {
         LAST_REFRESH = System.currentTimeMillis();
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ANONYMIZED_NAMES_FILE))){
-            oos.writeObject(ANON_MAP);
+        XmlFile config = getConfigXml();
+        try {
+            config.write(ANON_MAP);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Problem saving anonymized names", e);
         }

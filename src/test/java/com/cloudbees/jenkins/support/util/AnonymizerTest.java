@@ -25,21 +25,25 @@
 package com.cloudbees.jenkins.support.util;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import hudson.XmlFile;
 import hudson.model.FreeStyleProject;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringEndsWith.endsWith;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -55,7 +59,6 @@ public class AnonymizerTest {
 
     @Before
     public void setUp() {
-        Anonymizer.updateFile();
         SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
         settings.setAnonymizeComputers(true);
         settings.setAnonymizeItems(true);
@@ -110,10 +113,10 @@ public class AnonymizerTest {
         assertThat(anonJobB3, startsWith(anonFolderB + "/"));
         assertThat(anonJobB3.substring(anonFolderB.length()), containsString("_"));
 
-        File anonymizedNamesFile = new File(jenkins.getInstance().getRootDir(), "secrets/anonymized-names");
+        XmlFile anonymizedNamesFile = new XmlFile(Jenkins.XSTREAM, new File(jenkins.getInstance().getRootDir(),
+                "secrets/anonymized-names.xml"));
         assertTrue(anonymizedNamesFile.exists());
-        assertEquals(Anonymizer.getAnonMap(),
-                (Map<String, String>) new ObjectInputStream(new FileInputStream(anonymizedNamesFile)).readObject());
+        assertEquals(Anonymizer.getAnonymizedItems(), (Map<String, String>) anonymizedNamesFile.read());
     }
 
     @Test
@@ -126,6 +129,18 @@ public class AnonymizerTest {
         assertEquals("A", Anonymizer.anonymize("A"));
         assertEquals("master", Anonymizer.anonymize("master"));
         assertThat(Anonymizer.anonymize("master/fakename"), startsWith("master"));
+    }
+
+    @Test
+    @LocalData
+    public void loadFromFile() {
+        Anonymizer.refresh();
+
+        Map<String, String> anonymizedItems = Anonymizer.getAnonymizedItems();
+        assertThat(anonymizedItems.keySet(), hasSize(3));
+        assertThat(anonymizedItems.get("folderA"), equalTo("item_funny_tea"));
+        assertThat(anonymizedItems.get("folderA/job1"), equalTo("item_funny_tea/item_magnetic_agency"));
+        assertThat(anonymizedItems.get("job2"), equalTo("item_present_glove"));
     }
 
     private String assertCorrectLabel(String actual) {
