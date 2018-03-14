@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.util;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import hudson.model.FreeStyleProject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,6 +56,13 @@ public class AnonymizerTest {
     @Before
     public void setUp() {
         Anonymizer.updateFile();
+        SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
+        settings.setAnonymizeComputers(true);
+        settings.setAnonymizeItems(true);
+        settings.setAnonymizeLabels(true);
+        settings.setAnonymizeNodes(true);
+        settings.setAnonymizeUsers(true);
+        settings.setAnonymizeViews(true);
     }
 
     @Test

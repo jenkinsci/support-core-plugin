@@ -24,8 +24,10 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.util.Anonymizer;
 import org.apache.commons.io.FileUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -40,6 +42,17 @@ public class FileContentTest {
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     @Rule public JenkinsRule jenkins = new JenkinsRule();
+
+    @Before
+    public void setUp() {
+        SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
+        settings.setAnonymizeComputers(true);
+        settings.setAnonymizeItems(true);
+        settings.setAnonymizeLabels(true);
+        settings.setAnonymizeNodes(true);
+        settings.setAnonymizeUsers(true);
+        settings.setAnonymizeViews(true);
+    }
 
     @Test
     public void unanonymized() throws Exception {

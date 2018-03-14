@@ -4,10 +4,12 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.util.Anonymizer;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -26,6 +28,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class AboutJenkinsTest {
     @Rule public JenkinsRule jenkins = new JenkinsRule();
+
+    @Before
+    public void setUp() {
+        SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
+        settings.setAnonymizeComputers(true);
+        settings.setAnonymizeItems(true);
+        settings.setAnonymizeLabels(true);
+        settings.setAnonymizeNodes(true);
+        settings.setAnonymizeUsers(true);
+        settings.setAnonymizeViews(true);
+    }
 
     @Test
     public void mayBeDateSmokes() throws Exception {
