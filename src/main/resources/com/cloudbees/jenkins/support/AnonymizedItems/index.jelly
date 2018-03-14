@@ -26,13 +26,13 @@
   <l:layout title="${it.displayName}" norefresh="true" permission="${it.CREATE_BUNDLE}">
     <st:include page="sidepanel.jelly" it="${app}"/>
     <l:main-panel>
-      <h1>${%Anonymized Items}</h1>
+      <h2>${%Anonymized Items}</h2>
       <table class="pane sortable bigtable">
         <tr>
           <th class="pane-header" initialSortDir="down">${%Actual name}</th>
           <th class="pane-header">${%Anonymized Name}</th>
         </tr>
-        <j:forEach var="e" items="${it.anon}">
+        <j:forEach var="e" items="${it.anonymizedItemMap}">
           <tr>
             <td class="pane"><st:out value="${e.key}"/></td>
             <td class="pane" style="white-space: normal"><l:breakable value="${e.value}"/></td>
@@ -44,6 +44,31 @@
           <f:submit value="${%Refresh}"/>
         </form>
       </div>
+      <h2>${%Anonymization Options}</h2>
+      <f:form action="configSubmit" method="post" name="config">
+        <f:entry field="anonymizeLabels">
+          <f:checkbox title="Anonymize Labels" checked="${it.anonymizeLabels}"/>
+        </f:entry>
+        <f:entry field="anonymizeItems">
+          <f:checkbox title="Anonymize Items" checked="${it.anonymizeItems}"/>
+        </f:entry>
+        <f:entry field="anonymizeViews">
+          <f:checkbox title="Anonymize Views" checked="${it.anonymizeViews}"/>
+        </f:entry>
+        <f:entry field="anonymizeNodes">
+          <f:checkbox title="Anonymize Nodes" checked="${it.anonymizeNodes}"/>
+        </f:entry>
+        <f:entry field="anonymizeComputers">
+          <f:checkbox title="Anonymize Computers" checked="${it.anonymizeComputers}"/>
+        </f:entry>
+        <f:entry field="anonymizeUsers">
+          <f:checkbox title="Anonymize Users" checked="${it.anonymizeUsers}"/>
+        </f:entry>
+        <f:bottomButtonBar>
+          <f:submit value="${%Save}"/>
+          <f:apply value="${%Apply}"/>
+        </f:bottomButtonBar>
+      </f:form>
     </l:main-panel>
   </l:layout>
 </j:jelly>

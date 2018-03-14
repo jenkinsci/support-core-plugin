@@ -231,28 +231,8 @@ public class SupportPlugin extends Plugin {
         return anonymizationSettings.excludedWords;
     }
 
-    public boolean shouldAnonymizeLabels() {
-        return anonymizationSettings.anonymizeLabels;
-    }
-
-    public boolean shouldAnonymizeItems() {
-        return anonymizationSettings.anonymizeItems;
-    }
-
-    public boolean shouldAnonymizeViews() {
-        return anonymizationSettings.anonymizeViews;
-    }
-
-    public boolean shouldAnonymizeNodes() {
-        return anonymizationSettings.anonymizeNodes;
-    }
-
-    public boolean shouldAnonymizeComputers() {
-        return anonymizationSettings.anonymizeComputers;
-    }
-
-    public boolean shouldAnonymizeUsers() {
-        return anonymizationSettings.anonymizeUsers;
+    public AnonymizationSettings getAnonymizationSettings() {
+        return anonymizationSettings;
     }
 
     public Histogram getJenkinsExecutorTotalCount() {
@@ -871,15 +851,15 @@ public class SupportPlugin extends Plugin {
 
 
     public static class AnonymizationSettings {
+        // TODO:  Provide a way to modify these
         private Set<String> excludedWords = new HashSet<>();
 
-        // TODO:  Provide a way to set these
-        private boolean anonymizeLabels = true;
-        private boolean anonymizeItems = true;
-        private boolean anonymizeViews = true;
-        private boolean anonymizeNodes = true;
-        private boolean anonymizeComputers = true;
-        private boolean anonymizeUsers = true;
+        private boolean anonymizeLabels;
+        private boolean anonymizeItems;
+        private boolean anonymizeViews;
+        private boolean anonymizeNodes;
+        private boolean anonymizeComputers;
+        private boolean anonymizeUsers;
 
         public AnonymizationSettings() {
             // TODO:  Where should this actually go?  Here?  Elsewhere?  I don't think that these particular strings
@@ -896,6 +876,54 @@ public class SupportPlugin extends Plugin {
             excludedWords.add("view");
             excludedWords.add("user");
             excludedWords.add("");
+        }
+
+        public boolean isAnonymizeLabels() {
+            return anonymizeLabels;
+        }
+
+        public void setAnonymizeLabels(boolean anonymizeLabels) {
+            this.anonymizeLabels = anonymizeLabels;
+        }
+
+        public boolean isAnonymizeItems() {
+            return anonymizeItems;
+        }
+
+        public void setAnonymizeItems(boolean anonymizeItems) {
+            this.anonymizeItems = anonymizeItems;
+        }
+
+        public boolean isAnonymizeViews() {
+            return anonymizeViews;
+        }
+
+        public void setAnonymizeViews(boolean anonymizeViews) {
+            this.anonymizeViews = anonymizeViews;
+        }
+
+        public boolean isAnonymizeNodes() {
+            return anonymizeNodes;
+        }
+
+        public void setAnonymizeNodes(boolean anonymizeNodes) {
+            this.anonymizeNodes = anonymizeNodes;
+        }
+
+        public boolean isAnonymizeComputers() {
+            return anonymizeComputers;
+        }
+
+        public void setAnonymizeComputers(boolean anonymizeComputers) {
+            this.anonymizeComputers = anonymizeComputers;
+        }
+
+        public boolean isAnonymizeUsers() {
+            return anonymizeUsers;
+        }
+
+        public void setAnonymizeUsers(boolean anonymizeUsers) {
+            this.anonymizeUsers = anonymizeUsers;
         }
     }
 }

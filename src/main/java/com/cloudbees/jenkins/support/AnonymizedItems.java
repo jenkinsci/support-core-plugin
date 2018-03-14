@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.util.Anonymizer;
 import hudson.Extension;
 import hudson.model.ManagementLink;
+import hudson.util.FormApply;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -40,11 +42,17 @@ import java.util.Map;
  */
 @Extension
 public class AnonymizedItems extends ManagementLink {
+    private SupportPlugin plugin;
+    private SupportPlugin.AnonymizationSettings settings;
+
+    public AnonymizedItems() {
+        plugin = SupportPlugin.getInstance();
+        settings = plugin.getAnonymizationSettings();
+    }
 
     @CheckForNull
     @Override
     public String getIconFileName() {
-        // TODO:  New icon?
         return "/plugin/support-core/images/24x24/support.png";
     }
 
@@ -65,13 +73,76 @@ public class AnonymizedItems extends ManagementLink {
         return Messages.AnonymizedItems_Description();
     }
 
-    public Map<String, String> getAnon() {
+    public Map<String, String> getAnonymizedItemMap() {
         return Anonymizer.getDisplayItems();
     }
 
+    public boolean isAnonymizeLabels() {
+        return settings.isAnonymizeLabels();
+    }
+
+    public void setAnonymizeLabels(boolean anonymizeLabels) {
+        settings.setAnonymizeLabels(anonymizeLabels);
+    }
+
+    public boolean isAnonymizeItems() {
+        return settings.isAnonymizeItems();
+    }
+
+    public void setAnonymizeItems(boolean anonymizeItems) throws IOException {
+        settings.setAnonymizeItems(anonymizeItems);
+    }
+
+    public boolean isAnonymizeViews() {
+        return settings.isAnonymizeViews();
+    }
+
+    public void setAnonymizeViews(boolean anonymizeViews) throws IOException {
+        settings.setAnonymizeViews(anonymizeViews);
+    }
+
+    public boolean isAnonymizeNodes() {
+        return settings.isAnonymizeNodes();
+    }
+
+    public void setAnonymizeNodes(boolean anonymizeNodes) throws IOException {
+        settings.setAnonymizeNodes(anonymizeNodes);
+    }
+
+    public boolean isAnonymizeComputers() {
+        return settings.isAnonymizeComputers();
+    }
+
+    public void setAnonymizeComputers(boolean anonymizeComputers) throws IOException {
+        settings.setAnonymizeComputers(anonymizeComputers);
+    }
+
+    public boolean isAnonymizeUsers() {
+        return settings.isAnonymizeUsers();
+    }
+
+    public void setAnonymizeUsers(boolean anonymizeUsers) throws IOException {
+        settings.setAnonymizeUsers(anonymizeUsers);
+    }
+
     @RequirePOST
-    public void doUpdateNow(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doUpdateNow(StaplerRequest request, StaplerResponse response) throws ServletException, IOException {
         Anonymizer.refresh();
-        rsp.forwardToPreviousPage(req);
+        response.forwardToPreviousPage(request);
+    }
+
+    @RequirePOST
+    public synchronized void doConfigSubmit(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
+        JSONObject json = request.getSubmittedForm();
+        setAnonymizeLabels(json.getBoolean("anonymizeLabels"));
+        setAnonymizeItems(json.getBoolean("anonymizeItems"));
+        setAnonymizeViews(json.getBoolean("anonymizeViews"));
+        setAnonymizeNodes(json.getBoolean("anonymizeNodes"));
+        setAnonymizeComputers(json.getBoolean("anonymizeComputers"));
+        setAnonymizeUsers(json.getBoolean("anonymizeUsers"));
+
+        plugin.save();
+
+        FormApply.success(".").generateResponse(request, response, null);
     }
 }

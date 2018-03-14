@@ -95,38 +95,38 @@ public class Anonymizer {
             }
         }
 
-        SupportPlugin plugin = SupportPlugin.getInstance();
-        if (plugin.shouldAnonymizeLabels()) {
+        SupportPlugin.AnonymizationSettings settings = SupportPlugin.getInstance().getAnonymizationSettings();
+        if (settings.isAnonymizeLabels()) {
             for (Label label : instance.getLabels()) {
                 anonymizeName(label.getName(), "label", "", false);
             }
         }
 
-        if (plugin.shouldAnonymizeItems()) {
+        if (settings.isAnonymizeItems()) {
             for (Item item : instance.getAllItems()) {
                 anonymizePath(item.getFullName(), "item", false);
             }
         }
 
-        if (plugin.shouldAnonymizeViews()) {
+        if (settings.isAnonymizeViews()) {
             for (View view : instance.getViews()) {
                 anonymizeName(view.getViewName(), "view", "", false);
             }
         }
 
-        if (plugin.shouldAnonymizeNodes()) {
+        if (settings.isAnonymizeNodes()) {
             for (Node node : instance.getNodes()) {
                 anonymizeName(node.getDisplayName(), "node", "", false);
             }
         }
 
-        if (plugin.shouldAnonymizeComputers()) {
+        if (settings.isAnonymizeComputers()) {
             for (Computer computer : instance.getComputers()) {
                 anonymizeName(computer.getDisplayName(), "computer", "", false);
             }
         }
 
-        if (plugin.shouldAnonymizeUsers()) {
+        if (settings.isAnonymizeUsers()) {
             for (User user : User.getAll()) {
                 anonymizeName(user.getDisplayName(), "user", "", false);
             }
