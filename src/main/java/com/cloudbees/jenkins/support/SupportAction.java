@@ -181,7 +181,7 @@ public class SupportAction implements RootAction {
             return;
         }
         logger.fine("Parsing request...");
-        Set<String> remove = new HashSet<String>();
+        Set<String> remove = new HashSet<>();
         Selection anonymizeOption = req.bindJSON(Selection.class, json.getJSONObject("anonymizeOption"));
         for (Selection s : req.bindJSONToList(Selection.class, json.get("components"))) {
             if (!s.isSelected()) {
@@ -190,13 +190,8 @@ public class SupportAction implements RootAction {
             }
         }
         logger.fine("Selecting components...");
-        final List<Component> components = new ArrayList<Component>(getComponents());
-        for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
-            Component c = iterator.next();
-            if (remove.contains(c.getId()) || !c.isEnabled()) {
-                iterator.remove();
-            }
-        }
+        final List<Component> components = new ArrayList<>(getComponents());
+        components.removeIf(c -> remove.contains(c.getId()) || !c.isEnabled());
         final SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
             supportPlugin.setExcludedComponents(remove);

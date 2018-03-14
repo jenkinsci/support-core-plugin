@@ -111,8 +111,8 @@ public class AboutJenkins extends Component {
 
     @Override
     public void addContents(@NonNull Container container, boolean shouldAnonymize) {
-        List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();
-        List<PluginWrapper> disabledPlugins = new ArrayList<PluginWrapper>();
+        List<PluginWrapper> activePlugins = new ArrayList<>();
+        List<PluginWrapper> disabledPlugins = new ArrayList<>();
 
         populatePluginsLists(activePlugins, disabledPlugins);
 

@@ -43,8 +43,9 @@ public class ConfigFileComponent extends Component {
         File configFile = new File(jenkins.getRootDir(), "config.xml");
         if (configFile.exists()) {
             container.add(
-                    new XmlRedactedSecretFileContent(new ContentData("jenkins-root-configuration-files/" + configFile.getName(), shouldAnonymize),
-                                                     configFile));
+                    new XmlRedactedSecretFileContent(
+                            new ContentData("jenkins-root-configuration-files/" + configFile.getName(), shouldAnonymize),
+                            configFile));
         } else {
             //this should never happen..
             LOGGER.log(Level.WARNING, "Jenkins global config file does not exist.");

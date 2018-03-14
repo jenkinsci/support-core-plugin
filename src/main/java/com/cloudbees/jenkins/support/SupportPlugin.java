@@ -363,8 +363,7 @@ public class SupportPlugin extends Plugin {
         }
         toProcess.add(new StringContent(new ContentData("manifest.md", shouldAnonymize), manifest.toString()));
         try {
-            ZipOutputStream zip = new ZipOutputStream(outputStream);
-            try {
+            try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
                 BufferedOutputStream bos = new BufferedOutputStream(zip, 16384) {
                     @Override
                     public void close() throws IOException {
@@ -410,8 +409,6 @@ public class SupportPlugin extends Plugin {
                     }
                     zip.flush();
                 }
-            } finally {
-                zip.close();
             }
         } finally {
             outputStream.flush();

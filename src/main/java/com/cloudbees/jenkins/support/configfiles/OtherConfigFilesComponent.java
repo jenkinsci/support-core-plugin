@@ -48,7 +48,9 @@ public class OtherConfigFilesComponent extends Component {
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
-                        container.add(new XmlRedactedSecretFileContent(new ContentData("jenkins-root-configuration-files/" + configFile.getName(), shouldAnonymize), configFile));
+                        container.add(new XmlRedactedSecretFileContent(
+                                new ContentData("jenkins-root-configuration-files/" + configFile.getName(), shouldAnonymize),
+                                configFile));
                     }
                 }
             } else {

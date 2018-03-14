@@ -80,7 +80,9 @@ public class Anonymizer {
 
     @SuppressWarnings("unchecked")
     public static void refresh() {
+        LOGGER.log(Level.FINE, "Refreshing anonymized items");
         Jenkins instance = Jenkins.getInstance();
+        // TODO:  Ensure this is human readable
         if (ANONYMIZED_NAMES_FILE.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ANONYMIZED_NAMES_FILE))) {
                 ANON_MAP.putAll((Map<String, String>) ois.readObject());
