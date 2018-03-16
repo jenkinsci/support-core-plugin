@@ -95,6 +95,7 @@ public class FileContentTest {
         String foobarbaz = Anonymizer.anonymize("foo/bar/baz");
         String foobarSpace = Anonymizer.anonymize("foo bar");
 
+        // Experienced some problems with Windows for this test - using System.lineSeparator() for all new lines
         String ls = System.lineSeparator();
         File file = tmp.newFile();
         FileUtils.writeStringToFile(file, "foo" + ls + "foo/bar" + ls + "foo/bar/baz" + ls + "foo bar" + ls + "foobar" + ls);
