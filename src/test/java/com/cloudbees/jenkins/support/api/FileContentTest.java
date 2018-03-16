@@ -95,19 +95,20 @@ public class FileContentTest {
         String foobarbaz = Anonymizer.anonymize("foo/bar/baz");
         String foobarSpace = Anonymizer.anonymize("foo bar");
 
+        String ls = System.lineSeparator();
         File file = tmp.newFile();
-        FileUtils.writeStringToFile(file, "foo\nfoo/bar\nfoo/bar/baz\nfoo bar\nfoobar\n");
+        FileUtils.writeStringToFile(file, "foo" + ls + "foo/bar" + ls + "foo/bar/baz" + ls + "foo bar" + ls + "foobar" + ls);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         new FileContent(new ContentData("-", true), file).writeTo(out);
-        assertEquals(foo + "\n" + foobar + "\n" + foobarbaz + "\n" + foobarSpace + "\nfoobar\n",
+        assertEquals(foo + ls + foobar + ls + foobarbaz + ls + foobarSpace + ls + "foobar" + ls,
                 out.toString());
 
         File file2 = tmp.newFile();
-        FileUtils.writeStringToFile(file2, "foo foo/bar foo/bar/baz foo bar foobar\n");
+        FileUtils.writeStringToFile(file2, "foo foo/bar foo/bar/baz foo bar foobar" + ls);
         out.reset();
         new FileContent(new ContentData("-", true), file2).writeTo(out);
-        assertEquals(foo + " " + foobar + " " + foobarbaz + " " + foobarSpace + " foobar\n", out.toString());
+        assertEquals(foo + " " + foobar + " " + foobarbaz + " " + foobarSpace + " foobar" + ls, out.toString());
     }
 
     @Test
@@ -117,9 +118,9 @@ public class FileContentTest {
         String hello = Anonymizer.anonymize("hello");
 
         File f = tmp.newFile();
-        FileUtils.writeStringToFile(f, "hello world\n");
+        FileUtils.writeStringToFile(f, "hello world" + System.lineSeparator());
 
-        String fullContent = hello + " world\n";
+        String fullContent = hello + " world" + System.lineSeparator();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent(new ContentData("-", true), f).writeTo(baos);
         assertEquals(fullContent, baos.toString());
