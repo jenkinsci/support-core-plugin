@@ -26,7 +26,9 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
@@ -57,8 +59,13 @@ import java.util.TreeMap;
         return Collections.singleton(Jenkins.ADMINISTER);
     }
 
-    @Override public void addContents(Container result) {
-        final Map<String,AdministrativeMonitor> activated = new TreeMap<String,AdministrativeMonitor>();
+    @Override
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override public void addContents(Container result, boolean shouldAnonymize) {
+        final Map<String,AdministrativeMonitor> activated = new TreeMap<>();
         for (AdministrativeMonitor monitor : AdministrativeMonitor.all()) {
             if (monitor instanceof ReverseProxySetupMonitor) {
                 // This one is pretty special: always activated, but may or may not show anything in message.jelly.
@@ -70,7 +77,7 @@ import java.util.TreeMap;
             // disabled monitors could include RekeySecretAdminMonitor; no reason to show it
         }
         if (!activated.isEmpty()) {
-            result.add(new PrintedContent("admin-monitors.md") {
+            result.add(new PrintedContent(new ContentData("admin-monitors.md", shouldAnonymize)) {
                 @Override protected void printTo(PrintWriter out) throws IOException {
                     out.println("Monitors");
                     out.println("========");

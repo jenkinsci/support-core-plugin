@@ -26,14 +26,13 @@ package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
-
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
@@ -45,15 +44,14 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -183,7 +181,8 @@ public class SupportAction implements RootAction {
             return;
         }
         logger.fine("Parsing request...");
-        Set<String> remove = new HashSet<String>();
+        Set<String> remove = new HashSet<>();
+        Selection anonymizeOption = req.bindJSON(Selection.class, json.getJSONObject("anonymizeOption"));
         for (Selection s : req.bindJSONToList(Selection.class, json.get("components"))) {
             if (!s.isSelected()) {
                 logger.log(Level.FINER, "Excluding ''{0}'' from list of components to include", s.getName());
@@ -191,13 +190,8 @@ public class SupportAction implements RootAction {
             }
         }
         logger.fine("Selecting components...");
-        final List<Component> components = new ArrayList<Component>(getComponents());
-        for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
-            Component c = iterator.next();
-            if (remove.contains(c.getId()) || !c.isEnabled()) {
-                iterator.remove();
-            }
-        }
+        final List<Component> components = new ArrayList<>(getComponents());
+        components.removeIf(c -> remove.contains(c.getId()) || !c.isEnabled());
         final SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
             supportPlugin.setExcludedComponents(remove);
@@ -208,11 +202,18 @@ public class SupportAction implements RootAction {
         rsp.addHeader("Content-Disposition", "inline; filename=" + SupportPlugin.getBundleFileName() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
+            boolean shouldAnonymize = false;
+            // Can be null depending on the request
+            if (anonymizeOption != null && anonymizeOption.isSelected()) {
+                logger.log(Level.FINER, "Anonymizing support bundle");
+                Anonymizer.refresh();
+                shouldAnonymize = true;
+            }
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
             try {
                 SecurityContext old = ACL.impersonate(ACL.SYSTEM);
                 try {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
+                    SupportPlugin.writeBundle(servletOutputStream, components, shouldAnonymize);
                 } catch (IOException e) {
                     logger.log(Level.FINE, e.getMessage(), e);
                 } finally {

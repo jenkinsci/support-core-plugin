@@ -40,7 +40,7 @@ public class NetworkInterfacesTest {
                     e.printStackTrace();
                 }
             }
-        });
+        }, false);
 
         String masterNetworkInterfaces = baos.toString();
 

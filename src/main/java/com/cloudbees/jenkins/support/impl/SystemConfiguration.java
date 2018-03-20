@@ -27,11 +27,13 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +43,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * System configuration data (CPU information, swap configuration, mount points,
@@ -97,19 +98,19 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
     }
 
     @Override
-    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
+    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name, boolean shouldAnonymize) {
         container.add(
-                CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
-        container.add(CommandOutputContent.runOnNode(node, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
-        container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/" + name + "/userid.txt", "/bin/sh", "-c", "id -a"));
-        container.add(new StringContent("nodes/" + name + "/dmi.txt", getDmiInfo(node)));
+                CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, shouldAnonymize, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
+        container.add(CommandOutputContent.runOnNode(node, shouldAnonymize, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
+        container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, shouldAnonymize, "nodes/" + name + "/userid.txt", "/bin/sh", "-c", "id -a"));
+        container.add(new StringContent(new ContentData("nodes/" + name + "/dmi.txt", shouldAnonymize), getDmiInfo(node, shouldAnonymize)));
     }
 
-    public String getDmiInfo(Node node) {
+    public String getDmiInfo(Node node, boolean shouldAnonymize) {
         try {
-            return AsyncResultCache.get(node, dmiCache, new GetDmiInfo(), "dmi", "");
+            return AsyncResultCache.get(node, dmiCache, shouldAnonymize, new GetDmiInfo(), "dmi", "");
         } catch (IOException e) {
-            LOGGER.log(Level.FINE, "Could not retrieve dmi content from " + getNodeName(node), e);
+            LOGGER.log(Level.FINE, "Could not retrieve dmi content from " + getNodeName(node, shouldAnonymize), e);
         }
         return "no dmi info";
     }

@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -10,6 +11,7 @@ import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,7 +24,6 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Environment variables on the nodes.
@@ -50,12 +51,17 @@ public class EnvironmentVariables extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
-        result.add(new PrintedContent("nodes/master/environment.txt") {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
+        result.add(new PrintedContent(new ContentData("nodes/master/environment.txt", shouldAnonymize)) {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
-                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance()).entrySet()) {
+                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance(), shouldAnonymize).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -66,17 +72,17 @@ public class EnvironmentVariables extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
+                    new PrintedContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/environment.txt", shouldAnonymize)) {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
-                                for (Map.Entry<String, String> entry : getEnvironmentVariables(node)
+                                for (Map.Entry<String, String> entry : getEnvironmentVariables(node, shouldAnonymize)
                                         .entrySet()) {
                                     out.println(entry.getKey() + "=" + entry.getValue());
                                 }
                             } catch (IOException e) {
                                 logger.log(Level.WARNING,
-                                        "Could not record environment of node " + node.getNodeName(), e);
+                                        "Could not record environment of node " + getNodeName(node, shouldAnonymize), e);
                             }
                         }
                     }
@@ -85,7 +91,11 @@ public class EnvironmentVariables extends Component {
     }
 
     public Map<String,String> getEnvironmentVariables(Node node) throws IOException {
-        return AsyncResultCache.get(node, environmentVariableCache, new GetEnvironmentVariables(), "environment",
+        return getEnvironmentVariables(node, false);
+    }
+
+    public Map<String,String> getEnvironmentVariables(Node node, boolean shouldAnonymize) throws IOException {
+        return AsyncResultCache.get(node, environmentVariableCache, shouldAnonymize, new GetEnvironmentVariables(), "environment",
                 UNAVAILABLE);
     }
 

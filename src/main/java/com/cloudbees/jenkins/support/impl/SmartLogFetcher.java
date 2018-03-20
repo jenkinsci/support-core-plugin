@@ -1,11 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import hudson.util.IOUtils;
+import jenkins.MasterToSlaveFileCallable;
+import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
@@ -22,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.MasterToSlaveFileCallable;
 
 /**
  * Efficient incremental retrieval of log files from {@link Node}, by taking advantages of
@@ -39,6 +41,7 @@ import jenkins.MasterToSlaveFileCallable;
 class SmartLogFetcher {
     private final File rootCacheDir;
     private final FilenameFilter filter;
+    private final boolean shouldAnonymize;
 
     /**
      * @param id
@@ -48,9 +51,30 @@ class SmartLogFetcher {
      *      Used to match log files within the target directory.
      */
     public SmartLogFetcher(String id, FilenameFilter filter) {
+        this(id, filter, false);
+    }
+
+    /**
+     * @param id
+     *      SmartLogFetcher only supports one directory full of log files retrieved in one go.
+     *      So different IDs would have to be specified for different log files from different directories.
+     * @param filter
+     *      Used to match log files within the target directory.
+     * @param anonymizer
+     *      Anonymizes information.  Can be null.
+     */
+    public SmartLogFetcher(String id, FilenameFilter filter, boolean shouldAnonymize) {
         this.rootCacheDir = new File(SupportPlugin.getRootDirectory(), id);
         this.filter = filter;
+        this.shouldAnonymize = shouldAnonymize;
         assert filter instanceof Serializable;
+    }
+
+    private static String getNodeName(Node node, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return node instanceof Jenkins ? "master" : Anonymizer.anonymize(node.getNodeName());
+        }
+        return node instanceof Jenkins ? "master" : node.getNodeName();
     }
 
     public ForNode forNode(Node n) throws IOException {
@@ -68,7 +92,7 @@ class SmartLogFetcher {
         ForNode(Node node) throws IOException {
             this.node = node;
 
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
+            String cacheKey = Util.getDigestOf(getNodeName(node, shouldAnonymize) + ":" + node.getRootPath());
             this.cacheDir = new File(rootCacheDir, StringUtils.right(cacheKey, 8));
 
             if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {

@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.SupportContext;
 import com.google.common.collect.Lists;
@@ -66,28 +67,33 @@ public class JenkinsLogs extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
-        addMasterJulRingBuffer(result);
-        addMasterJulLogRecords(result);
-        addOtherMasterLogs(result);
-        addLogRecorders(result);
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
+        addMasterJulRingBuffer(result, shouldAnonymize);
+        addMasterJulLogRecords(result, shouldAnonymize);
+        addOtherMasterLogs(result, shouldAnonymize);
+        addLogRecorders(result, shouldAnonymize);
     }
 
     /**
      * Dumps the content of {@link LogRecorder}, which is the groups of loggers configured
      * by the user. The contents are also ring buffer and only remembers recent 256 or so entries.
      */
-    private void addLogRecorders(Container result) {
+    private void addLogRecorders(Container result, boolean shouldAnonymize) {
         for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
             String name = entry.getKey();
             String entryName = "nodes/master/logs/custom/" + name + ".log";
             File storedFile = new File(customLogs, name + ".log");
             if (storedFile.isFile()) {
-                result.add(new FileContent(entryName, storedFile));
+                result.add(new FileContent(new ContentData(entryName, shouldAnonymize), storedFile));
             } else {
                 // Was not stored for some reason; fine, just load the memory buffer.
                 final LogRecorder recorder = entry.getValue();
-                result.add(new LogRecordContent(entryName) {
+                result.add(new LogRecordContent(new ContentData(entryName, shouldAnonymize)) {
                     @Override
                     public Iterable<LogRecord> getLogRecords() {
                         return recorder.getLogRecords();
@@ -103,19 +109,19 @@ public class JenkinsLogs extends Component {
      * Does not add anything if Jenkins instance is unavailable.
      * Some plugins write log files here.
      */
-    private void addOtherMasterLogs(Container result) {
+    private void addOtherMasterLogs(Container result, boolean shouldAnonymize) {
         final Jenkins jenkins = Jenkins.getInstance();
         File[] files = jenkins.getRootDir().listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent(new ContentData("other-logs/" + f.getName(), shouldAnonymize), f));
             }
         }
         File logs = new File(jenkins.getRootDir(), "logs");
         files = logs.listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent(new ContentData("other-logs/" + f.getName(), shouldAnonymize), f));
             }
         }
 
@@ -123,7 +129,7 @@ public class JenkinsLogs extends Component {
         files = taskLogs.listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent(new ContentData("other-logs/" + f.getName(), shouldAnonymize), f));
             }
         }
     }
@@ -136,11 +142,11 @@ public class JenkinsLogs extends Component {
      *
      * @see WebAppMain#installLogger()
      */
-    private void addMasterJulRingBuffer(Container result) {
-        result.add(new LogRecordContent("nodes/master/logs/jenkins.log") {
+    private void addMasterJulRingBuffer(Container result, boolean shouldAnonymize) {
+        result.add(new LogRecordContent(new ContentData("nodes/master/logs/jenkins.log", shouldAnonymize)) {
             @Override
             public Iterable<LogRecord> getLogRecords() {
-                return Lists.reverse(new ArrayList<LogRecord>(Jenkins.logRecords));
+                return Lists.reverse(new ArrayList<>(Jenkins.logRecords));
             }
         });
     }
@@ -152,13 +158,13 @@ public class JenkinsLogs extends Component {
      * Compared to {@link #addMasterJulRingBuffer(Container)}, this one uses disk files,
      * so it remembers larger number of entries.
      */
-    private void addMasterJulLogRecords(Container result) {
+    private void addMasterJulLogRecords(Container result, boolean shouldAnonymize) {
         // this file captures the most recent of those that are still kept around in memory.
         // this overlaps with Jenkins.logRecords, and also overlaps with what's written in files,
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new LogRecordContent("nodes/master/logs/all_memory_buffer.log") {
+        result.add(new LogRecordContent(new ContentData("nodes/master/logs/all_memory_buffer.log", shouldAnonymize)) {
             @Override
             public Iterable<LogRecord> getLogRecords() {
                 return SupportPlugin.getInstance().getAllLogRecords();
@@ -173,7 +179,7 @@ public class JenkinsLogs extends Component {
 
         // log records written to the disk
         for (File file : julLogFiles){
-            result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
+            result.add(new FileContent(new ContentData("nodes/master/logs/" + file.getName(), shouldAnonymize), file));
         }
     }
 

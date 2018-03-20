@@ -24,13 +24,18 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.util.AnonymizedPrintWriter;
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
+import hudson.model.Node;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.Set;
 
@@ -116,7 +121,40 @@ public abstract class Component implements ExtensionPoint {
 
     public abstract void addContents(@NonNull Container container);
 
+    /**
+     * This should be overwritten to get anonymization support.  It is not declared abstract so as to not break
+     * compatibility with dependents.
+     */
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        addContents(container);
+    }
+
     public void start(@NonNull SupportContext context) {
 
+    }
+
+    protected static String getNodeName(Node node) {
+        return getNodeName(node, false);
+    }
+
+    protected static String getNodeName(Node node, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return node instanceof Jenkins ? "master" : Anonymizer.anonymize(node.getNodeName());
+        }
+        return node instanceof Jenkins ? "master" : node.getNodeName();
+    }
+
+    protected static PrintWriter getPrintWriter(Writer writer, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return new AnonymizedPrintWriter(writer);
+        }
+        return new PrintWriter(writer);
+    }
+
+    protected static PrintWriter getPrintWriter(Writer writer, boolean autoFlush, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return new AnonymizedPrintWriter(writer, autoFlush);
+        }
+        return new PrintWriter(writer, autoFlush);
     }
 }

@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -34,10 +35,15 @@ public class AboutUser extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         final Authentication authentication = SupportPlugin.getRequesterAuthentication();
         if (authentication != null) {
-            result.add(new PrintedContent("user.md") {
+            result.add(new PrintedContent(new ContentData("user.md", shouldAnonymize)) {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     out.println("User");

@@ -23,6 +23,11 @@ public class DeadlockRequestComponent extends FileListCapComponent {
 
     @Override
     public void addContents(@NonNull Container container) {
-        super.addContents(container, checker.logs);
+        super.addContents(container, checker.logs, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        super.addContents(container, checker.logs, shouldAnonymize);
     }
 }

@@ -24,8 +24,15 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.util.AnonymizedPrintWriter;
+import com.cloudbees.jenkins.support.util.Anonymizer;
+import hudson.model.Node;
+import jenkins.model.Jenkins;
+
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  * Represents some content in a support bundle.
@@ -35,13 +42,44 @@ import java.io.OutputStream;
 public abstract class Content {
 
     private final String name;
+    protected final boolean shouldAnonymize;
 
     protected Content(String name) {
-        this.name = name;
+        this(new ContentData(name, false));
+    }
+
+    protected Content(ContentData contentData) {
+        name = contentData.getName();
+        shouldAnonymize = contentData.isShouldAnonymize();
     }
 
     public String getName() {
         return name;
+    }
+
+    protected String getNodeName(Node node) {
+        return getNodeName(node, shouldAnonymize);
+    }
+
+    protected static String getNodeName(Node node, boolean shouldAnonymize) {
+        if (shouldAnonymize) {
+            return node instanceof Jenkins ? "master" : Anonymizer.anonymize(node.getNodeName());
+        }
+        return node instanceof Jenkins ? "master" : node.getNodeName();
+    }
+
+    protected PrintWriter getPrintWriter(Writer writer) {
+        if (shouldAnonymize) {
+            return new AnonymizedPrintWriter(writer);
+        }
+        return new PrintWriter(writer);
+    }
+
+    protected PrintWriter getPrintWriter(Writer writer, boolean autoFlush) {
+        if (shouldAnonymize) {
+            return new AnonymizedPrintWriter(writer, autoFlush);
+        }
+        return new PrintWriter(writer, autoFlush);
     }
 
     public abstract void writeTo(OutputStream os) throws IOException;

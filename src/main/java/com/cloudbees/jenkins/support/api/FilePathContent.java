@@ -48,21 +48,29 @@ public class FilePathContent extends Content {
     private final FilePath file;
 
     public FilePathContent(String name, FilePath file) {
-        super(name);
+        this(new ContentData(name, false), file);
+    }
+
+    public FilePathContent(ContentData contentData, FilePath file) {
+        super(contentData);
         this.file = file;
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {
-            file.copyTo(os);
+            if (shouldAnonymize) {
+                FileContent.anonymizeOutput(os, file.read(), -1);
+            } else {
+                file.copyTo(os);
+            }
         } catch (InterruptedException e) {
             throw new IOException(e);
         } catch (IOException e) {
             if (isFileNotFound(e) || isFileNotFound(e.getCause())) {
                 OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8");
                 try {
-                    PrintWriter pw = new PrintWriter(osw, true);
+                    PrintWriter pw = getPrintWriter(osw, true);
                     try {
                         pw.println("--- WARNING: Could not attach " + file.getRemote() + " as it cannot currently be found ---");
                         pw.println();

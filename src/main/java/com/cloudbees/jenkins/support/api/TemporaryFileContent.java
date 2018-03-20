@@ -39,7 +39,11 @@ public class TemporaryFileContent extends FileContent {
     private File f;
 
     public TemporaryFileContent(String name, File file) {
-        super(name, file);
+        this(new ContentData(name, false), file);
+    }
+
+    public TemporaryFileContent(ContentData contentData, File file) {
+        super(contentData, file);
         f = file;
     }
 

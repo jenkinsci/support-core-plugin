@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.TruncatedContent;
 import com.cloudbees.jenkins.support.api.TruncationException;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -46,10 +47,15 @@ public class DumpExportTable extends Component {
   }
 
   @Override
-  public void addContents(@NonNull Container result) {
+  public void addContents(@NonNull Container container) {
+    addContents(container, false);
+  }
+
+  @Override
+  public void addContents(@NonNull Container result, boolean shouldAnonymize) {
     for (final Node node : Jenkins.getInstance().getNodes()) {
       result.add(
-        new TruncatedContent("nodes/slave/" + node.getNodeName() + "/exportTable.txt") {
+        new TruncatedContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/exportTable.txt", shouldAnonymize)) {
           @Override
           protected void printTo(PrintWriter out) throws IOException {
             try {
@@ -61,10 +67,10 @@ public class DumpExportTable extends Component {
               }
             } catch (TruncationException e) {
               logger.log(Level.WARNING,
-                      "Truncated the output of export table for node: " + node.getNodeName(), e);
+                      "Truncated the output of export table for node: " + getNodeName(node, shouldAnonymize), e);
             } catch (IOException e) {
               logger.log(Level.WARNING,
-                      "Could not record environment of node " + node.getNodeName(), e);
+                      "Could not record environment of node " + getNodeName(node, shouldAnonymize), e);
             }
           }
         }

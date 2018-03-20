@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -39,10 +40,15 @@ public class AboutBrowser extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         final StaplerRequest currentRequest = Stapler.getCurrentRequest();
         if (currentRequest != null) {
-            result.add(new PrintedContent("browser.md") {
+            result.add(new PrintedContent(new ContentData("browser.md", shouldAnonymize)) {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     out.println("Browser");

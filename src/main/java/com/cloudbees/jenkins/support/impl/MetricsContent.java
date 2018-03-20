@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.json.HealthCheckModule;
@@ -23,7 +24,11 @@ public class MetricsContent extends Content {
     private ObjectMapper objectMapper;
 
     public MetricsContent(String name, MetricRegistry metricsRegistry) {
-        super(name);
+        this(new ContentData(name, false), metricsRegistry);
+    }
+
+    public MetricsContent(ContentData contentData, MetricRegistry metricsRegistry) {
+        super(contentData);
         this.registry = metricsRegistry;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new MetricsModule(TimeUnit.MINUTES, TimeUnit.SECONDS, true));
@@ -31,6 +36,7 @@ public class MetricsContent extends Content {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    // TODO:  Needs anonymization?
     @Override
     public void writeTo(OutputStream os) throws IOException {
         objectMapper.writer().writeValue(os, registry);

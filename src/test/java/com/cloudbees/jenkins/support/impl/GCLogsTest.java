@@ -26,7 +26,7 @@ public class GCLogsTest {
 
         TestContainer container = new TestContainer();
 
-        new GCLogs(finder).addContents(container);
+        new GCLogs(finder).addContents(container, false);
 
         assertEquals(1, container.getContents().size());
     }
@@ -47,7 +47,7 @@ public class GCLogsTest {
 
         TestContainer container = new TestContainer();
 
-        new GCLogs(finder).addContents(container);
+        new GCLogs(finder).addContents(container, false);
 
         assertEquals(15, container.getContents().size());
     }

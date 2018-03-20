@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -62,7 +63,12 @@ public class SlaveLaunchLogs extends Component{
 
     @Override
     public void addContents(@NonNull Container container) {
-        addSlaveLaunchLog(container);
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, boolean shouldAnonymize) {
+        addSlaveLaunchLog(container, shouldAnonymize);
     }
 
     /**
@@ -77,7 +83,7 @@ public class SlaveLaunchLogs extends Component{
      * will be full of old files that are not very interesting. Use some heuristics to cut off logs
      * that are old.
      */
-    private void addSlaveLaunchLog(Container result) {
+    private void addSlaveLaunchLog(Container result, boolean shouldAnonymize) {
         class Slave implements Comparable<Slave> {
             /**
              * Launch log directory of the agent: logs/slaves/NAME
@@ -162,7 +168,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, FileListCapComponent.MAX_FILE_SIZE));
+                    result.add(new FileContent(new ContentData("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName(), shouldAnonymize), f, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
     }

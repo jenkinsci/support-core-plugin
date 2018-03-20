@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.FileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.security.Permission;
@@ -30,6 +31,10 @@ public abstract class FileListCapComponent extends Component {
     }
 
     public void addContents(@NonNull Container container, FileListCap fileListCap) {
+        addContents(container, fileListCap, false);
+    }
+
+    public void addContents(@NonNull Container container, FileListCap fileListCap, boolean shouldAnonymize) {
         synchronized (fileListCap) {
             // while we read and put the reports into the support bundle, we don't want
             // the FileListCap to delete files. So we lock it.
@@ -37,7 +42,7 @@ public abstract class FileListCapComponent extends Component {
             final Collection<File> files = FileUtils.listFiles(
                     fileListCap.getFolder(), new String[] {"txt"}, false);
             for (File f : files) {
-                container.add(new FileContent(fileListCap.getFolder().getName() + "/" + f.getName(), f, MAX_FILE_SIZE));
+                container.add(new FileContent(new ContentData(fileListCap.getFolder().getName() + "/" + f.getName(), shouldAnonymize), f, MAX_FILE_SIZE));
             }
         }
     }

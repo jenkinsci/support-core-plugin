@@ -66,7 +66,7 @@ public class BuildQueueTest {
 
     // When
     build = p.scheduleBuild2(0);
-    queue.addContents(createContainer(baos));
+    queue.addContents(createContainer(baos), false);
 
     // Then
     build.cancel(true);

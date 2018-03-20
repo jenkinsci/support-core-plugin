@@ -25,17 +25,21 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.SupportLogFormatter;
+import com.cloudbees.jenkins.support.util.Anonymizer;
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Content that is stored as a file on disk.
@@ -48,11 +52,21 @@ public class FileContent extends Content {
     private final long maxSize;
 
     public FileContent(String name, File file) {
-        this(name, file, -1);
+        this(new ContentData(name, false), file, -1);
+    }
+
+    public FileContent(ContentData contentData, File file) {
+        this(contentData, file, -1);
     }
 
     public FileContent(String name, File file, long maxSize) {
-        super(name);
+        super(new ContentData(name, false));
+        this.file = file;
+        this.maxSize = maxSize;
+    }
+
+    public FileContent(ContentData contentData, File file, long maxSize) {
+        super(contentData);
         this.file = file;
         this.maxSize = maxSize;
     }
@@ -60,20 +74,24 @@ public class FileContent extends Content {
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {
-            InputStream is = getInputStream();
-            if (maxSize == -1) {
-                IOUtils.copy(is, os);
+            if (shouldAnonymize) {
+                anonymizeOutput(os, new FileInputStream(file), maxSize);
             } else {
-                try {
-                    IOUtils.copy(new TruncatedInputStream(is, maxSize), os);
-                } finally {
-                    is.close();
+                InputStream is = getInputStream();
+                if (maxSize == -1) {
+                    IOUtils.copy(is, os);
+                } else {
+                    try {
+                        IOUtils.copy(new TruncatedInputStream(is, maxSize), os);
+                    } finally {
+                        is.close();
+                    }
                 }
             }
         } catch (FileNotFoundException e) {
             OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8");
             try {
-                PrintWriter pw = new PrintWriter(osw, true);
+                PrintWriter pw = getPrintWriter(osw, true);
                 try {
                     pw.println("--- WARNING: Could not attach " + file + " as it cannot currently be found ---");
                     pw.println();
@@ -83,6 +101,24 @@ public class FileContent extends Content {
                 }
             } finally {
                 osw.flush();
+            }
+        }
+    }
+
+    public static void anonymizeOutput(OutputStream os, InputStream is, long maxSize) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+            int currentSize = 0;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = Anonymizer.anonymize(line) + System.lineSeparator();
+                byte[] asBytes = line.getBytes(StandardCharsets.UTF_8);
+                if (maxSize == -1 || currentSize + asBytes.length < maxSize) {
+                    os.write(asBytes);
+                    currentSize += asBytes.length;
+                } else {
+                    os.write(asBytes, 0, (int) (maxSize - currentSize));
+                    break;
+                }
             }
         }
     }
@@ -150,5 +186,4 @@ public class FileContent extends Content {
             return r;
         }
     }
-
 }

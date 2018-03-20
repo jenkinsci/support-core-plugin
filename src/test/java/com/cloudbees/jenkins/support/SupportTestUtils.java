@@ -31,7 +31,7 @@ public class SupportTestUtils {
                   e.printStackTrace();
                 }
               }
-            });
+            }, false);
 
     return baos.toString();
   }

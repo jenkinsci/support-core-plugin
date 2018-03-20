@@ -46,13 +46,21 @@ public abstract class TruncatedContent extends Content {
   }
 
   public TruncatedContent(String name, int maxSize) {
-    super(name);
+    this(new ContentData(name, false), maxSize);
+  }
+
+  public TruncatedContent(ContentData contentData) {
+    this(contentData, FileListCapComponent.MAX_FILE_SIZE);
+  }
+
+  public TruncatedContent(ContentData contentData, int maxSize) {
+    super(contentData);
     this.maxSize = maxSize;
   }
 
   @Override
   public void writeTo(OutputStream os) throws IOException {
-    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new TruncatedOutputStream(os, maxSize), "UTF-8")));
+    PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(new TruncatedOutputStream(os, maxSize), "UTF-8")));
     try {
       printTo(out);
     } finally {

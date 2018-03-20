@@ -27,10 +27,12 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
+import com.cloudbees.jenkins.support.util.AnonymizedPrintWriter;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -58,6 +60,7 @@ import hudson.util.TimeUnit2;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
@@ -85,6 +88,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -99,7 +103,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Main entry point for the support plugin.
@@ -149,8 +152,11 @@ public class SupportPlugin extends Plugin {
     /** class names of {@link Component} */
     private Set<String> excludedComponents;
 
+    private AnonymizationSettings anonymizationSettings;
+
     public SupportPlugin() {
         super();
+        anonymizationSettings = new AnonymizationSettings();
         handler.setLevel(getLogLevel());
         handler.setDirectory(getRootDirectory(), "all");
     }
@@ -216,6 +222,19 @@ public class SupportPlugin extends Plugin {
         save();
     }
 
+    public void addExcludedWordsFromAnonymization(Set<String> excludedWordsFromAnonymization) throws IOException {
+        anonymizationSettings.excludedWords.addAll(excludedWordsFromAnonymization);
+        save();
+    }
+
+    public Set<String> getExcludedWordsFromAnonymization() {
+        return anonymizationSettings.excludedWords;
+    }
+
+    public AnonymizationSettings getAnonymizationSettings() {
+        return anonymizationSettings;
+    }
+
     public Histogram getJenkinsExecutorTotalCount() {
         return JenkinsMetricProviderImpl.instance().getJenkinsExecutorTotalCount();
     }
@@ -272,6 +291,10 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
+        writeBundle(outputStream, components, false);
+    }
+
+    public static void writeBundle(OutputStream outputStream, final List<Component> components, boolean shouldAnonymize) throws IOException {
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
         final Set<String> names = new TreeSet<String>();
@@ -302,12 +325,17 @@ public class SupportPlugin extends Plugin {
         manifest.append("Requested components:\n\n");
 
         StringWriter errors = new StringWriter();
-        PrintWriter errorWriter = new PrintWriter(errors);
+        PrintWriter errorWriter;
+        if (shouldAnonymize) {
+            errorWriter = new AnonymizedPrintWriter(errors);
+        } else {
+            errorWriter = new PrintWriter(errors);
+        }
         for (Component c : components) {
             try {
                 manifest.append("  * ").append(c.getDisplayName()).append("\n\n");
                 names.clear();
-                c.addContents(container);
+                c.addContents(container, shouldAnonymize);
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
                 }
@@ -333,10 +361,9 @@ public class SupportPlugin extends Plugin {
 
             }
         }
-        toProcess.add(new StringContent("manifest.md", manifest.toString()));
+        toProcess.add(new StringContent(new ContentData("manifest.md", shouldAnonymize), manifest.toString()));
         try {
-            ZipOutputStream zip = new ZipOutputStream(outputStream);
-            try {
+            try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
                 BufferedOutputStream bos = new BufferedOutputStream(zip, 16384) {
                     @Override
                     public void close() throws IOException {
@@ -382,8 +409,6 @@ public class SupportPlugin extends Plugin {
                     }
                     zip.flush();
                 }
-            } finally {
-                zip.close();
             }
         } finally {
             outputStream.flush();
@@ -821,4 +846,81 @@ public class SupportPlugin extends Plugin {
         }
     }
 
+
+    public static class AnonymizationSettings {
+        // TODO:  Provide a way to modify these
+        private Set<String> excludedWords = new HashSet<>();
+
+        private boolean anonymizeLabels;
+        private boolean anonymizeItems;
+        private boolean anonymizeViews;
+        private boolean anonymizeNodes;
+        private boolean anonymizeComputers;
+        private boolean anonymizeUsers;
+
+        public AnonymizationSettings() {
+            // TODO:  Where should this actually go?  Here?  Elsewhere?  I don't think that these particular strings
+            // should be modifiable by users
+            excludedWords.add("a");
+            excludedWords.add("the");
+            excludedWords.add("all");
+            excludedWords.add("master");
+            excludedWords.add("jenkins");
+            excludedWords.add("node");
+            excludedWords.add("computer");
+            excludedWords.add("item");
+            excludedWords.add("label");
+            excludedWords.add("view");
+            excludedWords.add("user");
+            excludedWords.add("");
+        }
+
+        public boolean isAnonymizeLabels() {
+            return anonymizeLabels;
+        }
+
+        public void setAnonymizeLabels(boolean anonymizeLabels) {
+            this.anonymizeLabels = anonymizeLabels;
+        }
+
+        public boolean isAnonymizeItems() {
+            return anonymizeItems;
+        }
+
+        public void setAnonymizeItems(boolean anonymizeItems) {
+            this.anonymizeItems = anonymizeItems;
+        }
+
+        public boolean isAnonymizeViews() {
+            return anonymizeViews;
+        }
+
+        public void setAnonymizeViews(boolean anonymizeViews) {
+            this.anonymizeViews = anonymizeViews;
+        }
+
+        public boolean isAnonymizeNodes() {
+            return anonymizeNodes;
+        }
+
+        public void setAnonymizeNodes(boolean anonymizeNodes) {
+            this.anonymizeNodes = anonymizeNodes;
+        }
+
+        public boolean isAnonymizeComputers() {
+            return anonymizeComputers;
+        }
+
+        public void setAnonymizeComputers(boolean anonymizeComputers) {
+            this.anonymizeComputers = anonymizeComputers;
+        }
+
+        public boolean isAnonymizeUsers() {
+            return anonymizeUsers;
+        }
+
+        public void setAnonymizeUsers(boolean anonymizeUsers) {
+            this.anonymizeUsers = anonymizeUsers;
+        }
+    }
 }

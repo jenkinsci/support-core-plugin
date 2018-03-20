@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ContentData;
 import com.cloudbees.jenkins.support.api.StringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -13,6 +14,8 @@ import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import jenkins.util.Timer;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -36,8 +39,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
-import jenkins.util.Timer;
 
 /**
  * Thread dumps from the nodes.
@@ -62,12 +63,17 @@ public class ThreadDumps extends Component {
     }
 
     @Override
-    public void addContents(@NonNull Container result) {
+    public void addContents(@NonNull Container container) {
+        addContents(container, false);
+    }
+
+    @Override
+    public void addContents(@NonNull Container result, boolean shouldAnonymize) {
         result.add(
-                new Content("nodes/master/thread-dump.txt") {
+                new Content(new ContentData("nodes/master/thread-dump.txt", shouldAnonymize)) {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                        PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                         try {
                             out.println("Master");
                             out.println("======");
@@ -99,31 +105,30 @@ public class ThreadDumps extends Component {
             try {
                 threadDump = getThreadDump(node);
             } catch (IOException e) {
-                logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
+                logger.log(Level.WARNING, "Could not record thread dump for " + getNodeName(node, shouldAnonymize), e);
                 final StringWriter sw = new StringWriter();
-                PrintWriter out = new PrintWriter(sw);
+                PrintWriter out = getPrintWriter(sw, shouldAnonymize);
                 SupportLogFormatter.printStackTrace(e, out);
                 out.close();
                 result.add(
-                        new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", sw.toString()));
+                        new StringContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize), sw.toString()));
                 continue;
             }
             if (threadDump == null) {
                 StringBuilder buf = new StringBuilder();
-                buf.append(node.getNodeName()).append("\n");
+                buf.append(getNodeName(node, shouldAnonymize)).append("\n");
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", buf.toString()));
+                result.add(new StringContent(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize), buf.toString()));
             } else {
                 result.add(
-                        new Content("nodes/slave/" + node.getNodeName() + "/thread-dump.txt") {
+                        new Content(new ContentData("nodes/slave/" + getNodeName(node, shouldAnonymize) + "/thread-dump.txt", shouldAnonymize)) {
                             @Override
                             public void writeTo(OutputStream os) throws IOException {
-                                PrintWriter out =
-                                        new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                                PrintWriter out = getPrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
                                 try {
-                                    out.println(node.getNodeName());
+                                    out.println(getNodeName(node, shouldAnonymize));
                                     out.println("======");
                                     out.println();
                                     String content = null;
@@ -135,19 +140,14 @@ public class ThreadDumps extends Component {
                                                 TimeUnit.SECONDS
                                                         .toMillis(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)
                                         ), TimeUnit.MILLISECONDS);
-                                    } catch (InterruptedException e) {
+                                    } catch (InterruptedException | ExecutionException e) {
                                         logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
-                                                e);
-                                        SupportLogFormatter.printStackTrace(e, out);
-                                    } catch (ExecutionException e) {
-                                        logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
+                                                "Could not record thread dump for " + getNodeName(node, shouldAnonymize),
                                                 e);
                                         SupportLogFormatter.printStackTrace(e, out);
                                     } catch (TimeoutException e) {
                                         logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
+                                                "Could not record thread dump for " + getNodeName(node, shouldAnonymize),
                                                 e);
                                         SupportLogFormatter.printStackTrace(e, out);
                                         threadDump.cancel(true);
@@ -212,7 +212,21 @@ public class ThreadDumps extends Component {
             justification = "We don't want platform specific"
     )
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
+        threadDump(out, false);
+    }
+
+    /**
+     * Dumps all of the threads' current information to an output stream.
+     *
+     * @param out an output stream.
+     * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
+     */
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
+            justification = "We don't want platform specific"
+    )
+    public static void threadDump(OutputStream out, boolean shouldAnonymize) throws UnsupportedEncodingException {
+        final PrintWriter writer = getPrintWriter(new OutputStreamWriter(out, "utf-8"), true, shouldAnonymize);
 
         ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] threads;

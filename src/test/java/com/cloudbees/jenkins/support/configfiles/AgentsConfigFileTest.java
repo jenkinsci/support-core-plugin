@@ -54,7 +54,7 @@ public class AgentsConfigFileTest {
                     Assert.fail(e.getMessage());
                 }
             }
-        });
+        }, false);
         String fileContent = baos.toString();
         Assert.assertTrue(fileContent.contains("<name>node1</name>"));
     }
