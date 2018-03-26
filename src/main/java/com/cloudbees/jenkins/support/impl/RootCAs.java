@@ -35,7 +35,11 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,19 +48,16 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Set;
 import java.util.WeakHashMap;
-import jenkins.security.MasterToSlaveCallable;
 
-/**
- * @author schristou88
- */
 @Extension
 public class RootCAs extends Component {
 
-  private final WeakHashMap<Node, String> certCache = new WeakHashMap<Node, String>();
+  private final WeakHashMap<Node, String> certCache = new WeakHashMap<>();
 
   @Override
   public boolean isSelectedByDefault() {
@@ -104,8 +105,6 @@ public class RootCAs extends Component {
                   out.println(getRootCA(node));
                 } catch (IOException e) {
                   SupportLogFormatter.printStackTrace(e, out);
-                } catch (InterruptedException e) {
-                  SupportLogFormatter.printStackTrace(e, out);
                 } finally {
                   out.flush();
                 }
@@ -114,7 +113,7 @@ public class RootCAs extends Component {
     );
   }
 
-  public String getRootCA(Node node) throws IOException, InterruptedException {
+  public String getRootCA(Node node) throws IOException {
     return AsyncResultCache.get(node, certCache, new GetRootCA(), "Root CA info",
             "N/A: Either no connection to node, or no cached result");
   }
@@ -135,18 +134,30 @@ public class RootCAs extends Component {
   }
 
   public static void getRootCAList(StringWriter writer) {
-    KeyStore instance = null;
     try {
-      instance = KeyStore.getInstance(KeyStore.getDefaultType());
-      Enumeration<String> aliases = instance.aliases();
-      while (aliases.hasMoreElements()) {
-        String s = aliases.nextElement();
-        writer.append("========");
-        writer.append("Alias: " + s);
-        writer.append(instance.getCertificate(s).getPublicKey().toString());
-        writer.append("Trusted certificate: " + instance.isCertificateEntry(s));
+      // Inspired by:
+      // https://github.com/jenkinsci/jenkins-scripts/pull/82/files
+      // https://stackoverflow.com/questions/8884831/listing-certificates-in-jvm-trust-store
+      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init((KeyStore) null);
+      TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+      for (int i = 0; i < trustManagers.length; i++) {
+        writer.append("===== Trust Manager ").append(String.valueOf(i)).append(" =====\n");
+        TrustManager trustManager = trustManagers[i];
+        if (trustManager instanceof X509TrustManager) {
+          final X509Certificate[] acceptedIssuers = ((X509TrustManager) trustManager).getAcceptedIssuers();
+          writer.append("It is an X.509 Trust Manager containing ")
+                  .append(String.valueOf(acceptedIssuers.length))
+                  .append(" certificates:\n");
+          for (X509Certificate x509Certificate : acceptedIssuers) {
+            writer.append(x509Certificate.getSubjectX500Principal().toString()).append('\n');
+          }
+        } else {
+          writer.append("Skipping as it is not an X.509 Trust Manager.\n");
+          writer.append("Class Name: ").append(trustManager.getClass().getName()).append('\n');
+        }
       }
-    } catch (KeyStoreException e) {
+    } catch (KeyStoreException | NoSuchAlgorithmException e) {
       writer.write(Functions.printThrowable(e));
     }
   }
