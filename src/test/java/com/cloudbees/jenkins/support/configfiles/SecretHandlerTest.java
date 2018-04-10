@@ -10,8 +10,11 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import javax.xml.transform.TransformerException;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class SecretHandlerTest {
 
@@ -88,4 +91,28 @@ public class SecretHandlerTest {
         FileUtils.writeStringToFile(file, xml);
         String patchedXml = SecretHandler.findSecrets(file);
         assertEquals(expectedXml, patchedXml);
-    }}
+    }
+
+    @Test
+    public void shouldNotResolveExternalEntities() throws Exception {
+        final String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<!DOCTYPE test [ \n" +
+                "    <!ENTITY xxeattack SYSTEM \"file:///\"> \n" +
+                "]>\n" +
+                "<xxx>&xxeattack;</xxx>";
+        File file = File.createTempFile("test", ".xml");
+        FileUtils.writeStringToFile(file, xxeXml);
+        boolean fallbackEnabled = SecretHandler.ENABLE_FALLBACK;
+        try {
+            // Disable the fallback so TransformerExceptions are always thrown.
+            SecretHandler.ENABLE_FALLBACK = false;
+            String redactedXxeXml = SecretHandler.findSecrets(file);
+            // If there is no exception than the XML library should have removed the entity without processing it.
+            assertThat(redactedXxeXml, containsString("<xxx/>"));
+        } catch (TransformerException e) {
+            assertThat(e.getMessage(), containsString("Refusing to resolve entity"));
+        } finally {
+            SecretHandler.ENABLE_FALLBACK = fallbackEnabled;
+        }
+    }
+}

@@ -9,6 +9,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -16,6 +17,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -45,7 +47,7 @@ class SecretHandler {
      * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
      * Otherwise will be enabled.
      */
-    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
+    /* package */ static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
 
     /**
      * find the secret in the xml file and replace it with the place holder
@@ -93,13 +95,15 @@ class SecretHandler {
         Source src = new SAXSource(xr, new InputSource(new StringReader(str)));
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
         Result res = new StreamResult(result);
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        TransformerFactory factory = TransformerFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        Transformer transformer = factory.newTransformer();
         //omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, OUTPUT_ENCODING);
 
         try {
-            transformer.transform(src, res);
+            transformer.transform(convertToSafeSource(src), res);
             return result.toString("UTF-8");
         } catch (TransformerException e) {
             if (ENABLE_FALLBACK) {
@@ -125,5 +129,33 @@ class SecretHandler {
         return xml;
     }
 
+    /**
+     * Converts a Source into a Source that is protected against XXE attacks.
+     * @see jenkins.util.xml.XMLUtils#safeTransform
+     */
+    private static Source convertToSafeSource(Source source) throws TransformerException, SAXException {
+        InputSource src = SAXSource.sourceToInputSource(source);
+        if (src != null) {
+            SAXTransformerFactory stFactory = (SAXTransformerFactory) TransformerFactory.newInstance();
+            stFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+            try {
+                xmlReader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            } catch (SAXException ignored) {
+                /* Fallback entity resolver will be used */
+            }
+            try {
+                xmlReader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            } catch (SAXException ignored) {
+                /* Fallback entity resolver will be used */
+            }
+             // Fallback in case the above features are not supported by the underlying XML library.
+            xmlReader.setEntityResolver((publicId, systemId) -> {
+                throw new SAXException("Refusing to resolve entity with publicId(" + publicId + ") and systemId (" + systemId + ")");
+            });
+            return new SAXSource(xmlReader, src);
+        }
+        throw new TransformerException("Could not convert source of type " + source.getClass());
+    }
 
 }
