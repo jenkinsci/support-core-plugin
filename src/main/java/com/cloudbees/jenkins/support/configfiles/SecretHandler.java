@@ -92,7 +92,6 @@ class SecretHandler {
             }
         };
         String str = FileUtils.readFileToString(xmlFile);
-        Source src = new SAXSource(xr, new InputSource(new StringReader(str)));
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
         Result res = new StreamResult(result);
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -103,7 +102,8 @@ class SecretHandler {
         transformer.setOutputProperty(OutputKeys.ENCODING, OUTPUT_ENCODING);
 
         try {
-            transformer.transform(convertToSafeSource(src), res);
+            Source src = createSafeSource(xr, new InputSource(new StringReader(str)));
+            transformer.transform(src, res);
             return result.toString("UTF-8");
         } catch (TransformerException e) {
             if (ENABLE_FALLBACK) {
@@ -133,29 +133,24 @@ class SecretHandler {
      * Converts a Source into a Source that is protected against XXE attacks.
      * @see jenkins.util.xml.XMLUtils#safeTransform
      */
-    private static Source convertToSafeSource(Source source) throws TransformerException, SAXException {
-        InputSource src = SAXSource.sourceToInputSource(source);
-        if (src != null) {
-            SAXTransformerFactory stFactory = (SAXTransformerFactory) TransformerFactory.newInstance();
-            stFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-            try {
-                xmlReader.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            } catch (SAXException ignored) {
-                /* Fallback entity resolver will be used */
-            }
-            try {
-                xmlReader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            } catch (SAXException ignored) {
-                /* Fallback entity resolver will be used */
-            }
-             // Fallback in case the above features are not supported by the underlying XML library.
-            xmlReader.setEntityResolver((publicId, systemId) -> {
-                throw new SAXException("Refusing to resolve entity with publicId(" + publicId + ") and systemId (" + systemId + ")");
-            });
-            return new SAXSource(xmlReader, src);
+    private static Source createSafeSource(XMLReader reader, InputSource source) throws TransformerException, SAXException {
+        SAXTransformerFactory stFactory = (SAXTransformerFactory) TransformerFactory.newInstance();
+        stFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        try {
+            reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        } catch (SAXException ignored) {
+            /* Fallback entity resolver will be used */
         }
-        throw new TransformerException("Could not convert source of type " + source.getClass());
+        try {
+            reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        } catch (SAXException ignored) {
+            /* Fallback entity resolver will be used */
+        }
+         // Fallback in case the above features are not supported by the underlying XML library.
+        reader.setEntityResolver((publicId, systemId) -> {
+            throw new SAXException("Refusing to resolve entity with publicId(" + publicId + ") and systemId (" + systemId + ")");
+        });
+        return new SAXSource(reader, source);
     }
 
 }
