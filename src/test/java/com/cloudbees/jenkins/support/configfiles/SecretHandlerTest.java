@@ -10,8 +10,8 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
-import javax.xml.transform.TransformerException;
 
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -102,17 +102,11 @@ public class SecretHandlerTest {
                 "<xxx>&xxeattack;</xxx>";
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xxeXml);
-        boolean fallbackEnabled = SecretHandler.ENABLE_FALLBACK;
-        try {
-            // Disable the fallback so TransformerExceptions are always thrown.
-            SecretHandler.ENABLE_FALLBACK = false;
-            String redactedXxeXml = SecretHandler.findSecrets(file);
-            // If there is no exception than the XML library should have removed the entity without processing it.
-            assertThat(redactedXxeXml, containsString("<xxx/>"));
-        } catch (TransformerException e) {
-            assertThat(e.getMessage(), containsString("Refusing to resolve entity"));
-        } finally {
-            SecretHandler.ENABLE_FALLBACK = fallbackEnabled;
-        }
+        String redactedXxeXml = SecretHandler.findSecrets(file);
+        // Either the XML library understands the XXE disabling features, and removes XXEs completely,
+        // or our custom EntityResolver is used which replaces them with a placeholder.
+        assertThat(redactedXxeXml, anyOf(
+                containsString("<xxx/>"),
+                containsString("<xxx>" + SecretHandler.XXE_MARKER + "</xxx>")));
     }
 }

@@ -17,12 +17,13 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +40,7 @@ class SecretHandler {
      * our placeholder
      */
     protected static final String SECRET_MARKER = "#secret#";
+    protected static final String XXE_MARKER = "#XXE#";
     public static final String OUTPUT_ENCODING = "UTF-8";
     public static final Pattern SECRET_PATTERN = Pattern.compile(">\\{(.*)\\}<|>(.*)\\=<");
 
@@ -47,7 +49,7 @@ class SecretHandler {
      * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
      * Otherwise will be enabled.
      */
-    /* package */ static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
+    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
 
     /**
      * find the secret in the xml file and replace it with the place holder
@@ -92,6 +94,7 @@ class SecretHandler {
             }
         };
         String str = FileUtils.readFileToString(xmlFile);
+        Source src = createSafeSource(xr, new InputSource(new StringReader(str)));
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
         Result res = new StreamResult(result);
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -102,7 +105,6 @@ class SecretHandler {
         transformer.setOutputProperty(OutputKeys.ENCODING, OUTPUT_ENCODING);
 
         try {
-            Source src = createSafeSource(xr, new InputSource(new StringReader(str)));
             transformer.transform(src, res);
             return result.toString("UTF-8");
         } catch (TransformerException e) {
@@ -133,9 +135,7 @@ class SecretHandler {
      * Converts a Source into a Source that is protected against XXE attacks.
      * @see jenkins.util.xml.XMLUtils#safeTransform
      */
-    private static Source createSafeSource(XMLReader reader, InputSource source) throws TransformerException, SAXException {
-        SAXTransformerFactory stFactory = (SAXTransformerFactory) TransformerFactory.newInstance();
-        stFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    private static Source createSafeSource(XMLReader reader, InputSource source) {
         try {
             reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
         } catch (SAXException ignored) {
@@ -148,7 +148,7 @@ class SecretHandler {
         }
          // Fallback in case the above features are not supported by the underlying XML library.
         reader.setEntityResolver((publicId, systemId) -> {
-            throw new SAXException("Refusing to resolve entity with publicId(" + publicId + ") and systemId (" + systemId + ")");
+            return new InputSource(new ByteArrayInputStream(XXE_MARKER.getBytes(StandardCharsets.US_ASCII)));
         });
         return new SAXSource(reader, source);
     }
