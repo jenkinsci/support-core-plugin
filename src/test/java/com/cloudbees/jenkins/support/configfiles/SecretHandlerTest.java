@@ -94,6 +94,7 @@ public class SecretHandlerTest {
     }
 
     @Test
+    @Issue("JENKINS-50765")
     public void shouldNotResolveExternalEntities() throws Exception {
         final String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<!DOCTYPE test [ \n" +
