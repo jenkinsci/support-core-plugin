@@ -11,7 +11,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class SecretHandlerTest {
 
@@ -88,4 +91,23 @@ public class SecretHandlerTest {
         FileUtils.writeStringToFile(file, xml);
         String patchedXml = SecretHandler.findSecrets(file);
         assertEquals(expectedXml, patchedXml);
-    }}
+    }
+
+    @Test
+    @Issue("JENKINS-50765")
+    public void shouldNotResolveExternalEntities() throws Exception {
+        final String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<!DOCTYPE test [ \n" +
+                "    <!ENTITY xxeattack SYSTEM \"file:///\"> \n" +
+                "]>\n" +
+                "<xxx>&xxeattack;</xxx>";
+        File file = File.createTempFile("test", ".xml");
+        FileUtils.writeStringToFile(file, xxeXml);
+        String redactedXxeXml = SecretHandler.findSecrets(file);
+        // Either the XML library understands the XXE disabling features, and removes XXEs completely,
+        // or our custom EntityResolver is used which replaces them with a placeholder.
+        assertThat(redactedXxeXml, anyOf(
+                containsString("<xxx/>"),
+                containsString("<xxx>" + SecretHandler.XXE_MARKER + "</xxx>")));
+    }
+}
