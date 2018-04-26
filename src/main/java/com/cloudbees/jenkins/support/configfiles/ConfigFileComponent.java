@@ -33,7 +33,7 @@ public class ConfigFileComponent extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         File configFile = new File(jenkins.getRootDir(), "config.xml");
         if (configFile.exists()) {
             container.add(

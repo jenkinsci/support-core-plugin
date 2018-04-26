@@ -115,12 +115,7 @@ public class SupportAction implements RootAction {
     public List<String> getBundles() {
         List<String> res = new ArrayList<>();
         File rootDirectory = SupportPlugin.getRootDirectory();
-        File[] bundlesFiles = rootDirectory.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".zip") || name.endsWith(".log");
-            }
-        });
+        File[] bundlesFiles = rootDirectory.listFiles((dir, name) -> name.endsWith(".zip") || name.endsWith(".log"));
         if (bundlesFiles != null) {
             for (File bundleFile : bundlesFiles) {
                 res.add(bundleFile.getName());
@@ -174,7 +169,7 @@ public class SupportAction implements RootAction {
 
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        final Jenkins instance = Jenkins.getInstance();
+        final Jenkins instance = Jenkins.get();
         instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
 
         JSONObject json = req.getSubmittedForm();
@@ -183,7 +178,7 @@ public class SupportAction implements RootAction {
             return;
         }
         logger.fine("Parsing request...");
-        Set<String> remove = new HashSet<String>();
+        Set<String> remove = new HashSet<>();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("components"))) {
             if (!s.isSelected()) {
                 logger.log(Level.FINER, "Excluding ''{0}'' from list of components to include", s.getName());
@@ -191,13 +186,8 @@ public class SupportAction implements RootAction {
             }
         }
         logger.fine("Selecting components...");
-        final List<Component> components = new ArrayList<Component>(getComponents());
-        for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
-            Component c = iterator.next();
-            if (remove.contains(c.getId()) || !c.isEnabled()) {
-                iterator.remove();
-            }
-        }
+        final List<Component> components = new ArrayList<>(getComponents());
+        components.removeIf(c -> remove.contains(c.getId()) || !c.isEnabled());
         final SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
             supportPlugin.setExcludedComponents(remove);

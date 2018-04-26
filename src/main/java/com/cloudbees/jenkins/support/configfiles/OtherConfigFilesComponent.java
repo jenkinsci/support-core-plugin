@@ -33,7 +33,7 @@ public class OtherConfigFilesComponent extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
             File[] files = dir.listFiles(new FilenameFilter() {
