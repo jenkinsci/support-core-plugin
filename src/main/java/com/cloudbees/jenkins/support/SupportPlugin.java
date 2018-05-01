@@ -30,7 +30,11 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import com.cloudbees.jenkins.support.filter.MasterContentFilter;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
+import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -53,18 +57,17 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.ComputerListener;
-import hudson.util.IOUtils;
-import hudson.util.TimeUnit2;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
-import org.apache.tools.zip.ZipEntry;
-import org.apache.tools.zip.ZipOutputStream;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -73,13 +76,14 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -99,7 +103,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Main entry point for the support plugin.
@@ -112,13 +115,13 @@ public class SupportPlugin extends Plugin {
      * How long remote operations can block support bundle generation for.
      */
     public static final int REMOTE_OPERATION_TIMEOUT_MS =
-            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_TIMEOUT_MS", 500);
+            Integer.getInteger(SupportPlugin.class.getName() + ".REMOTE_OPERATION_TIMEOUT_MS", 500);
 
     /**
      * How long remote operations fallback caching can wait for
      */
     public static final int REMOTE_OPERATION_CACHE_TIMEOUT_SEC =
-            Integer.getInteger(SupportPlugin.class.getName()+".REMOTE_OPERATION_CACHE_TIMEOUT_SEC", 300);
+            Integer.getInteger(SupportPlugin.class.getName() + ".REMOTE_OPERATION_CACHE_TIMEOUT_SEC", 300);
 
     /**
      * How often automatic support bundles should be collected. Should be {@code 1} unless you have very good reason
@@ -133,8 +136,7 @@ public class SupportPlugin extends Plugin {
     public static final Permission CREATE_BUNDLE =
             new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
                     Jenkins.ADMINISTER, PermissionScope.JENKINS);
-    private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal
-            <Authentication>();
+    private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal<>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     public static final String SUPPORT_DIRECTORY_NAME = "support";
@@ -142,11 +144,13 @@ public class SupportPlugin extends Plugin {
 
     private transient SupportContextImpl context = null;
     private transient Logger rootLogger;
-    private transient WeakHashMap<Node,List<LogRecord>> logRecords;
+    private transient WeakHashMap<Node, List<LogRecord>> logRecords;
 
     private SupportProvider supportProvider;
-    
-    /** class names of {@link Component} */
+
+    /**
+     * class names of {@link Component}
+     */
     private Set<String> excludedComponents;
 
     public SupportPlugin() {
@@ -158,7 +162,7 @@ public class SupportPlugin extends Plugin {
     public SupportProvider getSupportProvider() {
         if (supportProvider == null) {
             // if this is not set, pick the first one that we can get our hands on
-            for (Descriptor<SupportProvider> d : Jenkins.getInstance().getDescriptorList(SupportProvider.class)) {
+            for (Descriptor<SupportProvider> d : Jenkins.get().getDescriptorList(SupportProvider.class)) {
                 if (d instanceof SupportProviderDescriptor) {
                     try {
                         supportProvider = ((SupportProviderDescriptor) (d)).newDefaultInstance();
@@ -177,7 +181,7 @@ public class SupportPlugin extends Plugin {
      * @return the wrking directory that the support-core plugin uses to write out files.
      */
     public static File getRootDirectory() {
-        return new File(Jenkins.getInstance().getRootDir(), SUPPORT_DIRECTORY_NAME);
+        return new File(Jenkins.get().getRootDir(), SUPPORT_DIRECTORY_NAME);
     }
 
 
@@ -201,15 +205,15 @@ public class SupportPlugin extends Plugin {
     }
 
     public Set<String> getExcludedComponents() {
-        return excludedComponents != null ? excludedComponents : Collections.<String>emptySet();
+        return excludedComponents != null ? excludedComponents : Collections.emptySet();
     }
 
     /**
      * Sets the ids of the components to be excluded.
      *
      * @param excludedComponents Component Ids (by default class names) to exclude.
-     * @see Component#getId
      * @throws IOException if an error occurs while saving the configuration.
+     * @see Component#getId
      */
     public void setExcludedComponents(Set<String> excludedComponents) throws IOException {
         this.excludedComponents = excludedComponents;
@@ -243,7 +247,7 @@ public class SupportPlugin extends Plugin {
     public static void setLogLevel(Level level) {
         SupportPlugin instance = getInstance();
         instance.handler.setLevel(level);
-        for (Node n : Jenkins.getInstance().getNodes()) {
+        for (Node n : Jenkins.get().getNodes()) {
             Computer c = n.toComputer();
             if (c == null) {
                 continue;
@@ -260,11 +264,11 @@ public class SupportPlugin extends Plugin {
     }
 
     public static SupportPlugin getInstance() {
-        return Jenkins.getInstance().getPlugin(SupportPlugin.class);
+        return Jenkins.get().getPlugin(SupportPlugin.class);
     }
 
     public static ExtensionList<Component> getComponents() {
-        return Jenkins.getInstance().getExtensionList(Component.class);
+        return Jenkins.get().getExtensionList(Component.class);
     }
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
@@ -272,9 +276,11 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
+        ContentFilter filter = MasterContentFilter.instance;
+        filter.reload();
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
-        final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<Content>();
-        final Set<String> names = new TreeSet<String>();
+        final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<>();
+        final Set<String> names = new TreeSet<>();
         Container container = new Container() {
             @Override
             public void add(@CheckForNull Content content) {
@@ -335,26 +341,23 @@ public class SupportPlugin extends Plugin {
         }
         toProcess.add(new StringContent("manifest.md", manifest.toString()));
         try {
-            ZipOutputStream zip = new ZipOutputStream(outputStream);
-            try {
-                BufferedOutputStream bos = new BufferedOutputStream(zip, 16384) {
-                    @Override
-                    public void close() throws IOException {
-                        // don't let any of the contents accidentally close the zip stream
-                        super.flush();
-                    }
-                };
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
+                final FilteredOutputStream out = new FilteredOutputStream(new IgnoreCloseOutputStream(zip), filter);
                 while (!toProcess.isEmpty()) {
-                    Content c = toProcess.poll();
+                    final Content c = toProcess.poll();
                     if (c == null) {
                         continue;
                     }
-                    final String name = c.getName();
+                    final String name = filter.filter(c.getName());
+                    final ZipArchiveEntry entry = new ZipArchiveEntry(name);
+                    entry.setTime(c.getTime());
                     try {
-                        ZipEntry entry = new ZipEntry(name);
-                        entry.setTime(c.getTime());
-                        zip.putNextEntry(entry);
-                        c.writeTo(bos);
+                        zip.putArchiveEntry(entry);
+                        if (name.endsWith(".png")) {
+                            c.writeTo(zip);
+                        } else {
+                            c.writeTo(out);
+                        }
                     } catch (Throwable e) {
                         LogRecord logRecord =
                                 new LogRecord(Level.WARNING, "Could not attach ''{0}'' to support bundle");
@@ -367,23 +370,20 @@ public class SupportPlugin extends Plugin {
                         SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
-                        bos.flush();
+                        out.flush();
+                        out.reset();
+                        zip.closeArchiveEntry();
                     }
-                    zip.flush();
                 }
                 errorWriter.close();
                 String errorContent = errors.toString();
-                if (!StringUtils.isBlank(errorContent)) {
-                    try {
-                        zip.putNextEntry(new ZipEntry("manifest/errors.txt"));
-                        zip.write(errorContent.getBytes("utf-8"));
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                    zip.flush();
+                if (StringUtils.isNotBlank(errorContent)) {
+                    zip.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
+                    out.write(errorContent.getBytes(StandardCharsets.UTF_8));
+                    out.flush();
+                    zip.closeArchiveEntry();
                 }
-            } finally {
-                zip.close();
+                zip.flush();
             }
         } finally {
             outputStream.flush();
@@ -415,7 +415,7 @@ public class SupportPlugin extends Plugin {
         if (!logStartupPerformanceIssues) return;
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date())+ ".txt");
+        final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date()) + ".txt");
         if (!f.exists()) {
             try {
                 f.createNewFile();
@@ -428,15 +428,17 @@ public class SupportPlugin extends Plugin {
             @Override
             public void run() {
                 while (true) {
-                    final Jenkins jenkins =Jenkins.getInstance();
+                    final Jenkins jenkins = Jenkins.getInstanceOrNull();
                     if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
                         continue;
                     }
-                    PrintStream ps = null;
-                    FileOutputStream fileOutputStream = null;
+                    final FileOutputStream fileOutputStream;
                     try {
                         fileOutputStream = new FileOutputStream(f, true);
-                        ps = new PrintStream(fileOutputStream, false, "UTF-8");
+                    } catch (FileNotFoundException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    try (PrintStream ps = new PrintStream(fileOutputStream, false, "UTF-8")) {
                         ps.println("=== Thread dump at " + new Date() + " ===");
                         ThreadDumps.threadDump(fileOutputStream);
                         // Generate a thread dump every few seconds/minutes
@@ -444,13 +446,9 @@ public class SupportPlugin extends Plugin {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } finally {
-                        org.apache.commons.io.IOUtils.closeQuietly(ps);
-                        org.apache.commons.io.IOUtils.closeQuietly(fileOutputStream);
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -511,41 +509,39 @@ public class SupportPlugin extends Plugin {
                     lr.setThrown(e);
                     return Collections.singletonList(lr);
                 } catch (TimeoutException e) {
-                    Computer.threadPoolForRemoting.submit(new Runnable() {
-                        public void run() {
-                            List<LogRecord> records;
-                            try {
-                                records = future.get(REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
-                            } catch (InterruptedException e1) {
-                                final LogRecord lr =
-                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
-                                lr.setThrown(e1);
-                                records = Collections.singletonList(lr);
-                            } catch (ExecutionException e1) {
-                                final LogRecord lr =
-                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
-                                lr.setThrown(e1);
-                                records = Collections.singletonList(lr);
-                            } catch (TimeoutException e1) {
-                                final LogRecord lr =
-                                        new LogRecord(Level.WARNING, "Could not retrieve remote log records");
-                                lr.setThrown(e1);
-                                records = Collections.singletonList(lr);
-                                future.cancel(true);
+                    Computer.threadPoolForRemoting.submit(() -> {
+                        List<LogRecord> records;
+                        try {
+                            records = future.get(REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
+                        } catch (InterruptedException e1) {
+                            final LogRecord lr =
+                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            lr.setThrown(e1);
+                            records = Collections.singletonList(lr);
+                        } catch (ExecutionException e1) {
+                            final LogRecord lr =
+                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            lr.setThrown(e1);
+                            records = Collections.singletonList(lr);
+                        } catch (TimeoutException e1) {
+                            final LogRecord lr =
+                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            lr.setThrown(e1);
+                            records = Collections.singletonList(lr);
+                            future.cancel(true);
+                        }
+                        synchronized (SupportPlugin.this) {
+                            if (logRecords == null) {
+                                logRecords = new WeakHashMap<>();
                             }
-                            synchronized (SupportPlugin.this) {
-                                if (logRecords == null) {
-                                    logRecords = new WeakHashMap<Node, List<LogRecord>>();
-                                }
-                                logRecords.put(node, records);
-                            }
+                            logRecords.put(node, records);
                         }
                     });
                     synchronized (this) {
                         if (logRecords != null) {
                             List<LogRecord> result = logRecords.get(node);
                             if (result != null) {
-                                result = new ArrayList<LogRecord>(result);
+                                result = new ArrayList<>(result);
                                 final LogRecord lr = new LogRecord(Level.WARNING, "Using cached remote log records");
                                 lr.setThrown(e);
                                 result.add(lr);
@@ -598,7 +594,7 @@ public class SupportPlugin extends Plugin {
         }
         final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
         if (StringUtils.isNotBlank(instanceType)) {
-            filename = filename + "_"+instanceType;
+            filename = filename + "_" + instanceType;
         }
         return filename;
     }
@@ -644,7 +640,7 @@ public class SupportPlugin extends Plugin {
         private static final long serialVersionUID = 1L;
 
         public List<LogRecord> call() throws RuntimeException {
-            return new ArrayList<LogRecord>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
+            return new ArrayList<>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
         }
 
     }
@@ -717,37 +713,31 @@ public class SupportPlugin extends Plugin {
                     return;
                 }
                 try {
-                    thread = new Thread(new Runnable() {
-                        public void run() {
-                            nextBundleWrite.set(System.currentTimeMillis() + TimeUnit2.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
-                            thread.setName(String.format("%s periodic bundle generator: since %s",
-                                    SupportPlugin.class.getSimpleName(), new Date()));
-                            clearRequesterAuthentication();
-                            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                            try {
-                                File bundleDir = getRootDirectory();
-                                if (!bundleDir.exists()) {
-                                    if (!bundleDir.mkdirs()) {
-                                        return;
-                                    }
+                    thread = new Thread(() -> {
+                        nextBundleWrite.set(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
+                        thread.setName(String.format("%s periodic bundle generator: since %s",
+                                SupportPlugin.class.getSimpleName(), new Date()));
+                        clearRequesterAuthentication();
+                        SecurityContext old = ACL.impersonate(ACL.SYSTEM);
+                        try {
+                            File bundleDir = getRootDirectory();
+                            if (!bundleDir.exists()) {
+                                if (!bundleDir.mkdirs()) {
+                                    return;
                                 }
-
-                                File file = new File(bundleDir, SupportPlugin.getBundleFileName());
-                                thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
-                                        SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
-                                FileOutputStream fos = null;
-                                try {
-                                    fos = new FileOutputStream(file);
-                                    writeBundle(fos);
-                                } finally {
-                                    IOUtils.closeQuietly(fos);
-                                }
-                                cleanupOldBundles(bundleDir, file);
-                            } catch (Throwable t) {
-                                logger.log(Level.WARNING, "Could not save support bundle", t);
-                            } finally {
-                                SecurityContextHolder.setContext(old);
                             }
+
+                            File file = new File(bundleDir, SupportPlugin.getBundleFileName());
+                            thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
+                                    SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
+                            try (FileOutputStream fos = new FileOutputStream(file)) {
+                                writeBundle(fos);
+                            }
+                            cleanupOldBundles(bundleDir, file);
+                        } catch (Throwable t) {
+                            logger.log(Level.WARNING, "Could not save support bundle", t);
+                        } finally {
+                            SecurityContextHolder.setContext(old);
                         }
                     }, SupportPlugin.class.getSimpleName() + " periodic bundle generator");
                     thread.start();
@@ -765,14 +755,10 @@ public class SupportPlugin extends Plugin {
         private void cleanupOldBundles(File bundleDir, File justGenerated) {
             thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
                     SupportPlugin.class.getSimpleName(), new Date()));
-            File[] files = bundleDir.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".zip");
-                }
-            });
+            File[] files = bundleDir.listFiles((dir, name) -> name.endsWith(".zip"));
             if (files == null) {
                 logger.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
-                           bundleDir.getAbsolutePath());
+                        bundleDir.getAbsolutePath());
                 return;
             }
             long pivot = System.currentTimeMillis();
@@ -800,7 +786,7 @@ public class SupportPlugin extends Plugin {
     public static class GlobalConfigurationImpl extends GlobalConfiguration {
 
         public boolean isSelectable() {
-            return Jenkins.getInstance().getDescriptorList(SupportProvider.class).size() > 1;
+            return Jenkins.get().getDescriptorList(SupportProvider.class).size() > 1;
         }
 
         public SupportProvider getSupportProvider() {

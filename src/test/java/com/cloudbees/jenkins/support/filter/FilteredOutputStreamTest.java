@@ -22,10 +22,8 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.impl;
+package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.anonymizer.AnonymizedOutputStream;
-import com.cloudbees.jenkins.support.anonymizer.ContentFilter;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -38,7 +36,7 @@ import java.util.Arrays;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
-public class AnonymizedOutputStreamTest {
+public class FilteredOutputStreamTest {
 
     private final InputStream testInput = getClass().getResourceAsStream("/test-input.txt");
     private final ByteArrayOutputStream testOutput = new ByteArrayOutputStream();
@@ -47,7 +45,7 @@ public class AnonymizedOutputStreamTest {
     public void shouldModifyStream() throws IOException {
         assertNotNull(testInput);
         ContentFilter filter = s -> s.replace("Line", "Network");
-        AnonymizedOutputStream out = new AnonymizedOutputStream(testOutput, filter);
+        FilteredOutputStream out = new FilteredOutputStream(testOutput, filter);
 
         IOUtils.copy(testInput, out);
         String contents = new String(testOutput.toByteArray(), UTF_8);
@@ -64,7 +62,7 @@ public class AnonymizedOutputStreamTest {
         char[] input = new char[4096];
         Arrays.fill(input, '*');
         InputStream in = new ByteArrayInputStream(new String(input).getBytes(UTF_8));
-        AnonymizedOutputStream out = new AnonymizedOutputStream(testOutput, s -> s.replace('*', 'a'));
+        FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.replace('*', 'a'));
 
         IOUtils.copy(in, out);
         String contents = new String(testOutput.toByteArray(), UTF_8);

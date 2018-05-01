@@ -22,7 +22,9 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.anonymizer;
+package com.cloudbees.jenkins.support.filter;
+
+import hudson.ExtensionPoint;
 
 import javax.annotation.Nonnull;
 
@@ -33,8 +35,7 @@ import javax.annotation.Nonnull;
  * @author Matt Sicker
  * @since 2.48
  */
-@FunctionalInterface
-public interface ContentFilter {
+public interface ContentFilter extends ExtensionPoint {
 
     /**
      * Filters a line or snippet of text.
@@ -44,5 +45,11 @@ public interface ContentFilter {
      */
     @Nonnull
     String filter(@Nonnull String input);
+
+    /**
+     * Reloads the state of this filter. This may be implemented to rescan for more items to filter.
+     */
+    default void reload() {
+    }
 
 }

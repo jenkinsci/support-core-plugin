@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.anonymizer;
+package com.cloudbees.jenkins.support.filter;
 
 import javax.annotation.concurrent.GuardedBy;
 import java.io.FilterOutputStream;
@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * @see ContentFilter
  * @since 2.48
  */
-public class AnonymizedOutputStream extends FilterOutputStream {
+public class FilteredOutputStream extends FilterOutputStream {
 
     private static final Pattern EOL = Pattern.compile("\r?\n");
     private static final int DEFAULT_DECODER_CAPACITY = 1024;
@@ -67,7 +67,7 @@ public class AnonymizedOutputStream extends FilterOutputStream {
      * @param out           output stream to write filtered content to
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public AnonymizedOutputStream(OutputStream out, ContentFilter contentFilter) {
+    public FilteredOutputStream(OutputStream out, ContentFilter contentFilter) {
         this(out, StandardCharsets.UTF_8, contentFilter);
     }
 
@@ -78,7 +78,7 @@ public class AnonymizedOutputStream extends FilterOutputStream {
      * @param charset       character set to use for decoding and encoding bytes written to this stream
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public AnonymizedOutputStream(OutputStream out, Charset charset, ContentFilter contentFilter) {
+    public FilteredOutputStream(OutputStream out, Charset charset, ContentFilter contentFilter) {
         super(out);
         this.charset = charset;
         this.decoder = charset.newDecoder()
