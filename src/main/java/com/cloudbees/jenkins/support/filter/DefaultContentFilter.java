@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Functions;
@@ -32,7 +31,6 @@ import hudson.XmlFile;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
-import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.kohsuke.randname.RandomNameGenerator;
@@ -110,12 +108,6 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
 
     public Set<String> getStopWords() {
         return stopWords;
-    }
-
-    @CheckForNull
-    @Override
-    public Permission getRequiredPermission() {
-        return SupportPlugin.CREATE_BUNDLE;
     }
 
     @RequirePOST
