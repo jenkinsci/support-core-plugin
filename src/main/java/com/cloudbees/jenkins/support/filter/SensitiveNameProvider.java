@@ -24,9 +24,17 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import hudson.Extension;
 import hudson.ExtensionPoint;
+import hudson.model.Computer;
+import hudson.model.Label;
+import hudson.model.Node;
+import hudson.model.User;
+import hudson.model.View;
+import jenkins.model.Jenkins;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 /**
@@ -46,4 +54,107 @@ public interface SensitiveNameProvider extends ExtensionPoint {
      */
     @Nonnull
     String prefix();
+
+    @Extension
+    class Items implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return Jenkins.get()
+                    .getItems().stream()
+                    .flatMap(item -> Arrays.stream(item.getFullName().split("/")))
+                    .distinct();
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "item";
+        }
+    }
+
+    @Extension
+    class Views implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return Jenkins.get()
+                    .getViews().stream()
+                    .map(View::getViewName);
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "view";
+        }
+    }
+
+    @Extension
+    class Nodes implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return Jenkins.get()
+                    .getNodes().stream()
+                    .map(Node::getNodeName);
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "node";
+        }
+    }
+
+    @Extension
+    class Computers implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return Arrays.stream(Jenkins.get().getComputers())
+                    .map(Computer::getDisplayName);
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "computer";
+        }
+    }
+
+    @Extension
+    class Users implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return User.getAll().stream()
+                    .map(User::getFullName);
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "user";
+        }
+    }
+
+    // note that this takes lower priority than the other sources because when you have computers and labels with
+    // the same name, the computer name should take preference as it is more specific
+    @Extension(ordinal = -100)
+    class Labels implements SensitiveNameProvider {
+        @Nonnull
+        @Override
+        public Stream<String> names() {
+            return Jenkins.get()
+                    .getLabels().stream()
+                    .map(Label::getDisplayName);
+        }
+
+        @Nonnull
+        @Override
+        public String prefix() {
+            return "label";
+        }
+    }
 }
