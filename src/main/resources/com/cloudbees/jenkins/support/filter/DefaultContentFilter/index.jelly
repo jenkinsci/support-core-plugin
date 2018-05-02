@@ -44,15 +44,15 @@
                 </tr>
                 <j:forEach items="${it.mappings}" var="item">
                     <tr>
-                        <td class="pane"><st:out value="${item.key}"/></td>
-                        <td class="pane"><st:out value="${item.value}"/></td>
+                        <td class="pane">${item.key}</td>
+                        <td class="pane">${item.value}</td>
                     </tr>
                 </j:forEach>
             </table>
             <h2>Stop Words</h2>
             <ul>
                 <j:forEach items="${it.stopWords}" var="stopWord">
-                    <li><st:out value="${stopWord}"/></li>
+                    <li>${stopWord}</li>
                 </j:forEach>
             </ul>
         </l:main-panel>
