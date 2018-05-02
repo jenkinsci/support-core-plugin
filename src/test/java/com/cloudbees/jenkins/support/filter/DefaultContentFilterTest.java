@@ -25,14 +25,15 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
+import hudson.model.ListView;
+import hudson.model.User;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.assertj.core.api.Assertions.*;
 
 public class DefaultContentFilterTest {
 
@@ -40,7 +41,7 @@ public class DefaultContentFilterTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     @Test
-    public void anonymizeNodesAndLabels() throws Exception {
+    public void anonymizeSlavesAndLabels() throws Exception {
         DefaultContentFilter filter = DefaultContentFilter.get();
         jenkins.createSlave("foo", "bar", null);
         jenkins.createSlave("jar", "war", null);
@@ -48,24 +49,24 @@ public class DefaultContentFilterTest {
         filter.setEnabled(false);
 
         String foo = filter.filter("foo");
-        assertEquals("foo", foo);
+        assertThat(foo).isEqualTo("foo");
         String bar = filter.filter("bar");
-        assertEquals("bar", bar);
+        assertThat(bar).isEqualTo("bar");
         String jar = filter.filter("jar");
-        assertEquals("jar", jar);
+        assertThat(jar).isEqualTo("jar");
         String war = filter.filter("war");
-        assertEquals("war", war);
+        assertThat(war).isEqualTo("war");
 
         filter.setEnabled(true);
 
         foo = filter.filter("foo");
-        assertNotEquals("foo", foo);
+        assertThat(foo).startsWith("computer_").doesNotContain("foo");
         bar = filter.filter("bar");
-        assertNotEquals("bar", bar);
+        assertThat(bar).startsWith("label_").doesNotContain("bar");
         jar = filter.filter("jar");
-        assertNotEquals("jar", jar);
+        assertThat(jar).startsWith("computer_").doesNotContain("jar");
         war = filter.filter("war");
-        assertNotEquals("war", war);
+        assertThat(war).startsWith("label_").doesNotContain("war");
     }
 
     @Test
@@ -77,11 +78,43 @@ public class DefaultContentFilterTest {
         filter.setEnabled(false);
 
         String actual = filter.filter(name);
-        assertEquals(name, actual);
+        assertThat(actual).isEqualTo(name);
 
         filter.setEnabled(true);
 
         actual = filter.filter(name);
-        assertNotEquals(name, actual);
+        assertThat(actual).startsWith("item_").doesNotContain(name);
+    }
+
+    @Test
+    public void anonymizeViews() throws IOException {
+        DefaultContentFilter filter = DefaultContentFilter.get();
+        jenkins.getInstance().addView(new ListView("foobar"));
+
+        filter.setEnabled(false);
+
+        String foobar = filter.filter("foobar");
+        assertThat(foobar).isEqualTo("foobar");
+
+        filter.setEnabled(true);
+
+        foobar = filter.filter("foobar");
+        assertThat(foobar).startsWith("view_").doesNotContain("foobar");
+    }
+
+    @Test
+    public void anonymizeUsers() {
+        DefaultContentFilter filter = DefaultContentFilter.get();
+        User.getOrCreateByIdOrFullName("gibson");
+
+        filter.setEnabled(false);
+
+        String gibson = filter.filter("gibson");
+        assertThat(gibson).isEqualTo("gibson");
+
+        filter.setEnabled(true);
+
+        gibson = filter.filter("gibson");
+        assertThat(gibson).startsWith("user_").doesNotContain("gibson");
     }
 }

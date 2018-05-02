@@ -80,7 +80,6 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
 
     private volatile boolean enabled;
     private final Map<String, Replacer> mappings = new ConcurrentHashMap<>();
-    private final RandomNameGenerator randomNameGenerator = new RandomNameGenerator();
     private final Set<String> stopWords = ConcurrentHashMap.newKeySet();
 
     public DefaultContentFilter() {
@@ -143,7 +142,7 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         ExtensionList.lookup(SensitiveNameProvider.class).stream()
                 .flatMap(provider -> provider.names().map(name -> ImmutablePair.of(name, provider.prefix())))
                 .filter(pair -> !stopWords.contains(pair.left.toLowerCase(Locale.ENGLISH)))
-                .forEach(pair -> mappings.computeIfAbsent(pair.left, ignored -> new Replacer(pair.left, pair.right + '_' + randomNameGenerator.next())));
+                .forEach(pair -> mappings.computeIfAbsent(pair.left, ignored -> Replacer.of(pair.left, pair.right)));
     }
 
     @Override
@@ -213,15 +212,24 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
     }
 
     private static class Replacer {
+        private static final RandomNameGenerator GENERATOR = new RandomNameGenerator();
         private final Collection<Pattern> patterns;
         private final String replacement;
+
+        static Replacer of(String original, String prefix) {
+            String name;
+            do {
+                name = GENERATOR.next();
+            } while (name.equalsIgnoreCase(original));
+            return new Replacer(original, prefix + '_' + name);
+        }
 
         private Replacer(String original, String replacement) {
             this.patterns = generate(original);
             this.replacement = replacement;
         }
 
-        private String replaceAll(CharSequence input) {
+        String replaceAll(CharSequence input) {
             String filtered = input.toString();
             for (Pattern pattern : patterns) {
                 filtered = pattern.matcher(filtered).replaceAll(replacement);
