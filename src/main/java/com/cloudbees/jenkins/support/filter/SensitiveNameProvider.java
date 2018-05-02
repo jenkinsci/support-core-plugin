@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Computer;
 import hudson.model.Label;
@@ -43,6 +44,14 @@ import java.util.stream.Stream;
  * @since TODO
  */
 public interface SensitiveNameProvider extends ExtensionPoint {
+
+    /**
+     * @return all registered sensitive name providers
+     */
+    static ExtensionList<SensitiveNameProvider> all() {
+        return ExtensionList.lookup(SensitiveNameProvider.class);
+    }
+
     /**
      * @return a stream of sensitive names to anonymize
      */

@@ -139,7 +139,7 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
             stopWords.add(item.getTaskNoun());
             stopWords.add(item.getPronoun());
         });
-        ExtensionList.lookup(SensitiveNameProvider.class).stream()
+        SensitiveNameProvider.all().stream()
                 .flatMap(provider -> provider.names().map(name -> ImmutablePair.of(name, provider.prefix())))
                 .filter(pair -> !stopWords.contains(pair.left.toLowerCase(Locale.ENGLISH)))
                 .forEach(pair -> mappings.computeIfAbsent(pair.left, ignored -> Replacer.of(pair.left, pair.right)));
