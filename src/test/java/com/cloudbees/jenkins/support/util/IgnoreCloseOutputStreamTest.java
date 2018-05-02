@@ -24,23 +24,35 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import javax.annotation.Nonnull;
-import java.io.FilterOutputStream;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * Provides a FilterInputStream that ignores calls to close its underlying stream and instead simply flushes it.
- *
- * @since TODO
- */
-public final class IgnoreCloseOutputStream extends FilterOutputStream {
-    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
-        super(out);
+import static org.mockito.BDDMockito.then;
+
+@RunWith(MockitoJUnitRunner.class)
+public class IgnoreCloseOutputStreamTest {
+
+    @Mock
+    private OutputStream out;
+
+    @Rule
+    public ExpectedException expected = ExpectedException.none();
+
+    @Test
+    public void shouldFlushInsteadOfClose() throws IOException {
+        IgnoreCloseOutputStream stream = new IgnoreCloseOutputStream(out);
+
+        stream.close();
+
+        then(out).should().flush();
+        then(out).shouldHaveNoMoreInteractions();
     }
 
-    @Override
-    public void close() throws IOException {
-        flush();
-    }
 }
