@@ -32,7 +32,6 @@ import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
-import com.cloudbees.jenkins.support.filter.MasterContentFilter;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.codahale.metrics.Histogram;
@@ -276,7 +275,7 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
-        ContentFilter filter = MasterContentFilter.instance;
+        ContentFilter filter = ContentFilter.ofAll();
         filter.reload();
         Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
         final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<>();

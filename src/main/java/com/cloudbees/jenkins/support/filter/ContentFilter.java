@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 
 import javax.annotation.Nonnull;
@@ -35,6 +36,35 @@ import javax.annotation.Nonnull;
  * @since TODO
  */
 public interface ContentFilter extends ExtensionPoint {
+
+    /**
+     * @return all ContentFilter extensions
+     */
+    static ExtensionList<ContentFilter> all() {
+        return ExtensionList.lookup(ContentFilter.class);
+    }
+
+    /**
+     * @return a ContentFilter that combines all registered filter extensions
+     */
+    static ContentFilter ofAll() {
+        return new ContentFilter() {
+            @Nonnull
+            @Override
+            public String filter(@Nonnull String input) {
+                String filtered = input;
+                for (ContentFilter filter : all()) {
+                    filtered = filter.filter(filtered);
+                }
+                return filtered;
+            }
+
+            @Override
+            public void reload() {
+                all().forEach(ContentFilter::reload);
+            }
+        };
+    }
 
     /**
      * Filters a line or snippet of text.
