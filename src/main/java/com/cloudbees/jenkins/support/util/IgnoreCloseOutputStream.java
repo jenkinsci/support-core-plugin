@@ -24,6 +24,9 @@
 
 package com.cloudbees.jenkins.support.util;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import javax.annotation.Nonnull;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -34,6 +37,7 @@ import java.io.OutputStream;
  *
  * @since TODO
  */
+@Restricted(NoExternalUse.class)
 public final class IgnoreCloseOutputStream extends FilterOutputStream {
     public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
         super(out);

@@ -33,6 +33,8 @@ import hudson.model.ManagementLink;
 import hudson.model.Saveable;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.randname.RandomNameGenerator;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -65,6 +67,7 @@ import java.util.stream.Stream;
  * @since TODO
  */
 @Extension
+@Restricted(NoExternalUse.class)
 public class DefaultContentFilter extends ManagementLink implements ContentFilter, Saveable {
 
     public static DefaultContentFilter get() {
