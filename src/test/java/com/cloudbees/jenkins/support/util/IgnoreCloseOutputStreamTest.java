@@ -24,9 +24,7 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -41,9 +39,6 @@ public class IgnoreCloseOutputStreamTest {
 
     @Mock
     private OutputStream out;
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     @Test
     public void shouldFlushInsteadOfClose() throws IOException {
