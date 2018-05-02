@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class FilteredOutputStreamTest {
 
@@ -53,13 +53,12 @@ public class FilteredOutputStreamTest {
         FilteredOutputStream output = new FilteredOutputStream(testOutput, filter);
 
         IOUtils.copy(input, output);
+        output.flush();
         String outputContents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertNotEquals(0, outputContents.length());
+        assertThat(outputContents).isNotEmpty();
         String[] lines = FilteredOutputStream.EOL.split(outputContents);
-        for (int i = 0; i < lines.length; i++) {
-            assertEquals(String.format("Network %d", i), lines[i]);
-        }
+        assertThat(lines).allMatch(line -> !line.contains("Line") && line.startsWith("Network")).hasSize(nrLines);
     }
 
     @Issue("JENKINS-21670")
@@ -76,12 +75,11 @@ public class FilteredOutputStreamTest {
         IOUtils.copy(in, out);
         String contents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertEquals("Buffer overflowed prematurely", 0, contents.length());
+        assertThat(contents).isEmpty();
 
         out.flush();
         contents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertNotEquals("No contents written", 0, contents.length());
-        assertTrue(contents.matches("^a+$"));
+        assertThat(contents).isNotEmpty().matches("^a+$");
     }
 }
