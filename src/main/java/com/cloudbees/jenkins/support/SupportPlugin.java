@@ -431,19 +431,13 @@ public class SupportPlugin extends Plugin {
                     if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
                         continue;
                     }
-                    final FileOutputStream fileOutputStream;
-                    try {
-                        fileOutputStream = new FileOutputStream(f, true);
-                    } catch (FileNotFoundException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                    try (PrintStream ps = new PrintStream(fileOutputStream, false, "UTF-8")) {
+                    try (PrintStream ps = new PrintStream(new FileOutputStream(f, true), false, "UTF-8")) {
                         ps.println("=== Thread dump at " + new Date() + " ===");
-                        ThreadDumps.threadDump(fileOutputStream);
+                        ThreadDumps.threadDump(ps);
                         // Generate a thread dump every few seconds/minutes
                         ps.flush();
-                        Thread.sleep(TimeUnit.SECONDS.toMillis(secondsPerThreadDump));
-                    } catch (UnsupportedEncodingException e) {
+                        TimeUnit.SECONDS.sleep(secondsPerThreadDump);
+                    } catch (FileNotFoundException | UnsupportedEncodingException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
