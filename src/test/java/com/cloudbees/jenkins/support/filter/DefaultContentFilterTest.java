@@ -29,6 +29,7 @@ import hudson.model.ListView;
 import hudson.model.User;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
@@ -40,6 +41,7 @@ public class DefaultContentFilterTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
+    @Issue("JENKINS-21670")
     @Test
     public void anonymizeSlavesAndLabels() throws Exception {
         DefaultContentFilter filter = DefaultContentFilter.get();
@@ -69,6 +71,7 @@ public class DefaultContentFilterTest {
         assertThat(war).startsWith("label_").doesNotContain("war");
     }
 
+    @Issue("JENKINS-21670")
     @Test
     public void anonymizeItems() throws IOException {
         DefaultContentFilter filter = DefaultContentFilter.get();
@@ -86,6 +89,7 @@ public class DefaultContentFilterTest {
         assertThat(actual).startsWith("item_").doesNotContain(name);
     }
 
+    @Issue("JENKINS-21670")
     @Test
     public void anonymizeViews() throws IOException {
         DefaultContentFilter filter = DefaultContentFilter.get();
@@ -102,6 +106,7 @@ public class DefaultContentFilterTest {
         assertThat(foobar).startsWith("view_").doesNotContain("foobar");
     }
 
+    @Issue("JENKINS-21670")
     @Test
     public void anonymizeUsers() {
         DefaultContentFilter filter = DefaultContentFilter.get();
