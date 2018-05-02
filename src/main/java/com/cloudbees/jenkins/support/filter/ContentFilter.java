@@ -49,9 +49,8 @@ public interface ContentFilter extends ExtensionPoint {
      */
     static ContentFilter ofAll() {
         return new ContentFilter() {
-            @Nonnull
             @Override
-            public String filter(@Nonnull String input) {
+            public @Nonnull String filter(@Nonnull String input) {
                 String filtered = input;
                 for (ContentFilter filter : all()) {
                     filtered = filter.filter(filtered);
@@ -72,8 +71,7 @@ public interface ContentFilter extends ExtensionPoint {
      * @param input input data to filter
      * @return the filtered input data
      */
-    @Nonnull
-    String filter(@Nonnull String input);
+    @Nonnull String filter(@Nonnull String input);
 
     /**
      * Reloads the state of this filter. This may be implemented to rescan for more items to filter.
