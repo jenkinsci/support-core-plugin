@@ -32,8 +32,7 @@ import java.util.stream.Stream;
 /**
  * Provides names that are considered sensitive and should be filtered when anonymizing data.
  *
- * @author Matt Sicker
- * @since 2.48
+ * @since TODO
  */
 public interface SensitiveNameProvider extends ExtensionPoint {
     /**

@@ -63,9 +63,8 @@ import java.util.stream.Stream;
 /**
  * Filters contents based on names provided by all {@linkplain SensitiveNameProvider known sources}.
  *
- * @author Matt Sicker
  * @see SensitiveNameProvider
- * @since 2.48
+ * @since TODO
  */
 @Extension
 public class DefaultContentFilter extends ManagementLink implements ContentFilter, Saveable {

@@ -32,8 +32,7 @@ import javax.annotation.Nonnull;
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
  * to the bundle, though more complex filtering can be achieved.
  *
- * @author Matt Sicker
- * @since 2.48
+ * @since TODO
  */
 public interface ContentFilter extends ExtensionPoint {
 

@@ -31,8 +31,8 @@ import javax.annotation.Nonnull;
 /**
  * Provides a ContentFilter that aggregates and applies all registered filters.
  *
- * @author Matt Sicker
- * @since 2.48
+ * TODO: move to static methods in ContentFilter
+ * @since TODO
  */
 public enum MasterContentFilter implements ContentFilter {
     instance;

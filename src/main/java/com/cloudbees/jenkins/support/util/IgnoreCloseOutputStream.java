@@ -32,8 +32,7 @@ import java.io.OutputStream;
 /**
  * Provides an InputStream that ignores call to {@link #close()}.
  *
- * @author Matt Sicker
- * @since 2.48
+ * @since TODO
  */
 public final class IgnoreCloseOutputStream extends FilterOutputStream {
     public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
@@ -42,6 +41,7 @@ public final class IgnoreCloseOutputStream extends FilterOutputStream {
 
     @Override
     public void close() throws IOException {
+        // TODO: this should likely be modified to flush
         // ignored
     }
 }

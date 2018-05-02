@@ -37,8 +37,8 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 /**
- * @author Matt Sicker
- * @since 2.48
+ * TODO: move to SensitiveNameProvider
+ * @since TODO
  */
 public final class DefaultSensitiveNameProviders {
 
