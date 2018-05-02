@@ -40,8 +40,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -56,6 +54,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -74,7 +75,7 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         return all().get(DefaultContentFilter.class);
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultContentFilter.class);
+    private static final Logger LOGGER = Logger.getLogger(DefaultContentFilter.class.getName());
     private static final String ALT_SEPARATOR = " » ";
 
     private volatile boolean enabled;
@@ -119,9 +120,8 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         res.forwardToPreviousPage(req);
     }
 
-    @Nonnull
     @Override
-    public String filter(@Nonnull String input) {
+    public @Nonnull String filter(@Nonnull String input) {
         if (input.isEmpty() || !enabled) return input;
         String filtered = input;
         for (Replacer replacer : mappings.values()) {
@@ -161,7 +161,7 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         try {
             file.write(proxy);
         } catch (IOException e) {
-            LOGGER.warn("Could not save file {}", file, e);
+            logWarning(e, "Could not save file %s", file.getFile().getName());
         }
     }
 
@@ -179,26 +179,31 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
                 mappings.put(entry.getKey(), new Replacer(entry.getKey(), entry.getValue()));
             }
         } catch (IOException e) {
-            LOGGER.warn("Could not load file {}", file, e);
+            logWarning(e, "Could not load file %s", file.getFile().getName());
         }
         reload();
     }
 
-    @CheckForNull
+    private static void logWarning(@CheckForNull Throwable e, @Nonnull String format, Object... params) {
+        LogRecord record = new LogRecord(Level.WARNING, String.format(format, params));
+        if (e != null) {
+            record.setThrown(e);
+        }
+        LOGGER.log(record);
+    }
+
     @Override
-    public String getIconFileName() {
+    public @CheckForNull String getIconFileName() {
         return "secure.png";
     }
 
-    @CheckForNull
     @Override
-    public String getUrlName() {
+    public @CheckForNull String getUrlName() {
         return "anonymized";
     }
 
-    @CheckForNull
     @Override
-    public String getDisplayName() {
+    public @CheckForNull String getDisplayName() {
         return "Anonymized Items";
     }
 
