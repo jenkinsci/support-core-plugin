@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -43,14 +44,14 @@ import java.util.regex.Pattern;
  * Data written to an instance of this will be decoded on the fly using the provided charset, and each line
  * written is filtered.
  *
- * @author Matt Sicker
  * @see ContentFilter
- * @since 2.48
+ * @since TODO
  */
 public class FilteredOutputStream extends FilterOutputStream {
 
-    private static final Pattern EOL = Pattern.compile("\r?\n");
-    private static final int DEFAULT_DECODER_CAPACITY = 1024;
+    static final Pattern EOL = Pattern.compile("\r?\n");
+    static final int DEFAULT_DECODER_CAPACITY = 1024;
+    private static final String UNKNOWN_INPUT = "\uFFFD";
 
     @GuardedBy("this")
     private final ByteBuffer in = ByteBuffer.allocate(256);
@@ -67,7 +68,7 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @param out           output stream to write filtered content to
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public FilteredOutputStream(OutputStream out, ContentFilter contentFilter) {
+    public FilteredOutputStream(@Nonnull OutputStream out, @Nonnull ContentFilter contentFilter) {
         this(out, StandardCharsets.UTF_8, contentFilter);
     }
 
@@ -78,13 +79,13 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @param charset       character set to use for decoding and encoding bytes written to this stream
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public FilteredOutputStream(OutputStream out, Charset charset, ContentFilter contentFilter) {
+    public FilteredOutputStream(@Nonnull OutputStream out, @Nonnull Charset charset, @Nonnull ContentFilter contentFilter) {
         super(out);
         this.charset = charset;
         this.decoder = charset.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)
                 .onUnmappableCharacter(CodingErrorAction.REPLACE)
-                .replaceWith("\uFFFD");
+                .replaceWith(UNKNOWN_INPUT);
         this.contentFilter = contentFilter;
     }
 
@@ -94,12 +95,12 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     @Override
-    public synchronized void write(byte[] b) throws IOException {
+    public synchronized void write(@Nonnull byte[] b) throws IOException {
         write(b, 0, b.length);
     }
 
     @Override
-    public synchronized void write(byte[] b, int off, int len) throws IOException {
+    public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
         while (len > 0) {
             int toCopy = Math.min(in.remaining(), len);
             if (toCopy == 0) throw new IllegalStateException();

@@ -25,43 +25,52 @@
 package com.cloudbees.jenkins.support.filter;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CharSequenceInputStream;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.nio.CharBuffer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 public class FilteredOutputStreamTest {
 
-    private final InputStream testInput = getClass().getResourceAsStream("/test-input.txt");
     private final ByteArrayOutputStream testOutput = new ByteArrayOutputStream();
 
+    @Issue("JENKINS-21670")
     @Test
     public void shouldModifyStream() throws IOException {
-        assertNotNull(testInput);
+        final int nrLines = FilteredOutputStream.DEFAULT_DECODER_CAPACITY;
+        String inputContents = IntStream.range(0, nrLines).mapToObj(i -> "Line " + i).collect(Collectors.joining(System.lineSeparator()));
+        CharSequenceInputStream input = new CharSequenceInputStream(inputContents, UTF_8);
         ContentFilter filter = s -> s.replace("Line", "Network");
-        FilteredOutputStream out = new FilteredOutputStream(testOutput, filter);
+        FilteredOutputStream output = new FilteredOutputStream(testOutput, filter);
 
-        IOUtils.copy(testInput, out);
-        String contents = new String(testOutput.toByteArray(), UTF_8);
+        IOUtils.copy(input, output);
+        String outputContents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertNotEquals(0, contents.length());
-        String[] lines = contents.split("\n");
+        assertNotEquals(0, outputContents.length());
+        String[] lines = FilteredOutputStream.EOL.split(outputContents);
         for (int i = 0; i < lines.length; i++) {
             assertEquals(String.format("Network %d", i), lines[i]);
         }
     }
 
+    @Issue("JENKINS-21670")
     @Test
-    public void shouldSupportLongLines() throws IOException {
-        char[] input = new char[4096];
-        Arrays.fill(input, '*');
-        InputStream in = new ByteArrayInputStream(new String(input).getBytes(UTF_8));
+    public void shouldSupportLinesLargerThanDefaultBufferSize() throws IOException {
+        CharBuffer input = CharBuffer.allocate(FilteredOutputStream.DEFAULT_DECODER_CAPACITY * 10);
+        for (int i = 0; i < input.capacity(); i++) {
+            input.put('*');
+        }
+        input.flip();
+        InputStream in = new CharSequenceInputStream(input, UTF_8);
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.replace('*', 'a'));
 
         IOUtils.copy(in, out);
@@ -73,6 +82,6 @@ public class FilteredOutputStreamTest {
         contents = new String(testOutput.toByteArray(), UTF_8);
 
         assertNotEquals("No contents written", 0, contents.length());
-        assertTrue(contents.matches("^a{4096}$"));
+        assertTrue(contents.matches("^a+$"));
     }
 }
