@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -106,11 +107,11 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         for (Map.Entry<String, Replacer> entry : mappings.entrySet()) {
             map.put(entry.getKey(), entry.getValue().replacement);
         }
-        return map;
+        return Collections.unmodifiableMap(map);
     }
 
     public Set<String> getStopWords() {
-        return stopWords;
+        return Collections.unmodifiableSet(stopWords);
     }
 
     @RequirePOST
