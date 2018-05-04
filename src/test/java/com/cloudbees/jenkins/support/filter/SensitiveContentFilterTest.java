@@ -36,7 +36,7 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.*;
 
-public class DefaultContentFilterTest {
+public class SensitiveContentFilterTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -44,7 +44,7 @@ public class DefaultContentFilterTest {
     @Issue("JENKINS-21670")
     @Test
     public void anonymizeSlavesAndLabels() throws Exception {
-        DefaultContentFilter filter = DefaultContentFilter.get();
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
         jenkins.createSlave("foo", "bar", null);
         jenkins.createSlave("jar", "war", null);
 
@@ -74,7 +74,7 @@ public class DefaultContentFilterTest {
     @Issue("JENKINS-21670")
     @Test
     public void anonymizeItems() throws IOException {
-        DefaultContentFilter filter = DefaultContentFilter.get();
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
         FreeStyleProject project = jenkins.createFreeStyleProject();
         String name = project.getName();
 
@@ -92,7 +92,7 @@ public class DefaultContentFilterTest {
     @Issue("JENKINS-21670")
     @Test
     public void anonymizeViews() throws IOException {
-        DefaultContentFilter filter = DefaultContentFilter.get();
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
         jenkins.getInstance().addView(new ListView("foobar"));
 
         filter.setEnabled(false);
@@ -109,7 +109,7 @@ public class DefaultContentFilterTest {
     @Issue("JENKINS-21670")
     @Test
     public void anonymizeUsers() {
-        DefaultContentFilter filter = DefaultContentFilter.get();
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
         User.getOrCreateByIdOrFullName("gibson");
 
         filter.setEnabled(false);

@@ -69,20 +69,20 @@ import java.util.stream.Stream;
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class DefaultContentFilter extends ManagementLink implements ContentFilter, Saveable {
+public class SensitiveContentFilter extends ManagementLink implements ContentFilter, Saveable {
 
-    public static DefaultContentFilter get() {
-        return all().get(DefaultContentFilter.class);
+    public static SensitiveContentFilter get() {
+        return all().get(SensitiveContentFilter.class);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultContentFilter.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
     private static final String ALT_SEPARATOR = " » ";
 
     private volatile boolean enabled;
     private final Map<String, Replacer> mappings = new ConcurrentHashMap<>();
     private final Set<String> stopWords = ConcurrentHashMap.newKeySet();
 
-    public DefaultContentFilter() {
+    public SensitiveContentFilter() {
         stopWords.addAll(Arrays.asList(
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
