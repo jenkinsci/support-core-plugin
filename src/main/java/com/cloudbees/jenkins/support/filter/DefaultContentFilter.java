@@ -41,7 +41,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.File;
@@ -161,7 +160,9 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
         try {
             file.write(proxy);
         } catch (IOException e) {
-            logWarning(e, "Could not save file %s", file.getFile().getName());
+            LogRecord r = new LogRecord(Level.WARNING, String.format("Could not save file %s", file.getFile().getName()));
+            r.setThrown(e);
+            LOGGER.log(r);
         }
     }
 
@@ -179,31 +180,25 @@ public class DefaultContentFilter extends ManagementLink implements ContentFilte
                 mappings.put(entry.getKey(), new Replacer(entry.getKey(), entry.getValue()));
             }
         } catch (IOException e) {
-            logWarning(e, "Could not load file %s", file.getFile().getName());
+            LogRecord r = new LogRecord(Level.WARNING, String.format("Could not load file %s", file.getFile().getName()));
+            r.setThrown(e);
+            LOGGER.log(r);
         }
         reload();
     }
 
-    private static void logWarning(@CheckForNull Throwable e, @Nonnull String format, Object... params) {
-        LogRecord record = new LogRecord(Level.WARNING, String.format(format, params));
-        if (e != null) {
-            record.setThrown(e);
-        }
-        LOGGER.log(record);
-    }
-
     @Override
-    public @CheckForNull String getIconFileName() {
+    public @Nonnull String getIconFileName() {
         return "secure.png";
     }
 
     @Override
-    public @CheckForNull String getUrlName() {
+    public @Nonnull String getUrlName() {
         return "anonymized";
     }
 
     @Override
-    public @CheckForNull String getDisplayName() {
+    public @Nonnull String getDisplayName() {
         return "Anonymized Items";
     }
 
