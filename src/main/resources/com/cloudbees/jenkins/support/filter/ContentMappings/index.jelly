@@ -24,18 +24,11 @@
   -->
 
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
-    <l:layout title="${it.displayName}" permission="${it.CREATE_BUNDLE}">
+    <l:layout title="${it.displayName}" permission="${app.ADMINISTER}">
+        <!-- FIXME: this side panel should be a link back to manage jenkins only -->
         <st:include page="sidepanel.jelly" it="${app}"/>
         <l:main-panel>
             <h1>Anonymized Items</h1>
-            <f:form action="update" method="post" name="Update Settings">
-                <f:entry field="enabled" title="Enabled" description="Whether or not to enable anonymization of support bundles">
-                    <f:checkbox checked="${it.enabled}"/>
-                </f:entry>
-                <f:block>
-                    <f:submit value="Update Settings"/>
-                </f:block>
-            </f:form>
             <h2>Mappings</h2>
             <table class="pane sortable bigtable">
                 <tr>

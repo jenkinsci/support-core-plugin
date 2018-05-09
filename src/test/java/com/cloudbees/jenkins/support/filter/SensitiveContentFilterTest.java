@@ -27,19 +27,19 @@ package com.cloudbees.jenkins.support.filter;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SensitiveContentFilterTest {
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule jenkins = new JenkinsRule();
 
     @Issue("JENKINS-21670")
     @Test
@@ -47,27 +47,18 @@ public class SensitiveContentFilterTest {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         jenkins.createSlave("foo", "bar", null);
         jenkins.createSlave("jar", "war", null);
-
-        filter.setEnabled(false);
+        filter.reload();
 
         String foo = filter.filter("foo");
-        assertThat(foo).isEqualTo("foo");
-        String bar = filter.filter("bar");
-        assertThat(bar).isEqualTo("bar");
-        String jar = filter.filter("jar");
-        assertThat(jar).isEqualTo("jar");
-        String war = filter.filter("war");
-        assertThat(war).isEqualTo("war");
-
-        filter.setEnabled(true);
-
-        foo = filter.filter("foo");
         assertThat(foo).startsWith("computer_").doesNotContain("foo");
-        bar = filter.filter("bar");
+
+        String bar = filter.filter("bar");
         assertThat(bar).startsWith("label_").doesNotContain("bar");
-        jar = filter.filter("jar");
+
+        String jar = filter.filter("jar");
         assertThat(jar).startsWith("computer_").doesNotContain("jar");
-        war = filter.filter("war");
+
+        String war = filter.filter("war");
         assertThat(war).startsWith("label_").doesNotContain("war");
     }
 
@@ -76,16 +67,11 @@ public class SensitiveContentFilterTest {
     public void anonymizeItems() throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         FreeStyleProject project = jenkins.createFreeStyleProject();
+        filter.reload();
         String name = project.getName();
 
-        filter.setEnabled(false);
-
         String actual = filter.filter(name);
-        assertThat(actual).isEqualTo(name);
 
-        filter.setEnabled(true);
-
-        actual = filter.filter(name);
         assertThat(actual).startsWith("item_").doesNotContain(name);
     }
 
@@ -94,15 +80,10 @@ public class SensitiveContentFilterTest {
     public void anonymizeViews() throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         jenkins.getInstance().addView(new ListView("foobar"));
-
-        filter.setEnabled(false);
+        filter.reload();
 
         String foobar = filter.filter("foobar");
-        assertThat(foobar).isEqualTo("foobar");
 
-        filter.setEnabled(true);
-
-        foobar = filter.filter("foobar");
         assertThat(foobar).startsWith("view_").doesNotContain("foobar");
     }
 
@@ -111,15 +92,10 @@ public class SensitiveContentFilterTest {
     public void anonymizeUsers() {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         User.getOrCreateByIdOrFullName("gibson");
-
-        filter.setEnabled(false);
+        filter.reload();
 
         String gibson = filter.filter("gibson");
-        assertThat(gibson).isEqualTo("gibson");
 
-        filter.setEnabled(true);
-
-        gibson = filter.filter("gibson");
         assertThat(gibson).startsWith("user_").doesNotContain("gibson");
     }
 }

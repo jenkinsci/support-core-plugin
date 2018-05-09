@@ -24,48 +24,31 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.github.javafaker.Faker;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.ExtensionPoint;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import java.util.Locale;
-import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-/**
- * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
- *
- * @see NameProvider
- * @since TODO
- */
 @Extension
 @Restricted(NoExternalUse.class)
-public class SensitiveContentFilter implements ContentFilter {
+public class DataFaker implements ExtensionPoint, Function<Function<Faker, String>, Supplier<String>> {
 
-    public static SensitiveContentFilter get() {
-        return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
+    public static DataFaker get() {
+        return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
-    @Override
-    public @Nonnull String filter(@Nonnull String input) {
-        ContentMappings mappings = ContentMappings.get();
-        String filtered = input;
-        for (ContentMapping mapping : mappings) {
-            filtered = mapping.filter(filtered);
-        }
-        return filtered;
-    }
+    private final Faker faker = new Faker(Locale.ENGLISH);
 
     @Override
-    public synchronized void reload() {
-        ContentMappings mappings = ContentMappings.get();
-        Set<String> stopWords = mappings.getStopWords();
-        for (NameProvider provider : NameProvider.all()) {
-            provider.names()
-                    .filter(name -> !stopWords.contains(name.toLowerCase(Locale.ENGLISH)))
-                    .forEach(name -> mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake())));
-        }
+    public Supplier<String> apply(@Nonnull Function<Faker, String> generator) {
+        return () -> generator.apply(faker).toLowerCase(Locale.ENGLISH).replace(' ', '_');
     }
 
 }

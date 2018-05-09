@@ -1,0 +1,162 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2018, CloudBees, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+package com.cloudbees.jenkins.support.filter;
+
+import hudson.BulkChange;
+import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.XmlFile;
+import hudson.model.AbstractItem;
+import hudson.model.ManagementLink;
+import hudson.model.Saveable;
+import hudson.model.listeners.SaveableListener;
+import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toConcurrentMap;
+import static java.util.stream.Collectors.toMap;
+
+@Restricted(NoExternalUse.class)
+public class ContentMappings extends ManagementLink implements Saveable, Iterable<ContentMapping> {
+
+    public static ContentMappings get() {
+        return all().get(ContentMappings.class);
+    }
+
+    public static @Extension ContentMappings newInstance() throws IOException {
+        XmlFile file = getMappingsFile();
+        return (ContentMappings) (file.exists() ? file.read() : new XmlProxy().readResolve());
+    }
+
+    private static XmlFile getMappingsFile() {
+        return new XmlFile(new File(Jenkins.get().getRootDir(), "secrets/" + ContentMappings.class.getCanonicalName() + ".xml"));
+    }
+
+    private final Set<String> stopWords;
+    private final Map<String, ContentMapping> mappings;
+
+    private ContentMappings(@Nonnull XmlProxy proxy) {
+        stopWords = Collections.unmodifiableSet(proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords);
+        mappings = proxy.stopWords == null
+                ? new ConcurrentHashMap<>()
+                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity()));
+    }
+
+    private static Set<String> getDefaultStopWords() {
+        Set<String> stopWords = new HashSet<>(Arrays.asList(
+                "jenkins", "node", "master", "computer",
+                "item", "label", "view", "all", "unknown",
+                "user", "anonymous", "authenticated"
+        ));
+        ExtensionList.lookup(AbstractItem.class).forEach(item -> {
+            stopWords.add(item.getTaskNoun());
+            stopWords.add(item.getPronoun());
+        });
+        return Collections.unmodifiableSet(stopWords);
+    }
+
+    public @Nonnull Set<String> getStopWords() {
+        return stopWords;
+    }
+
+    public @Nonnull Map<String, String> getMappings() {
+        return mappings.values().stream().collect(toMap(ContentMapping::getOriginal, ContentMapping::getReplacement));
+    }
+
+    public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
+        return mappings.computeIfAbsent(original, generator);
+    }
+
+    @Override
+    public void save() throws IOException {
+        if (!BulkChange.contains(this)) {
+            XmlFile file = getMappingsFile();
+            file.write(this);
+            SaveableListener.fireOnChange(this, file);
+        }
+    }
+
+    @Override
+    public Iterator<ContentMapping> iterator() {
+        return mappings.values().iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super ContentMapping> action) {
+        mappings.values().forEach(action);
+    }
+
+    @Override
+    public Spliterator<ContentMapping> spliterator() {
+        return mappings.values().spliterator();
+    }
+
+    private Object writeReplace() {
+        XmlProxy proxy = new XmlProxy();
+        proxy.stopWords = new HashSet<>(stopWords);
+        proxy.mappings = new HashSet<>(mappings.values());
+        return proxy;
+    }
+
+    private static class XmlProxy {
+        private Set<String> stopWords;
+        private Set<ContentMapping> mappings;
+
+        private Object readResolve() {
+            return new ContentMappings(this);
+        }
+    }
+
+    @Override
+    public @Nonnull String getIconFileName() {
+        return "support.png";
+    }
+
+    @Override
+    public @Nonnull String getDisplayName() {
+        // TODO: move to Messages.properties
+        return "Support Bundle Anonymization";
+    }
+
+    @Override
+    public @Nonnull String getUrlName() {
+        return "anonymizedMappings";
+    }
+}
