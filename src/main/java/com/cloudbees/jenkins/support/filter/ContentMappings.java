@@ -24,20 +24,16 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import hudson.BulkChange;
+import com.cloudbees.jenkins.support.util.Persistence;
 import hudson.Extension;
 import hudson.ExtensionList;
-import hudson.XmlFile;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
-import hudson.model.listeners.SaveableListener;
-import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,12 +71,11 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * Constructs a new ContentMappings using an existing config file or default settings if not found.
      */
     public static @Extension ContentMappings newInstance() throws IOException {
-        XmlFile file = getMappingsFile();
-        return (ContentMappings) (file.exists() ? file.read() : new XmlProxy().readResolve());
-    }
-
-    private static XmlFile getMappingsFile() {
-        return new XmlFile(new File(Jenkins.get().getRootDir(), "secrets/" + ContentMappings.class.getCanonicalName() + ".xml"));
+        ContentMappings mappings = Persistence.load(ContentMappings.class);
+        if (mappings == null) {
+            mappings = (ContentMappings) new XmlProxy().readResolve();
+        }
+        return mappings;
     }
 
     private static final Logger LOGGER = Logger.getLogger(ContentMappings.class.getName());
@@ -140,11 +135,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     @Override
     public void save() throws IOException {
-        if (!BulkChange.contains(this)) {
-            XmlFile file = getMappingsFile();
-            file.write(this);
-            SaveableListener.fireOnChange(this, file);
-        }
+        Persistence.save(this);
     }
 
     @Override
