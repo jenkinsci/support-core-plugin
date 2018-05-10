@@ -115,11 +115,6 @@
       <artifactId>javafaker</artifactId>
       <version>0.15</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.7</version>
-    </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>org.assertj</groupId>
