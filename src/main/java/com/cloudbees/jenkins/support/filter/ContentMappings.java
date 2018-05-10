@@ -49,6 +49,9 @@ import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static java.util.stream.Collectors.toConcurrentMap;
 import static java.util.stream.Collectors.toMap;
@@ -68,6 +71,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private static XmlFile getMappingsFile() {
         return new XmlFile(new File(Jenkins.get().getRootDir(), "secrets/" + ContentMappings.class.getCanonicalName() + ".xml"));
     }
+
+    private static final Logger LOGGER = Logger.getLogger(ContentMappings.class.getName());
 
     private final Set<String> stopWords;
     private final Map<String, ContentMapping> mappings;
@@ -101,7 +106,16 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     }
 
     public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
-        return mappings.computeIfAbsent(original, generator);
+        return mappings.computeIfAbsent(original, generator.andThen(mapping -> {
+            try {
+                save();
+            } catch (IOException e) {
+                LogRecord r = new LogRecord(Level.WARNING, "Could not save file");
+                r.setThrown(e);
+                LOGGER.log(r);
+            }
+            return mapping;
+        }));
     }
 
     @Override
