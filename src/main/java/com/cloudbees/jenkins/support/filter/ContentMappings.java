@@ -146,13 +146,17 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     @Override
     public @Nonnull String getIconFileName() {
-        return "support.png";
+        return "/plugin/support-core/images/48x48/support.png";
     }
 
     @Override
     public @Nonnull String getDisplayName() {
-        // TODO: move to Messages.properties
-        return "Support Bundle Anonymization";
+        return Messages.ContentMappings_DisplayName();
+    }
+
+    @Override
+    public String getDescription() {
+        return Messages.ContentMappings_Description();
     }
 
     @Override
