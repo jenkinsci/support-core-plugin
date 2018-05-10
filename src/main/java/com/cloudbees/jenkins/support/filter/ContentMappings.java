@@ -56,13 +56,24 @@ import java.util.logging.Logger;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Holds all anonymized content mappings and provides a management view to see those mappings.
+ *
+ * @since TODO
+ */
 @Restricted(NoExternalUse.class)
 public class ContentMappings extends ManagementLink implements Saveable, Iterable<ContentMapping> {
 
+    /**
+     * @return the singleton instance
+     */
     public static ContentMappings get() {
         return all().get(ContentMappings.class);
     }
 
+    /**
+     * Constructs a new ContentMappings using an existing config file or default settings if not found.
+     */
     public static @Extension ContentMappings newInstance() throws IOException {
         XmlFile file = getMappingsFile();
         return (ContentMappings) (file.exists() ? file.read() : new XmlProxy().readResolve());
@@ -97,14 +108,23 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         return Collections.unmodifiableSet(stopWords);
     }
 
+    /**
+     * @return the set of stop words to ignore when filtering
+     */
     public @Nonnull Set<String> getStopWords() {
         return stopWords;
     }
 
+    /**
+     * @return the map of original to replacement values known to this instance
+     */
     public @Nonnull Map<String, String> getMappings() {
         return mappings.values().stream().collect(toMap(ContentMapping::getOriginal, ContentMapping::getReplacement));
     }
 
+    /**
+     * Looks up or creates a new ContentMapping for the given original string and a ContentMapping generator.
+     */
     public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
         return mappings.computeIfAbsent(original, generator.andThen(mapping -> {
             try {

@@ -38,12 +38,16 @@ import java.util.regex.Pattern;
 /**
  * Filters contents by mapping all found IPv4 and IPv6 addresses to generated names.
  *
+ * @see ContentMappings
  * @since TODO
  */
 @Extension
 @Restricted(NoExternalUse.class)
 public class InetAddressContentFilter implements ContentFilter {
 
+    /**
+     * @return the singleton instance
+     */
     public static InetAddressContentFilter get() {
         return ExtensionList.lookupSingleton(InetAddressContentFilter.class);
     }

@@ -36,16 +36,27 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Provides a way to bind Faker data generators to a Faker instance.
+ *
+ * @since TODO
+ */
 @Extension
 @Restricted(NoExternalUse.class)
 public class DataFaker implements ExtensionPoint, Function<Function<Faker, String>, Supplier<String>> {
 
+    /**
+     * @return the singleton instance
+     */
     public static DataFaker get() {
         return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
     private final Faker faker = new Faker(Locale.ENGLISH);
 
+    /**
+     * Binds the provided Faker generator to a configured Faker instance and normalizes the name.
+     */
     @Override
     public Supplier<String> apply(@Nonnull Function<Faker, String> generator) {
         return () -> generator.apply(faker).toLowerCase(Locale.ENGLISH).replace(' ', '_');

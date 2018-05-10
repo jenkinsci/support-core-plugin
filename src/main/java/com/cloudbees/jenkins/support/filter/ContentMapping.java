@@ -36,6 +36,13 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Represents a mapping from some original string to a replacement. Useful both as an individual ContentFilter as well
+ * as a persistable class for consistent anonymization mappings.
+ *
+ * @see ContentMappings
+ * @since TODO
+ */
 @Immutable
 @Restricted(NoExternalUse.class)
 public class ContentMapping implements ContentFilter {
@@ -53,6 +60,9 @@ public class ContentMapping implements ContentFilter {
         this.hashCode = original.hashCode();
     }
 
+    /**
+     * Constructs a ContentMapping using an original and replacement value.
+     */
     public static ContentMapping of(@Nonnull String original, @Nonnull String replacement) {
         return new ContentMapping(original, generatePattern(original), replacement);
     }
@@ -67,10 +77,16 @@ public class ContentMapping implements ContentFilter {
         return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
     }
 
+    /**
+     * @return the original string to replace
+     */
     public @Nonnull String getOriginal() {
         return original;
     }
 
+    /**
+     * @return the replacement string that the originals are replaced with
+     */
     public @Nonnull String getReplacement() {
         return replacement;
     }
