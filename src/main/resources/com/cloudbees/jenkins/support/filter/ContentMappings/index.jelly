@@ -23,6 +23,7 @@
   ~ THE SOFTWARE.
   -->
 
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <l:layout title="${it.displayName}" permission="${app.ADMINISTER}">
         <st:include page="sidepanel.jelly" it="${app}"/>
