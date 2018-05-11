@@ -4,11 +4,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.ItemComponentDescriptor;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.FreeStyleProject;
 import hudson.util.IOUtils;
 import hudson.util.RingBufferLogHandler;
 import org.junit.Before;
@@ -132,5 +135,35 @@ public class SupportActionTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void generateBundleWithItemSpecificComponents() throws Exception {
+        FreeStyleProject job = rule.createFreeStyleProject();
+        rule.buildAndAssertSuccess(job);
+
+        WebClient wc = rule.createWebClient();
+        HtmlPage p = wc.goTo(job.getUrl() + "/support");
+
+        // Click through and add each descriptor
+        HtmlForm form = p.getFormByName("bundle-contents");
+        HtmlButton submit = (HtmlButton) form.getHtmlElementsByTagName("button").get(1);
+        for (int i = 0; i < ItemComponentDescriptor.getDescriptors(job).size(); i++) {
+            HtmlElement addComponent = (HtmlElement)form.getElementsByAttribute("button", "suffix", "itemComponents").get(0);
+            addComponent.click();
+            Thread.sleep(100); // If we click things too quickly they won't be added correctly
+            HtmlElement listContainer = (HtmlElement) addComponent.getParentNode().getParentNode().getNextSibling();
+            listContainer.getElementsByTagName("a").get(i).click();
+            Thread.sleep(100);
+        }
+
+        Page zip = submit.click();
+        File zipFile = File.createTempFile("test", ".zip");
+        IOUtils.copy(zip.getWebResponse().getContentAsStream(), zipFile);
+
+        ZipFile z = new ZipFile(zipFile);
+        assertNotNull(z.getEntry("items/" + job.getName() + "/config.xml"));
+        assertNotNull(z.getEntry("items/" + job.getName() + "/builds/1/build.xml"));
+        assertNotNull(z.getEntry("items/" + job.getName() + "/builds/1/log"));
     }
 }
