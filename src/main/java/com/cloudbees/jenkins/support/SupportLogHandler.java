@@ -236,6 +236,9 @@ public class SupportLogHandler extends Handler {
                 return;
             }
             Path parentDirectory = path.getParent();
+            if (parentDirectory == null) {
+                throw new IllegalArgumentException("Path does not have a parent directory: " + path);
+            }
             if (Files.notExists(parentDirectory)) {
                 Files.createDirectories(parentDirectory);
             }
