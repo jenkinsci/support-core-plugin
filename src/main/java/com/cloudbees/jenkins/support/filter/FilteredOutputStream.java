@@ -29,6 +29,7 @@ import javax.annotation.concurrent.GuardedBy;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
  * written is filtered.
  *
  * @see ContentFilter
+ * @see FilteredWriter
  * @since TODO
  */
 public class FilteredOutputStream extends FilterOutputStream {
@@ -189,5 +191,12 @@ public class FilteredOutputStream extends FilterOutputStream {
         in.clear();
         buf.clear();
         decoder.reset();
+    }
+
+    /**
+     * @return a FilteredWriter view of this stream's underlying OutputStream
+     */
+    public FilteredWriter asWriter() {
+        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter);
     }
 }
