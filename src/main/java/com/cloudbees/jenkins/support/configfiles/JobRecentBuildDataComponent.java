@@ -121,7 +121,7 @@ public class JobRecentBuildDataComponent extends ItemComponent {
             return item instanceof Job;
         }
 
-        public FormValidation doCheckRecentBuildsToInlcude(@QueryParameter int recentBuildsToInclude) {
+        public FormValidation doCheckRecentBuildsToInclude(@QueryParameter int recentBuildsToInclude) {
             if (recentBuildsToInclude <= 0) {
                 return FormValidation.error("Must be a positive number");
             }
