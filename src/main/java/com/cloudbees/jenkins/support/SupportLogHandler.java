@@ -25,20 +25,18 @@
 package com.cloudbees.jenkins.support;
 
 import hudson.util.IOUtils;
-import net.jcip.annotations.GuardedBy;
 
-import java.io.BufferedOutputStream;
+import javax.annotation.concurrent.GuardedBy;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -47,6 +45,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * A log handler that rotates files.
@@ -64,7 +64,7 @@ public class SupportLogHandler extends Handler {
     @GuardedBy("outputLock")
     private Writer writer;
     @GuardedBy("outputLock")
-    private File logDirectry;
+    private Path logDirectory;
     private String logFilePrefix;
     private final SimpleDateFormat dateFormat;
     private final int maxFiles;
@@ -84,7 +84,7 @@ public class SupportLogHandler extends Handler {
     public void setDirectory(File directory, String namePrefix) {
         outputLock.lock();
         try {
-            logDirectry = directory;
+            logDirectory = directory.toPath();
             logFilePrefix = namePrefix;
             rollOver();
         } finally {
@@ -130,38 +130,44 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
-            justification = "Best effort"
-    )
     private void rollOver() {
         outputLock.lock();
         try {
-            setFile(null);
-            if (logDirectry != null) {
-                setFile(new File(logDirectry, logFilePrefix + "_" + dateFormat.format(new Date()) + ".log"));
-                File[] files = logDirectry.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        return name.startsWith(logFilePrefix) && name.endsWith(".log");
-                    }
-                });
-                if (files != null && files.length > maxFiles) {
-                    Arrays.sort(files, new Comparator<File>() {
-                        public int compare(File o1, File o2) {
-                            long lm1 = o1.lastModified();
-                            long lm2 = o2.lastModified();
-                            return lm1 < lm2 ? -1 : lm1 == lm2 ? 0 : +1;
-                        }
-                    });
-                    for (int i = 0; i < files.length - maxFiles; i++) {
-                        files[i].delete();
-                    }
+            setPath(null);
+            if (logDirectory != null) {
+                setPath(logDirectory.resolve(logFilePrefix + '_' + dateFormat.format(new Date()) + ".log"));
+                List<Path> logFiles = Files.list(logDirectory)
+                        .filter(path -> {
+                            Path name = path.getFileName();
+                            return name.startsWith(logFilePrefix) && name.endsWith(".log");
+                        })
+                        .sorted(Comparator.comparingLong(SupportLogHandler::getLastModifiedTime))
+                        .collect(toList());
+                if (logFiles.size() > maxFiles) {
+                    logFiles.stream()
+                            .limit(logFiles.size() - maxFiles)
+                            .forEach(SupportLogHandler::delete);
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (IOException ignored) {
             // ignore
         } finally {
             outputLock.unlock();
+        }
+    }
+
+    private static long getLastModifiedTime(Path path) {
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    private static void delete(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException ignored) {
         }
     }
 
@@ -208,64 +214,37 @@ public class SupportLogHandler extends Handler {
     }
 
     private void setWriter(Writer writer) {
-        Writer oldWriter = null;
-        boolean success = false;
         outputLock.lock();
         try {
-            oldWriter = this.writer;
-            if (oldWriter != null) {
-                try {
-                    this.writer.flush();
-                } catch (IOException e) {
-                    // ignore
+            if (this.writer != null) {
+                try (Writer previous = this.writer) {
+                    previous.flush();
+                } catch (IOException ignored) {
                 }
             }
             this.writer = writer;
         } finally {
             outputLock.unlock();
-            IOUtils.closeQuietly(oldWriter);
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
-            justification = "Best effort"
-    )
-    private void setFile(File file) throws FileNotFoundException {
+    private void setPath(Path path) throws IOException {
         outputLock.lock();
         try {
-            if (file == null) {
+            if (path == null) {
                 setWriter(null);
                 return;
             }
-            final File parentFile = file.getParentFile();
-            if (parentFile != null) {
-                parentFile.mkdirs();
+            Path parentDirectory = path.getParent();
+            if (Files.notExists(parentDirectory)) {
+                Files.createDirectories(parentDirectory);
             }
-            boolean success = false;
-            FileOutputStream fos = null;
-            BufferedOutputStream bos = null;
-            OutputStreamWriter writer = null;
-            try {
-                fos = new FileOutputStream(file);
-                bos = new BufferedOutputStream(fos);
-                try {
-                    writer = new OutputStreamWriter(bos, "utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    writer = new OutputStreamWriter(bos); // fall back to something sensible
-                }
-                setWriter(writer);
-                fileCount = 0;
-                success = true;
-            } finally {
-                if (!success) {
-                    IOUtils.closeQuietly(writer);
-                    IOUtils.closeQuietly(bos);
-                    IOUtils.closeQuietly(fos);
-                }
-            }
+            BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            setWriter(writer);
+            fileCount = 0;
         } finally {
             outputLock.unlock();
         }
     }
+
 }
