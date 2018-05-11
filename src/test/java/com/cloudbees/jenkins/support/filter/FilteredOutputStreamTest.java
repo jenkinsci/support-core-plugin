@@ -33,11 +33,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.*;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FilteredOutputStreamTest {
 
@@ -47,7 +47,9 @@ public class FilteredOutputStreamTest {
     @Test
     public void shouldModifyStream() throws IOException {
         final int nrLines = FilteredOutputStream.DEFAULT_DECODER_CAPACITY;
-        String inputContents = IntStream.range(0, nrLines).mapToObj(i -> "Line " + i).collect(Collectors.joining(System.lineSeparator()));
+        String inputContents = IntStream.range(0, nrLines)
+                .mapToObj(i -> "Line " + i)
+                .collect(joining(System.lineSeparator()));
         CharSequenceInputStream input = new CharSequenceInputStream(inputContents, UTF_8);
         ContentFilter filter = s -> s.replace("Line", "Network");
         FilteredOutputStream output = new FilteredOutputStream(testOutput, filter);
@@ -58,7 +60,9 @@ public class FilteredOutputStreamTest {
 
         assertThat(outputContents).isNotEmpty();
         String[] lines = FilteredOutputStream.EOL.split(outputContents);
-        assertThat(lines).allMatch(line -> !line.contains("Line") && line.startsWith("Network")).hasSize(nrLines);
+        assertThat(lines)
+                .allMatch(line -> !line.contains("Line") && line.startsWith("Network"))
+                .hasSize(nrLines);
     }
 
     @Issue("JENKINS-21670")
@@ -80,6 +84,8 @@ public class FilteredOutputStreamTest {
         out.flush();
         contents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertThat(contents).isNotEmpty().matches("^a+$");
+        assertThat(contents)
+                .isNotEmpty()
+                .matches("^a+$");
     }
 }
