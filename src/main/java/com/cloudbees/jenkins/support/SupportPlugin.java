@@ -352,6 +352,7 @@ public class SupportPlugin extends Plugin {
                     entry.setTime(c.getTime());
                     try {
                         zip.putArchiveEntry(entry);
+                        zip.flush();
                         if (name.endsWith(".png")) {
                             c.writeTo(zip);
                         } else {

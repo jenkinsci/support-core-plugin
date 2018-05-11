@@ -24,11 +24,14 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Content that is printed on demand.
@@ -42,11 +45,17 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+        final PrintWriter writer;
+        if (os instanceof FilteredOutputStream) {
+            FilteredOutputStream out = (FilteredOutputStream) os;
+            writer = new PrintWriter(out.asWriter());
+        } else {
+            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
+        }
         try {
-            printTo(out);
+            printTo(writer);
         } finally {
-            out.flush();
+            writer.flush();
         }
     }
 
