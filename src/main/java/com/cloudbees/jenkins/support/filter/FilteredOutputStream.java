@@ -151,7 +151,7 @@ public class FilteredOutputStream extends FilterOutputStream {
                 if (!filterFlushLines()) {
                     // unable to make space, need to resize
                     buf.flip();
-                    buf = CharBuffer.allocate(buf.capacity() + DEFAULT_DECODER_CAPACITY).put(buf);
+                    buf = CharBuffer.allocate(buf.capacity() * 2).put(buf);
                 }
             } else {
                 throw new IllegalStateException("CharsetDecoder is mis-configured. Result: " + result);

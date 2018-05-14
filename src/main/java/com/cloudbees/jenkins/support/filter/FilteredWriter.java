@@ -64,7 +64,7 @@ public class FilteredWriter extends FilterWriter {
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
-                buf = CharBuffer.allocate(buf.capacity() + DEFAULT_BUFFER_CAPACITY).put(buf);
+                buf = CharBuffer.allocate(buf.capacity() * 2).put(buf);
             }
             int toCopy = Math.min(buf.remaining(), len);
             if (toCopy == 0) throw new IllegalStateException();
@@ -81,7 +81,7 @@ public class FilteredWriter extends FilterWriter {
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
-                buf = CharBuffer.allocate(buf.capacity() + DEFAULT_BUFFER_CAPACITY).put(buf);
+                buf = CharBuffer.allocate(buf.capacity() * 2).put(buf);
             }
             int toCopy = Math.min(buf.remaining(), len);
             if (toCopy == 0) throw new IllegalStateException();
