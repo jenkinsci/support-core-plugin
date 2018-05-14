@@ -275,7 +275,11 @@ public class SupportPlugin extends Plugin {
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
         ContentFilter filter = ContentFilters.get();
-        filter.reload();
+        ContentMappings mappings = ContentMappings.get();
+        try (BulkChange change = new BulkChange(mappings)) {
+            filter.reload();
+            change.commit();
+        }
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
@@ -283,7 +287,6 @@ public class SupportPlugin extends Plugin {
         List<Content> contents = appendManifestContents(manifest, errorWriter, components);
         contents.add(new StringContent("manifest.md", manifest.toString()));
         try {
-            ContentMappings mappings = ContentMappings.get();
             try (BulkChange change = new BulkChange(mappings);
                  ZipArchiveOutputStream zip = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 final FilteredOutputStream filteredOut = new FilteredOutputStream(new IgnoreCloseOutputStream(zip), filter);
