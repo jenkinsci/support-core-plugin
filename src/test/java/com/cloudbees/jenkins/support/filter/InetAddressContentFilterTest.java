@@ -44,32 +44,21 @@ public class InetAddressContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldFilterIPv4Addresses() {
+    public void shouldFilterInetAddresses() {
         InetAddressContentFilter filter = InetAddressContentFilter.get();
         // speed up test execution by ignoring new content mappings
         ContentMappings mappings = ContentMappings.get();
         try (BulkChange ignored = new BulkChange(mappings)) {
-            qt().forAll(ipv4()).checkAssert(string ->
-                    assertThat(filter.filter(string))
+            qt().forAll(inetAddress()).checkAssert(address ->
+                    assertThat(filter.filter(address))
                             .contains("ip_")
-                            .doesNotContain(string)
+                            .doesNotContain(address)
             );
         }
     }
 
-    @Issue("JENKINS-21670")
-    @Test
-    public void shouldFilterIPv6Addresses() {
-        InetAddressContentFilter filter = InetAddressContentFilter.get();
-        // speed up test execution by ignoring new content mappings
-        ContentMappings mappings = ContentMappings.get();
-        try (BulkChange ignored = new BulkChange(mappings)) {
-            qt().forAll(ipv6()).checkAssert(string ->
-                    assertThat(filter.filter(string))
-                            .contains("ip_")
-                            .doesNotContain(string)
-            );
-        }
+    private Gen<String> inetAddress() {
+        return ipv4().mix(ipv6());
     }
 
     private Gen<String> ipv4() {
