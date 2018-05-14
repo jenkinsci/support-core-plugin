@@ -62,9 +62,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     @GuardedBy("this")
     private final ByteBuffer encodedBuf = ByteBuffer.allocate(256);
     @GuardedBy("this")
-    private ByteBuffer buf = ByteBuffer.allocate(DEFAULT_DECODER_CAPACITY);
-    @GuardedBy("this")
-    private CharBuffer decodedBuf = buf.asCharBuffer();
+    private CharBuffer decodedBuf;
     private final Charset charset;
     @GuardedBy("this")
     private final CharsetDecoder decoder;
@@ -97,6 +95,12 @@ public class FilteredOutputStream extends FilterOutputStream {
         this.contentFilter = contentFilter;
     }
 
+    private void ensureBuffer() {
+        if (decodedBuf == null) {
+            decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+        }
+    }
+
     @Override
     public synchronized void write(int b) throws IOException {
         write(new byte[]{(byte) b}, 0, 1);
@@ -125,6 +129,7 @@ public class FilteredOutputStream extends FilterOutputStream {
      */
     @Override
     public synchronized void flush() throws IOException {
+        ensureBuffer();
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
             String contents = decodedBuf.toString();
@@ -144,6 +149,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     private void decodeFilterFlushLines(boolean endOfInput) throws IOException {
+        ensureBuffer();
         encodedBuf.flip();
         while (true) {
             CoderResult result = decoder.decode(encodedBuf, decodedBuf, endOfInput);
@@ -154,9 +160,7 @@ public class FilteredOutputStream extends FilterOutputStream {
                 if (!filterFlushLines()) {
                     // unable to make space, need to resize
                     decodedBuf.flip();
-                    buf = ByteBuffer.allocate(buf.capacity() * 2);
-                    CharBuffer cbuf = buf.asCharBuffer();
-                    decodedBuf = cbuf.put(decodedBuf);
+                    decodedBuf = CharBuffer.allocate(decodedBuf.capacity() * 2).put(decodedBuf);
                 }
             } else {
                 throw new IllegalStateException("CharsetDecoder is mis-configured. Result: " + result);
@@ -166,6 +170,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     private boolean filterFlushLines() throws IOException {
+        ensureBuffer();
         boolean flushed = false;
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
@@ -190,9 +195,9 @@ public class FilteredOutputStream extends FilterOutputStream {
      */
     public synchronized void reset() {
         encodedBuf.clear();
-        if (buf.capacity() > DEFAULT_DECODER_CAPACITY) {
-            buf = ByteBuffer.allocate(DEFAULT_DECODER_CAPACITY);
-            decodedBuf = buf.asCharBuffer();
+        ensureBuffer();
+        if (decodedBuf.capacity() > DEFAULT_DECODER_CAPACITY) {
+            this.decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
         } else {
             decodedBuf.clear();
         }
@@ -203,6 +208,8 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @return a FilteredWriter view of this stream's underlying OutputStream
      */
     public FilteredWriter asWriter() {
-        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter, decodedBuf);
+        CharBuffer initialBuffer = decodedBuf;
+        decodedBuf = null;
+        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter, initialBuffer);
     }
 }
