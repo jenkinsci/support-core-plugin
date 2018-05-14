@@ -330,7 +330,10 @@ public class SupportPlugin extends Plugin {
                         filteredOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
                         filteredOut.flush();
                         zip.closeArchiveEntry();
-                    } catch (IOException ignored) {
+                    } catch (IOException e) {
+                        LogRecord r = new LogRecord(Level.WARNING, "Could not write manifest/errors.txt to zip archive");
+                        r.setThrown(e);
+                        logger.log(r);
                     }
                 }
                 zip.flush();
