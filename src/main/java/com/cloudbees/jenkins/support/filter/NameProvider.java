@@ -130,5 +130,5 @@ public class NameProvider implements ExtensionPoint {
             () -> Jenkins.get()
                     .getLabels().stream()
                     .map(Label::getDisplayName),
-            DataFaker.get().apply(faker -> "label_" + faker.space().star()));
+            DataFaker.get().apply(faker -> "label_" + faker.internet().domainWord()));
 }
