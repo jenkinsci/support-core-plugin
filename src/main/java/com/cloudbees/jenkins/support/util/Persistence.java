@@ -67,10 +67,9 @@ public final class Persistence {
     /**
      * Loads a Saveable object from its default location or returns {@code null} when the file doesn't exist.
      */
-    @SuppressWarnings("unchecked")
     public static @CheckForNull <T extends Saveable> T load(@Nonnull Class<T> clazz) throws IOException {
         XmlFile file = getConfigFile(clazz);
-        return file.exists() ? (T) file.read() : null;
+        return file.exists() ? clazz.cast(file.read()) : null;
     }
 
     private Persistence() {
