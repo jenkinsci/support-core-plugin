@@ -24,6 +24,9 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 import java.io.FilterWriter;
@@ -40,6 +43,7 @@ import java.util.regex.Pattern;
  * @see FilteredOutputStream
  * @since TODO
  */
+@Restricted(NoExternalUse.class)
 public class FilteredWriter extends FilterWriter {
 
     static final Pattern EOL = Pattern.compile("\r?\n");
@@ -49,7 +53,8 @@ public class FilteredWriter extends FilterWriter {
     @GuardedBy("this")
     private CharBuffer buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
 
-    public FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter) {
+    // TODO: this should reuse the buffer allocated by FilteredOutputStream
+    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter) {
         super(writer);
         this.contentFilter = contentFilter;
     }

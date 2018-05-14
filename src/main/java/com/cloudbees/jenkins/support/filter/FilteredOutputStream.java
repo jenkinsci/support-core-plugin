@@ -24,6 +24,9 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 import java.io.FilterOutputStream;
@@ -49,6 +52,7 @@ import java.util.regex.Pattern;
  * @see FilteredWriter
  * @since TODO
  */
+@Restricted(NoExternalUse.class)
 public class FilteredOutputStream extends FilterOutputStream {
 
     static final Pattern EOL = Pattern.compile("\r?\n");
