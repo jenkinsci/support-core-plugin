@@ -2,14 +2,16 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +21,13 @@ import java.util.logging.Logger;
  */
 @Extension
 public class OtherConfigFilesComponent extends Component {
+
+    private static final List<String> BLACKLISTED_FILENAMES = Arrays.asList(
+            ContentMappings.class.getName() + ".xml",
+            "credentials.xml",
+            "config.xml"
+    );
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -36,12 +45,7 @@ public class OtherConfigFilesComponent extends Component {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
-            File[] files = dir.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    //all xml files but credentials.xml (black-listed) and config.xml (already handled by ConfigFileComponent)
-                    return name.toLowerCase().endsWith(".xml") && !name.equals("credentials.xml") && !name.equals("config.xml");
-                }
-            });
+            File[] files = dir.listFiles((dir1, name) -> name.toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(name));
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
