@@ -60,9 +60,11 @@ public class FilteredOutputStream extends FilterOutputStream {
     private static final String UNKNOWN_INPUT = "\uFFFD";
 
     @GuardedBy("this")
-    private final ByteBuffer in = ByteBuffer.allocate(256);
+    private final ByteBuffer encodedBuf = ByteBuffer.allocate(256);
     @GuardedBy("this")
-    private CharBuffer buf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+    private ByteBuffer buf = ByteBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+    @GuardedBy("this")
+    private CharBuffer decodedBuf = buf.asCharBuffer();
     private final Charset charset;
     @GuardedBy("this")
     private final CharsetDecoder decoder;
@@ -108,9 +110,9 @@ public class FilteredOutputStream extends FilterOutputStream {
     @Override
     public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
         while (len > 0) {
-            int toCopy = Math.min(in.remaining(), len);
-            if (toCopy == 0) throw new IllegalStateException();
-            in.put(b, off, toCopy);
+            int toCopy = Math.min(encodedBuf.remaining(), len);
+            if (toCopy == 0) throw new IllegalStateException("Cannot write zero bytes; " + encodedBuf.toString());
+            encodedBuf.put(b, off, toCopy);
             decodeFilterFlushLines(false);
             len -= toCopy;
             off += toCopy;
@@ -123,15 +125,12 @@ public class FilteredOutputStream extends FilterOutputStream {
      */
     @Override
     public synchronized void flush() throws IOException {
-        if (buf.position() > 0) {
-            buf.flip();
-            String contents = buf.toString();
+        if (decodedBuf.position() > 0) {
+            decodedBuf.flip();
+            String contents = decodedBuf.toString();
             String filtered = contentFilter.filter(contents);
             out.write(filtered.getBytes(charset));
-            buf.clear();
-            if (buf.capacity() > DEFAULT_DECODER_CAPACITY) {
-                buf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
-            }
+            decodedBuf.clear();
         }
         out.flush();
     }
@@ -145,45 +144,43 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     private void decodeFilterFlushLines(boolean endOfInput) throws IOException {
-        in.flip();
+        encodedBuf.flip();
         while (true) {
-            CoderResult result = decoder.decode(in, buf, endOfInput);
+            CoderResult result = decoder.decode(encodedBuf, decodedBuf, endOfInput);
             if (result.isUnderflow()) {
                 // keep accepting; can't decode this yet
                 break;
             } else if (result.isOverflow()) {
                 if (!filterFlushLines()) {
                     // unable to make space, need to resize
-                    buf.flip();
-                    buf = CharBuffer.allocate(buf.capacity() * 2).put(buf);
+                    decodedBuf.flip();
+                    buf = ByteBuffer.allocate(buf.capacity() * 2);
+                    CharBuffer cbuf = buf.asCharBuffer();
+                    decodedBuf = cbuf.put(decodedBuf);
                 }
             } else {
                 throw new IllegalStateException("CharsetDecoder is mis-configured. Result: " + result);
             }
         }
-        in.compact();
+        encodedBuf.compact();
     }
 
     private boolean filterFlushLines() throws IOException {
         boolean flushed = false;
-        if (buf.position() > 0) {
-            buf.flip();
-            Matcher matcher = EOL.matcher(buf);
+        if (decodedBuf.position() > 0) {
+            decodedBuf.flip();
+            Matcher matcher = EOL.matcher(decodedBuf);
             int start = 0;
             while (matcher.find()) {
                 int end = matcher.end();
-                String line = buf.subSequence(start, end).toString();
+                String line = decodedBuf.subSequence(start, end).toString();
                 String filtered = contentFilter.filter(line);
                 out.write(filtered.getBytes(charset));
                 start = end;
                 flushed = true;
             }
-            buf.position(start);
-            if (buf.capacity() - buf.remaining() > DEFAULT_DECODER_CAPACITY) {
-                buf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY).put(buf);
-            } else {
-                buf.compact();
-            }
+            decodedBuf.position(start);
+            decodedBuf.compact();
         }
         return flushed;
     }
@@ -192,8 +189,13 @@ public class FilteredOutputStream extends FilterOutputStream {
      * Resets the state of this stream's decoders and buffers.
      */
     public synchronized void reset() {
-        in.clear();
-        buf.clear();
+        encodedBuf.clear();
+        if (buf.capacity() > DEFAULT_DECODER_CAPACITY) {
+            buf = ByteBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+            decodedBuf = buf.asCharBuffer();
+        } else {
+            decodedBuf.clear();
+        }
         decoder.reset();
     }
 
@@ -201,6 +203,6 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @return a FilteredWriter view of this stream's underlying OutputStream
      */
     public FilteredWriter asWriter() {
-        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter);
+        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter, decodedBuf);
     }
 }

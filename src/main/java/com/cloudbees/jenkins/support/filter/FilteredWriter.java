@@ -51,12 +51,12 @@ public class FilteredWriter extends FilterWriter {
 
     private final ContentFilter contentFilter;
     @GuardedBy("this")
-    private CharBuffer buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
+    private CharBuffer buf;
 
-    // TODO: this should reuse the buffer allocated by FilteredOutputStream
-    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter) {
+    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter, @Nonnull CharBuffer initialBuffer) {
         super(writer);
         this.contentFilter = contentFilter;
+        this.buf = initialBuffer;
     }
 
     @Override
@@ -106,9 +106,6 @@ public class FilteredWriter extends FilterWriter {
             String filtered = contentFilter.filter(original);
             out.write(filtered);
             buf.clear();
-            if (buf.capacity() > DEFAULT_BUFFER_CAPACITY) {
-                buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
-            }
         }
         out.flush();
     }
@@ -117,6 +114,10 @@ public class FilteredWriter extends FilterWriter {
     public synchronized void close() throws IOException {
         flush();
         out.close();
+        buf.clear();
+        if (buf.capacity() > DEFAULT_BUFFER_CAPACITY) {
+            buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
+        }
     }
 
     private void filterFlushLines() throws IOException {
@@ -132,11 +133,7 @@ public class FilteredWriter extends FilterWriter {
                 start = end;
             }
             buf.position(start);
-            if (buf.capacity() - buf.remaining() > DEFAULT_BUFFER_CAPACITY) {
-                buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY).put(buf);
-            } else {
-                buf.compact();
-            }
+            buf.compact();
         }
     }
 
