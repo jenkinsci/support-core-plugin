@@ -32,12 +32,13 @@ import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.codahale.metrics.Histogram;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.BulkChange;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -83,7 +84,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,7 +93,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -277,101 +276,46 @@ public class SupportPlugin extends Plugin {
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
         ContentFilter filter = ContentFilters.get();
         filter.reload();
-        Logger logger = Logger.getLogger(SupportPlugin.class.getName()); // TODO why is this not SupportPlugin.logger?
-        final java.util.Queue<Content> toProcess = new ConcurrentLinkedQueue<>();
-        final Set<String> names = new TreeSet<>();
-        Container container = new Container() {
-            @Override
-            public void add(@CheckForNull Content content) {
-                if (content != null) {
-                    names.add(content.getName());
-                    toProcess.add(content);
-                }
-            }
-        };
-
         StringBuilder manifest = new StringBuilder();
-        SupportPlugin plugin = SupportPlugin.getInstance();
-        SupportProvider supportProvider = plugin == null ? null : plugin.getSupportProvider();
-        String bundleName =
-                (supportProvider == null ? "Support" : supportProvider.getDisplayName()) + " Bundle Manifest";
-        manifest.append(bundleName).append('\n');
-        manifest.append(StringUtils.repeat("=", bundleName.length())).append('\n');
-        manifest.append("\n");
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-        f.setTimeZone(TimeZone.getTimeZone("UTC"));
-        manifest.append("Generated on ")
-                .append(f.format(new Date()))
-                .append("\n");
-        manifest.append("\n");
-        manifest.append("Requested components:\n\n");
-
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
-        for (Component c : components) {
-            try {
-                manifest.append("  * ").append(c.getDisplayName()).append("\n\n");
-                names.clear();
-                c.addContents(container);
-                for (String name : names) {
-                    manifest.append("      - `").append(name).append("`\n\n");
-                }
-            } catch (Throwable e) {
-                String cDisplayName = null;
-                try {
-                    cDisplayName = c.getDisplayName();
-                } catch (Throwable e1) {
-                    // be very defensive
-                    cDisplayName = c.getClass().getName();
-                }
-                LogRecord logRecord =
-                        new LogRecord(Level.WARNING, "Could not get content from ''{0}'' for support bundle");
-                logRecord.setThrown(e);
-                logRecord.setParameters(new Object[]{cDisplayName});
-                logger.log(logRecord);
-                errorWriter.println(
-                        MessageFormat.format("Could not get content from ''{0}'' for support bundle", cDisplayName));
-                errorWriter.println("-----------------------------------------------------------------------");
-                errorWriter.println();
-                SupportLogFormatter.printStackTrace(e, errorWriter);
-                errorWriter.println();
-
-            }
-        }
-        toProcess.add(new StringContent("manifest.md", manifest.toString()));
+        appendManifestHeader(manifest);
+        List<Content> contents = appendManifestContents(manifest, errorWriter, components);
+        contents.add(new StringContent("manifest.md", manifest.toString()));
         try {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
-                final FilteredOutputStream out = new FilteredOutputStream(new IgnoreCloseOutputStream(zip), filter);
-                while (!toProcess.isEmpty()) {
-                    final Content c = toProcess.poll();
-                    if (c == null) {
+            ContentMappings mappings = ContentMappings.get();
+            try (BulkChange change = new BulkChange(mappings);
+                 ZipArchiveOutputStream zip = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
+                final FilteredOutputStream filteredOut = new FilteredOutputStream(new IgnoreCloseOutputStream(zip), filter);
+                for (Content content : contents) {
+                    if (content == null) {
                         continue;
                     }
-                    final String name = filter.filter(c.getName());
+                    final String name = filter.filter(content.getName());
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
-                    entry.setTime(c.getTime());
+                    entry.setTime(content.getTime());
                     try {
                         zip.putArchiveEntry(entry);
                         zip.flush();
+                        // TODO: this could be more intelligent at detecting binary files
                         if (name.endsWith(".png")) {
-                            c.writeTo(zip);
+                            content.writeTo(zip);
                         } else {
-                            c.writeTo(out);
+                            content.writeTo(filteredOut);
                         }
                     } catch (Throwable e) {
-                        LogRecord logRecord =
-                                new LogRecord(Level.WARNING, "Could not attach ''{0}'' to support bundle");
-                        logRecord.setThrown(e);
-                        logRecord.setParameters(new Object[]{name});
-                        logger.log(logRecord);
-                        errorWriter.println(MessageFormat.format("Could not attach ''{0}'' to support bundle", name));
+                        String msg = "Could not attach ''" + name + "'' to support bundle";
+                        LogRecord r = new LogRecord(Level.WARNING, msg);
+                        r.setThrown(e);
+                        logger.log(r);
+                        errorWriter.println(msg);
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
                         SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
-                        out.flush();
-                        out.reset();
+                        filteredOut.flush();
+                        filteredOut.reset();
                         zip.closeArchiveEntry();
                     }
                 }
@@ -379,14 +323,83 @@ public class SupportPlugin extends Plugin {
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
                     zip.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
-                    out.write(errorContent.getBytes(StandardCharsets.UTF_8));
-                    out.flush();
+                    filteredOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
+                    filteredOut.flush();
                     zip.closeArchiveEntry();
                 }
                 zip.flush();
+                change.commit();
             }
         } finally {
             outputStream.flush();
+        }
+    }
+
+    private static void appendManifestHeader(StringBuilder manifest) {
+        SupportPlugin plugin = SupportPlugin.getInstance();
+        SupportProvider supportProvider = plugin == null ? null : plugin.getSupportProvider();
+        String bundleName =
+                (supportProvider == null ? "Support" : supportProvider.getDisplayName()) + " Bundle Manifest";
+        manifest.append(bundleName)
+                .append('\n')
+                .append(StringUtils.repeat("=", bundleName.length()))
+                .append("\n\n");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+        manifest.append("Generated on ")
+                .append(f.format(new Date()))
+                .append("\n\n");
+    }
+
+    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<Component> components) {
+        manifest.append("Requested components:\n\n");
+        ContentContainer contents = new ContentContainer();
+        for (Component component : components) {
+            try {
+                manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
+                component.addContents(contents);
+                Set<String> names = contents.getLatestNames();
+                for (String name : names) {
+                    manifest.append("      - `").append(name).append("`\n\n");
+                }
+            } catch (Throwable e) {
+                String displayName;
+                try {
+                    displayName = component.getDisplayName();
+                } catch (Throwable ignored) {
+                    // be very defensive
+                    displayName = component.getClass().getName();
+                }
+                String msg = "Could not get content from " + displayName + " for support bundle";
+                LogRecord r = new LogRecord(Level.WARNING, msg);
+                r.setThrown(e);
+                logger.log(r);
+                errors.println(msg);
+                errors.println("-----------------------------------------------------------------------");
+                errors.println();
+                SupportLogFormatter.printStackTrace(e, errors);
+                errors.println();
+            }
+        }
+        return contents.contents;
+    }
+
+    private static class ContentContainer extends Container {
+        private final List<Content> contents = new ArrayList<>();
+        private final Set<String> names = new TreeSet<>();
+
+        @Override
+        public void add(Content content) {
+            if (content != null) {
+                contents.add(content);
+                names.add(content.getName());
+            }
+        }
+
+        private Set<String> getLatestNames() {
+            Set<String> copy = new TreeSet<>(names);
+            names.clear();
+            return copy;
         }
     }
 
