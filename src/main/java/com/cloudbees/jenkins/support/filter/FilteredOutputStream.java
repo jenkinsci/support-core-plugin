@@ -207,9 +207,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     /**
      * @return a FilteredWriter view of this stream's underlying OutputStream
      */
-    public synchronized FilteredWriter asWriter() {
-        CharBuffer initialBuffer = decodedBuf;
-        decodedBuf = null;
-        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter, initialBuffer);
+    public FilteredWriter asWriter() {
+        return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter);
     }
 }

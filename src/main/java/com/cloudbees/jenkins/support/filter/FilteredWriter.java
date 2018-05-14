@@ -53,10 +53,15 @@ public class FilteredWriter extends FilterWriter {
     @GuardedBy("this")
     private CharBuffer buf;
 
-    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter, @Nonnull CharBuffer initialBuffer) {
+    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter) {
         super(writer);
         this.contentFilter = contentFilter;
-        this.buf = initialBuffer;
+    }
+
+    private void ensureBuffer() {
+        if (buf == null) {
+            buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
+        }
     }
 
     @Override
@@ -66,6 +71,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void write(@Nonnull char[] cbuf, int off, int len) throws IOException {
+        ensureBuffer();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
@@ -83,6 +89,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void write(@Nonnull String str, int off, int len) throws IOException {
+        ensureBuffer();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
@@ -100,6 +107,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void flush() throws IOException {
+        ensureBuffer();
         if (buf.position() > 0) {
             buf.flip();
             String original = buf.toString();
@@ -121,6 +129,7 @@ public class FilteredWriter extends FilterWriter {
     }
 
     private void filterFlushLines() throws IOException {
+        ensureBuffer();
         if (buf.position() > 0) {
             buf.flip();
             Matcher matcher = EOL.matcher(buf);

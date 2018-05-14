@@ -48,7 +48,7 @@ public class FilteredWriterTest {
         CharSequenceReader reader = new CharSequenceReader(inputContents);
         ContentFilter filter = s -> s.replace("ManagedNode", "Anonymous_");
         StringWriter output = new StringWriter();
-        FilteredWriter writer = new FilteredWriter(output, filter, CharBuffer.allocate(FilteredWriter.DEFAULT_BUFFER_CAPACITY));
+        FilteredWriter writer = new FilteredWriter(output, filter);
 
         IOUtils.copy(reader, writer);
         writer.flush();
@@ -72,7 +72,7 @@ public class FilteredWriterTest {
         CharSequenceReader reader = new CharSequenceReader(input);
         ContentFilter filter = s -> s.replace('+', '-');
         StringWriter output = new StringWriter();
-        FilteredWriter writer = new FilteredWriter(output, filter, CharBuffer.allocate(FilteredWriter.DEFAULT_BUFFER_CAPACITY));
+        FilteredWriter writer = new FilteredWriter(output, filter);
 
         IOUtils.copy(reader, writer);
         assertThat(output.toString()).isEmpty();
