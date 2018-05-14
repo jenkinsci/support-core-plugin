@@ -325,10 +325,13 @@ public class SupportPlugin extends Plugin {
                 errorWriter.close();
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
-                    zip.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
-                    filteredOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
-                    filteredOut.flush();
-                    zip.closeArchiveEntry();
+                    try {
+                        zip.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
+                        filteredOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
+                        filteredOut.flush();
+                        zip.closeArchiveEntry();
+                    } catch (IOException ignored) {
+                    }
                 }
                 zip.flush();
                 change.commit();
