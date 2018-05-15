@@ -43,10 +43,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static java.util.stream.Collectors.toConcurrentMap;
@@ -87,7 +87,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         stopWords = Collections.unmodifiableSet(proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords);
         mappings = proxy.stopWords == null
                 ? new ConcurrentHashMap<>()
-                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity()));
+                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, ConcurrentSkipListMap::new));
     }
 
     private static Set<String> getDefaultStopWords() {
@@ -125,9 +125,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             try {
                 save();
             } catch (IOException e) {
-                LogRecord r = new LogRecord(Level.WARNING, "Could not save file");
-                r.setThrown(e);
-                LOGGER.log(r);
+                LOGGER.log(Level.WARNING, "Could not save mappings file", e);
             }
             return mapping;
         }));
