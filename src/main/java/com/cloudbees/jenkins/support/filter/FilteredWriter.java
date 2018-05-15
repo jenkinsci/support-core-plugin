@@ -58,7 +58,10 @@ public class FilteredWriter extends FilterWriter {
         this.contentFilter = contentFilter;
     }
 
-    private void ensureBuffer() {
+    private void ensureOpen() {
+        if (out == null) {
+            throw new IllegalStateException("FilteredWriter is closed");
+        }
         if (buf == null) {
             buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
         }
@@ -71,7 +74,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void write(@Nonnull char[] cbuf, int off, int len) throws IOException {
-        ensureBuffer();
+        ensureOpen();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
@@ -89,7 +92,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void write(@Nonnull String str, int off, int len) throws IOException {
-        ensureBuffer();
+        ensureOpen();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
             if (!buf.hasRemaining()) {
@@ -107,7 +110,7 @@ public class FilteredWriter extends FilterWriter {
 
     @Override
     public synchronized void flush() throws IOException {
-        ensureBuffer();
+        ensureOpen();
         if (buf.position() > 0) {
             buf.flip();
             String original = buf.toString();
@@ -122,14 +125,12 @@ public class FilteredWriter extends FilterWriter {
     public synchronized void close() throws IOException {
         flush();
         out.close();
-        buf.clear();
-        if (buf.capacity() > DEFAULT_BUFFER_CAPACITY) {
-            buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
-        }
+        out = null;
+        buf = null;
     }
 
     private void filterFlushLines() throws IOException {
-        ensureBuffer();
+        ensureOpen();
         if (buf.position() > 0) {
             buf.flip();
             Matcher matcher = EOL.matcher(buf);

@@ -95,7 +95,10 @@ public class FilteredOutputStream extends FilterOutputStream {
         this.contentFilter = contentFilter;
     }
 
-    private void ensureBuffer() {
+    private void ensureOpen() {
+        if (out == null) {
+            throw new IllegalStateException("FilteredOutputStream is closed");
+        }
         if (decodedBuf == null) {
             decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
         }
@@ -113,6 +116,7 @@ public class FilteredOutputStream extends FilterOutputStream {
 
     @Override
     public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
+        ensureOpen();
         while (len > 0) {
             int toCopy = Math.min(encodedBuf.remaining(), len);
             if (toCopy == 0) throw new IllegalStateException("Cannot write zero bytes; " + encodedBuf.toString());
@@ -129,7 +133,7 @@ public class FilteredOutputStream extends FilterOutputStream {
      */
     @Override
     public synchronized void flush() throws IOException {
-        ensureBuffer();
+        ensureOpen();
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
             String contents = decodedBuf.toString();
@@ -144,12 +148,13 @@ public class FilteredOutputStream extends FilterOutputStream {
     public synchronized void close() throws IOException {
         decodeFilterFlushLines(true);
         flush();
-        reset();
         out.close();
+        out = null;
+        decodedBuf = null;
     }
 
     private void decodeFilterFlushLines(boolean endOfInput) throws IOException {
-        ensureBuffer();
+        ensureOpen();
         encodedBuf.flip();
         while (true) {
             CoderResult result = decoder.decode(encodedBuf, decodedBuf, endOfInput);
@@ -170,7 +175,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     private boolean filterFlushLines() throws IOException {
-        ensureBuffer();
+        ensureOpen();
         boolean flushed = false;
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
@@ -194,8 +199,8 @@ public class FilteredOutputStream extends FilterOutputStream {
      * Resets the state of this stream's decoders and buffers.
      */
     public synchronized void reset() {
+        ensureOpen();
         encodedBuf.clear();
-        ensureBuffer();
         if (decodedBuf.capacity() > DEFAULT_DECODER_CAPACITY) {
             this.decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
         } else {
@@ -208,6 +213,9 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @return a FilteredWriter view of this stream's underlying OutputStream
      */
     public FilteredWriter asWriter() {
+        if (out == null) {
+            throw new IllegalStateException("FilteredOutputStream is closed, cannot open a writer view");
+        }
         return new FilteredWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), contentFilter);
     }
 }
