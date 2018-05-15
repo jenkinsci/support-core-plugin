@@ -49,6 +49,11 @@ public class ContentFilters extends GlobalConfiguration {
 
     private boolean enabled;
 
+    public ContentFilters() {
+        super();
+        load();
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
