@@ -285,8 +285,8 @@ public class SupportPlugin extends Plugin {
             try (BulkChange change = new BulkChange(ContentMappings.get());
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 Optional<ContentFilter> maybeFilter = getContentFilter();
-                Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(new IgnoreCloseOutputStream(binaryOut), filter));
-                OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElseGet(() -> new IgnoreCloseOutputStream(binaryOut));
+                Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
+                IgnoreCloseOutputStream textOut = maybeFilteredOut.map(IgnoreCloseOutputStream::new).orElseGet(() -> new IgnoreCloseOutputStream(binaryOut));
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
