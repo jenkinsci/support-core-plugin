@@ -45,7 +45,7 @@
         </p>
       </j:if>
       <j:if test="${!it.anonymized}">
-        <p>
+        <p class="warning">
           Support bundle anonymization is disabled. This can be enabled in the
           <a href="../configure">global configuration</a> under <i>Support Bundle Anonymization</i>.
         </p>
