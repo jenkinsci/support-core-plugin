@@ -1,7 +1,7 @@
 <!--
  ~ The MIT License
  ~
- ~ Copyright (c) 2013, CloudBees, Inc.
+ ~ Copyright (c) 2018, CloudBees, Inc.
  ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
  ~ of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,19 @@
       <p>
         ${%detail}
       </p>
+      <j:if test="${it.anonymized}">
+        <p>
+          Support bundle anonymization is enabled. View
+          <a href="../anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
+          <a href="../configure">global configuration</a> under <i>Support Bundle Anonymization</i>.
+        </p>
+      </j:if>
+      <j:if test="${!it.anonymized}">
+        <p>
+          Support bundle anonymization is disabled. This can be enabled in the
+          <a href="../configure">global configuration</a> under <i>Support Bundle Anonymization</i>.
+        </p>
+      </j:if>
       <f:form name="bundle-contents" method="POST" action="generateAllBundles">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">

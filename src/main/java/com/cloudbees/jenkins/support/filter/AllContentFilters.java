@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,42 +22,31 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import javax.annotation.Nonnull;
 
 /**
- * Content that is printed on demand.
+ * Composite ContentFilter of all registered ContentFilter extensions.
  *
- * @author Stephen Connolly
+ * @since TODO
  */
-public abstract class PrintedContent extends GenerateOnDemandContent {
-    public PrintedContent(String name) {
-        super(name);
+@Restricted(NoExternalUse.class)
+class AllContentFilters implements ContentFilter {
+    @Override
+    public @Nonnull String filter(@Nonnull String input) {
+        String filtered = input;
+        for (ContentFilter filter : ContentFilter.all()) {
+            filtered = filter.filter(filtered);
+        }
+        return filtered;
     }
 
     @Override
-    public final void writeTo(OutputStream os) throws IOException {
-        final PrintWriter writer;
-        if (os instanceof FilteredOutputStream) {
-            FilteredOutputStream out = (FilteredOutputStream) os;
-            writer = new PrintWriter(out.asWriter());
-        } else {
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
-        }
-        try {
-            printTo(writer);
-        } finally {
-            writer.flush();
-        }
+    public void reload() {
+        ContentFilter.all().forEach(ContentFilter::reload);
     }
-
-    protected abstract void printTo(PrintWriter out) throws IOException;
 }

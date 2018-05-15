@@ -50,7 +50,7 @@ import java.util.List;
 public class SupportCommand extends CLICommand {
 
     @Argument(metaVar = "COMPONENTS")
-    public List<String> components = new ArrayList<String>();
+    public List<String> components = new ArrayList<>();
 
     @Override
     public String getShortDescription() {
@@ -71,8 +71,8 @@ public class SupportCommand extends CLICommand {
 
     @Override
     protected int run() throws Exception {
-        Jenkins.getInstance().checkPermission(SupportPlugin.CREATE_BUNDLE);
-        List<Component> selected = new ArrayList<Component>();
+        Jenkins.get().checkPermission(SupportPlugin.CREATE_BUNDLE);
+        List<Component> selected = new ArrayList<>();
         for (Component c : SupportPlugin.getComponents()) {
             if (c.isEnabled() && (components.isEmpty() || components.contains(c.getId()))) {
                 selected.add(c);

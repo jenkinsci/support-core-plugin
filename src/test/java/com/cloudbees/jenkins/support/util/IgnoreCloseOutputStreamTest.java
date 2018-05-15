@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,42 +22,32 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.util;
 
-import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 
-/**
- * Content that is printed on demand.
- *
- * @author Stephen Connolly
- */
-public abstract class PrintedContent extends GenerateOnDemandContent {
-    public PrintedContent(String name) {
-        super(name);
+import static org.mockito.BDDMockito.then;
+
+@RunWith(MockitoJUnitRunner.class)
+public class IgnoreCloseOutputStreamTest {
+
+    @Mock
+    private OutputStream out;
+
+    @Test
+    public void shouldFlushInsteadOfClose() throws IOException {
+        IgnoreCloseOutputStream stream = new IgnoreCloseOutputStream(out);
+
+        stream.close();
+
+        then(out).should().flush();
+        then(out).shouldHaveNoMoreInteractions();
     }
 
-    @Override
-    public final void writeTo(OutputStream os) throws IOException {
-        final PrintWriter writer;
-        if (os instanceof FilteredOutputStream) {
-            FilteredOutputStream out = (FilteredOutputStream) os;
-            writer = new PrintWriter(out.asWriter());
-        } else {
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
-        }
-        try {
-            printTo(writer);
-        } finally {
-            writer.flush();
-        }
-    }
-
-    protected abstract void printTo(PrintWriter out) throws IOException;
 }

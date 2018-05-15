@@ -63,7 +63,7 @@ public class AgentsConfigFile extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        File[] agentDirs = new File(Jenkins.getInstance().getRootDir(), "nodes").listFiles();
+        File[] agentDirs = new File(Jenkins.get().getRootDir(), "nodes").listFiles();
         if (agentDirs == null) {
             return;
         }

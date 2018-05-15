@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,42 +22,51 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import hudson.Extension;
+import hudson.ExtensionList;
+import jenkins.model.GlobalConfiguration;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import javax.annotation.Nonnull;
 
 /**
- * Content that is printed on demand.
+ * Configures content filters for anonymization.
  *
- * @author Stephen Connolly
+ * @see ContentFilter
+ * @since TODO
  */
-public abstract class PrintedContent extends GenerateOnDemandContent {
-    public PrintedContent(String name) {
-        super(name);
+@Extension
+@Restricted(NoExternalUse.class)
+public class ContentFilters extends GlobalConfiguration {
+
+    public static ContentFilters get() {
+        return ExtensionList.lookupSingleton(ContentFilters.class);
+    }
+
+    private boolean enabled;
+
+    public ContentFilters() {
+        super();
+        load();
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @DataBoundSetter
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        save();
     }
 
     @Override
-    public final void writeTo(OutputStream os) throws IOException {
-        final PrintWriter writer;
-        if (os instanceof FilteredOutputStream) {
-            FilteredOutputStream out = (FilteredOutputStream) os;
-            writer = new PrintWriter(out.asWriter());
-        } else {
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
-        }
-        try {
-            printTo(writer);
-        } finally {
-            writer.flush();
-        }
+    public @Nonnull String getDisplayName() {
+        return Messages.ContentFilters_DisplayName();
     }
 
-    protected abstract void printTo(PrintWriter out) throws IOException;
 }
