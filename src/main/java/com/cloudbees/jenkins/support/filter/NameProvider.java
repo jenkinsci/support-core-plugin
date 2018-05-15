@@ -86,7 +86,7 @@ public class NameProvider implements ExtensionPoint {
                     .getItems().stream()
                     .flatMap(item -> Arrays.stream(item.getFullName().split("/")))
                     .distinct(),
-            DataFaker.get().apply(faker -> "item_" + faker.app().name()));
+            DataFaker.get().apply(faker -> "item_" + faker.space().star()));
 
     /**
      * Provides the names of view.
