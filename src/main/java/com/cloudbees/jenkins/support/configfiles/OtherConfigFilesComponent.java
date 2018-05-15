@@ -23,8 +23,11 @@ import java.util.logging.Logger;
 public class OtherConfigFilesComponent extends Component {
 
     private static final List<String> BLACKLISTED_FILENAMES = Arrays.asList(
+            // contains anonymized content mappings
             ContentMappings.class.getName() + ".xml",
+            // credentials.xml is handled by XmlRedactedSecretFileContent
             "credentials.xml",
+            // config.xml is handled by ConfigFileComponent
             "config.xml"
     );
 
