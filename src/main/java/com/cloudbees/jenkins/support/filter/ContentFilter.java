@@ -45,6 +45,11 @@ public interface ContentFilter extends ExtensionPoint {
     }
 
     /**
+     * Provides a ContentFilter that combines all registered ContentFilter extensions.
+     */
+    ContentFilter ALL = new AllContentFilters();
+
+    /**
      * Filters a line or snippet of text.
      *
      * @param input input data to filter

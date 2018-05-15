@@ -89,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
@@ -274,12 +275,6 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
-        ContentFilter filter = ContentFilters.get();
-        ContentMappings mappings = ContentMappings.get();
-        try (BulkChange change = new BulkChange(mappings)) {
-            filter.reload();
-            change.commit();
-        }
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
@@ -287,61 +282,74 @@ public class SupportPlugin extends Plugin {
         List<Content> contents = appendManifestContents(manifest, errorWriter, components);
         contents.add(new StringContent("manifest.md", manifest.toString()));
         try {
-            try (BulkChange change = new BulkChange(mappings);
-                 ZipArchiveOutputStream zip = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
-                final FilteredOutputStream filteredOut = new FilteredOutputStream(new IgnoreCloseOutputStream(zip), filter);
+            try (BulkChange change = new BulkChange(ContentMappings.get());
+                 ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
+                Optional<ContentFilter> maybeFilter = getContentFilter();
+                Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(new IgnoreCloseOutputStream(binaryOut), filter));
+                OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElseGet(() -> new IgnoreCloseOutputStream(binaryOut));
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
                     }
-                    final String name = filter.filter(content.getName());
+                    final String name = maybeFilter.map(filter -> filter.filter(content.getName())).orElseGet(content::getName);
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                     entry.setTime(content.getTime());
                     try {
-                        zip.putArchiveEntry(entry);
-                        zip.flush();
+                        binaryOut.putArchiveEntry(entry);
+                        binaryOut.flush();
                         // TODO: this could be more intelligent at detecting binary files
                         if (name.endsWith(".png")) {
-                            content.writeTo(zip);
+                            content.writeTo(binaryOut);
+                            binaryOut.flush();
                         } else {
-                            content.writeTo(filteredOut);
+                            content.writeTo(textOut);
+                            textOut.flush();
+                            maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
                         }
                     } catch (Throwable e) {
                         String msg = "Could not attach ''" + name + "'' to support bundle";
-                        LogRecord r = new LogRecord(Level.WARNING, msg);
-                        r.setThrown(e);
-                        logger.log(r);
+                        logger.log(Level.WARNING, msg, e);
                         errorWriter.println(msg);
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
                         SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
-                        filteredOut.flush();
-                        filteredOut.reset();
-                        zip.closeArchiveEntry();
+                        binaryOut.closeArchiveEntry();
                     }
                 }
                 errorWriter.close();
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
                     try {
-                        zip.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
-                        filteredOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
-                        filteredOut.flush();
-                        zip.closeArchiveEntry();
+                        binaryOut.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
+                        textOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
+                        textOut.flush();
+                        binaryOut.closeArchiveEntry();
                     } catch (IOException e) {
-                        LogRecord r = new LogRecord(Level.WARNING, "Could not write manifest/errors.txt to zip archive");
-                        r.setThrown(e);
-                        logger.log(r);
+                        logger.log(Level.WARNING, "Could not write manifest/errors.txt to zip archive", e);
                     }
                 }
-                zip.flush();
+                binaryOut.flush();
                 change.commit();
             }
         } finally {
             outputStream.flush();
         }
+    }
+
+    private static Optional<ContentFilter> getContentFilter() throws IOException {
+        ContentFilters filters = ContentFilters.get();
+        if (filters.isEnabled()) {
+            ContentFilter filter = ContentFilter.ALL;
+            ContentMappings mappings = ContentMappings.get();
+            try (BulkChange change = new BulkChange(mappings)) {
+                filter.reload();
+                change.commit();
+            }
+            return Optional.of(filter);
+        }
+        return Optional.empty();
     }
 
     private static void appendManifestHeader(StringBuilder manifest) {
@@ -380,9 +388,7 @@ public class SupportPlugin extends Plugin {
                     displayName = component.getClass().getName();
                 }
                 String msg = "Could not get content from " + displayName + " for support bundle";
-                LogRecord r = new LogRecord(Level.WARNING, msg);
-                r.setThrown(e);
-                logger.log(r);
+                logger.log(Level.WARNING, msg, e);
                 errors.println(msg);
                 errors.println("-----------------------------------------------------------------------");
                 errors.println();

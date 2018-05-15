@@ -24,44 +24,29 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import hudson.Extension;
-import hudson.ExtensionList;
-import jenkins.model.GlobalConfiguration;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 
 /**
- * Configures content filters for anonymization.
+ * Composite ContentFilter of all registered ContentFilter extensions.
  *
- * @see ContentFilter
  * @since TODO
  */
-@Extension
 @Restricted(NoExternalUse.class)
-public class ContentFilters extends GlobalConfiguration {
-
-    public static ContentFilters get() {
-        return ExtensionList.lookupSingleton(ContentFilters.class);
-    }
-
-    private boolean enabled;
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    @DataBoundSetter
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        save();
+class AllContentFilters implements ContentFilter {
+    @Override
+    public @Nonnull String filter(@Nonnull String input) {
+        String filtered = input;
+        for (ContentFilter filter : ContentFilter.all()) {
+            filtered = filter.filter(filtered);
+        }
+        return filtered;
     }
 
     @Override
-    public @Nonnull String getDisplayName() {
-        return Messages.ContentFilters_DisplayName();
+    public void reload() {
+        ContentFilter.all().forEach(ContentFilter::reload);
     }
-
 }
