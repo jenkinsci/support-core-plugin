@@ -35,6 +35,11 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Dynamically selects either a textual or binary OutputStream destination based on simple content type probing.
+ *
+ * @since TODO
+ */
 @Restricted(NoExternalUse.class)
 public class OutputStreamSelector extends OutputStream implements WrapperOutputStream {
     private static final int DEFAULT_PROBE_SIZE = 20;
@@ -45,6 +50,12 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     private boolean closed;
     private boolean flushScheduled;
 
+    /**
+     * Constructs an OutputStreamSelector using the provided streams.
+     *
+     * @param binaryOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be binary
+     * @param textOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be textual
+     */
     public OutputStreamSelector(@Nonnull Supplier<OutputStream> binaryOutputStreamProvider, @Nonnull Supplier<OutputStream> textOutputStreamProvider) {
         this.binaryOutputStreamProvider = binaryOutputStreamProvider;
         this.textOutputStreamProvider = textOutputStreamProvider;

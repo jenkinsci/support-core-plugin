@@ -24,9 +24,18 @@
 
 package com.cloudbees.jenkins.support.util;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import javax.annotation.Nullable;
 import java.io.OutputStream;
 
+/**
+ * Allows for nested OutputStream wrappers and getting access to the unwrapped stream.
+ *
+ * @since TODO
+ */
+@Restricted(NoExternalUse.class)
 public interface WrapperOutputStream {
     @Nullable OutputStream getUnderlyingStream();
 
