@@ -28,6 +28,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.GuardedBy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -45,9 +46,13 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     private static final int DEFAULT_PROBE_SIZE = 20;
     private final Supplier<OutputStream> binaryOutputStreamProvider;
     private final Supplier<OutputStream> textOutputStreamProvider;
+    @GuardedBy("this")
     private ByteBuffer head = ByteBuffer.allocate(DEFAULT_PROBE_SIZE);
+    @GuardedBy("this")
     private OutputStream out;
+    @GuardedBy("this")
     private boolean closed;
+    @GuardedBy("this")
     private boolean flushScheduled;
 
     /**
@@ -66,13 +71,13 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public void write(int b) throws IOException {
+    public synchronized void write(int b) throws IOException {
         ensureOpen();
         write(new byte[]{(byte) b});
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    public synchronized void write(byte[] b, int off, int len) throws IOException {
         ensureOpen();
         if (len < 0) throw new IllegalArgumentException("Length cannot be negative. Got: " + len);
         if (len == 0) return;
@@ -120,7 +125,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public void flush() throws IOException {
+    public synchronized void flush() throws IOException {
         ensureOpen();
         if (out == null) {
             flushScheduled = true;
@@ -130,7 +135,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         ensureOpen();
         try {
             if (out == null) {
@@ -143,7 +148,8 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public OutputStream getUnderlyingStream() {
+    public synchronized OutputStream getUnderlyingStream() {
+        ensureOpen();
         return out;
     }
 }

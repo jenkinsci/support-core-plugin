@@ -55,6 +55,10 @@ public class OutputStreamSelectorTest {
         assertThatIllegalStateException()
                 .isThrownBy(() -> selector.write(new byte[]{0, 1, 2, 3, 4, 5, 6, 7}, 4, 4))
                 .withMessageContaining("closed");
+        assertThatIllegalStateException()
+                .isThrownBy(() -> selector.flush());
+        assertThatIllegalStateException()
+                .isThrownBy(() -> selector.getUnderlyingStream());
     }
 
     @Test
