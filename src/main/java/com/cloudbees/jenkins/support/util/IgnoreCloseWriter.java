@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Provides a {@link FilterWriter} that ignores calls to close its underlying stream and instead simply flushes it.
+ * Provides a {@link FilterWriter} that ignores calls to close its underlying writer and instead simply flushes it.
  *
  * @since TODO
  */
