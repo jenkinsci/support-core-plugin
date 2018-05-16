@@ -165,6 +165,7 @@ public class SupportActionTest {
             assertThat("Node name should be present when anonymization is disabled",
                     nodeComponentText, containsString(node.getNodeName()));
         }
+        bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(true);
             SupportPlugin.writeBundle(os, componentsToCreate);
