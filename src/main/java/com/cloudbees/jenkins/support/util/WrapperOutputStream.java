@@ -24,31 +24,17 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import javax.annotation.Nonnull;
-import java.io.FilterOutputStream;
-import java.io.IOException;
+import javax.annotation.Nullable;
 import java.io.OutputStream;
 
-/**
- * Provides a {@link FilterOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
- *
- * @since TODO
- */
-@Restricted(NoExternalUse.class)
-public final class IgnoreCloseOutputStream extends FilterOutputStream implements WrapperOutputStream {
-    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
-        super(out);
-    }
+public interface WrapperOutputStream {
+    @Nullable OutputStream getUnderlyingStream();
 
-    @Override
-    public void close() throws IOException {
-        flush();
-    }
-
-    public OutputStream getUnderlyingStream() {
+    default @Nullable OutputStream getRecursivelyUnderlyingStream() {
+        OutputStream out = getUnderlyingStream();
+        while (out instanceof WrapperOutputStream) {
+            out = ((WrapperOutputStream) out).getUnderlyingStream();
+        }
         return out;
     }
 }

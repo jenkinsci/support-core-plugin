@@ -36,7 +36,7 @@ import java.util.function.Supplier;
 import static java.util.Objects.requireNonNull;
 
 @Restricted(NoExternalUse.class)
-public class OutputStreamSelector extends OutputStream {
+public class OutputStreamSelector extends OutputStream implements WrapperOutputStream {
     private static final int DEFAULT_PROBE_SIZE = 20;
     private final Supplier<OutputStream> binaryOutputStreamProvider;
     private final Supplier<OutputStream> textOutputStreamProvider;
@@ -129,5 +129,10 @@ public class OutputStreamSelector extends OutputStream {
         } finally {
             closed = true;
         }
+    }
+
+    @Override
+    public OutputStream getUnderlyingStream() {
+        return out;
     }
 }

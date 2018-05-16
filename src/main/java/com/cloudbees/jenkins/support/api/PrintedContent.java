@@ -25,8 +25,8 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
-import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.IgnoreCloseWriter;
+import com.cloudbees.jenkins.support.util.WrapperOutputStream;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -62,11 +62,10 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
      * when filtering.
      */
     private PrintWriter getWriter(OutputStream os) {
-        if (os instanceof IgnoreCloseOutputStream) {
-            IgnoreCloseOutputStream ignoreCloseStream = (IgnoreCloseOutputStream) os;
-            // IgnoreCloseOutputStream always wraps the OutputStream, so we need to examine the type of the underlying stream.
-            if (ignoreCloseStream.getUnderlyingStream() instanceof FilteredOutputStream) {
-                FilteredOutputStream filteredStream = (FilteredOutputStream) ignoreCloseStream.getUnderlyingStream();
+        if (os instanceof WrapperOutputStream) {
+            OutputStream out = ((WrapperOutputStream) os).getRecursivelyUnderlyingStream();
+            if (out instanceof FilteredOutputStream) {
+                FilteredOutputStream filteredStream = (FilteredOutputStream) out;
                 return new PrintWriter(new IgnoreCloseWriter(filteredStream.asWriter()));
             }
         }

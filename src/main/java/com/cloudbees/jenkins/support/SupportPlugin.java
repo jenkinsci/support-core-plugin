@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
+import com.cloudbees.jenkins.support.util.OutputStreamSelector;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.BulkChange;
@@ -286,7 +287,9 @@ public class SupportPlugin extends Plugin {
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 Optional<ContentFilter> maybeFilter = getContentFilter();
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
-                IgnoreCloseOutputStream textOut = maybeFilteredOut.map(IgnoreCloseOutputStream::new).orElseGet(() -> new IgnoreCloseOutputStream(binaryOut));
+                OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
+                OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
+                IgnoreCloseOutputStream out = new IgnoreCloseOutputStream(selector);
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
@@ -297,15 +300,9 @@ public class SupportPlugin extends Plugin {
                     try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
-                        // TODO: this could be more intelligent at detecting binary files
-                        if (name.endsWith(".png")) {
-                            content.writeTo(binaryOut);
-                            binaryOut.flush();
-                        } else {
-                            content.writeTo(textOut);
-                            textOut.flush();
-                            maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
-                        }
+                        content.writeTo(out);
+                        out.flush();
+                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
                     } catch (Throwable e) {
                         String msg = "Could not attach ''" + name + "'' to support bundle";
                         logger.log(Level.WARNING, msg, e);
