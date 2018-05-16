@@ -28,27 +28,23 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.io.FilterOutputStream;
+import java.io.FilterWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 
 /**
- * Provides a {@link FilterInputStream} that ignores calls to close its underlying stream and instead simply flushes it.
+ * Provides a {@link FilterWriter} that ignores calls to close its underlying stream and instead simply flushes it.
  *
  * @since TODO
  */
 @Restricted(NoExternalUse.class)
-public final class IgnoreCloseOutputStream extends FilterOutputStream {
-    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
+public final class IgnoreCloseWriter extends FilterWriter {
+    public IgnoreCloseWriter(@Nonnull Writer out) {
         super(out);
     }
 
     @Override
     public void close() throws IOException {
         flush();
-    }
-
-    public OutputStream getUnderlyingStream() {
-        return out;
     }
 }

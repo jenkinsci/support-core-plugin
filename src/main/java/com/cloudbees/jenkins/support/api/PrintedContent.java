@@ -25,6 +25,8 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
+import com.cloudbees.jenkins.support.util.IgnoreCloseWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -45,18 +47,30 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        final PrintWriter writer;
-        if (os instanceof FilteredOutputStream) {
-            FilteredOutputStream out = (FilteredOutputStream) os;
-            writer = new PrintWriter(out.asWriter());
-        } else {
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
-        }
+        final PrintWriter writer = getWriter(os);
         try {
             printTo(writer);
         } finally {
             writer.flush();
         }
+    }
+
+    /**
+     * When anonymization is enabled, we create an {@link FilteredWriter} directly from
+     * the underlying {@link FilteredOutputStream} that prevents us from encoding and
+     * then immediately decoding characters written to the returned {@link PrintStream}
+     * when filtering.
+     */
+    private PrintWriter getWriter(OutputStream os) {
+        if (os instanceof IgnoreCloseOutputStream) {
+            IgnoreCloseOutputStream ignoreCloseStream = (IgnoreCloseOutputStream) os;
+            // IgnoreCloseOutputStream always wraps the OutputStream, so we need to examine the type of the underlying stream.
+            if (ignoreCloseStream.getUnderlyingStream() instanceof FilteredOutputStream) {
+                FilteredOutputStream filteredStream = (FilteredOutputStream) ignoreCloseStream.getUnderlyingStream();
+                return new PrintWriter(new IgnoreCloseWriter(filteredStream.asWriter()));
+            }
+        }
+        return new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
     }
 
     protected abstract void printTo(PrintWriter out) throws IOException;
