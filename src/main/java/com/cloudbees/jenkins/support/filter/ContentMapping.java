@@ -30,7 +30,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -46,11 +45,8 @@ import static java.util.stream.Collectors.joining;
  */
 @Immutable
 @Restricted(NoExternalUse.class)
-public class ContentMapping implements ContentFilter, Comparable<ContentMapping> {
+public class ContentMapping implements ContentFilter {
     private static final String ALT_SEPARATOR = " » ";
-    private static final Comparator<ContentMapping> BY_LENGTH = Comparator.comparingLong(mapping -> mapping.getOriginal().length());
-    private static final Comparator<ContentMapping> BY_NAME = Comparator.comparing(ContentMapping::getOriginal);
-    private static final Comparator<ContentMapping> COMPARATOR = BY_LENGTH.reversed().thenComparing(BY_NAME);
 
     private final String original;
     private final Pattern pattern;
@@ -111,11 +107,6 @@ public class ContentMapping implements ContentFilter, Comparable<ContentMapping>
     @Override
     public int hashCode() {
         return hashCode;
-    }
-
-    @Override
-    public int compareTo(ContentMapping o) {
-        return COMPARATOR.compare(this, o);
     }
 
     private Object writeReplace() {

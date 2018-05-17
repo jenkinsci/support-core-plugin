@@ -37,13 +37,13 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -79,6 +79,9 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         return mappings;
     }
 
+    private static final Comparator<String> BY_LENGTH = Comparator.comparingLong(String::length);
+    private static final Comparator<String> BY_NAME = Comparator.comparing(Function.identity());
+    private static final Comparator<String> COMPARATOR = BY_LENGTH.reversed().thenComparing(BY_NAME);
     private static final Logger LOGGER = Logger.getLogger(ContentMappings.class.getName());
 
     private final Set<String> stopWords;
@@ -87,8 +90,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private ContentMappings(@Nonnull XmlProxy proxy) {
         stopWords = proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords;
         mappings = proxy.stopWords == null
-                ? new ConcurrentHashMap<>()
-                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, ConcurrentSkipListMap::new));
+                ? new ConcurrentSkipListMap<>(COMPARATOR)
+                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
     }
 
     private static Set<String> getDefaultStopWords() {

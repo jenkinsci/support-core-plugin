@@ -24,11 +24,17 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
-import java.util.Locale;
+import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.StreamSupport;
+
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -49,5 +55,18 @@ public class ContentMappingsTest {
         assertThat(mappings.getStopWords(), not(hasItems(expectedStopWords)));
         mappings.reload();
         assertThat(mappings.getStopWords(), hasItems(expectedStopWords));
+    }
+
+    @Test
+    public void contentMappingsOrderedByLengthDescending() throws IOException {
+        r.createFreeStyleProject("ShortName");
+        r.createFreeStyleProject("LongerName");
+        r.createFreeStyleProject("LongestNameHere");
+        ContentFilter.ALL.reload();
+        ContentMappings mappings = ContentMappings.get();
+        List<String> originals = StreamSupport.stream(mappings.spliterator(), false)
+                .map(ContentMapping::getOriginal)
+                .collect(toList());
+        Assertions.assertThat(originals).containsExactly("LongestNameHere", "LongerName", "ShortName");
     }
 }
