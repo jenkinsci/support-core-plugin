@@ -48,7 +48,8 @@ public final class IgnoreCloseOutputStream extends FilterOutputStream implements
         flush();
     }
 
-    public OutputStream getUnderlyingStream() {
+    @Override
+    public @Nonnull OutputStream unwrap() {
         return out;
     }
 }

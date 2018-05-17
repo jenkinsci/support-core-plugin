@@ -58,7 +58,7 @@ public class OutputStreamSelectorTest {
         assertThatIllegalStateException()
                 .isThrownBy(() -> selector.flush());
         assertThatIllegalStateException()
-                .isThrownBy(() -> selector.getUnderlyingStream());
+                .isThrownBy(() -> selector.unwrap());
     }
 
     @Test
@@ -112,6 +112,11 @@ public class OutputStreamSelectorTest {
                 .isNotEmpty()
                 .containsOnly(0x42);
         assertThat(binaryOut.toByteArray()).isEmpty();
+    }
+
+    @Test
+    public void shouldForceTextStreamWhenUnwrappingFreshStream() throws IOException {
+        assertThat(selector.unwrap()).isSameAs(textOut);
     }
 
     @Test

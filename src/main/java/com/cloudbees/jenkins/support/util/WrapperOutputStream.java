@@ -27,7 +27,8 @@ package com.cloudbees.jenkins.support.util;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -37,12 +38,26 @@ import java.io.OutputStream;
  */
 @Restricted(NoExternalUse.class)
 public interface WrapperOutputStream {
-    @Nullable OutputStream getUnderlyingStream();
+    /**
+     * Unwraps this stream, potentially forcing unwritten data to be flushed.
+     *
+     * @return the underlying stream being wrapped
+     * @throws IOException if an exception occurs preparing the unwrapped reference
+     * @throws IllegalStateException if this stream is closed
+     */
+    @Nonnull OutputStream unwrap() throws IOException;
 
-    default @Nullable OutputStream getRecursivelyUnderlyingStream() {
-        OutputStream out = getUnderlyingStream();
+    /**
+     * Unwraps this stream, recursively descending through any further WrapperOutputStream instances.
+     *
+     * @return the underlying stream being wrapped
+     * @throws IOException if an exception occurs during any unwrap stage
+     * @throws IllegalStateException if this stream is closed
+     */
+    default @Nonnull OutputStream unwrapRecursively() throws IOException {
+        OutputStream out = unwrap();
         while (out instanceof WrapperOutputStream) {
-            out = ((WrapperOutputStream) out).getUnderlyingStream();
+            out = ((WrapperOutputStream) out).unwrap();
         }
         return out;
     }

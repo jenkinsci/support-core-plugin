@@ -61,9 +61,9 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
      * then immediately decoding characters written to the returned {@link PrintStream}
      * when filtering.
      */
-    private PrintWriter getWriter(OutputStream os) {
+    private PrintWriter getWriter(OutputStream os) throws IOException {
         if (os instanceof WrapperOutputStream) {
-            OutputStream out = ((WrapperOutputStream) os).getRecursivelyUnderlyingStream();
+            OutputStream out = ((WrapperOutputStream) os).unwrapRecursively();
             if (out instanceof FilteredOutputStream) {
                 FilteredOutputStream filteredStream = (FilteredOutputStream) out;
                 return new PrintWriter(new IgnoreCloseWriter(filteredStream.asWriter()));

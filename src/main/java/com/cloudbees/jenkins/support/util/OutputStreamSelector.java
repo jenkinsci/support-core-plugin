@@ -75,7 +75,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public synchronized void write(byte[] b, int off, int len) throws IOException {
+    public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
         ensureOpen();
         if (len < 0) throw new IllegalArgumentException("Length cannot be negative. Got: " + len);
         if (len == 0) return;
@@ -110,7 +110,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             head.get(b);
             write(b);
         } else {
-            out = binaryOutputStreamProvider.get();
+            out = textOutputStreamProvider.get();
         }
     }
 
@@ -142,8 +142,9 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public synchronized OutputStream getUnderlyingStream() {
+    public synchronized @Nonnull OutputStream unwrap() throws IOException {
         ensureOpen();
+        chooseStream();
         return out;
     }
 }
