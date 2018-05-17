@@ -341,6 +341,7 @@ public class SupportPlugin extends Plugin {
             ContentFilter filter = ContentFilter.ALL;
             ContentMappings mappings = ContentMappings.get();
             try (BulkChange change = new BulkChange(mappings)) {
+                mappings.reload();
                 filter.reload();
                 change.commit();
             }

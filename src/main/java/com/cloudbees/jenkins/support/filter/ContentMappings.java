@@ -26,10 +26,10 @@ package com.cloudbees.jenkins.support.filter;
 
 import com.cloudbees.jenkins.support.util.Persistence;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
+import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
@@ -84,30 +85,25 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private final Map<String, ContentMapping> mappings;
 
     private ContentMappings(@Nonnull XmlProxy proxy) {
-        stopWords = Collections.unmodifiableSet(proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords);
+        stopWords = proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords;
         mappings = proxy.stopWords == null
                 ? new ConcurrentHashMap<>()
                 : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, ConcurrentSkipListMap::new));
     }
 
     private static Set<String> getDefaultStopWords() {
-        Set<String> stopWords = new HashSet<>(Arrays.asList(
+        return new HashSet<>(Arrays.asList(
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated"
         ));
-        ExtensionList.lookup(AbstractItem.class).forEach(item -> {
-            stopWords.add(item.getTaskNoun());
-            stopWords.add(item.getPronoun());
-        });
-        return Collections.unmodifiableSet(stopWords);
     }
 
     /**
      * @return the set of stop words to ignore when filtering
      */
     public @Nonnull Set<String> getStopWords() {
-        return stopWords;
+        return Collections.unmodifiableSet(stopWords);
     }
 
     /**
@@ -129,6 +125,13 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             }
             return mapping;
         }));
+    }
+
+    public void reload() {
+        Jenkins.get().allItems(AbstractItem.class).forEach(item -> {
+            stopWords.add(item.getTaskNoun().toLowerCase(Locale.ENGLISH));
+            stopWords.add(item.getPronoun().toLowerCase(Locale.ENGLISH));
+        });
     }
 
     @Override
