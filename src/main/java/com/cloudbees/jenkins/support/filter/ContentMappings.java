@@ -95,7 +95,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         return new HashSet<>(Arrays.asList(
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
-                "user", "anonymous", "authenticated"
+                "user", "anonymous", "authenticated",
+                "everyone", "system"
         ));
     }
 
