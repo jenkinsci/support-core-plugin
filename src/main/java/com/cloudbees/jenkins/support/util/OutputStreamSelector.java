@@ -52,8 +52,6 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     private OutputStream out;
     @GuardedBy("this")
     private boolean closed;
-    @GuardedBy("this")
-    private boolean flushScheduled;
 
     /**
      * Constructs an OutputStreamSelector using the provided streams.
@@ -114,9 +112,6 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
         } else {
             out = binaryOutputStreamProvider.get();
         }
-        if (flushScheduled) {
-            out.flush();
-        }
     }
 
     private static boolean isNonWhitespaceControlCharacter(byte b) {
@@ -128,10 +123,9 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     public synchronized void flush() throws IOException {
         ensureOpen();
         if (out == null) {
-            flushScheduled = true;
-        } else {
-            out.flush();
+            chooseStream();
         }
+        out.flush();
     }
 
     @Override

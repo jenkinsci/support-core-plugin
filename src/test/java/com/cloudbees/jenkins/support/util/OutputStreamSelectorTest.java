@@ -105,14 +105,13 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldDeferFlushUntilStreamChosen() throws IOException {
+    public void shouldForceStreamChoiceWhenFlushed() throws IOException {
         selector.write(0x42);
         selector.flush();
-        verify(binaryOut, never()).flush();
-        verify(textOut, never()).flush();
-        selector.close();
-        verify(textOut).flush();
-        verifyNoMoreInteractions(binaryOut);
+        assertThat(textOut.toByteArray())
+                .isNotEmpty()
+                .containsOnly(0x42);
+        assertThat(binaryOut.toByteArray()).isEmpty();
     }
 
     @Test
