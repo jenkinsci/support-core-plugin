@@ -146,6 +146,7 @@ public class FilteredOutputStream extends FilterOutputStream {
 
     @Override
     public synchronized void close() throws IOException {
+        ensureOpen();
         decodeFilterFlushLines(true);
         flush();
         out.close();
@@ -212,7 +213,7 @@ public class FilteredOutputStream extends FilterOutputStream {
     /**
      * @return a FilteredWriter view of this stream's underlying OutputStream
      */
-    public FilteredWriter asWriter() {
+    public synchronized FilteredWriter asWriter() {
         if (out == null) {
             throw new IllegalStateException("FilteredOutputStream is closed, cannot open a writer view");
         }

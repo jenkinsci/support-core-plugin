@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.github.javafaker.Faker;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceInputStream;
 import org.junit.Test;
@@ -33,11 +34,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 public class FilteredOutputStreamTest {
 
@@ -87,5 +91,55 @@ public class FilteredOutputStreamTest {
         assertThat(contents)
                 .isNotEmpty()
                 .matches("^a+$");
+    }
+
+    @Test
+    public void shouldNotAllowOperationsAfterClose() throws IOException {
+        FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
+        out.close();
+        assertThatIllegalStateException()
+                .isThrownBy(() -> out.write(0));
+        assertThatIllegalStateException()
+                .isThrownBy(() -> out.write(new byte[0]));
+        assertThatIllegalStateException()
+                .isThrownBy(() -> out.write(new byte[]{1, 2, 3, 4}, 0, 4));
+        assertThatIllegalStateException()
+                .isThrownBy(out::flush);
+        assertThatIllegalStateException()
+                .isThrownBy(out::close);
+        assertThatIllegalStateException()
+                .isThrownBy(out::reset);
+        assertThatIllegalStateException()
+                .isThrownBy(out::asWriter);
+    }
+
+    @Test
+    public void shouldSupportMultipleUsesWithReset() throws IOException {
+        FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
+        Faker faker = new Faker();
+        List<String> paragraphs = faker.lorem().paragraphs(10);
+        StringBuilder b = new StringBuilder();
+        for (String paragraph : paragraphs) {
+            out.write(paragraph.getBytes(UTF_8));
+            out.write('\n');
+            b.append(paragraph).append('\n');
+            out.reset();
+        }
+        String expected = b.toString();
+        assertThat(new String(testOutput.toByteArray(), UTF_8))
+                .isNotEmpty()
+                .isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldSupportWriterView() throws IOException {
+        FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.toUpperCase(Locale.ENGLISH));
+        String original = new Faker().lorem().paragraph();
+        try (FilteredWriter writer = out.asWriter()) {
+            writer.write(original);
+        }
+        assertThat(new String(testOutput.toByteArray(), UTF_8))
+                .isNotEmpty()
+                .isEqualTo(original.toUpperCase(Locale.ENGLISH));
     }
 }
