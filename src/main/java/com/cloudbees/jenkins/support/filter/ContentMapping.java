@@ -112,18 +112,16 @@ public class ContentMapping implements ContentFilter {
     private Object writeReplace() {
         SerializationProxy proxy = new SerializationProxy();
         proxy.original = original;
-        proxy.pattern = pattern;
         proxy.replacement = replacement;
         return proxy;
     }
 
     private static class SerializationProxy {
         private String original;
-        private Pattern pattern;
         private String replacement;
 
         private Object readResolve() {
-            return new ContentMapping(original, pattern, replacement);
+            return ContentMapping.of(original, replacement);
         }
     }
 }
