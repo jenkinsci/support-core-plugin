@@ -99,7 +99,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
-                "everyone", "system"
+                "everyone", "system", "admin"
         ));
     }
 
