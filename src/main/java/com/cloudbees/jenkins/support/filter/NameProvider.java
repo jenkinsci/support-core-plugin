@@ -38,8 +38,10 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Strategy for providing a stream of names to anonymize along with an accompanying name generator.
@@ -78,13 +80,24 @@ public class NameProvider implements ExtensionPoint {
         return ExtensionList.lookup(NameProvider.class);
     }
 
+    private static <T> Stream<T> stream(Iterable<T> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private static <T> Stream<T> stream(T[] array) {
+        return StreamSupport.stream(Arrays.spliterator(array), false);
+    }
+
+    private static <T> Stream<T> stream(Collection<T> collection) {
+        return collection.stream();
+    }
+
     /**
      * Provides the names of items.
      */
     public static final @Extension NameProvider ITEMS = new NameProvider(
-            () -> Jenkins.get()
-                    .getItems().stream()
-                    .flatMap(item -> Arrays.stream(item.getFullName().split("/")))
+            () -> stream(Jenkins.get().allItems())
+                    .flatMap(item -> Stream.of(item.getName(), item.getDisplayName()))
                     .distinct(),
             DataFaker.get().apply(faker -> "item_" + faker.space().star()));
 
@@ -92,8 +105,7 @@ public class NameProvider implements ExtensionPoint {
      * Provides the names of view.
      */
     public static final @Extension NameProvider VIEWS = new NameProvider(
-            () -> Jenkins.get()
-                    .getViews().stream()
+            () -> stream(Jenkins.get().getViews())
                     .map(View::getViewName),
             DataFaker.get().apply(faker -> "view_" + faker.space().moon()));
 
@@ -101,8 +113,7 @@ public class NameProvider implements ExtensionPoint {
      * Provides the names of nodes.
      */
     public static final @Extension NameProvider NODES = new NameProvider(
-            () -> Jenkins.get()
-                    .getNodes().stream()
+            () -> stream(Jenkins.get().getNodes())
                     .map(Node::getNodeName),
             DataFaker.get().apply(faker -> "node_" + faker.internet().domainWord()));
 
@@ -110,7 +121,7 @@ public class NameProvider implements ExtensionPoint {
      * Provides the names of computers.
      */
     public static final @Extension NameProvider COMPUTERS = new NameProvider(
-            () -> Arrays.stream(Jenkins.get().getComputers())
+            () -> stream(Jenkins.get().getComputers())
                     .map(Computer::getDisplayName),
             DataFaker.get().apply(faker -> "computer_" + faker.internet().domainWord()));
 
@@ -118,7 +129,7 @@ public class NameProvider implements ExtensionPoint {
      * Provides the names of users.
      */
     public static final @Extension NameProvider USERS = new NameProvider(
-            () -> User.getAll().stream()
+            () -> stream(User.getAll())
                     .map(User::getFullName),
             DataFaker.get().apply(faker -> "user_" + faker.name().username()));
 
@@ -127,8 +138,7 @@ public class NameProvider implements ExtensionPoint {
      * naming conflicts between labels and nodes/computers.
      */
     public static final @Extension(ordinal = -100) NameProvider LABELS = new NameProvider(
-            () -> Jenkins.get()
-                    .getLabels().stream()
+            () -> stream(Jenkins.get().getLabels())
                     .map(Label::getDisplayName),
             DataFaker.get().apply(faker -> "label_" + faker.internet().domainWord()));
 }
