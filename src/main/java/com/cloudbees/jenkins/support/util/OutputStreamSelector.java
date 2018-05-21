@@ -43,11 +43,11 @@ import static java.util.Objects.requireNonNull;
  */
 @Restricted(NoExternalUse.class)
 public class OutputStreamSelector extends OutputStream implements WrapperOutputStream {
-    private static final int DEFAULT_PROBE_SIZE = 20;
+    static final int DEFAULT_PROBE_SIZE = 20;
     private final Supplier<OutputStream> binaryOutputStreamProvider;
     private final Supplier<OutputStream> textOutputStreamProvider;
     @GuardedBy("this")
-    private ByteBuffer head = ByteBuffer.allocate(DEFAULT_PROBE_SIZE);
+    private ByteBuffer head;
     @GuardedBy("this")
     private OutputStream out;
     @GuardedBy("this")
@@ -87,6 +87,9 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     private void probeContents(byte[] b, int off, int len) throws IOException {
+        if (head == null) {
+            head = ByteBuffer.allocate(DEFAULT_PROBE_SIZE);
+        }
         int toCopy = Math.min(head.remaining(), len);
         if (toCopy == 0) throw new IllegalStateException("No more room to buffer header, should have chosen stream by now");
         head.put(b, off, toCopy);
@@ -98,20 +101,24 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     private void chooseStream() throws IOException {
-        if (head.position() > 0) {
+        if (head == null || head.position() == 0) {
+            out = requireNonNull(textOutputStreamProvider.get(), "No OutputStream returned by text supplier");
+        } else {
             head.flip().mark();
             boolean hasControlCharacter = false;
             while (head.hasRemaining()) {
                 hasControlCharacter |= isNonWhitespaceControlCharacter(head.get());
             }
             head.reset();
-            out = requireNonNull((hasControlCharacter ? binaryOutputStreamProvider : textOutputStreamProvider).get(), "No OutputStream returned by supplier");
+            out = requireNonNull(
+                    (hasControlCharacter ? binaryOutputStreamProvider : textOutputStreamProvider).get(),
+                    String.format("No OutputStream returned by %s supplier", hasControlCharacter ? "binary" : "text")
+            );
             byte[] b = new byte[head.remaining()];
             head.get(b);
             write(b);
-        } else {
-            out = textOutputStreamProvider.get();
         }
+        head = null;
     }
 
     private static boolean isNonWhitespaceControlCharacter(byte b) {
@@ -126,6 +133,15 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             chooseStream();
         }
         out.flush();
+    }
+
+    /**
+     * Resets the state of this stream to allow for contents to be probed again.
+     */
+    public synchronized void reset() {
+        ensureOpen();
+        head = null;
+        out = null;
     }
 
     @Override

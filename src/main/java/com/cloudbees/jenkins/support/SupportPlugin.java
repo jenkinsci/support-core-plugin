@@ -288,6 +288,8 @@ public class SupportPlugin extends Plugin {
                 Optional<ContentFilter> maybeFilter = getContentFilter();
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
+                OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
+                IgnoreCloseOutputStream out = new IgnoreCloseOutputStream(selector);
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
@@ -298,11 +300,8 @@ public class SupportPlugin extends Plugin {
                     try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
-                        OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
-                        IgnoreCloseOutputStream out = new IgnoreCloseOutputStream(selector);
                         content.writeTo(out);
                         out.flush();
-                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
                     } catch (Throwable e) {
                         String msg = "Could not attach ''" + name + "'' to support bundle";
                         logger.log(Level.WARNING, msg, e);
@@ -312,6 +311,8 @@ public class SupportPlugin extends Plugin {
                         SupportLogFormatter.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
+                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
+                        selector.reset();
                         binaryOut.closeArchiveEntry();
                     }
                 }

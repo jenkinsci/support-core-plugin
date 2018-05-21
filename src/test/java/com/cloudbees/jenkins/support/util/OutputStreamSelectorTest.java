@@ -29,6 +29,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,8 @@ import java.nio.file.Paths;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.quicktheories.QuickTheory.qt;
+import static org.quicktheories.generators.SourceDSL.strings;
 
 public class OutputStreamSelectorTest {
 
@@ -59,10 +62,30 @@ public class OutputStreamSelectorTest {
                 .isThrownBy(() -> selector.flush());
         assertThatIllegalStateException()
                 .isThrownBy(() -> selector.unwrap());
+        assertThatIllegalStateException()
+                .isThrownBy(() -> selector.reset());
     }
 
     @Test
-    public void shouldNotAllowInvalidLengths() throws IOException {
+    public void shouldNotAllowNullOutputStreamReturnedBySupplier() {
+        assertThatNullPointerException()
+                .isThrownBy(() -> {
+                    OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
+                    selector.write(0);
+                    selector.flush();
+                });
+        assertThatNullPointerException()
+                .isThrownBy(() -> {
+                    OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
+                    selector.write('A');
+                    selector.flush();
+                });
+        assertThatNullPointerException()
+                .isThrownBy(() -> new OutputStreamSelector(() -> null, () -> null).flush());
+    }
+
+    @Test
+    public void shouldNotAllowInvalidLengths() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> selector.write(new byte[0], 0, -1));
     }
@@ -90,18 +113,36 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldUseTextStreamWhenAllPrintable() throws IOException {
+    public void shouldUseTextStreamWhenAllPrintable() {
         Faker faker = new Faker();
         String contents = faker.lorem().paragraph();
+        assertThatContentsWriteToTextOut(contents);
+    }
 
-        selector.write(contents.getBytes(UTF_8));
-        selector.close();
+    @Test
+    public void shouldUseTextStreamForPrintableASCII() {
+        int probeSize = OutputStreamSelector.DEFAULT_PROBE_SIZE;
+        qt().forAll(strings().betweenCodePoints(0x20, 0x7e).ofLengthBetween(probeSize / 2, probeSize * 2))
+                .checkAssert(this::assertThatContentsWriteToTextOut);
+    }
 
-        assertThat(binaryOut.toByteArray()).isEmpty();
-        byte[] bytes = textOut.toByteArray();
-        assertThat(bytes).isNotEmpty();
-        String actual = new String(bytes, UTF_8);
-        assertThat(actual).isEqualTo(contents);
+    private void assertThatContentsWriteToTextOut(String contents) {
+        try {
+            selector.write(contents.getBytes(UTF_8));
+            selector.flush();
+
+            assertThat(binaryOut.toByteArray())
+                    .isEmpty();
+            assertThat(new String(textOut.toByteArray(), UTF_8))
+                    .isNotEmpty()
+                    .isEqualTo(contents);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            selector.reset();
+            binaryOut.reset();
+            textOut.reset();
+        }
     }
 
     @Test
