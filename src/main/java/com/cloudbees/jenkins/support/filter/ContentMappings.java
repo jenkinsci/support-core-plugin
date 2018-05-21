@@ -99,7 +99,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
-                "everyone", "system"
+                "everyone", "system", "admin"
         ));
     }
 
@@ -121,14 +121,13 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * Looks up or creates a new ContentMapping for the given original string and a ContentMapping generator.
      */
     public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
-        return mappings.computeIfAbsent(original, generator.andThen(mapping -> {
-            try {
-                save();
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Could not save mappings file", e);
-            }
-            return mapping;
-        }));
+        ContentMapping mapping = mappings.computeIfAbsent(original, generator);
+        try {
+            save();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not save mappings file", e);
+        }
+        return mapping;
     }
 
     public void reload() {
