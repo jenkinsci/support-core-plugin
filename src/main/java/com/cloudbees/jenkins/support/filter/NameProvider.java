@@ -97,8 +97,7 @@ public class NameProvider implements ExtensionPoint {
      */
     public static final @Extension NameProvider ITEMS = new NameProvider(
             () -> stream(Jenkins.get().allItems())
-                    .flatMap(item -> Stream.of(item.getName(), item.getDisplayName()))
-                    .distinct(),
+                    .flatMap(item -> Stream.of(item.getName(), item.getDisplayName())),
             DataFaker.get().apply(faker -> "item_" + faker.space().star()));
 
     /**
@@ -106,7 +105,7 @@ public class NameProvider implements ExtensionPoint {
      */
     public static final @Extension NameProvider VIEWS = new NameProvider(
             () -> stream(Jenkins.get().getViews())
-                    .map(View::getViewName),
+                    .flatMap(view -> Stream.of(view.getViewName(), view.getDisplayName())),
             DataFaker.get().apply(faker -> "view_" + faker.space().moon()));
 
     /**
@@ -114,7 +113,7 @@ public class NameProvider implements ExtensionPoint {
      */
     public static final @Extension NameProvider NODES = new NameProvider(
             () -> stream(Jenkins.get().getNodes())
-                    .map(Node::getNodeName),
+                    .flatMap(node -> Stream.of(node.getNodeName(), node.getDisplayName())),
             DataFaker.get().apply(faker -> "node_" + faker.internet().domainWord()));
 
     /**
@@ -122,7 +121,7 @@ public class NameProvider implements ExtensionPoint {
      */
     public static final @Extension NameProvider COMPUTERS = new NameProvider(
             () -> stream(Jenkins.get().getComputers())
-                    .map(Computer::getDisplayName),
+                    .flatMap(computer -> Stream.of(computer.getName(), computer.getDisplayName())),
             DataFaker.get().apply(faker -> "computer_" + faker.internet().domainWord()));
 
     /**
@@ -130,7 +129,7 @@ public class NameProvider implements ExtensionPoint {
      */
     public static final @Extension NameProvider USERS = new NameProvider(
             () -> stream(User.getAll())
-                    .map(User::getFullName),
+                    .flatMap(user -> Stream.of(user.getId(), user.getFullName(), user.getDisplayName())),
             DataFaker.get().apply(faker -> "user_" + faker.name().username()));
 
     /**
