@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
 import hudson.ExtensionList;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -63,7 +64,7 @@ public class SensitiveContentFilter implements ContentFilter {
         Set<String> stopWords = mappings.getStopWords();
         for (NameProvider provider : NameProvider.all()) {
             provider.names()
-                    .filter(name -> !stopWords.contains(name.toLowerCase(Locale.ENGLISH)))
+                    .filter(name -> StringUtils.isNotBlank(name) && !stopWords.contains(name.toLowerCase(Locale.ENGLISH)))
                     .forEach(name -> mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake())));
         }
     }
