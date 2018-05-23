@@ -75,7 +75,11 @@
           </f:entry>
         </j:forEach>
         <f:entry>
-          <f:submit value="${%Delete Bundle}"/>
+          <span class="yui-button yui-submit-button submit-button danger">
+            <span class="first-child">
+              <button type="submit">${%Delete Bundle}</button>
+            </span>
+          </span>
         </f:entry>
       </f:form>
       </f:section>
