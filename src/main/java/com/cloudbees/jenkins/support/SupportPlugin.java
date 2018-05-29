@@ -289,7 +289,8 @@ public class SupportPlugin extends Plugin {
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
-                IgnoreCloseOutputStream out = new IgnoreCloseOutputStream(selector);
+                IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
+                IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
@@ -300,6 +301,7 @@ public class SupportPlugin extends Plugin {
                     try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
+                        OutputStream out = content.isSensitive() ? filteredOut : unfilteredOut;
                         content.writeTo(out);
                         out.flush();
                     } catch (Throwable e) {

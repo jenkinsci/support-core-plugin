@@ -47,4 +47,15 @@ public abstract class Content {
     public abstract void writeTo(OutputStream os) throws IOException;
 
     public long getTime() throws IOException { return System.currentTimeMillis(); }
+
+    /**
+     * Indicates if this Content may contain sensitive data. When {@code true}, the contents written via
+     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
+     * When {@code false}, the contents are written without any filtering applied.
+     *
+     * @since TODO
+     */
+    public boolean isSensitive() {
+        return true;
+    }
 }

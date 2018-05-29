@@ -699,6 +699,11 @@ public class AboutJenkins extends Component {
                 out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
+
+        @Override
+        public boolean isSensitive() {
+            return false;
+        }
     }
 
     private static class DisabledPlugins extends PrintedContent {
@@ -715,6 +720,11 @@ public class AboutJenkins extends Component {
                 out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
+
+        @Override
+        public boolean isSensitive() {
+            return false;
+        }
     }
 
     private static class FailedPlugins extends PrintedContent {
@@ -730,6 +740,11 @@ public class AboutJenkins extends Component {
             for (PluginManager.FailedPlugin w : plugins) {
                 out.println(w.name + " -> " + w.cause);
             }
+        }
+
+        @Override
+        public boolean isSensitive() {
+            return false;
         }
     }
 
@@ -792,6 +807,11 @@ public class AboutJenkins extends Component {
 
             out.println();
 
+        }
+
+        @Override
+        public boolean isSensitive() {
+            return false;
         }
     }
 
