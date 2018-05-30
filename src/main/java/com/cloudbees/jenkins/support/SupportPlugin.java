@@ -301,7 +301,7 @@ public class SupportPlugin extends Plugin {
                     try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
-                        OutputStream out = content.isSensitive() ? filteredOut : unfilteredOut;
+                        OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
                         content.writeTo(out);
                         out.flush();
                     } catch (Throwable e) {

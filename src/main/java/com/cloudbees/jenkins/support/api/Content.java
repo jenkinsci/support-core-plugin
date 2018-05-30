@@ -49,13 +49,13 @@ public abstract class Content {
     public long getTime() throws IOException { return System.currentTimeMillis(); }
 
     /**
-     * Indicates if this Content may contain sensitive data. When {@code true}, the contents written via
+     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
      * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
      * When {@code false}, the contents are written without any filtering applied.
      *
      * @since TODO
      */
-    public boolean isSensitive() {
+    public boolean shouldBeFiltered() {
         return true;
     }
 }

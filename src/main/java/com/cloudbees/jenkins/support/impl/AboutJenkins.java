@@ -701,7 +701,7 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        public boolean isSensitive() {
+        public boolean shouldBeFiltered() {
             return false;
         }
     }
@@ -722,7 +722,7 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        public boolean isSensitive() {
+        public boolean shouldBeFiltered() {
             return false;
         }
     }
@@ -743,7 +743,7 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        public boolean isSensitive() {
+        public boolean shouldBeFiltered() {
             return false;
         }
     }
@@ -810,7 +810,7 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        public boolean isSensitive() {
+        public boolean shouldBeFiltered() {
             return false;
         }
     }
