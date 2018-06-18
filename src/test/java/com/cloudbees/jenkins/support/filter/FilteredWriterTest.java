@@ -41,7 +41,7 @@ public class FilteredWriterTest {
     @Issue("JENKINS-21670")
     @Test
     public void shouldModifyStream() throws Exception {
-        final int nrLines = FilteredWriter.DEFAULT_BUFFER_CAPACITY;
+        final int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
         String inputContents = IntStream.range(0, nrLines)
                 .mapToObj(i -> "ManagedNode" + i)
                 .collect(joining(System.lineSeparator()));
@@ -55,7 +55,7 @@ public class FilteredWriterTest {
         String outputContents = output.toString();
 
         assertThat(outputContents).isNotEmpty();
-        String[] lines = FilteredWriter.EOL.split(outputContents);
+        String[] lines = FilteredConstants.EOL.split(outputContents);
         assertThat(lines)
                 .allMatch(line -> !line.contains("ManagedNode") && line.startsWith("Anonymous_"))
                 .hasSize(nrLines);
@@ -64,7 +64,7 @@ public class FilteredWriterTest {
     @Issue("JENKINS-21670")
     @Test
     public void shouldSupportLinesLongerThanDefaultBufferSize() throws Exception {
-        CharBuffer input = CharBuffer.allocate(FilteredWriter.DEFAULT_BUFFER_CAPACITY * 10);
+        CharBuffer input = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY * 10);
         for (int i = 0; i < input.capacity(); i++) {
             input.put('+');
         }

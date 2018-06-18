@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Wraps a Writer by filtering written lines using a provided ContentFilter.
@@ -45,9 +44,6 @@ import java.util.regex.Pattern;
  */
 @Restricted(NoExternalUse.class)
 public class FilteredWriter extends FilterWriter {
-
-    static final Pattern EOL = Pattern.compile("\r?\n");
-    static final int DEFAULT_BUFFER_CAPACITY = 1024;
 
     private final ContentFilter contentFilter;
     @GuardedBy("this")
@@ -63,7 +59,7 @@ public class FilteredWriter extends FilterWriter {
             throw new IllegalStateException("FilteredWriter is closed");
         }
         if (buf == null) {
-            buf = CharBuffer.allocate(DEFAULT_BUFFER_CAPACITY);
+            buf = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY);
         }
     }
 
@@ -133,7 +129,7 @@ public class FilteredWriter extends FilterWriter {
         ensureOpen();
         if (buf.position() > 0) {
             buf.flip();
-            Matcher matcher = EOL.matcher(buf);
+            Matcher matcher = FilteredConstants.EOL.matcher(buf);
             int start = 0;
             while (matcher.find()) {
                 int end = matcher.end();

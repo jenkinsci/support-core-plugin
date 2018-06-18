@@ -41,7 +41,6 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Wraps an OutputStream by filtering written lines using a provided ContentFilter.
@@ -55,8 +54,6 @@ import java.util.regex.Pattern;
 @Restricted(NoExternalUse.class)
 public class FilteredOutputStream extends FilterOutputStream {
 
-    static final Pattern EOL = Pattern.compile("\r?\n");
-    static final int DEFAULT_DECODER_CAPACITY = 1024;
     private static final String UNKNOWN_INPUT = "\uFFFD";
 
     @GuardedBy("this")
@@ -100,7 +97,7 @@ public class FilteredOutputStream extends FilterOutputStream {
             throw new IllegalStateException("FilteredOutputStream is closed");
         }
         if (decodedBuf == null) {
-            decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+            decodedBuf = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY);
         }
     }
 
@@ -180,7 +177,7 @@ public class FilteredOutputStream extends FilterOutputStream {
         boolean flushed = false;
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
-            Matcher matcher = EOL.matcher(decodedBuf);
+            Matcher matcher = FilteredConstants.EOL.matcher(decodedBuf);
             int start = 0;
             while (matcher.find()) {
                 int end = matcher.end();
@@ -202,8 +199,8 @@ public class FilteredOutputStream extends FilterOutputStream {
     public synchronized void reset() {
         ensureOpen();
         encodedBuf.clear();
-        if (decodedBuf.capacity() > DEFAULT_DECODER_CAPACITY) {
-            this.decodedBuf = CharBuffer.allocate(DEFAULT_DECODER_CAPACITY);
+        if (decodedBuf.capacity() > FilteredConstants.DEFAULT_DECODER_CAPACITY) {
+            this.decodedBuf = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY);
         } else {
             decodedBuf.clear();
         }

@@ -50,7 +50,7 @@ public class FilteredOutputStreamTest {
     @Issue("JENKINS-21670")
     @Test
     public void shouldModifyStream() throws IOException {
-        final int nrLines = FilteredOutputStream.DEFAULT_DECODER_CAPACITY;
+        final int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
         String inputContents = IntStream.range(0, nrLines)
                 .mapToObj(i -> "Line " + i)
                 .collect(joining(System.lineSeparator()));
@@ -63,7 +63,7 @@ public class FilteredOutputStreamTest {
         String outputContents = new String(testOutput.toByteArray(), UTF_8);
 
         assertThat(outputContents).isNotEmpty();
-        String[] lines = FilteredOutputStream.EOL.split(outputContents);
+        String[] lines = FilteredConstants.EOL.split(outputContents);
         assertThat(lines)
                 .allMatch(line -> !line.contains("Line") && line.startsWith("Network"))
                 .hasSize(nrLines);
@@ -72,7 +72,7 @@ public class FilteredOutputStreamTest {
     @Issue("JENKINS-21670")
     @Test
     public void shouldSupportLinesLargerThanDefaultBufferSize() throws IOException {
-        CharBuffer input = CharBuffer.allocate(FilteredOutputStream.DEFAULT_DECODER_CAPACITY * 10);
+        CharBuffer input = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY * 10);
         for (int i = 0; i < input.capacity(); i++) {
             input.put('*');
         }
