@@ -456,23 +456,25 @@ public class SupportPlugin extends Plugin {
         Thread t = new Thread("Support core plugin startup diagnostics") {
             @Override
             public void run() {
-                while (true) {
-                    final Jenkins jenkins = Jenkins.getInstanceOrNull();
-                    if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
-                        continue;
+                try {
+                    while (true) {
+                        final Jenkins jenkins = Jenkins.getInstanceOrNull();
+                        if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
+                            continue;
+                        }
+                        try (PrintStream ps = new PrintStream(new FileOutputStream(f, true), false, "UTF-8")) {
+                            ps.println("=== Thread dump at " + new Date() + " ===");
+                            ThreadDumps.threadDump(ps);
+                            // Generate a thread dump every few seconds/minutes
+                            ps.flush();
+                            TimeUnit.SECONDS.sleep(secondsPerThreadDump);
+                        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    try (PrintStream ps = new PrintStream(new FileOutputStream(f, true), false, "UTF-8")) {
-                        ps.println("=== Thread dump at " + new Date() + " ===");
-                        ThreadDumps.threadDump(ps);
-                        // Generate a thread dump every few seconds/minutes
-                        ps.flush();
-                        TimeUnit.SECONDS.sleep(secondsPerThreadDump);
-                    } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        Thread.currentThread().interrupt();
-                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
             }
         };
