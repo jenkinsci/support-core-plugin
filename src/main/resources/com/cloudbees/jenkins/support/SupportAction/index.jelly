@@ -37,7 +37,18 @@
       <p>
         ${%detail}
       </p>
+      <j:set var="descriptor" value="${it.descriptor}"/>
       <f:form name="bundle-contents" method="POST" action="generateAllBundles">
+        <j:if test="${it.item != null}">
+          <f:section title="Item-Specific Components">
+            <f:entry title="">
+              <f:hetero-list name="itemComponents" addCaption="${%Add Component}"
+                             oneEach="true" hasHeader="true" targetType="${com.cloudbees.jenkins.support.api.ItemComponent.class}"
+                             items="${it.itemComponents}" descriptors="${descriptor.getItemComponentsDescriptors(it.item)}"/>
+            </f:entry>
+          </f:section>
+        </j:if>
+        <f:section title="Global Components">
         <j:forEach var="component" items="${it.components}">
           <f:entry field="component">
             <div name="components">
@@ -58,6 +69,7 @@
             </div>
           </f:entry>
         </j:forEach>
+        </f:section>
         <f:entry>
           <f:submit value="${%Generate Bundle}"/>
         </f:entry>

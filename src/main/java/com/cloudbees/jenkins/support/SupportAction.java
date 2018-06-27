@@ -25,23 +25,34 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.ItemComponent;
+import com.cloudbees.jenkins.support.api.ItemComponentDescriptor;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 
 import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Action;
+import hudson.model.Descriptor;
 import hudson.model.RootAction;
+import hudson.model.TopLevelItem;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.model.TransientActionFactory;
 import net.sf.json.JSONObject;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.annotation.CheckForNull;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -50,6 +61,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -58,16 +71,44 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Main root action for generating support.
+ * Main action for generating support. Available as a root action and for every {@link TopLevelItem}.
  */
 @Extension
-public class SupportAction implements RootAction {
+public class SupportAction extends AbstractDescribableImpl<SupportAction> implements RootAction {
 
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
+
+    private final @CheckForNull TopLevelItem item;
+    private List<ItemComponent> itemComponents;
+
+    public SupportAction() {
+        this.item = null;
+    }
+
+    @Restricted(NoExternalUse.class)
+    public TopLevelItem getItem() {
+        return item;
+    }
+
+    @Restricted(NoExternalUse.class)
+    public SupportAction(TopLevelItem item) {
+        this.item = item;
+    }
+
+    @Restricted(NoExternalUse.class)
+    public List<ItemComponent> getItemComponents() {
+        return itemComponents;
+    }
+
+    @Restricted(NoExternalUse.class)
+    @DataBoundSetter
+    public void setItemComponents(List<ItemComponent> itemComponents) {
+        this.itemComponents = itemComponents;
+    }
 
     public String getIconFileName() {
         return "/plugin/support-core/images/24x24/support.png";
@@ -192,6 +233,13 @@ public class SupportAction implements RootAction {
         }
         logger.fine("Selecting components...");
         final List<Component> components = new ArrayList<Component>(getComponents());
+        if (item != null && json.has("itemComponents")) {
+            List<ItemComponent> boundItemComponents = req.bindJSONToList(ItemComponent.class, json.get("itemComponents"));
+            for (ItemComponent itemComponent : boundItemComponents) {
+                itemComponent.setItem(item);
+            }
+            components.addAll(boundItemComponents);
+        }
         for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
             Component c = iterator.next();
             if (remove.contains(c.getId()) || !c.isEnabled()) {
@@ -248,6 +296,27 @@ public class SupportAction implements RootAction {
 
         public boolean isSelected() {
             return selected;
+        }
+    }
+
+    @Extension
+    public static class DescriptorImpl extends Descriptor<SupportAction> {
+        public List<ItemComponentDescriptor> getItemComponentsDescriptors(TopLevelItem item) {
+            return ItemComponentDescriptor.getDescriptors(item);
+        }
+    }
+
+    @Restricted(NoExternalUse.class)
+    @Extension
+    public static class TransientActionFactoryImpl extends TransientActionFactory<TopLevelItem> {
+        @Override
+        public Class<TopLevelItem> type() {
+            return TopLevelItem.class;
+        }
+
+        @Override
+        public Collection<? extends Action> createFor(TopLevelItem item) {
+            return Collections.singleton(new SupportAction(item));
         }
     }
 }
