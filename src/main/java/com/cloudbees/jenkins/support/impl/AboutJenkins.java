@@ -11,6 +11,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -531,7 +532,7 @@ public class AboutJenkins extends Component {
             this.plugins = plugins;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
+            final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
             out.println("=======");
             out.println();
@@ -564,8 +565,9 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("  * Security realm: " + getDescriptorName(jenkins.getSecurityRealm()));
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
-            out.println("  * CSRF Protection: "  + Jenkins.getInstance().isUseCrumbs());
-            out.println("  * Initialization Milestone: " + Jenkins.getInstance().getInitLevel());
+            out.println("  * CSRF Protection: "  + jenkins.isUseCrumbs());
+            out.println("  * Initialization Milestone: " + jenkins.getInitLevel());
+            out.println("  * Support bundle anonymization: " + ContentFilters.get().isEnabled());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");
@@ -697,6 +699,11 @@ public class AboutJenkins extends Component {
                 out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            return false;
+        }
     }
 
     private static class DisabledPlugins extends PrintedContent {
@@ -713,6 +720,11 @@ public class AboutJenkins extends Component {
                 out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
             }
         }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            return false;
+        }
     }
 
     private static class FailedPlugins extends PrintedContent {
@@ -728,6 +740,11 @@ public class AboutJenkins extends Component {
             for (PluginManager.FailedPlugin w : plugins) {
                 out.println(w.name + " -> " + w.cause);
             }
+        }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            return false;
         }
     }
 
@@ -790,6 +807,11 @@ public class AboutJenkins extends Component {
 
             out.println();
 
+        }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            return false;
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,15 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.filter;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.util.regex.Pattern;
 
-/**
- * Represents some content in a support bundle.
- *
- * @author Stephen Connolly
- */
-public abstract class Content {
+final class FilteredConstants {
 
-    private final String name;
+    static final Pattern EOL = Pattern.compile("\r?\n");
+    static final int DEFAULT_DECODER_CAPACITY = 1024;
 
-    protected Content(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public abstract void writeTo(OutputStream os) throws IOException;
-
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
-
-    /**
-     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
-     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
-     * When {@code false}, the contents are written without any filtering applied.
-     *
-     * @since TODO
-     */
-    public boolean shouldBeFiltered() {
-        return true;
+    private FilteredConstants() {
     }
 }

@@ -24,11 +24,16 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import com.cloudbees.jenkins.support.util.IgnoreCloseWriter;
+import com.cloudbees.jenkins.support.util.WrapperOutputStream;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Content that is printed on demand.
@@ -42,12 +47,29 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+        final PrintWriter writer = getWriter(os);
         try {
-            printTo(out);
+            printTo(writer);
         } finally {
-            out.flush();
+            writer.flush();
         }
+    }
+
+    /**
+     * When anonymization is enabled, we create an {@link FilteredWriter} directly from
+     * the underlying {@link FilteredOutputStream} that prevents us from encoding and
+     * then immediately decoding characters written to the returned {@link PrintStream}
+     * when filtering.
+     */
+    private PrintWriter getWriter(OutputStream os) throws IOException {
+        if (os instanceof WrapperOutputStream) {
+            OutputStream out = ((WrapperOutputStream) os).unwrapRecursively();
+            if (out instanceof FilteredOutputStream) {
+                FilteredOutputStream filteredStream = (FilteredOutputStream) out;
+                return new PrintWriter(new IgnoreCloseWriter(filteredStream.asWriter()));
+            }
+        }
+        return new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
     }
 
     protected abstract void printTo(PrintWriter out) throws IOException;

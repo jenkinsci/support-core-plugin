@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,34 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.util;
 
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import javax.annotation.Nonnull;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Represents some content in a support bundle.
+ * Provides a {@link FilterOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
  *
- * @author Stephen Connolly
+ * @since TODO
  */
-public abstract class Content {
-
-    private final String name;
-
-    protected Content(String name) {
-        this.name = name;
+@Restricted(NoExternalUse.class)
+public final class IgnoreCloseOutputStream extends FilterOutputStream implements WrapperOutputStream {
+    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
+        super(out);
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public void close() throws IOException {
+        flush();
     }
 
-    public abstract void writeTo(OutputStream os) throws IOException;
-
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
-
-    /**
-     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
-     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
-     * When {@code false}, the contents are written without any filtering applied.
-     *
-     * @since TODO
-     */
-    public boolean shouldBeFiltered() {
-        return true;
+    @Override
+    public @Nonnull OutputStream unwrap() {
+        return out;
     }
 }

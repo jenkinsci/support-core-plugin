@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,32 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.util;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * Represents some content in a support bundle.
- *
- * @author Stephen Connolly
- */
-public abstract class Content {
+import static org.mockito.BDDMockito.then;
 
-    private final String name;
+@RunWith(MockitoJUnitRunner.class)
+public class IgnoreCloseOutputStreamTest {
 
-    protected Content(String name) {
-        this.name = name;
+    @Mock
+    private OutputStream out;
+
+    @Test
+    public void shouldFlushInsteadOfClose() throws IOException {
+        IgnoreCloseOutputStream stream = new IgnoreCloseOutputStream(out);
+
+        stream.close();
+
+        then(out).should().flush();
+        then(out).shouldHaveNoMoreInteractions();
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public abstract void writeTo(OutputStream os) throws IOException;
-
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
-
-    /**
-     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
-     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
-     * When {@code false}, the contents are written without any filtering applied.
-     *
-     * @since TODO
-     */
-    public boolean shouldBeFiltered() {
-        return true;
-    }
 }

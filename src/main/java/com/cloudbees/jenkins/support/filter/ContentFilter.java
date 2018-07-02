@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,45 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.filter;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import hudson.ExtensionList;
+import hudson.ExtensionPoint;
+
+import javax.annotation.Nonnull;
 
 /**
- * Represents some content in a support bundle.
+ * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
+ * to the bundle, though more complex filtering can be achieved.
  *
- * @author Stephen Connolly
+ * @since TODO
  */
-public abstract class Content {
-
-    private final String name;
-
-    protected Content(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public abstract void writeTo(OutputStream os) throws IOException;
-
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
+public interface ContentFilter extends ExtensionPoint {
 
     /**
-     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
-     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
-     * When {@code false}, the contents are written without any filtering applied.
-     *
-     * @since TODO
+     * @return all ContentFilter extensions
      */
-    public boolean shouldBeFiltered() {
-        return true;
+    static ExtensionList<ContentFilter> all() {
+        return ExtensionList.lookup(ContentFilter.class);
     }
+
+    /**
+     * Provides a ContentFilter that combines all registered ContentFilter extensions.
+     */
+    ContentFilter ALL = new AllContentFilters();
+
+    /**
+     * Filters a line or snippet of text.
+     *
+     * @param input input data to filter
+     * @return the filtered input data
+     */
+    @Nonnull String filter(@Nonnull String input);
+
+    /**
+     * Reloads the state of this filter. This may be implemented to rescan for more items to filter.
+     */
+    default void reload() {
+    }
+
 }

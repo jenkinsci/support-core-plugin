@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,51 @@
  * THE SOFTWARE.
  */
 
-package com.cloudbees.jenkins.support.api;
+package com.cloudbees.jenkins.support.filter;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import hudson.Extension;
+import hudson.ExtensionList;
+import jenkins.model.GlobalConfiguration;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.DataBoundSetter;
+
+import javax.annotation.Nonnull;
 
 /**
- * Represents some content in a support bundle.
+ * Configures content filters for anonymization.
  *
- * @author Stephen Connolly
+ * @see ContentFilter
+ * @since TODO
  */
-public abstract class Content {
+@Extension
+@Restricted(NoExternalUse.class)
+public class ContentFilters extends GlobalConfiguration {
 
-    private final String name;
-
-    protected Content(String name) {
-        this.name = name;
+    public static ContentFilters get() {
+        return ExtensionList.lookupSingleton(ContentFilters.class);
     }
 
-    public String getName() {
-        return name;
+    private boolean enabled;
+
+    public ContentFilters() {
+        super();
+        load();
     }
 
-    public abstract void writeTo(OutputStream os) throws IOException;
-
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
-
-    /**
-     * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via
-     * {@link #writeTo(OutputStream)} may be filtered by a {@link com.cloudbees.jenkins.support.filter.ContentFilter}.
-     * When {@code false}, the contents are written without any filtering applied.
-     *
-     * @since TODO
-     */
-    public boolean shouldBeFiltered() {
-        return true;
+    public boolean isEnabled() {
+        return enabled;
     }
+
+    @DataBoundSetter
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        save();
+    }
+
+    @Override
+    public @Nonnull String getDisplayName() {
+        return Messages.ContentFilters_DisplayName();
+    }
+
 }
