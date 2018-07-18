@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import com.github.javafaker.Faker;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceInputStream;
 import org.junit.Test;
@@ -36,7 +35,9 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
@@ -44,6 +45,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 public class FilteredOutputStreamTest {
+
+    public static final String FAKE_TEXT =
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor " +
+            "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud " +
+            "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute " +
+            "irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla " +
+            "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia " +
+            "deserunt mollit anim id est laborum.";
 
     private final ByteArrayOutputStream testOutput = new ByteArrayOutputStream();
 
@@ -116,8 +125,7 @@ public class FilteredOutputStreamTest {
     @Test
     public void shouldSupportMultipleUsesWithReset() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
-        Faker faker = new Faker();
-        List<String> paragraphs = faker.lorem().paragraphs(10);
+        List<String> paragraphs = Stream.generate(() -> FAKE_TEXT).limit(10).collect(Collectors.toList());
         StringBuilder b = new StringBuilder();
         for (String paragraph : paragraphs) {
             out.write(paragraph.getBytes(UTF_8));
@@ -134,7 +142,7 @@ public class FilteredOutputStreamTest {
     @Test
     public void shouldSupportWriterView() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.toUpperCase(Locale.ENGLISH));
-        String original = new Faker().lorem().paragraph();
+        String original = FAKE_TEXT;
         try (FilteredWriter writer = out.asWriter()) {
             writer.write(original);
         }

@@ -76,7 +76,7 @@ public class InetAddressContentFilter implements ContentFilter {
     }
 
     private static ContentMapping newMapping(String original) {
-        String replacement = DataFaker.get().apply(faker -> "ip_" + faker.internet().domainName()).get();
+        String replacement = DataFaker.get().apply(name -> "ip_" + name).get();
         return ContentMapping.of(original, replacement);
     }
 

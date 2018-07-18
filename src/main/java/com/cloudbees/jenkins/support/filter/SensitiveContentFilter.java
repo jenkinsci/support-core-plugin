@@ -26,13 +26,13 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
 import hudson.ExtensionList;
-import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import java.util.Locale;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
