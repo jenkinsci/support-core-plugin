@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import com.github.javafaker.Faker;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -35,15 +34,16 @@ import javax.annotation.Nonnull;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.kohsuke.randname.RandomNameGenerator;
 
 /**
- * Provides a way to bind Faker data generators to a Faker instance.
+ * Provides a way to generate random names.
  *
  * @since TODO
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class DataFaker implements ExtensionPoint, Function<Function<Faker, String>, Supplier<String>> {
+public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Supplier<String>> {
 
     /**
      * @return the singleton instance
@@ -52,14 +52,14 @@ public class DataFaker implements ExtensionPoint, Function<Function<Faker, Strin
         return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
-    private final Faker faker = new Faker(Locale.ENGLISH);
+    private final RandomNameGenerator generator = new RandomNameGenerator();
 
     /**
-     * Binds the provided Faker generator to a configured Faker instance and normalizes the name.
+     * Applies the provided function to a random name and normalizes the result.
      */
     @Override
-    public Supplier<String> apply(@Nonnull Function<Faker, String> generator) {
-        return () -> generator.apply(faker).toLowerCase(Locale.ENGLISH).replace(' ', '_');
+    public Supplier<String> apply(@Nonnull Function<String, String> nameTransformer) {
+        return () -> nameTransformer.apply(generator.next()).toLowerCase(Locale.ENGLISH).replace(' ', '_');
     }
 
 }

@@ -27,11 +27,8 @@ package com.cloudbees.jenkins.support.filter;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import hudson.model.Computer;
 import hudson.model.Label;
-import hudson.model.Node;
 import hudson.model.User;
-import hudson.model.View;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -98,7 +95,7 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension NameProvider ITEMS = new NameProvider(
             () -> stream(Jenkins.get().allItems())
                     .flatMap(item -> Stream.of(item.getName(), item.getDisplayName())),
-            DataFaker.get().apply(faker -> "item_" + faker.space().star()));
+            DataFaker.get().apply(name -> "item_" + name));
 
     /**
      * Provides the names of view.
@@ -106,7 +103,7 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension NameProvider VIEWS = new NameProvider(
             () -> stream(Jenkins.get().getViews())
                     .flatMap(view -> Stream.of(view.getViewName(), view.getDisplayName())),
-            DataFaker.get().apply(faker -> "view_" + faker.space().moon()));
+            DataFaker.get().apply(name -> "view_" + name));
 
     /**
      * Provides the names of nodes.
@@ -114,7 +111,7 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension NameProvider NODES = new NameProvider(
             () -> stream(Jenkins.get().getNodes())
                     .flatMap(node -> Stream.of(node.getNodeName(), node.getDisplayName())),
-            DataFaker.get().apply(faker -> "node_" + faker.internet().domainWord()));
+            DataFaker.get().apply(name -> "node_" + name));
 
     /**
      * Provides the names of computers.
@@ -122,7 +119,7 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension NameProvider COMPUTERS = new NameProvider(
             () -> stream(Jenkins.get().getComputers())
                     .flatMap(computer -> Stream.of(computer.getName(), computer.getDisplayName())),
-            DataFaker.get().apply(faker -> "computer_" + faker.internet().domainWord()));
+            DataFaker.get().apply(name -> "computer_" + name));
 
     /**
      * Provides the names of users.
@@ -130,7 +127,7 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension NameProvider USERS = new NameProvider(
             () -> stream(User.getAll())
                     .flatMap(user -> Stream.of(user.getId(), user.getFullName(), user.getDisplayName())),
-            DataFaker.get().apply(faker -> "user_" + faker.name().username()));
+            DataFaker.get().apply(name -> "user_" + name));
 
     /**
      * Provides the names of labels. Note that this extension is given a lower priority than the others to avoid
@@ -139,5 +136,5 @@ public class NameProvider implements ExtensionPoint {
     public static final @Extension(ordinal = -100) NameProvider LABELS = new NameProvider(
             () -> stream(Jenkins.get().getLabels())
                     .map(Label::getDisplayName),
-            DataFaker.get().apply(faker -> "label_" + faker.internet().domainWord()));
+            DataFaker.get().apply(name -> "label_" + name));
 }

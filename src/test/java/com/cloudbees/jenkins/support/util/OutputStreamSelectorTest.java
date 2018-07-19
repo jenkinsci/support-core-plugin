@@ -24,7 +24,7 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import com.github.javafaker.Faker;
+import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 
@@ -114,9 +114,7 @@ public class OutputStreamSelectorTest {
 
     @Test
     public void shouldUseTextStreamWhenAllPrintable() {
-        Faker faker = new Faker();
-        String contents = faker.lorem().paragraph();
-        assertThatContentsWriteToTextOut(contents);
+        assertThatContentsWriteToTextOut(FilteredOutputStreamTest.FAKE_TEXT);
     }
 
     @Test
