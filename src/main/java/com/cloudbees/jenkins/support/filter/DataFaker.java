@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 import org.kohsuke.randname.RandomNameGenerator;
 
 /**
- * Provides a way to bind generate random names.
+ * Provides a way to generate random names.
  *
  * @since TODO
  */
@@ -52,14 +52,14 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
         return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
-    private final RandomNameGenerator faker = new RandomNameGenerator();
+    private final RandomNameGenerator generator = new RandomNameGenerator();
 
     /**
-     * Applies the provided name generator to a random name and normalizes it.
+     * Applies the provided function to a random name and normalizes the result.
      */
     @Override
-    public Supplier<String> apply(@Nonnull Function<String, String> generator) {
-        return () -> generator.apply(faker.next()).toLowerCase(Locale.ENGLISH).replace(' ', '_');
+    public Supplier<String> apply(@Nonnull Function<String, String> nameTransformer) {
+        return () -> nameTransformer.apply(generator.next()).toLowerCase(Locale.ENGLISH).replace(' ', '_');
     }
 
 }
