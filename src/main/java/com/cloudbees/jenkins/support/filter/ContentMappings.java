@@ -169,6 +169,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private Object writeReplace() {
         XmlProxy proxy = new XmlProxy();
         proxy.stopWords = new HashSet<>(stopWords);
+        proxy.stopWords.remove(Jenkins.VERSION);
         proxy.mappings = new HashSet<>(mappings.values());
         return proxy;
     }
