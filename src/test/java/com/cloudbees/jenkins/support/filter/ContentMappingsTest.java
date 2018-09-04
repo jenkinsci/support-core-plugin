@@ -24,23 +24,39 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
+import jenkins.model.Jenkins;
 import org.assertj.core.api.Assertions;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.StreamSupport;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-public class ContentMappingsTest { 
+public class ContentMappingsTest {
+
+    private static String originalVersion;
+
+    @BeforeClass
+    public static void storeVersion() {
+        originalVersion = Jenkins.VERSION;
+    }
+
+    @AfterClass
+    public static void restoreVersion() {
+        Jenkins.VERSION = originalVersion;
+    }
 
     @Rule
     public RestartableJenkinsRule rr = new RestartableJenkinsRule();
@@ -86,4 +102,21 @@ public class ContentMappingsTest {
             assertThat(ContentMappings.get().getMappings(), hasEntry(mapping.getOriginal(), mapping.getReplacement()));
         });
     }
+
+    @Issue("JENKINS-53184")
+    @Test
+    @LocalData
+    public void jenkinsVersionIncludedAsStopWord() {
+        rr.then(r -> {
+            Jenkins.VERSION = "1.2.3.4";
+            ContentMappings mappings = ContentMappings.get();
+
+            // Jenkins version added to stop words
+            assertTrue(mappings.getStopWords().contains(Jenkins.VERSION));
+
+            // Previous mappings with Jenkins version are ignored
+            assertTrue(mappings.getMappings().isEmpty());
+        });
+    }
+
 }

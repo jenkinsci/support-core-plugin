@@ -25,6 +25,9 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.BulkChange;
+import jenkins.model.Jenkins;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -39,8 +42,20 @@ import static org.quicktheories.generators.SourceDSL.integers;
 
 public class InetAddressContentFilterTest {
 
+    private static String originalVersion;
+
     @ClassRule
     public static JenkinsRule jenkins = new JenkinsRule();
+
+    @BeforeClass
+    public static void storeVersion() {
+        originalVersion = Jenkins.VERSION;
+    }
+
+    @AfterClass
+    public static void restoreVersion() {
+        Jenkins.VERSION = originalVersion;
+    }
 
     @Issue("JENKINS-21670")
     @Test
@@ -55,6 +70,15 @@ public class InetAddressContentFilterTest {
                             .doesNotContain(address)
             );
         }
+    }
+
+    @Issue("JENKINS-53184")
+    @Test
+    public void shouldNotFilterInetAddressMatchingJenkinsVersion() {
+        Jenkins.VERSION = "1.2.3.4";
+        InetAddressContentFilter filter = InetAddressContentFilter.get();
+        assertThat(filter.filter(Jenkins.VERSION))
+                .isEqualTo(Jenkins.VERSION);
     }
 
     private Gen<String> inetAddress() {
