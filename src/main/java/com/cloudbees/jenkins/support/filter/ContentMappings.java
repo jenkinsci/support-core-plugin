@@ -88,10 +88,18 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private final Map<String, ContentMapping> mappings;
 
     private ContentMappings(@Nonnull XmlProxy proxy) {
-        stopWords = proxy.stopWords == null ? getDefaultStopWords() : proxy.stopWords;
-        mappings = proxy.stopWords == null
+        if (proxy.stopWords == null) {
+            stopWords = getDefaultStopWords();
+        } else {
+            stopWords = proxy.stopWords;
+            stopWords.add(Jenkins.VERSION);
+        }
+
+        mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
-                : proxy.mappings.stream().collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
+                : proxy.mappings.stream()
+                    .filter(mapping -> !stopWords.contains(mapping.getOriginal()))
+                    .collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
     }
 
     private static Set<String> getDefaultStopWords() {
@@ -99,7 +107,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
-                "everyone", "system", "admin"
+                "everyone", "system", "admin",
+                Jenkins.VERSION
         ));
     }
 
