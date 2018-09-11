@@ -1,0 +1,26 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.cloudbees.jenkins.support.filter.ContentMappings resolves-to="com.cloudbees.jenkins.support.filter.ContentMappings$XmlProxy">
+  <stopWords>
+    <string>all</string>
+    <string>authenticated</string>
+    <string>item</string>
+    <string>everyone</string>
+    <string>admin</string>
+    <string>label</string>
+    <string>master</string>
+    <string>unknown</string>
+    <string>node</string>
+    <string>computer</string>
+    <string>view</string>
+    <string>system</string>
+    <string>jenkins</string>
+    <string>anonymous</string>
+    <string>user</string>
+  </stopWords>
+  <mappings>
+    <com.cloudbees.jenkins.support.filter.ContentMapping resolves-to="com.cloudbees.jenkins.support.filter.ContentMapping$SerializationProxy">
+      <original>1.2.3.4</original>
+      <replacement>ip_thin_idea</replacement>
+    </com.cloudbees.jenkins.support.filter.ContentMapping>
+  </mappings>
+</com.cloudbees.jenkins.support.filter.ContentMappings>

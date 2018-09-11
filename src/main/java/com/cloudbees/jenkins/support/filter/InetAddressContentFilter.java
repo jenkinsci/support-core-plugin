@@ -66,7 +66,11 @@ public class InetAddressContentFilter implements ContentFilter {
         Set<ContentMapping> found = new HashSet<>();
         Matcher m = IP_ADDRESS.matcher(input);
         while (m.find()) {
-            found.add(mappings.getMappingOrCreate(m.group(), InetAddressContentFilter::newMapping));
+            String ip = m.group();
+
+            if (!mappings.getStopWords().contains(ip)) {
+                found.add(mappings.getMappingOrCreate(ip, InetAddressContentFilter::newMapping));
+            }
         }
         String filtered = input;
         for (ContentMapping mapping : found) {
