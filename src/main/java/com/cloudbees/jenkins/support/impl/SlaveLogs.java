@@ -37,19 +37,16 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.model.Node;
-import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.ExceptionCatchingThreadFactory;
-import hudson.util.RingBufferLogHandler;
 import jenkins.model.Jenkins;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,10 +62,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static com.cloudbees.jenkins.support.SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS;
 import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.LOG_FORMATTER;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Adds the agent logs from all of the machines
@@ -102,7 +97,6 @@ public class SlaveLogs extends Component {
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
         SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
-        final boolean needHack = SlaveLogFetcher.isRequired();
 
         for (final Node node : Jenkins.getInstance().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
@@ -115,18 +109,7 @@ public class SlaveLogs extends Component {
                                     out.println("N/A");
                                 } else {
                                     try {
-                                        List<LogRecord> records = null;
-                                        if (needHack) {
-                                            VirtualChannel channel = computer.getChannel();
-                                            if (channel != null) {
-                                                hudson.remoting.Future<List<LogRecord>> future = SlaveLogFetcher.getLogRecords(channel);
-                                                records = future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                                            }
-                                        }
-
-                                        if (records == null) {
-                                            records = computer.getLogRecords();
-                                        }
+                                        List<LogRecord> records = computer.getLogRecords();
 
                                         for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
                                              iterator.hasPrevious(); ) {
@@ -250,63 +233,4 @@ public class SlaveLogs extends Component {
         }
     }
 
-    private static class SlaveLogFetcher extends MasterToSlaveCallable<List<LogRecord>, RuntimeException> {
-
-        public static boolean isRequired() {
-            try {
-                SlaveComputer.class.getClassLoader().loadClass(SlaveComputer.class.getName() + "$SlaveLogFetcher");
-                return false;
-            } catch (ClassNotFoundException e) {
-                return true;
-            }
-        }
-
-        public List<LogRecord> call() throws RuntimeException {
-            try {
-                Class<?> aClass =
-                        SlaveComputer.class.getClassLoader().loadClass(SlaveComputer.class.getName() + "$LogHolder");
-                Field logHandler = aClass.getDeclaredField("SLAVE_LOG_HANDLER");
-                boolean accessible = logHandler.isAccessible();
-                try {
-                    if (!accessible) {
-                        logHandler.setAccessible(true);
-                    }
-                    Object instance = logHandler.get(null);
-                    if (instance instanceof RingBufferLogHandler) {
-                        RingBufferLogHandler handler = (RingBufferLogHandler) instance;
-                        return new ArrayList<LogRecord>(handler.getView());
-                    }
-                } finally {
-                    if (!accessible) {
-                        logHandler.setAccessible(accessible);
-                    }
-                }
-                throw new RuntimeException("Could not retrieve logs");
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchFieldException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public static hudson.remoting.Future<List<LogRecord>> getLogRecords(@NonNull VirtualChannel channel) throws IOException {
-            return channel.callAsync(new SlaveLogFetcher());
-        }
-
-        /**
-         * @deprecated Please use getLogRecords(Channel) instead. This method is synchronous which could cause
-         * the channel to block.
-         */
-        @Deprecated
-        public static List<LogRecord> getLogRecords(Computer computer) throws IOException, InterruptedException {
-            VirtualChannel channel = computer.getChannel();
-            if (channel == null) {
-                return Collections.emptyList();
-            } else {
-                return channel.call(new SlaveLogFetcher());
-            }
-        }
-    }
 }
