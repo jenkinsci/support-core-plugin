@@ -17,4 +17,11 @@ public class MarkdownTest {
         assertEquals("a&#96;b", Markdown.escapeBacktick("a`b"));
         assertEquals("a_b", Markdown.escapeBacktick("a_b"));
     }
+
+    @Test
+    public void prettyNone() {
+        assertEquals(Markdown.NONE_STRING, Markdown.prettyNone(null));
+        assertEquals(Markdown.NONE_STRING, Markdown.prettyNone(""));
+        assertEquals("a", Markdown.prettyNone("a"));
+    }
 }

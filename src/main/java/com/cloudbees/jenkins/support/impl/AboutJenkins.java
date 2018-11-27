@@ -129,7 +129,7 @@ public class AboutJenkins extends Component {
 
     private static String getDescriptorName(@CheckForNull Describable<?> d) {
         if (d == null) {
-            return "(none)";
+            return Markdown.NONE_STRING;
         }
         return "`" + Markdown.escapeBacktick(d.getClass().getName()) + "`";
     }
@@ -821,8 +821,7 @@ public class AboutJenkins extends Component {
             super("nodes.md");
         }
         private String getLabelString(Node n) {
-            String r = n.getLabelString();
-            return r.isEmpty() ? "(none)" : r;
+            return Markdown.prettyNone(n.getLabelString());
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
