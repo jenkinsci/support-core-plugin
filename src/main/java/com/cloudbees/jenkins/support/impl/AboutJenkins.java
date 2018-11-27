@@ -12,6 +12,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -327,8 +328,8 @@ public class AboutJenkins extends Component {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
-            result.append(min).append(" Home:           `").append(System.getProperty("java.home").replaceAll("`",
-                    "&#96;")).append("`\n");
+            result.append(min).append(" Home:           `").append(
+                    Markdown.escapeBacktick(System.getProperty("java.home"))).append("`\n");
             result.append(min).append(" Vendor:           ").append(System.getProperty("java.vendor")).append("\n");
             result.append(min).append(" Version:          ").append(System.getProperty("java.version")).append("\n");
             long maxMem = runtime.maxMemory();
@@ -430,15 +431,15 @@ public class AboutJenkins extends Component {
             result.append(maj).append(" JVM startup parameters:\n");
             if (mBean.isBootClassPathSupported()) {
                 result.append(min).append(" Boot classpath: `")
-                        .append(mBean.getBootClassPath().replaceAll("`", "&#96;")).append("`\n");
+                        .append(Markdown.escapeBacktick(mBean.getBootClassPath())).append("`\n");
             }
-            result.append(min).append(" Classpath: `").append(mBean.getClassPath().replaceAll("`", "&#96;"))
+            result.append(min).append(" Classpath: `").append(Markdown.escapeBacktick(mBean.getClassPath()))
                     .append("`\n");
-            result.append(min).append(" Library path: `").append(mBean.getLibraryPath().replaceAll("`", "&#96;"))
+            result.append(min).append(" Library path: `").append(Markdown.escapeBacktick(mBean.getLibraryPath()))
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
-                result.append(min).append(" arg[").append(count++).append("]: `").append(arg.replaceAll("`", "&#96;"))
+                result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(arg))
                         .append("`\n");
             }
             return result.toString();
@@ -539,7 +540,7 @@ public class AboutJenkins extends Component {
             out.println("Version details");
             out.println("---------------");
             out.println();
-            out.println("  * Version: `" + Jenkins.VERSION.replaceAll("`", "&#96;") + "`");
+            out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -554,7 +555,7 @@ public class AboutJenkins extends Component {
                 out.println("      - Specification: " + servletContext.getMajorVersion() + "." + servletContext
                         .getMinorVersion());
                 out.println(
-                        "      - Name:          `" + servletContext.getServerInfo().replaceAll("`", "&#96;") + "`");
+                        "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
             } catch (NullPointerException e) {
                 // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
@@ -844,11 +845,11 @@ public class AboutJenkins extends Component {
             out.println("===========");
             out.println();
             out.println("  * master (Jenkins)");
-            out.println("      - Description:    _" + Util.fixNull(jenkins.getNodeDescription())
-                    .replaceAll("_", "&#95;") + "_");
+            out.println("      - Description:    _" +
+                    Markdown.escapeUnderscore(Util.fixNull(jenkins.getNodeDescription())) + "_");
             out.println("      - Executors:      " + jenkins.getNumExecutors());
-            out.println("      - FS root:        `" + jenkins.getRootDir().getAbsolutePath()
-                    .replaceAll("`", "&#96;") + "`");
+            out.println("      - FS root:        `" +
+                    Markdown.escapeBacktick(jenkins.getRootDir().getAbsolutePath()) + "`");
             out.println("      - Labels:         " + getLabelString(jenkins));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             out.println("      - Slave Version:  " + Launcher.VERSION);
@@ -856,15 +857,15 @@ public class AboutJenkins extends Component {
             out.println();
             for (Node node : jenkins.getNodes()) {
                 out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
-                out.println("      - Description:    _" + Util.fixNull(node.getNodeDescription()).replaceAll("_", "&#95;") + "_");
+                out.println("      - Description:    _" +
+                        Markdown.escapeUnderscore(Util.fixNull(node.getNodeDescription())) + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
-                    out.println("      - Remote FS root: `" + rootPath.getRemote().replaceAll("`", "&#96;")
-                            + "`");
+                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(rootPath.getRemote()) + "`");
                 } else if (node instanceof Slave) {
-                    out.println("      - Remote FS root: `" + Slave.class.cast(node).getRemoteFS()
-                            .replaceAll("`", "&#96;") + "`");
+                    out.println("      - Remote FS root: `" +
+                            Markdown.escapeBacktick(Slave.class.cast(node).getRemoteFS()) + "`");
                 }
                 out.println("      - Labels:         " + getLabelString(node));
                 out.println("      - Usage:          `" + node.getMode() + "`");
