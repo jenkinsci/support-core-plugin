@@ -75,7 +75,7 @@
           <f:submit value="${%Generate Bundle}"/>
         </f:entry>
       </f:form>
-      <f:section title="${%List existing Bundle}">
+      <f:section title="${%Existing support bundles}">
 
       <f:form name="bundle-contents" method="POST" action="deleteBundles">
         <j:forEach var="bundle" items="${it.bundles}">
