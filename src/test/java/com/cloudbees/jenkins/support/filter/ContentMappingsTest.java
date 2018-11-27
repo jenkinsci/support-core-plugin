@@ -26,10 +26,7 @@ package com.cloudbees.jenkins.support.filter;
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
 import org.assertj.core.api.Assertions;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
@@ -37,12 +34,12 @@ import org.jvnet.hudson.test.recipes.LocalData;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ContentMappingsTest {
 
@@ -53,9 +50,12 @@ public class ContentMappingsTest {
         originalVersion = Jenkins.VERSION;
     }
 
-    @AfterClass
-    public static void restoreVersion() {
+    @After
+    public void resetVersion() {
         Jenkins.VERSION = originalVersion;
+        rr.then(r -> {
+            ContentMappings.get().clear();
+        });
     }
 
     @Rule
@@ -132,6 +132,37 @@ public class ContentMappingsTest {
 
             // Previous mappings with the operating system are ignored
             assertTrue(mappings.getMappings().isEmpty());
+        });
+    }
+    private static ContentMapping identityMapping(String original) {
+        return ContentMapping.of(original, original);
+    }
+
+    @Test
+    public void clear() {
+        rr.then(r -> {
+            String ALT_VERSION = "alt-version";
+            ContentMappings contentMappings = ContentMappings.get();
+            int initialMappingsSize = contentMappings.getMappings().size();
+
+            contentMappings.getMappingOrCreate("something", ContentMappingsTest::identityMapping);
+
+            assertTrue(contentMappings.getMappings().size() > initialMappingsSize);
+
+            Jenkins.VERSION = ALT_VERSION;
+            contentMappings.clear();
+
+            Set<String> stopWords = contentMappings.getStopWords();
+            assertTrue(stopWords.contains(ALT_VERSION));
+            assertFalse(stopWords.contains(originalVersion));
+            assertTrue(contentMappings.getMappings().size() == initialMappingsSize);
+
+            Jenkins.VERSION = originalVersion;
+            contentMappings.clear();
+
+            stopWords = contentMappings.getStopWords();
+            assertFalse(stopWords.contains(ALT_VERSION));
+            assertTrue(stopWords.contains(originalVersion));
         });
     }
 }

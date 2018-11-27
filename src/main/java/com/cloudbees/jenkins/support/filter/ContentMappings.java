@@ -157,6 +157,12 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         });
     }
 
+    protected void clear() {
+        stopWords.clear();
+        stopWords.addAll(getDefaultStopWords());
+        mappings.clear();
+    }
+
     @Override
     public void save() throws IOException {
         Persistence.save(this);
