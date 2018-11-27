@@ -31,6 +31,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.IOException;
 
@@ -97,5 +98,17 @@ public class SensitiveContentFilterTest {
         String gibson = filter.filter("gibson");
 
         assertThat(gibson).startsWith("user_").doesNotContain("gibson");
+    }
+
+    @Issue("JENKINS-54688")
+    @Test
+    public void shouldNotFilterOperatingSystem() throws Exception {
+        final String os = "Linux";
+        final String label = "fake";
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        jenkins.createSlave("foo", String.format("%s %s", os, label), null);
+        filter.reload();
+        assertThat(filter.filter(os)).isEqualTo(os);
+        assertThat(filter.filter(label)).startsWith("label_").isNotEqualTo(label);
     }
 }
