@@ -31,7 +31,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.IOException;
 
