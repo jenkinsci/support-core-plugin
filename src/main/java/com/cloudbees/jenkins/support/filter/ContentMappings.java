@@ -118,7 +118,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private static Set<String> getAllowedOSName() {
         return new HashSet<>(Arrays.asList(
                 "linux", "windows", "win", "mac", "macos", "macosx",
-                "mac os x", "ubuntu", "debian", "fedora"
+                "mac os x", "ubuntu", "debian", "fedora", "red hat",
+                "sunos", "freebsd"
         ));
     }
 
