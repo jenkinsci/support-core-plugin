@@ -96,7 +96,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         }
 
         // JENKINS-54688
-        //stopWords.addAll(getAllowedOSName());
+        stopWords.addAll(getAllowedOSName());
 
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
