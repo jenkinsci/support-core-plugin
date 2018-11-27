@@ -330,8 +330,10 @@ public class AboutJenkins extends Component {
             result.append(maj).append(" Java\n");
             result.append(min).append(" Home:           `").append(
                     Markdown.escapeBacktick(System.getProperty("java.home"))).append("`\n");
-            result.append(min).append(" Vendor:           ").append(System.getProperty("java.vendor")).append("\n");
-            result.append(min).append(" Version:          ").append(System.getProperty("java.version")).append("\n");
+            result.append(min).append(" Vendor:           ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vendor"))).append("\n");
+            result.append(min).append(" Version:          ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.version"))).append("\n");
             long maxMem = runtime.maxMemory();
             long allocMem = runtime.totalMemory();
             long freeMem = runtime.freeMemory();
@@ -383,27 +385,35 @@ public class AboutJenkins extends Component {
             result.append(min).append(" Version: ").append(System.getProperty("java.vm.specification.version"))
                     .append("\n");
             result.append(maj).append(" JVM Implementation\n");
-            result.append(min).append(" Name:    ").append(System.getProperty("java.vm.name")).append("\n");
-            result.append(min).append(" Vendor:  ").append(System.getProperty("java.vm.vendor")).append("\n");
-            result.append(min).append(" Version: ").append(System.getProperty("java.vm.version")).append("\n");
+            result.append(min).append(" Name:    ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.name"))).append("\n");
+            result.append(min).append(" Vendor:  ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.vendor"))).append("\n");
+            result.append(min).append(" Version: ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.version"))).append("\n");
             result.append(maj).append(" Operating system\n");
-            result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
-            result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
-            result.append(min).append(" Version:      ").append(System.getProperty("os.version")).append("\n");
+            result.append(min).append(" Name:         ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.name"))).append("\n");
+            result.append(min).append(" Architecture: ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.arch"))).append("\n");
+            result.append(min).append(" Version:      ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.version"))).append("\n");
             File lsb_release = new File("/usr/bin/lsb_release");
             if (lsb_release.canExecute()) {
                 try {
                     Process proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--description", "--short").start();
                     String distro = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0) {
-                        result.append(min).append(" Distribution: ").append(distro).append("\n");
+                        result.append(min).append(" Distribution: ").append(
+                                Markdown.escapeUnderscore(distro)).append("\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
                     proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--version", "--short").start();
                     String modules = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0 && modules != null) {
-                        result.append(min).append(" LSB Modules:  `").append(modules).append("`\n");
+                        result.append(min).append(" LSB Modules:  `").append(
+                                Markdown.escapeUnderscore(modules)).append("`\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
