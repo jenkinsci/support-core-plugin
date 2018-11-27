@@ -856,7 +856,8 @@ public class AboutJenkins extends Component {
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
+                out.println("  * `" + Markdown.escapeBacktick(node.getNodeName()) + "` (" +getDescriptorName(node) +
+                        ")");
                 out.println("      - Description:    _" +
                         Markdown.escapeUnderscore(Util.fixNull(node.getNodeDescription())) + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
@@ -867,7 +868,7 @@ public class AboutJenkins extends Component {
                     out.println("      - Remote FS root: `" +
                             Markdown.escapeBacktick(Slave.class.cast(node).getRemoteFS()) + "`");
                 }
-                out.println("      - Labels:         " + getLabelString(node));
+                out.println("      - Labels:         " + Markdown.escapeUnderscore(getLabelString(node)));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;
