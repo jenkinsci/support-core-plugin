@@ -1,0 +1,36 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.cloudbees.jenkins.support.filter.ContentMappings resolves-to="com.cloudbees.jenkins.support.filter.ContentMappings$XmlProxy">
+  <stopWords>
+    <string>authenticated</string>
+    <string>admin</string>
+    <string>mac</string>
+    <string>unknown</string>
+    <string>computer</string>
+    <string>view</string>
+    <string>linux</string>
+    <string>debian</string>
+    <string>jenkins</string>
+    <string>win</string>
+    <string>macos</string>
+    <string>all</string>
+    <string>macosx</string>
+    <string>item</string>
+    <string>everyone</string>
+    <string>ubuntu</string>
+    <string>label</string>
+    <string>windows</string>
+    <string>mac os x</string>
+    <string>master</string>
+    <string>node</string>
+    <string>system</string>
+    <string>fedora</string>
+    <string>anonymous</string>
+    <string>user</string>
+  </stopWords>
+  <mappings>
+    <com.cloudbees.jenkins.support.filter.ContentMapping resolves-to="com.cloudbees.jenkins.support.filter.ContentMapping$SerializationProxy">
+      <original>Linux</original>
+      <replacement>label_characteristic_chocolate</replacement>
+    </com.cloudbees.jenkins.support.filter.ContentMapping>
+  </mappings>
+</com.cloudbees.jenkins.support.filter.ContentMappings>

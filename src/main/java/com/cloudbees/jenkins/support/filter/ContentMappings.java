@@ -95,10 +95,13 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             stopWords.add(Jenkins.VERSION);
         }
 
+        // JENKINS-54688
+        //stopWords.addAll(getAllowedOSName());
+
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
                 : proxy.mappings.stream()
-                    .filter(mapping -> !stopWords.contains(mapping.getOriginal()))
+                    .filter(mapping -> !stopWords.contains(mapping.getOriginal().toLowerCase(Locale.ENGLISH)))
                     .collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
     }
 
@@ -109,6 +112,13 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                 "user", "anonymous", "authenticated",
                 "everyone", "system", "admin",
                 Jenkins.VERSION
+        ));
+    }
+
+    private static Set<String> getAllowedOSName() {
+        return new HashSet<>(Arrays.asList(
+                "linux", "windows", "win", "mac", "macos", "macosx",
+                "mac os x", "ubuntu", "debian", "fedora"
         ));
     }
 

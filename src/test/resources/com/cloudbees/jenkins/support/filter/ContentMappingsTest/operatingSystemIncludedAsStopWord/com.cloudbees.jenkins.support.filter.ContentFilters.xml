@@ -1,0 +1,4 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<com.cloudbees.jenkins.support.filter.ContentFilters plugin="support-core@2.51">
+  <enabled>true</enabled>
+</com.cloudbees.jenkins.support.filter.ContentFilters>
