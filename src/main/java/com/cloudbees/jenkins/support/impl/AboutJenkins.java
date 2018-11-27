@@ -131,7 +131,7 @@ public class AboutJenkins extends Component {
         if (d == null) {
             return "(none)";
         }
-        return "`" + d.getClass().getName() + "`";
+        return "`" + Markdown.escapeBacktick(d.getClass().getName()) + "`";
     }
 
     /**
