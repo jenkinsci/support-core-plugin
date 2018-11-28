@@ -1,6 +1,5 @@
 /*
  * Copyright © 2013 CloudBees, Inc.
- * This is proprietary code. All rights reserved.
  */
 package com.cloudbees.jenkins.support.impl;
 
