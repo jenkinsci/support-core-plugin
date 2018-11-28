@@ -98,4 +98,16 @@ public class SensitiveContentFilterTest {
 
         assertThat(gibson).startsWith("user_").doesNotContain("gibson");
     }
+
+    @Issue("JENKINS-54688")
+    @Test
+    public void shouldNotFilterOperatingSystem() throws Exception {
+        final String os = "Linux";
+        final String label = "fake";
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        jenkins.createSlave("foo", String.format("%s %s", os, label), null);
+        filter.reload();
+        assertThat(filter.filter(os)).isEqualTo(os);
+        assertThat(filter.filter(label)).startsWith("label_").isNotEqualTo(label);
+    }
 }

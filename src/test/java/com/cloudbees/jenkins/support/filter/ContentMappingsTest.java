@@ -119,4 +119,19 @@ public class ContentMappingsTest {
         });
     }
 
+    @Issue("JENKINS-54688")
+    @Test
+    @LocalData
+    public void operatingSystemIncludedAsStopWord() {
+        rr.then(r -> {
+            String os = "Linux";
+            ContentMappings mappings = ContentMappings.get();
+
+            // The Operating system is added to stop words
+            assertTrue(mappings.getStopWords().contains(os.toLowerCase(Locale.ENGLISH)));
+
+            // Previous mappings with the operating system are ignored
+            assertTrue(mappings.getMappings().isEmpty());
+        });
+    }
 }
