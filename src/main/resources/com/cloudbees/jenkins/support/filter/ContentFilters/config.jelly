@@ -25,8 +25,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:section title="Support Bundle Anonymization">
-        <f:block>
-            <f:checkbox field="enabled" checked="${it.enabled}" title="Anonymize support bundle contents"/>
-        </f:block>
+        <f:entry field="enabled">
+            <f:checkbox title="Anonymize support bundle contents" checked="${it.enabled}"/>
+        </f:entry>
     </f:section>
 </j:jelly>
