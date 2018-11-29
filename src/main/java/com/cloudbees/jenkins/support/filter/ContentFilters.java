@@ -47,20 +47,28 @@ public class ContentFilters extends GlobalConfiguration {
         return ExtensionList.lookupSingleton(ContentFilters.class);
     }
 
-    private boolean enabled;
+    private transient boolean enabled;
+    private boolean anonymizeSupportBundles;
 
     public ContentFilters() {
         super();
         load();
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isAnonymizeSupportBundles() {
+        return anonymizeSupportBundles;
+    }
+
+    protected Object readResolve() {
+        if (enabled) {
+            anonymizeSupportBundles = true;
+        }
+        return this;
     }
 
     @DataBoundSetter
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setAnonymizeSupportBundles(boolean anonymizeSupportBundles) {
+        this.anonymizeSupportBundles = anonymizeSupportBundles;
         save();
     }
 

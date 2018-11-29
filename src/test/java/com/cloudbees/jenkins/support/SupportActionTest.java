@@ -160,7 +160,7 @@ public class SupportActionTest {
         File bundleFile = temp.newFile();
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
-            ContentFilters.get().setEnabled(false);
+            ContentFilters.get().setAnonymizeSupportBundles(false);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
             String nodeComponentText = IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
@@ -169,7 +169,7 @@ public class SupportActionTest {
         }
         bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
-            ContentFilters.get().setEnabled(true);
+            ContentFilters.get().setAnonymizeSupportBundles(true);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
             String nodeComponentText = IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
@@ -271,7 +271,7 @@ public class SupportActionTest {
     private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization) throws IOException {
         File bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
-            ContentFilters.get().setEnabled(enabledAnonymization);
+            ContentFilters.get().setAnonymizeSupportBundles(enabledAnonymization);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
             return zip;

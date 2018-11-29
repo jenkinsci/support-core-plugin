@@ -122,7 +122,7 @@ public class SupportAction implements RootAction {
     }
 
     public boolean isAnonymized() {
-        return ContentFilters.get().isEnabled();
+        return ContentFilters.get().isAnonymizeSupportBundles();
     }
 
     @RequirePOST

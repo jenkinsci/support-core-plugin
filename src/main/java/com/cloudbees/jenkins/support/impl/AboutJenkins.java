@@ -577,7 +577,7 @@ public class AboutJenkins extends Component {
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
             out.println("  * CSRF Protection: "  + jenkins.isUseCrumbs());
             out.println("  * Initialization Milestone: " + jenkins.getInitLevel());
-            out.println("  * Support bundle anonymization: " + ContentFilters.get().isEnabled());
+            out.println("  * Support bundle anonymization: " + ContentFilters.get().isAnonymizeSupportBundles());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");

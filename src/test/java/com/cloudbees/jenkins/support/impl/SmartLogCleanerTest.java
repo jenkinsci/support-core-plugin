@@ -76,7 +76,7 @@ public class SmartLogCleanerTest {
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(SlaveLogs.class));
         File bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
-            ContentFilters.get().setEnabled(false);
+            ContentFilters.get().setAnonymizeSupportBundles(false);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
             return zip;

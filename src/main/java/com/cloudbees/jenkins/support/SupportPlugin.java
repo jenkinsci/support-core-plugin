@@ -378,7 +378,7 @@ public class SupportPlugin extends Plugin {
 
     public static Optional<ContentFilter> getContentFilter() throws IOException {
         ContentFilters filters = ContentFilters.get();
-        if (filters.isEnabled()) {
+        if (filters.isAnonymizeSupportBundles()) {
             ContentFilter filter = ContentFilter.ALL;
             ContentMappings mappings = ContentMappings.get();
             try (BulkChange change = new BulkChange(mappings)) {
