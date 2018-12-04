@@ -56,9 +56,9 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
     }
 
     /**
-     * When anonymization is enabled, we create an {@link FilteredWriter} directly from
+     * When anonymization is enabled, we create an {@link com.cloudbees.jenkins.support.filter.FilteredWriter} directly from
      * the underlying {@link FilteredOutputStream} that prevents us from encoding and
-     * then immediately decoding characters written to the returned {@link PrintStream}
+     * then immediately decoding characters written to the returned {@link java.io.PrintStream}
      * when filtering.
      */
     private PrintWriter getWriter(OutputStream os) throws IOException {

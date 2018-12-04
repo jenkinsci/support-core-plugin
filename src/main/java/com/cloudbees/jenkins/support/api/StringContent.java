@@ -24,6 +24,9 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.filter.FilteredContent;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -32,7 +35,7 @@ import java.io.OutputStream;
  *
  * @author Stephen Connolly
  */
-public class StringContent extends Content {
+public class StringContent extends FilteredContent {
 
     private final String value;
 
@@ -43,6 +46,12 @@ public class StringContent extends Content {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        os.write(value.getBytes("utf-8"));
+        writeTo(os, null);
+    }
+
+    @Override
+    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+        String filtered = (filter == null ? value : filter.filter(value));
+        os.write(filtered.getBytes("UTF-8"));
     }
 }

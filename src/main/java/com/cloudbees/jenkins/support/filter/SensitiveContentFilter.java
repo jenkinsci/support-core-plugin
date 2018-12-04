@@ -30,6 +30,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
@@ -52,9 +53,17 @@ public class SensitiveContentFilter implements ContentFilter {
     public @Nonnull String filter(@Nonnull String input) {
         ContentMappings mappings = ContentMappings.get();
         String filtered = input;
+        Set<String> searchList = new HashSet<>();
+        Set<String> replacementList = new HashSet<>();
+
         for (ContentMapping mapping : mappings) {
-            filtered = mapping.filter(filtered);
+            searchList.add(mapping.getOriginal());
+            replacementList.add(mapping.getReplacement());
         }
+        if (!searchList.isEmpty()) {
+            filtered = StringUtils.replaceEach(input, searchList.toArray(new String[]{}), replacementList.toArray(new String[]{}));
+        }
+
         return filtered;
     }
 

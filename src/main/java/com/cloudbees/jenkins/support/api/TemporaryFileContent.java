@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import hudson.Util;
 
 import java.io.File;
@@ -47,6 +48,15 @@ public class TemporaryFileContent extends FileContent {
     public void writeTo(OutputStream os) throws IOException {
         try {
             super.writeTo(os);
+        } finally {
+            delete();
+        }
+    }
+
+    @Override
+    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+        try {
+            super.writeTo(os, filter);
         } finally {
             delete();
         }

@@ -141,9 +141,12 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * Looks up or creates a new ContentMapping for the given original string and a ContentMapping generator.
      */
     public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
+        boolean isNew = !mappings.containsKey(original);
         ContentMapping mapping = mappings.computeIfAbsent(original, generator);
         try {
-            save();
+            if (isNew) {
+                save();
+            }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Could not save mappings file", e);
         }
