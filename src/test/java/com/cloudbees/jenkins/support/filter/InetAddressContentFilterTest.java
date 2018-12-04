@@ -26,10 +26,7 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.BulkChange;
 import jenkins.model.Jenkins;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.quicktheories.core.Gen;
@@ -46,6 +43,11 @@ public class InetAddressContentFilterTest {
 
     @ClassRule
     public static JenkinsRule jenkins = new JenkinsRule();
+
+    @Before
+    public void resetMappings() {
+        ContentMappings.get().clear();
+    }
 
     @BeforeClass
     public static void storeVersion() {
@@ -76,6 +78,7 @@ public class InetAddressContentFilterTest {
     @Test
     public void shouldNotFilterInetAddressMatchingJenkinsVersion() {
         Jenkins.VERSION = "1.2.3.4";
+        resetMappings();
         InetAddressContentFilter filter = InetAddressContentFilter.get();
         assertThat(filter.filter(Jenkins.VERSION))
                 .isEqualTo(Jenkins.VERSION);
