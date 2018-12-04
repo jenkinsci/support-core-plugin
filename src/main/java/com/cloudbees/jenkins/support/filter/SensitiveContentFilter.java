@@ -30,10 +30,13 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
@@ -53,8 +56,8 @@ public class SensitiveContentFilter implements ContentFilter {
     public @Nonnull String filter(@Nonnull String input) {
         ContentMappings mappings = ContentMappings.get();
         String filtered = input;
-        Set<String> searchList = new HashSet<>();
-        Set<String> replacementList = new HashSet<>();
+        List<String> searchList = new ArrayList<>();
+        List<String> replacementList = new ArrayList<>();
 
         for (ContentMapping mapping : mappings) {
             searchList.add(mapping.getOriginal());

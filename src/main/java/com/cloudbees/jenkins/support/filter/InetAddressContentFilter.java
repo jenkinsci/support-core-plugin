@@ -31,8 +31,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,8 +65,8 @@ public class InetAddressContentFilter implements ContentFilter {
     public @Nonnull String filter(@Nonnull String input) {
         ContentMappings mappings = ContentMappings.get();
         Matcher m = IP_ADDRESS.matcher(input);
-        Set<String> searchList = new HashSet<>();
-        Set<String> replacementList = new HashSet<>();
+        List<String> searchList = new ArrayList<>();
+        List<String> replacementList = new ArrayList<>();
         while (m.find()) {
             String ip = m.group();
 
