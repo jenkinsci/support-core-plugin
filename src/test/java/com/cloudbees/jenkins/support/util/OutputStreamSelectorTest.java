@@ -119,7 +119,7 @@ public class OutputStreamSelectorTest {
 
     @Test
     public void shouldUseTextStreamForPrintableASCII() {
-        int probeSize = OutputStreamSelector.DEFAULT_PROBE_SIZE;
+        int probeSize = StreamUtils.DEFAULT_PROBE_SIZE;
         qt().forAll(strings().betweenCodePoints(0x20, 0x7e).ofLengthBetween(probeSize / 2, probeSize * 2))
                 .checkAssert(this::assertThatContentsWriteToTextOut);
     }

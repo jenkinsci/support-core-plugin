@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Restricted(NoExternalUse.class)
 public class OutputStreamSelector extends OutputStream implements WrapperOutputStream {
-    static final int DEFAULT_PROBE_SIZE = 20;
+
     private final Supplier<OutputStream> binaryOutputStreamProvider;
     private final Supplier<OutputStream> textOutputStreamProvider;
     @GuardedBy("this")
@@ -88,7 +88,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
 
     private void probeContents(byte[] b, int off, int len) throws IOException {
         if (head == null) {
-            head = ByteBuffer.allocate(DEFAULT_PROBE_SIZE);
+            head = ByteBuffer.allocate(StreamUtils.DEFAULT_PROBE_SIZE);
         }
         int toCopy = Math.min(head.remaining(), len);
         if (toCopy == 0) throw new IllegalStateException("No more room to buffer header, should have chosen stream by now");
@@ -105,10 +105,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             out = requireNonNull(textOutputStreamProvider.get(), "No OutputStream returned by text supplier");
         } else {
             head.flip().mark();
-            boolean hasControlCharacter = false;
-            while (head.hasRemaining()) {
-                hasControlCharacter |= isNonWhitespaceControlCharacter(head.get());
-            }
+            boolean hasControlCharacter = StreamUtils.isNonWhitespaceControlCharacter(head);
             head.reset();
             out = requireNonNull(
                     (hasControlCharacter ? binaryOutputStreamProvider : textOutputStreamProvider).get(),
@@ -119,11 +116,6 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             write(b);
         }
         head = null;
-    }
-
-    private static boolean isNonWhitespaceControlCharacter(byte b) {
-        char c = (char) (b & 0xff);
-        return Character.isISOControl(c) && c != '\t' && c != '\n' && c != '\r';
     }
 
     @Override

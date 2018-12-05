@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.api;
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
+import com.cloudbees.jenkins.support.util.StreamUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -151,26 +152,26 @@ public class FileContent extends PrefilteredContent {
 
     // Check if the file is binary or not
     private boolean isBinary() {
-        char[] c = new char[3];
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), ENCODING)) {
-            int data = reader.read();
-
-            for (int i = 0; i < 3; i++) {
-                c[i] = (char) data;
-                data = reader.read();
+        try (InputStream in = getInputStream()) {
+            long size = Files.size(file.toPath());
+            if (size == 0) {
+                // Empty file, so no need to check
+                return true;
             }
+
+            byte[] b = new byte[( size < StreamUtils.DEFAULT_PROBE_SIZE ? (int)size : StreamUtils.DEFAULT_PROBE_SIZE)];
+            int read = in.read(b);
+            if (read != b.length) {
+                // Something went wrong, so better not to read line by line
+                return true;
+            }
+
+            return StreamUtils.isNonWhitespaceControlCharacter(b);
         } catch (IOException e) {
             // If cannot be checked, then considered as binary, so we do not
             // read line by line
             return true;
         }
-
-        StringBuffer type = new StringBuffer(Character.toString(c[0]));
-        for (int i = 1; i < 2; i++) {
-            type.append(c[i]);
-        }
-
-        return (!type.toString().matches("[_a-zA-Z0-9\\-\\.]*"));
     }
 
 
