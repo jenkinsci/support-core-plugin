@@ -101,7 +101,7 @@ public class SlaveLogs extends Component {
                             public Iterable<LogRecord> getLogRecords() throws IOException {
                                 Computer computer = node.toComputer();
                                 if (computer == null) {
-                                    return Lists.reverse(Collections.emptyList());
+                                    return Collections.emptyList();
                                 } else {
                                     try {
                                         return Lists.reverse(new ArrayList<>(computer.getLogRecords()));
