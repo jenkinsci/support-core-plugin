@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Represents some filtered content in a support bundle.
+ * Represents some content in a support bundle which will be filtered previously to the zip created.
  */
 public abstract class PrefilteredContent extends Content {
 
@@ -47,7 +47,7 @@ public abstract class PrefilteredContent extends Content {
     public abstract void writeTo(OutputStream os, ContentFilter filter) throws IOException;
 
     @Override
-    public boolean shouldBeFiltered() {
+    public final boolean shouldBeFiltered() {
         return false;
     }
 }

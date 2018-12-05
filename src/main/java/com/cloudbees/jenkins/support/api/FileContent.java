@@ -244,9 +244,9 @@ public class FileContent extends PrefilteredContent {
                 return null;
             }
 
-            int lenght = line.getBytes(ENCODING).length;
-            int toRead = (lenght <= len ? lenght : (int)len);
-            len -= lenght;
+            int length = line.getBytes(ENCODING).length;
+            int toRead = (length <= len ? length : (int)len);
+            len -= length;
 
             byte[] dest = new byte[toRead];
             System.arraycopy(line.getBytes(ENCODING), 0, new byte[toRead], 0, toRead);
