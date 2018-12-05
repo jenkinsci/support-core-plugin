@@ -3,7 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-import com.cloudbees.jenkins.support.filter.FilteredContent;
+import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.google.common.collect.Lists;
 
 import java.io.BufferedWriter;
@@ -21,7 +21,7 @@ import java.util.logging.LogRecord;
  *
  * @author Kohsuke Kawaguchi
  */
-public abstract class LogRecordContent extends FilteredContent {
+public abstract class LogRecordContent extends PrefilteredContent {
     public LogRecordContent(String name) {
         super(name);
     }

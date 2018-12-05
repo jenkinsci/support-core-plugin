@@ -25,7 +25,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-import com.cloudbees.jenkins.support.filter.FilteredContent;
+import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,7 +35,7 @@ import java.io.OutputStream;
  *
  * @author Stephen Connolly
  */
-public class StringContent extends FilteredContent {
+public class StringContent extends PrefilteredContent {
 
     private final String value;
 

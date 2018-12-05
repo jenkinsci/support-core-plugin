@@ -33,7 +33,7 @@ import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
-import com.cloudbees.jenkins.support.filter.FilteredContent;
+import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
@@ -303,8 +303,8 @@ public class SupportPlugin extends Plugin {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
-                        if (content instanceof FilteredContent && maybeFilter.isPresent()) {
-                            ((FilteredContent)content).writeTo(out, maybeFilter.get());
+                        if (content instanceof PrefilteredContent && maybeFilter.isPresent()) {
+                            ((PrefilteredContent)content).writeTo(out, maybeFilter.get());
                         } else {
                             content.writeTo(out);
                         }

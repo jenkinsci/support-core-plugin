@@ -32,9 +32,9 @@ import java.io.OutputStream;
 /**
  * Represents some filtered content in a support bundle.
  */
-public abstract class FilteredContent extends Content {
+public abstract class PrefilteredContent extends Content {
 
-    protected FilteredContent(String name) {
+    protected PrefilteredContent(String name) {
         super(name);
     }
 

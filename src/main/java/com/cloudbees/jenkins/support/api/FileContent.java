@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-import com.cloudbees.jenkins.support.filter.FilteredContent;
+import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -48,7 +48,7 @@ import java.nio.file.NoSuchFileException;
  *
  * @author Stephen Connolly
  */
-public class FileContent extends FilteredContent {
+public class FileContent extends PrefilteredContent {
 
     protected final File file;
     private final long maxSize;
