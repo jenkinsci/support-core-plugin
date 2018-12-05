@@ -78,7 +78,7 @@ public class InetAddressContentFilter implements ContentFilter {
         }
         String filtered = input;
         if (!searchList.isEmpty()) {
-            filtered = StringUtils.replaceEach(input, searchList.toArray(new String[]{}), replacementList.toArray(new String[]{}));
+            filtered = StringUtils.replaceEach(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
         }
 
         return filtered;
