@@ -11,6 +11,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -127,9 +128,9 @@ public class AboutJenkins extends Component {
 
     private static String getDescriptorName(@CheckForNull Describable<?> d) {
         if (d == null) {
-            return "(none)";
+            return Markdown.NONE_STRING;
         }
-        return "`" + d.getClass().getName() + "`";
+        return "`" + Markdown.escapeBacktick(d.getClass().getName()) + "`";
     }
 
     /**
@@ -326,10 +327,12 @@ public class AboutJenkins extends Component {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
-            result.append(min).append(" Home:           `").append(System.getProperty("java.home").replaceAll("`",
-                    "&#96;")).append("`\n");
-            result.append(min).append(" Vendor:           ").append(System.getProperty("java.vendor")).append("\n");
-            result.append(min).append(" Version:          ").append(System.getProperty("java.version")).append("\n");
+            result.append(min).append(" Home:           `").append(
+                    Markdown.escapeBacktick(System.getProperty("java.home"))).append("`\n");
+            result.append(min).append(" Vendor:           ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vendor"))).append("\n");
+            result.append(min).append(" Version:          ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.version"))).append("\n");
             long maxMem = runtime.maxMemory();
             long allocMem = runtime.totalMemory();
             long freeMem = runtime.freeMemory();
@@ -381,27 +384,35 @@ public class AboutJenkins extends Component {
             result.append(min).append(" Version: ").append(System.getProperty("java.vm.specification.version"))
                     .append("\n");
             result.append(maj).append(" JVM Implementation\n");
-            result.append(min).append(" Name:    ").append(System.getProperty("java.vm.name")).append("\n");
-            result.append(min).append(" Vendor:  ").append(System.getProperty("java.vm.vendor")).append("\n");
-            result.append(min).append(" Version: ").append(System.getProperty("java.vm.version")).append("\n");
+            result.append(min).append(" Name:    ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.name"))).append("\n");
+            result.append(min).append(" Vendor:  ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.vendor"))).append("\n");
+            result.append(min).append(" Version: ").append(
+                    Markdown.escapeUnderscore(System.getProperty("java.vm.version"))).append("\n");
             result.append(maj).append(" Operating system\n");
-            result.append(min).append(" Name:         ").append(System.getProperty("os.name")).append("\n");
-            result.append(min).append(" Architecture: ").append(System.getProperty("os.arch")).append("\n");
-            result.append(min).append(" Version:      ").append(System.getProperty("os.version")).append("\n");
+            result.append(min).append(" Name:         ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.name"))).append("\n");
+            result.append(min).append(" Architecture: ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.arch"))).append("\n");
+            result.append(min).append(" Version:      ").append(
+                    Markdown.escapeUnderscore(System.getProperty("os.version"))).append("\n");
             File lsb_release = new File("/usr/bin/lsb_release");
             if (lsb_release.canExecute()) {
                 try {
                     Process proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--description", "--short").start();
                     String distro = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0) {
-                        result.append(min).append(" Distribution: ").append(distro).append("\n");
+                        result.append(min).append(" Distribution: ").append(
+                                Markdown.escapeUnderscore(distro)).append("\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
                     proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--version", "--short").start();
                     String modules = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0 && modules != null) {
-                        result.append(min).append(" LSB Modules:  `").append(modules).append("`\n");
+                        result.append(min).append(" LSB Modules:  `").append(
+                                Markdown.escapeUnderscore(modules)).append("`\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
@@ -429,15 +440,15 @@ public class AboutJenkins extends Component {
             result.append(maj).append(" JVM startup parameters:\n");
             if (mBean.isBootClassPathSupported()) {
                 result.append(min).append(" Boot classpath: `")
-                        .append(mBean.getBootClassPath().replaceAll("`", "&#96;")).append("`\n");
+                        .append(Markdown.escapeBacktick(mBean.getBootClassPath())).append("`\n");
             }
-            result.append(min).append(" Classpath: `").append(mBean.getClassPath().replaceAll("`", "&#96;"))
+            result.append(min).append(" Classpath: `").append(Markdown.escapeBacktick(mBean.getClassPath()))
                     .append("`\n");
-            result.append(min).append(" Library path: `").append(mBean.getLibraryPath().replaceAll("`", "&#96;"))
+            result.append(min).append(" Library path: `").append(Markdown.escapeBacktick(mBean.getLibraryPath()))
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
-                result.append(min).append(" arg[").append(count++).append("]: `").append(arg.replaceAll("`", "&#96;"))
+                result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(arg))
                         .append("`\n");
             }
             return result.toString();
@@ -538,7 +549,7 @@ public class AboutJenkins extends Component {
             out.println("Version details");
             out.println("---------------");
             out.println();
-            out.println("  * Version: `" + Jenkins.VERSION.replaceAll("`", "&#96;") + "`");
+            out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -553,7 +564,7 @@ public class AboutJenkins extends Component {
                 out.println("      - Specification: " + servletContext.getMajorVersion() + "." + servletContext
                         .getMinorVersion());
                 out.println(
-                        "      - Name:          `" + servletContext.getServerInfo().replaceAll("`", "&#96;") + "`");
+                        "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
             } catch (NullPointerException e) {
                 // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
@@ -819,8 +830,7 @@ public class AboutJenkins extends Component {
             super("nodes.md");
         }
         private String getLabelString(Node n) {
-            String r = n.getLabelString();
-            return r.isEmpty() ? "(none)" : r;
+            return Markdown.prettyNone(n.getLabelString());
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
@@ -843,29 +853,30 @@ public class AboutJenkins extends Component {
             out.println("===========");
             out.println();
             out.println("  * master (Jenkins)");
-            out.println("      - Description:    _" + Util.fixNull(jenkins.getNodeDescription())
-                    .replaceAll("_", "&#95;") + "_");
+            out.println("      - Description:    _" +
+                    Markdown.escapeUnderscore(Util.fixNull(jenkins.getNodeDescription())) + "_");
             out.println("      - Executors:      " + jenkins.getNumExecutors());
-            out.println("      - FS root:        `" + jenkins.getRootDir().getAbsolutePath()
-                    .replaceAll("`", "&#96;") + "`");
+            out.println("      - FS root:        `" +
+                    Markdown.escapeBacktick(jenkins.getRootDir().getAbsolutePath()) + "`");
             out.println("      - Labels:         " + getLabelString(jenkins));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * " + node.getNodeName() + " (" + getDescriptorName(node) + ")");
-                out.println("      - Description:    _" + Util.fixNull(node.getNodeDescription()).replaceAll("_", "&#95;") + "_");
+                out.println("  * `" + Markdown.escapeBacktick(node.getNodeName()) + "` (" +getDescriptorName(node) +
+                        ")");
+                out.println("      - Description:    _" +
+                        Markdown.escapeUnderscore(Util.fixNull(node.getNodeDescription())) + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
-                    out.println("      - Remote FS root: `" + rootPath.getRemote().replaceAll("`", "&#96;")
-                            + "`");
+                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(rootPath.getRemote()) + "`");
                 } else if (node instanceof Slave) {
-                    out.println("      - Remote FS root: `" + Slave.class.cast(node).getRemoteFS()
-                            .replaceAll("`", "&#96;") + "`");
+                    out.println("      - Remote FS root: `" +
+                            Markdown.escapeBacktick(Slave.class.cast(node).getRemoteFS()) + "`");
                 }
-                out.println("      - Labels:         " + getLabelString(node));
+                out.println("      - Labels:         " + Markdown.escapeUnderscore(getLabelString(node)));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;
