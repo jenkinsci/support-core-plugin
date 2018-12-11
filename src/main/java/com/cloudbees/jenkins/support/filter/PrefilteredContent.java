@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,54 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.cloudbees.jenkins.support.api;
 
-import com.cloudbees.jenkins.support.filter.ContentFilter;
-import hudson.Util;
+package com.cloudbees.jenkins.support.filter;
 
-import java.io.File;
+import com.cloudbees.jenkins.support.api.Content;
+
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * Temporary file content, auto-deleted after {@link #writeTo(OutputStream)}.
+ * Represents some content in a support bundle which will be filtered previously to the zip created.
  */
-public class TemporaryFileContent extends FileContent {
+public abstract class PrefilteredContent extends Content {
 
-    private File f;
-
-    public TemporaryFileContent(String name, File file) {
-        super(name, file);
-        f = file;
+    protected PrefilteredContent(String name) {
+        super(name);
     }
+
+    /**
+     * Write the component in the bundle filtering the content
+     * @param os OutputStream where write the content
+     * @param filter ContentFilter to apply
+     * @throws IOException
+     */
+    public abstract void writeTo(OutputStream os, ContentFilter filter) throws IOException;
 
     @Override
-    public void writeTo(OutputStream os) throws IOException {
-        try {
-            super.writeTo(os);
-        } finally {
-            delete();
-        }
+    public final boolean shouldBeFiltered() {
+        return false;
     }
-
-    @Override
-    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
-        try {
-            super.writeTo(os, filter);
-        } finally {
-            delete();
-        }
-    }
-
-    private void delete() {
-        try {
-            Util.deleteFile(f);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to delete tmp file " + f.getAbsolutePath(), e);
-        }
-    }
-
-    private static final Logger LOGGER = Logger.getLogger(TemporaryFileContent.class.getName());
 }

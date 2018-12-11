@@ -24,12 +24,10 @@
 
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
-import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -46,11 +44,9 @@ import jenkins.model.Jenkins;
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -63,7 +59,6 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
-import static com.cloudbees.jenkins.support.impl.JenkinsLogs.LOG_FORMATTER;
 
 /**
  * Adds the agent logs from all of the machines
@@ -98,31 +93,22 @@ public class SlaveLogs extends Component {
         SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
 
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
-                        new PrintedContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
+                        new LogRecordContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
                             @Override
-                            protected void printTo(PrintWriter out) throws IOException {
+                            public Iterable<LogRecord> getLogRecords() throws IOException {
                                 Computer computer = node.toComputer();
                                 if (computer == null) {
-                                    out.println("N/A");
+                                    return Collections.emptyList();
                                 } else {
                                     try {
-                                        List<LogRecord> records = computer.getLogRecords();
-
-                                        for (ListIterator<LogRecord> iterator = records.listIterator(records.size());
-                                             iterator.hasPrevious(); ) {
-                                            LogRecord logRecord = iterator.previous();
-                                            out.print(LOG_FORMATTER.format(logRecord));
-                                        }
-                                    } catch (Throwable e) {
-                                        out.println();
-                                        SupportLogFormatter.printStackTrace(e, out);
+                                        return Lists.reverse(new ArrayList<>(computer.getLogRecords()));
+                                    } catch (InterruptedException e) {
+                                        throw new IOException(e);
                                     }
                                 }
-                                out.flush();
-
                             }
                         }
                 );
