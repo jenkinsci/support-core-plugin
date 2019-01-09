@@ -102,7 +102,7 @@ public class SupportActionTest {
             HtmlPage p = wc.goTo(root.getUrlName());
 
             HtmlForm form = p.getFormByName("bundle-contents");
-            HtmlButton submit = (HtmlButton) form.getHtmlElementsByTagName("button").get(0);
+            HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
             Page zip = submit.click();
             File zipFile = File.createTempFile("test", "zip");
             IOUtils.copy(zip.getWebResponse().getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
