@@ -1,8 +1,5 @@
 package com.cloudbees.jenkins.support;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -20,9 +17,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.junit.rules.TemporaryFolder;
 import org.xml.sax.SAXException;
 
 import javax.inject.Inject;
@@ -31,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +39,7 @@ import java.util.zip.ZipFile;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -178,4 +176,110 @@ public class SupportActionTest {
                     nodeComponentText, containsString(anonymousNodeName));
         }
     }
+
+    /**
+     * Check if the zip loses the folders due to anonymize '/' because there is an object with such a name. For example, a label.
+     * @throws Exception If exception happened during the test
+     */
+    @Test
+    public void corruptZipTestBySlash() throws Exception {
+        Slave node = rule.createSlave("slave", "/", null);
+
+        // Set the components to generate
+        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+
+        ZipFile zip = generateBundle(componentsToCreate, false);
+        ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
+
+        bundlesMatch(zip, anonymizedZip);
+    }
+
+    /**
+     * Check if the file names in the zip are corrupt due to anonymize '.' because there is an object with such a name.
+     * For example, a label.
+     * @throws Exception If exception happened during the test
+     */
+    @Test
+    public void corruptZipTestByDot() throws Exception {
+        Slave node = rule.createSlave("slave", ".", null);
+        // Set the components to generate
+        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+
+        ZipFile zip = generateBundle(componentsToCreate, false);
+        ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
+
+        bundlesMatch(zip, anonymizedZip);
+    }
+
+    /**
+     * Check if the file names in the zip are corrupt due to anonymize words in the file names because there is an object
+     * with such a name. For example, a label.
+     * @throws Exception If exception happened during the test
+     */
+    @Test
+    public void corruptZipTestByWordsInFileName() throws Exception {
+
+        // Create a slave with very bad words
+        Slave node = rule.createSlave("slave", "active plugins checksums md5 items about nodes manifest errors", null);
+
+        /* This words are in the stopWords, so they won't never be replaced
+        "jenkins", "node", "master", "computer", "item", "label", "view", "all", "unknown", "user", "anonymous",
+        "authenticated", "everyone", "system", "admin", Jenkins.VERSION
+        */
+
+        // Set the components to generate
+        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+
+        ZipFile zip = generateBundle(componentsToCreate, false);
+        ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
+
+        bundlesMatch(zip, anonymizedZip);
+
+        //assertThat("Node name should be present when anonymization is disabled",
+        //      nodeComponentText, containsString(node.getNodeName()));
+    }
+
+    /**
+     * Checks if both bundles have the same file names. It fails if it's not the case.
+     * @param zip The bundle generated without anonymization
+     * @param anonymizedZip The bundle generated with anonymization
+     */
+    private void bundlesMatch(ZipFile zip, ZipFile anonymizedZip) {
+        // Print every entry
+        List<String> entries = getFileNamesFromBundle(zip);
+
+        // Debugging
+        //entries.stream().forEach(entry -> System.out.println(entry));
+        //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
+
+        List<String> anonymizedEntries = getFileNamesFromBundle(anonymizedZip);
+
+        // More debugging
+        //System.out.println("Anonymized:");
+        //entries.stream().forEach(entry -> System.out.println(entry));
+        //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
+
+        assertTrue("Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n " + anonymizedEntries, anonymizedEntries.equals(entries));
+    }
+
+    private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization) throws IOException {
+        File bundleFile = temp.newFile();
+        try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
+            ContentFilters.get().setEnabled(enabledAnonymization);
+            SupportPlugin.writeBundle(os, componentsToCreate);
+            ZipFile zip = new ZipFile(bundleFile);
+            return zip;
+        }
+    }
+
+    private List<String> getFileNamesFromBundle(ZipFile zip) {
+        List<String> entries = new ArrayList<>(zip.size());
+        zip.stream().forEach(entry -> entries.add(entry.getName()));
+        return entries;
+    }
+
+    private String getContentZipEntry(ZipFile zip, String name) throws IOException {
+        return IOUtils.toString(zip.getInputStream(zip.getEntry(name)), StandardCharsets.UTF_8);
+    }
 }
+
