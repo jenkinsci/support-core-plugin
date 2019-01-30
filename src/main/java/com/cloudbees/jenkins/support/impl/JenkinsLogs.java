@@ -22,6 +22,7 @@ import jenkins.model.Jenkins;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -242,6 +243,8 @@ public class JenkinsLogs extends Component {
                 SupportLogFormatter.class,
                 LogFlusher.class,
                 CopyOnWriteList.class,
+                PrintWriter.class,
+                Throwable.class,
             });
         }
 
