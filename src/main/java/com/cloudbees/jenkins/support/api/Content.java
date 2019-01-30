@@ -62,9 +62,9 @@ public abstract class Content {
      * {code}new Content("nodes/{0}/file-descriptors.txt", "node") will filter the {0} part of the name with all the
      * declared {@link ContentFilter}.
      * This new constructor avoid having incorrectly filtered elements in the support bundle. For example, when having
-     * a job called <i>nodes</i>. The <i>nodes</i> element in the file name of a  file in the bundle shouldn't be filtered.
+     * a job called <i>nodes</i>. The <i>nodes</i> element in the file name of a file in the bundle shouldn't be filtered.
      *
-     * The name is filtered using the {@link java.text.MessageFormat#format(String, Object...)} method.
+     * The name is rendered using the {@link java.text.MessageFormat#format(String, Object...)} method after the filter.
      *
      * @param name name of the content
      * @param tokens strings to be filtered in the name

@@ -342,7 +342,7 @@ public class SupportPlugin extends Plugin {
      * Filter the name of a content depending on the tokens in the name that need to be replaced.
      * @param maybeFilter an Optional with a {@link ContentFilter} or not
      * @param name the name of the content to be filtered
-     * @param tokens tokens in the name to be filtered. If null, the whole name is filtered
+     * @param tokens tokens in the name to be filtered. If null, no filter takes place to avoid corruption
      * @return the name filtered
      */
     private static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] tokens) {
