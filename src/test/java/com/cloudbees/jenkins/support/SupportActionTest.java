@@ -22,6 +22,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.xml.sax.SAXException;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import static org.hamcrest.Matchers.containsString;
@@ -183,7 +185,8 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
-        Slave node = rule.createSlave("slave", "/", null);
+        final String OBJECT_NAME = "slave";
+        Slave node = rule.createSlave(OBJECT_NAME, "/", null);
 
         // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -191,7 +194,7 @@ public class SupportActionTest {
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip);
+        bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
     }
 
     /**
@@ -201,14 +204,15 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
-        Slave node = rule.createSlave("slave", ".", null);
+        final String OBJECT_NAME = "slave";
+        Slave node = rule.createSlave(OBJECT_NAME, ".", null);
         // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip);
+        bundlesMatch(zip, anonymizedZip,  OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
     }
 
     /**
@@ -218,9 +222,9 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {
-
+        final String OBJECT_NAME = "slave";
         // Create a slave with very bad words
-        Slave node = rule.createSlave("slave", "active plugins checksums md5 items about nodes manifest errors", null);
+        Slave node = rule.createSlave(OBJECT_NAME, "active plugins checksums md5 items about nodes manifest errors", null);
 
         /* This words are in the stopWords, so they won't never be replaced
         "jenkins", "node", "master", "computer", "item", "label", "view", "all", "unknown", "user", "anonymous",
@@ -233,7 +237,7 @@ public class SupportActionTest {
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip);
+        bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
 
         //assertThat("Node name should be present when anonymization is disabled",
         //      nodeComponentText, containsString(node.getNodeName()));
@@ -244,7 +248,7 @@ public class SupportActionTest {
      * @param zip The bundle generated without anonymization
      * @param anonymizedZip The bundle generated with anonymization
      */
-    private void bundlesMatch(ZipFile zip, ZipFile anonymizedZip) {
+    private void bundlesMatch(ZipFile zip, ZipFile anonymizedZip, String objectName, String anonymizedObjectName) {
         // Print every entry
         List<String> entries = getFileNamesFromBundle(zip);
 
@@ -253,13 +257,14 @@ public class SupportActionTest {
         //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
 
         List<String> anonymizedEntries = getFileNamesFromBundle(anonymizedZip);
+        List<String> anonymizedEntriesRestored = anonymizedEntries.stream().map(entry -> entry.replaceAll(anonymizedObjectName, objectName)).collect(Collectors.toList());
 
         // More debugging
         //System.out.println("Anonymized:");
         //entries.stream().forEach(entry -> System.out.println(entry));
         //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
 
-        assertTrue("Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n " + anonymizedEntries, anonymizedEntries.equals(entries));
+        assertTrue("Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n " + anonymizedEntriesRestored, anonymizedEntriesRestored.equals(entries));
     }
 
     private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization) throws IOException {
@@ -272,14 +277,12 @@ public class SupportActionTest {
         }
     }
 
+    @Nonnull
     private List<String> getFileNamesFromBundle(ZipFile zip) {
         List<String> entries = new ArrayList<>(zip.size());
         zip.stream().forEach(entry -> entries.add(entry.getName()));
         return entries;
     }
 
-    private String getContentZipEntry(ZipFile zip, String name) throws IOException {
-        return IOUtils.toString(zip.getInputStream(zip.getEntry(name)), StandardCharsets.UTF_8);
-    }
 }
 
