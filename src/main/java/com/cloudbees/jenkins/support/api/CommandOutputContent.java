@@ -28,6 +28,10 @@ public class CommandOutputContent extends StringContent {
         super(name, value);
     }
 
+    private CommandOutputContent(String name, String[] tokens, String value) {
+        super(name, tokens, value);
+    }
+
     public static class CommandLauncher extends MasterToSlaveCallable<String, RuntimeException> {
         final String[] command;
 
@@ -54,6 +58,10 @@ public class CommandOutputContent extends StringContent {
     }
 
     public static CommandOutputContent runOnNode(Node node, String name, String... command) {
+        return runOnNode(node, name, null, command);
+    }
+
+    public static CommandOutputContent runOnNode(Node node, String name, String[] tokens, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         VirtualChannel chan = node.getChannel();
@@ -75,10 +83,14 @@ public class CommandOutputContent extends StringContent {
             }
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, tokens, content);
     }
 
     public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String... command) {
+        return runOnNodeAndCache(cache, node, name, null, command);
+    }
+
+    public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String[] tokens, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         try {
@@ -91,6 +103,6 @@ public class CommandOutputContent extends StringContent {
             LOGGER.log(lr);
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, tokens, content);
     }
 }

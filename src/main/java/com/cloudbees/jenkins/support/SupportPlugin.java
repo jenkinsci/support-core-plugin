@@ -86,24 +86,19 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * Main entry point for the support plugin.
@@ -296,7 +291,7 @@ public class SupportPlugin extends Plugin {
                     if (content == null) {
                         continue;
                     }
-                    final String name = maybeFilter.map(filter -> filter.filter(content.getName())).orElseGet(content::getName);
+                    final String name = getNameFiltered(maybeFilter, content.getName(), content.getTokens());
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                     entry.setTime(content.getTime());
                     try {
@@ -343,7 +338,33 @@ public class SupportPlugin extends Plugin {
         }
     }
 
-    private static Optional<ContentFilter> getContentFilter() throws IOException {
+    /**
+     * Filter the name of a content depending on the tokens in the name that need to be replaced.
+     * @param maybeFilter an Optional with a {@link ContentFilter} or not
+     * @param name the name of the content to be filtered
+     * @param tokens tokens in the name to be filtered. If null, the whole name is filtered
+     * @return the name filtered
+     */
+    private static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] tokens) {
+        String filteredName;
+
+        if (tokens != null) {
+            // Filter each token or return the token depending on whether the filter is active or not
+            String[] replacedTokens = Arrays.stream(tokens).map(token -> maybeFilter.map(filter -> filter.filter(token)).orElse(token)).toArray(String[]::new);
+
+            // Replace each placeholder {0}, {1} in the name, with the replaced token
+            filteredName = MessageFormat.format(name, replacedTokens);
+        } else {
+            // Previous behavior was filter all the name, but it could end up in having a corrupted bundle. So we expect
+            // implementors to use the appropriate constructor of Content.
+            //filteredName = maybeFilter.map(filter -> filter.filter(name)).orElse(name);
+            filteredName = name;
+        }
+        System.out.format("%s is replaced by %s%n", name, filteredName);
+        return filteredName;
+    }
+
+    public static Optional<ContentFilter> getContentFilter() throws IOException {
         ContentFilters filters = ContentFilters.get();
         if (filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;

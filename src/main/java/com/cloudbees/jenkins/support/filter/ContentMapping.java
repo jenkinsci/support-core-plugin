@@ -74,6 +74,7 @@ public class ContentMapping implements ContentFilter {
                 .distinct()
                 .map(Pattern::quote)
                 .collect(joining("|", "\\b(", ")\\b"));
+        System.out.println("To look for regex: [" + regex + "]");
         return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
     }
 

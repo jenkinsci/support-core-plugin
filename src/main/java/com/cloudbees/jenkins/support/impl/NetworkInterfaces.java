@@ -77,7 +77,7 @@ public class NetworkInterfaces extends Component {
 
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + node.getNodeName() + "/networkInterface.md") {
+                    new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
                             os.write(getNetworkInterface(node).getBytes("UTF-8"));

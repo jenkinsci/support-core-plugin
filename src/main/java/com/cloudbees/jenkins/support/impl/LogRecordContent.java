@@ -26,6 +26,10 @@ public abstract class LogRecordContent extends PrefilteredContent {
         super(name);
     }
 
+    public LogRecordContent(String name, String... tokens) {
+        super(name, tokens);
+    }
+
     /**
      * Iterates {@link LogRecord}s to be printed as this content.
      *

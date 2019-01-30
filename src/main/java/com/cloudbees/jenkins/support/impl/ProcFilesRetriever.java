@@ -82,7 +82,7 @@ public abstract class ProcFilesRetriever extends Component {
         }
 
         for (Map.Entry<String, String> procDescriptor : getFilesToRetrieve().entrySet()) {
-            container.add(new FilePathContent("nodes/" + name + "/proc/" + procDescriptor.getValue(),
+            container.add(new FilePathContent("nodes/{0}/proc/{1}", new String[]{name, procDescriptor.getValue()},
                     new FilePath(c.getChannel(), procDescriptor.getKey())));
         }
 

@@ -44,6 +44,11 @@ public class StringContent extends PrefilteredContent {
         this.value = value;
     }
 
+    public StringContent(String name, String[] filterableNameTokens, String value) {
+        super(name, filterableNameTokens);
+        this.value = value;
+    }
+
     @Override
     public void writeTo(OutputStream os) throws IOException {
         writeTo(os, null);

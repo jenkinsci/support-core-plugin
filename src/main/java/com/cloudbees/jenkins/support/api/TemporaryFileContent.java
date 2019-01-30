@@ -44,6 +44,11 @@ public class TemporaryFileContent extends FileContent {
         f = file;
     }
 
+    public TemporaryFileContent(String name, String[] tokens, File file) {
+        super(name, tokens, file);
+        f = file;
+    }
+
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {

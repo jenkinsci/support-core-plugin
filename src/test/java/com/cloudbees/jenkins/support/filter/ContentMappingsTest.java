@@ -25,17 +25,24 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.*;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipFile;
 
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
@@ -165,4 +172,22 @@ public class ContentMappingsTest {
             assertTrue(stopWords.contains(originalVersion));
         });
     }
+
+    /*
+    @Test
+    public void filteredNamesGeneratingBundle() {
+        JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
+        IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
+        ZipFile z = new ZipFile(zipFile);
+        zj.
+
+        File zipFile = File.createTempFile("test", "zip");
+        ((File) zipFile).deleteOnExit();
+        FileOutputStream fileOutputStream = new FileOutputStream(tempLogFile);
+
+        ClearCaseChangeLogSet.saveToChangeLog(fileOutputStream, history);
+        fileOutputStream.close();
+
+        comprobar que el zip tiene las entradas bien
+    }*/
 }

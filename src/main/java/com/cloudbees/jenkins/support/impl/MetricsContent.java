@@ -24,6 +24,17 @@ public class MetricsContent extends Content {
 
     public MetricsContent(String name, MetricRegistry metricsRegistry) {
         super(name);
+
+        this.registry = metricsRegistry;
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new MetricsModule(TimeUnit.MINUTES, TimeUnit.SECONDS, true));
+        objectMapper.registerModule(new HealthCheckModule());
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    }
+
+    public MetricsContent(String name, String[] tokens,  MetricRegistry metricsRegistry) {
+        super(name, tokens);
+
         this.registry = metricsRegistry;
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new MetricsModule(TimeUnit.MINUTES, TimeUnit.SECONDS, true));

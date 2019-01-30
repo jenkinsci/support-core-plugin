@@ -111,13 +111,13 @@ public class LoadStats extends Component {
             String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
             if (!headless) {
                 BufferedImage image = stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
-                container.add(new ImageContent(String.format("load-stats/%s/%s.png", name, scaleName), image));
+                container.add(new ImageContent("load-stats/{0}/{1}.png", new String[]{name, scaleName}, image));
             }
-            container.add(new CsvContent(String.format("load-stats/%s/%s.csv", name, scaleName), stats, scale));
+            container.add(new CsvContent("load-stats/{0}/{1}.csv", new String[]{name, scaleName}, stats, scale));
         }
         // on the other hand, if headless we should give an easy way to generate the graphs
         if (headless) {
-            container.add(new GnuPlotScript(String.format("load-stats/%s/gnuplot", name)));
+            container.add(new GnuPlotScript("load-stats/{0}/gnuplot", name));
         }
     }
 
@@ -126,6 +126,11 @@ public class LoadStats extends Component {
 
         public ImageContent(String name, BufferedImage image) {
             super(name);
+            this.image = image;
+        }
+
+        public ImageContent(String name, String[] tokens, BufferedImage image) {
+            super(name, tokens);
             this.image = image;
         }
 
@@ -163,9 +168,31 @@ public class LoadStats extends Component {
         private final long time;
         private final long clock;
 
+        public CsvContent(String name, String[] tokens, LoadStatistics stats, MultiStageTimeSeries.TimeScale scale) {
+            super(name, tokens);
+
+            time = System.currentTimeMillis();
+            clock = scale.tick;
+            data = new TreeMap<String, float[]>();
+            for (Field f : FIELDS) {
+                try {
+                    MultiStageTimeSeries ts = (MultiStageTimeSeries) f.get(stats);
+                    if (ts != null) {
+                        TimeSeries series = ts.pick(scale);
+                        if (series != null) {
+                            data.put(camelCaseToSentenceCase(f.getName()), series.getHistory());
+                        }
+                    }
+                } catch (IllegalAccessException e) {
+                    continue;
+                }
+            }
+        }
+
         public CsvContent(String name, LoadStatistics stats,
                           MultiStageTimeSeries.TimeScale scale) {
             super(name);
+
             time = System.currentTimeMillis();
             clock = scale.tick;
             data = new TreeMap<String, float[]>();
@@ -217,6 +244,10 @@ public class LoadStats extends Component {
 
         public GnuPlotScript(String name) {
             super(name);
+        }
+
+        public GnuPlotScript(String name, String... tokens) {
+            super(name, tokens);
         }
 
         @Override

@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.configfiles.OtherConfigFilesComponent;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
@@ -13,6 +14,7 @@ import hudson.ExtensionList;
 import hudson.model.Label;
 import hudson.model.Slave;
 import hudson.util.RingBufferLogHandler;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -238,9 +240,6 @@ public class SupportActionTest {
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
         bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
-
-        //assertThat("Node name should be present when anonymization is disabled",
-        //      nodeComponentText, containsString(node.getNodeName()));
     }
 
     /**
@@ -255,7 +254,7 @@ public class SupportActionTest {
         // Debugging
         //entries.stream().forEach(entry -> System.out.println(entry));
         //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
-q
+
         List<String> anonymizedEntries = getFileNamesFromBundle(anonymizedZip);
 
         //The name of the node created becomes replaced, so we change it to how the anonymization process has left it

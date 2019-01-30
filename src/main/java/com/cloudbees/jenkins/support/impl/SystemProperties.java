@@ -72,7 +72,7 @@ public class SystemProperties extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new Content("nodes/slave/" + node.getNodeName() + "/system.properties") {
+                    new Content("nodes/slave/{0}/system.properties", node.getNodeName()) {
                         @Override
                         public void writeTo(OutputStream os) {
                             try {

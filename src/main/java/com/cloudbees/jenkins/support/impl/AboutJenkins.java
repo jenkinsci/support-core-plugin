@@ -557,7 +557,7 @@ public class AboutJenkins extends Component {
                 out.println("  * Mode:    WAR");
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
-            out.println("  * Url:     " + (jlc != null ? jlc.getUrl() : "No JenkinsLocationConfiguration available"));
+            out.println("  * Url:     " + jlc.getUrl());
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
@@ -998,7 +998,7 @@ public class AboutJenkins extends Component {
     private class NodeChecksumsContent extends PrintedContent {
         private final Node node;
         NodeChecksumsContent(Node node) {
-            super("nodes/slave/" + node.getNodeName() + "/checksums.md5");
+            super("nodes/slave/{0}/checksums.md5", node.getNodeName());
             this.node = node;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
