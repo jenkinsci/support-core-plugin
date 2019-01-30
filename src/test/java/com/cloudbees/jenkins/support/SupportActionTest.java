@@ -255,8 +255,10 @@ public class SupportActionTest {
         // Debugging
         //entries.stream().forEach(entry -> System.out.println(entry));
         //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
-
+q
         List<String> anonymizedEntries = getFileNamesFromBundle(anonymizedZip);
+
+        //The name of the node created becomes replaced, so we change it to how the anonymization process has left it
         List<String> anonymizedEntriesRestored = anonymizedEntries.stream().map(entry -> entry.replaceAll(anonymizedObjectName, objectName)).collect(Collectors.toList());
 
         // More debugging
