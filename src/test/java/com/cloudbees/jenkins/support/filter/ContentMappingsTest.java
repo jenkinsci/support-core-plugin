@@ -172,22 +172,4 @@ public class ContentMappingsTest {
             assertTrue(stopWords.contains(originalVersion));
         });
     }
-
-    /*
-    @Test
-    public void filteredNamesGeneratingBundle() {
-        JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
-        IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
-        ZipFile z = new ZipFile(zipFile);
-        zj.
-
-        File zipFile = File.createTempFile("test", "zip");
-        ((File) zipFile).deleteOnExit();
-        FileOutputStream fileOutputStream = new FileOutputStream(tempLogFile);
-
-        ClearCaseChangeLogSet.saveToChangeLog(fileOutputStream, history);
-        fileOutputStream.close();
-
-        comprobar que el zip tiene las entradas bien
-    }*/
 }

@@ -124,7 +124,6 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             singleChars.add(Character.toString((char) i));
         }
 
-        System.out.println(singleChars);
         return singleChars;
     }
 

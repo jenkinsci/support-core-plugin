@@ -360,7 +360,7 @@ public class SupportPlugin extends Plugin {
             //filteredName = maybeFilter.map(filter -> filter.filter(name)).orElse(name);
             filteredName = name;
         }
-        System.out.format("%s is replaced by %s%n", name, filteredName);
+
         return filteredName;
     }
 
