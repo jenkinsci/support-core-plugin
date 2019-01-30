@@ -33,8 +33,8 @@ import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
-import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.OutputStreamSelector;
@@ -88,17 +88,24 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Main entry point for the support plugin.
