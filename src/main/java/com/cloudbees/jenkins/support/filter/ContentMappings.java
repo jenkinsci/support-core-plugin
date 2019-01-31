@@ -120,8 +120,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         final int TILDE = '~'; //126
         Set<String> singleChars = new HashSet<>(TILDE - SPACE + 1);
 
-        for (int i = SPACE; i <= TILDE; i++) {
-            singleChars.add(Character.toString((char) i));
+        for (char i = SPACE; i <= TILDE; i++) {
+            singleChars.add(Character.toString(i));
         }
 
         return singleChars;
