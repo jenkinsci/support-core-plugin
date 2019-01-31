@@ -68,12 +68,12 @@ public class FileContent extends PrefilteredContent {
         this.isBinary = isBinary();
     }
 
-    public FileContent(String name, String[] tokens, File file) {
-        this(name, tokens, file, -1);
+    public FileContent(String name, String[] filterableParameters, File file) {
+        this(name, filterableParameters, file, -1);
     }
 
-    public FileContent(String name, String[] tokens, File file, long maxSize) {
-        super(name, tokens);
+    public FileContent(String name, String[] filterableParameters, File file, long maxSize) {
+        super(name, filterableParameters);
         this.file = file;
         this.maxSize = maxSize;
         this.isBinary = isBinary();

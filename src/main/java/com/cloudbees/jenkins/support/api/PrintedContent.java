@@ -45,8 +45,8 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
         super(name);
     }
 
-    public PrintedContent(String name, String... tokens) {
-        super(name, tokens);
+    public PrintedContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
     }
 
     @Override

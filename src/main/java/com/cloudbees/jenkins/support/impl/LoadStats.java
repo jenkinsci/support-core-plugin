@@ -129,8 +129,8 @@ public class LoadStats extends Component {
             this.image = image;
         }
 
-        public ImageContent(String name, String[] tokens, BufferedImage image) {
-            super(name, tokens);
+        public ImageContent(String name, String[] filterableParameters, BufferedImage image) {
+            super(name, filterableParameters);
             this.image = image;
         }
 
@@ -168,8 +168,8 @@ public class LoadStats extends Component {
         private final long time;
         private final long clock;
 
-        public CsvContent(String name, String[] tokens, LoadStatistics stats, MultiStageTimeSeries.TimeScale scale) {
-            super(name, tokens);
+        public CsvContent(String name, String[] filterableParameters, LoadStatistics stats, MultiStageTimeSeries.TimeScale scale) {
+            super(name, filterableParameters);
 
             time = System.currentTimeMillis();
             clock = scale.tick;
@@ -246,8 +246,8 @@ public class LoadStats extends Component {
             super(name);
         }
 
-        public GnuPlotScript(String name, String... tokens) {
-            super(name, tokens);
+        public GnuPlotScript(String name, String... filterableParameters) {
+            super(name, filterableParameters);
         }
 
         @Override

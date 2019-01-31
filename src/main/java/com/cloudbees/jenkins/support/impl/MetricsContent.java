@@ -32,8 +32,8 @@ public class MetricsContent extends Content {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public MetricsContent(String name, String[] tokens,  MetricRegistry metricsRegistry) {
-        super(name, tokens);
+    public MetricsContent(String name, String[] filterableParameters,  MetricRegistry metricsRegistry) {
+        super(name, filterableParameters);
 
         this.registry = metricsRegistry;
         objectMapper = new ObjectMapper();

@@ -298,7 +298,7 @@ public class SupportPlugin extends Plugin {
                     if (content == null) {
                         continue;
                     }
-                    final String name = getNameFiltered(maybeFilter, content.getName(), content.getTokens());
+                    final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                     entry.setTime(content.getTime());
                     try {
@@ -346,21 +346,21 @@ public class SupportPlugin extends Plugin {
     }
 
     /**
-     * Filter the name of a content depending on the tokens in the name that need to be replaced.
+     * Filter the name of a content depending on the filterableParameters in the name that need to be replaced.
      * @param maybeFilter an Optional with a {@link ContentFilter} or not
      * @param name the name of the content to be filtered
-     * @param tokens tokens in the name to be filtered. If null, no filter takes place to avoid corruption
+     * @param filterableParameters filterableParameters in the name to be filtered. If null, no filter takes place to avoid corruption
      * @return the name filtered
      */
-    private static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] tokens) {
+    private static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] filterableParameters) {
         String filteredName;
 
-        if (tokens != null) {
+        if (filterableParameters != null) {
             // Filter each token or return the token depending on whether the filter is active or not
-            String[] replacedTokens = Arrays.stream(tokens).map(token -> maybeFilter.map(filter -> filter.filter(token)).orElse(token)).toArray(String[]::new);
+            String[] replacedParameters = Arrays.stream(filterableParameters).map(filterableParameter -> maybeFilter.map(filter -> filter.filter(filterableParameter)).orElse(filterableParameter)).toArray(String[]::new);
 
             // Replace each placeholder {0}, {1} in the name, with the replaced token
-            filteredName = MessageFormat.format(name, replacedTokens);
+            filteredName = MessageFormat.format(name, replacedParameters);
         } else {
             // Previous behavior was filter all the name, but it could end up in having a corrupted bundle. So we expect
             // implementors to use the appropriate constructor of Content.

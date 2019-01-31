@@ -38,8 +38,8 @@ public abstract class PrefilteredContent extends Content {
         super(name);
     }
 
-    protected PrefilteredContent(String name, String... tokens) {
-        super(name, tokens);
+    protected PrefilteredContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
     }
 
     /**

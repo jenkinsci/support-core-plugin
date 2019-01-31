@@ -15,8 +15,8 @@ class XmlRedactedSecretFileContent extends FileContent {
         super(name, file);
     }
 
-    public XmlRedactedSecretFileContent(String name, String[] tokens, File file) {
-        super(name, tokens, file);
+    public XmlRedactedSecretFileContent(String name, String[] filterableParameters, File file) {
+        super(name, filterableParameters, file);
     }
 
     @Override

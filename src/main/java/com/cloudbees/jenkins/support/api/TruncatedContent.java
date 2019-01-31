@@ -50,12 +50,12 @@ public abstract class TruncatedContent extends Content {
     this.maxSize = maxSize;
   }
 
-  public TruncatedContent(String name, String... tokens) {
-    this(name, tokens, FileListCapComponent.MAX_FILE_SIZE);
+  public TruncatedContent(String name, String... filterableParameters) {
+    this(name, filterableParameters, FileListCapComponent.MAX_FILE_SIZE);
   }
 
-  public TruncatedContent(String name, String[] tokens, int maxSize) {
-    super(name, tokens);
+  public TruncatedContent(String name, String[] filterableParameters, int maxSize) {
+    super(name, filterableParameters);
     this.maxSize = maxSize;
   }
 

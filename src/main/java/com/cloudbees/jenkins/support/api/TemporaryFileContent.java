@@ -44,8 +44,8 @@ public class TemporaryFileContent extends FileContent {
         f = file;
     }
 
-    public TemporaryFileContent(String name, String[] tokens, File file) {
-        super(name, tokens, file);
+    public TemporaryFileContent(String name, String[] filterableParameters, File file) {
+        super(name, filterableParameters, file);
         f = file;
     }
 

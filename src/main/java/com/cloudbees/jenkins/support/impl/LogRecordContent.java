@@ -26,8 +26,8 @@ public abstract class LogRecordContent extends PrefilteredContent {
         super(name);
     }
 
-    public LogRecordContent(String name, String... tokens) {
-        super(name, tokens);
+    public LogRecordContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
     }
 
     /**

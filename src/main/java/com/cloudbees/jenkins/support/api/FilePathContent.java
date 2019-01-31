@@ -52,8 +52,8 @@ public class FilePathContent extends Content {
         this.file = file;
     }
 
-    public FilePathContent(String name, String[] tokens, FilePath file) {
-        super(name, tokens);
+    public FilePathContent(String name, String[] filterableParameters, FilePath file) {
+        super(name, filterableParameters);
         this.file = file;
     }
 

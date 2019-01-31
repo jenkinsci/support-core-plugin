@@ -43,7 +43,7 @@ public abstract class Content {
     /**
      * Parts of the name to be filtered
      */
-    private String[] tokens;
+    private String[] filterableParameters;
 
 
     /**
@@ -58,7 +58,7 @@ public abstract class Content {
 
     /**
      * Set a name to this content with some filterable parts. The name could have elements with the form {0}, {1} that
-     * will be filtered properly using the tokens. Example: Creating a content with
+     * will be filtered properly using the filterableParameters. Example: Creating a content with
      * {code}new Content("nodes/{0}/file-descriptors.txt", "node") will filter the {0} part of the name with all the
      * declared {@link ContentFilter}.
      * This new constructor avoid having incorrectly filtered elements in the support bundle. For example, when having
@@ -67,11 +67,11 @@ public abstract class Content {
      * The name is rendered using the {@link java.text.MessageFormat#format(String, Object...)} method after the filter.
      *
      * @param name name of the content
-     * @param tokens strings to be filtered in the name
+     * @param filterableParameters strings to be filtered in the name
      */
-    protected Content(String name, String... tokens) {
+    protected Content(String name, String... filterableParameters) {
         this.name = name;
-        this.tokens = tokens;
+        this.filterableParameters = filterableParameters;
     }
 
     public String getName() {
@@ -79,8 +79,8 @@ public abstract class Content {
     }
 
     @CheckForNull
-    public String[] getTokens() {
-        return (tokens == null) ? null : Arrays.copyOf(tokens, tokens.length);
+    public String[] getFilterableParameters() {
+        return (filterableParameters == null) ? null : Arrays.copyOf(filterableParameters, filterableParameters.length);
     }
 
     public abstract void writeTo(OutputStream os) throws IOException;

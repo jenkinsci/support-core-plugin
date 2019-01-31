@@ -44,8 +44,8 @@ public class StringContent extends PrefilteredContent {
         this.value = value;
     }
 
-    public StringContent(String name, String[] filterableNameTokens, String value) {
-        super(name, filterableNameTokens);
+    public StringContent(String name, String[] filterableParameters, String value) {
+        super(name, filterableParameters);
         this.value = value;
     }
 
