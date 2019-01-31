@@ -48,7 +48,7 @@ public abstract class Content {
 
     /**
      * Create a Content with this name. The name is not filtered so this constructor should be used exclusively when
-     * the name is not prone to have sensitive information. If the name of this content is someway dinamically generated
+     * the name is not prone to have sensitive information. If the name of this content is dynamically generated
      * and prone to have sensitive information, use the {@link #Content(String, String...)} constructor.
      * @param name name of the content.
      */
