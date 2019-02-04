@@ -24,15 +24,14 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.cloudbees.jenkins.support.util.WordReplacer;
 import hudson.Extension;
 import hudson.ExtensionList;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-
-import org.apache.commons.lang.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -64,7 +63,7 @@ public class SensitiveContentFilter implements ContentFilter {
             replacementList.add(mapping.getReplacement());
         }
         if (!searchList.isEmpty()) {
-            filtered = StringUtils.replaceEach(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
+            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
         }
 
         return filtered;

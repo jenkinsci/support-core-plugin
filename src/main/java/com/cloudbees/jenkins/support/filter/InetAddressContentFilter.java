@@ -24,9 +24,9 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.cloudbees.jenkins.support.util.WordReplacer;
 import hudson.Extension;
 import hudson.ExtensionList;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -78,7 +78,7 @@ public class InetAddressContentFilter implements ContentFilter {
         }
         String filtered = input;
         if (!searchList.isEmpty()) {
-            filtered = StringUtils.replaceEach(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
+            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
         }
 
         return filtered;

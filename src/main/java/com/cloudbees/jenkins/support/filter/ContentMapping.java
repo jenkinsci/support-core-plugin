@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.cloudbees.jenkins.support.util.WordReplacer;
 import hudson.Functions;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -31,10 +32,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a mapping from some original string to a replacement. Useful both as an individual ContentFilter as well
@@ -49,14 +46,26 @@ public class ContentMapping implements ContentFilter {
     private static final String ALT_SEPARATOR = " » ";
 
     private final String original;
-    private final Pattern pattern;
     private final String replacement;
     private final int hashCode;
 
-    private ContentMapping(@Nonnull String original, @Nonnull Pattern pattern, @Nonnull String replacement) {
+    private final String[] originals;
+    private final String[] replacements;
+
+    private ContentMapping(@Nonnull String original, @Nonnull String replacement) {
         this.original = original;
-        this.pattern = pattern;
         this.replacement = replacement;
+
+        // add variables of the original string to replace, just in case
+        originals = new String[4];
+        originals[0] = original;
+        originals[1] = Functions.escape(original);
+        originals[2] = original.replace("/", ALT_SEPARATOR);
+        originals[3] = Functions.escape(originals[2]);
+
+        // the replacement is the same
+        replacements = new String[] {replacement, replacement, replacement, replacement};
+
         this.hashCode = original.hashCode();
     }
 
@@ -64,17 +73,7 @@ public class ContentMapping implements ContentFilter {
      * Constructs a ContentMapping using an original and replacement value.
      */
     public static ContentMapping of(@Nonnull String original, @Nonnull String replacement) {
-        return new ContentMapping(original, generatePattern(original), replacement);
-    }
-
-
-    private static Pattern generatePattern(String original) {
-        String alternative = original.replace("/", ALT_SEPARATOR);
-        String regex = Stream.of(original, Functions.escape(original), alternative, Functions.escape(alternative))
-                .distinct()
-                .map(Pattern::quote)
-                .collect(joining("|", "\\b(", ")\\b"));
-        return Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        return new ContentMapping(original, /*generatePattern(original),*/ replacement);
     }
 
     /**
@@ -93,7 +92,7 @@ public class ContentMapping implements ContentFilter {
 
     @Override
     public @Nonnull String filter(@Nonnull String input) {
-        return pattern.matcher(input).replaceAll(replacement);
+        return WordReplacer.replaceWordsIgnoreCase(input, originals, replacements);
     }
 
     @Override
