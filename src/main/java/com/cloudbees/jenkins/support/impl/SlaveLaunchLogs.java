@@ -162,7 +162,7 @@ public class SlaveLaunchLogs extends Component{
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {
-                    result.add(new FileContent("nodes/slave/" + s.getName() + "/launchLogs/"+f.getName() , f, FileListCapComponent.MAX_FILE_SIZE));
+                    result.add(new FileContent("nodes/slave/{0}/launchLogs/{1}", new String[]{s.getName(), f.getName()} , f, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
     }

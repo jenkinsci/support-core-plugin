@@ -80,14 +80,14 @@ public class JenkinsLogs extends Component {
     private void addLogRecorders(Container result) {
         for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
             String name = entry.getKey();
-            String entryName = "nodes/master/logs/custom/" + name + ".log";
+            String entryName = "nodes/master/logs/custom/{0}.log"; // name to be filtered in the bundle
             File storedFile = new File(customLogs, name + ".log");
             if (storedFile.isFile()) {
-                result.add(new FileContent(entryName, storedFile));
+                result.add(new FileContent(entryName, new String[]{name}, storedFile));
             } else {
                 // Was not stored for some reason; fine, just load the memory buffer.
                 final LogRecorder recorder = entry.getValue();
-                result.add(new LogRecordContent(entryName) {
+                result.add(new LogRecordContent(entryName, new String[]{name}) {
                     @Override
                     public Iterable<LogRecord> getLogRecords() {
                         return recorder.getLogRecords();
@@ -108,14 +108,14 @@ public class JenkinsLogs extends Component {
         File[] files = jenkins.getRootDir().listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent("other-logs/{0}", new String[]{f.getName()}, f));
             }
         }
         File logs = getLogsRoot();
         files = logs.listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent("other-logs/{0}", new String[]{f.getName()}, f));
             }
         }
 
@@ -123,7 +123,7 @@ public class JenkinsLogs extends Component {
         files = taskLogs.listFiles(ROTATED_LOGFILE_FILTER);
         if (files != null) {
             for (File f : files) {
-                result.add(new FileContent("other-logs/" + f.getName(), f));
+                result.add(new FileContent("other-logs/{0}", new String[]{f.getName()}, f));
             }
         }
     }
@@ -189,7 +189,7 @@ public class JenkinsLogs extends Component {
 
         // log records written to the disk
         for (File file : julLogFiles){
-            result.add(new FileContent("nodes/master/logs/" + file.getName(), file));
+            result.add(new FileContent("nodes/master/logs/{0}", new String[]{file.getName()}, file));
         }
     }
 

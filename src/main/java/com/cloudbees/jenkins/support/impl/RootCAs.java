@@ -97,7 +97,7 @@ public class RootCAs extends Component {
       name = "slave/" + node.getNodeName();
     }
     container.add(
-            new Content("nodes/" + name + "/RootCA.txt") {
+            new Content("nodes/{0}/RootCA.txt", name) {
               @Override
               public void writeTo(OutputStream os) throws IOException {
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));

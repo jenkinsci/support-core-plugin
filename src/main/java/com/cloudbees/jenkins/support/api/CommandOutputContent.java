@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -14,7 +15,6 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Content of a command output. You can only instantiate this content with
@@ -26,6 +26,10 @@ public class CommandOutputContent extends StringContent {
 
     private CommandOutputContent(String name, String value) {
         super(name, value);
+    }
+
+    private CommandOutputContent(String name, String[] filterableParameters, String value) {
+        super(name, filterableParameters, value);
     }
 
     public static class CommandLauncher extends MasterToSlaveCallable<String, RuntimeException> {
@@ -54,6 +58,10 @@ public class CommandOutputContent extends StringContent {
     }
 
     public static CommandOutputContent runOnNode(Node node, String name, String... command) {
+        return runOnNode(node, name, null, command);
+    }
+
+    public static CommandOutputContent runOnNode(Node node, String name, String[] filterableParameters, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         VirtualChannel chan = node.getChannel();
@@ -75,10 +83,14 @@ public class CommandOutputContent extends StringContent {
             }
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, filterableParameters, content);
     }
 
     public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String... command) {
+        return runOnNodeAndCache(cache, node, name, null, command);
+    }
+
+    public static CommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String[] filterableParameters, String... command) {
         String content = "Exception occurred while retrieving command content";
 
         try {
@@ -91,6 +103,6 @@ public class CommandOutputContent extends StringContent {
             LOGGER.log(lr);
         }
 
-        return new CommandOutputContent(name, content);
+        return new CommandOutputContent(name, filterableParameters, content);
     }
 }

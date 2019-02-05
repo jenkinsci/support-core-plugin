@@ -69,7 +69,7 @@ public final class SlaveCommandStatistics extends Component {
 
     @Override
     public void addContents(Container container) {
-        statistics.forEach((name, stats) -> container.add(new PrintedContent("nodes/slave/" + name + "/command-stats.md") {
+        statistics.forEach((name, stats) -> container.add(new PrintedContent("nodes/slave/{0}/command-stats.md", name) {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 stats.print(out);

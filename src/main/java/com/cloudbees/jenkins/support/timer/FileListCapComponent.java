@@ -37,7 +37,7 @@ public abstract class FileListCapComponent extends Component {
             final Collection<File> files = FileUtils.listFiles(
                     fileListCap.getFolder(), new String[] {"txt"}, false);
             for (File f : files) {
-                container.add(new FileContent(fileListCap.getFolder().getName() + "/" + f.getName(), f, MAX_FILE_SIZE));
+                container.add(new FileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
             }
         }
     }

@@ -52,6 +52,11 @@ public class FilePathContent extends Content {
         this.file = file;
     }
 
+    public FilePathContent(String name, String[] filterableParameters, FilePath file) {
+        super(name, filterableParameters);
+        this.file = file;
+    }
+
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {

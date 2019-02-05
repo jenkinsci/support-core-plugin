@@ -45,6 +45,10 @@ public abstract class PrintedContent extends GenerateOnDemandContent {
         super(name);
     }
 
+    public PrintedContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
+    }
+
     @Override
     public final void writeTo(OutputStream os) throws IOException {
         final PrintWriter writer = getWriter(os);

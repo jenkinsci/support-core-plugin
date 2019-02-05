@@ -49,7 +49,7 @@ public class DumpExportTable extends Component {
   public void addContents(@NonNull Container result) {
     for (final Node node : Jenkins.getInstance().getNodes()) {
       result.add(
-        new TruncatedContent("nodes/slave/" + node.getNodeName() + "/exportTable.txt") {
+        new TruncatedContent("nodes/slave/{0}/exportTable.txt", node.getNodeName()) {
           @Override
           protected void printTo(PrintWriter out) throws IOException {
             try {

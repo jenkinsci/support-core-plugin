@@ -133,7 +133,7 @@ public class GCLogs extends Component {
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
             LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + gcLog.getName(), gcLog));
+            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
         }
     }
 

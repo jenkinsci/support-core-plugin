@@ -99,10 +99,10 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
     @Override
     protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
         container.add(
-                CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/" + name + "/sysctl.txt", "/bin/sh", "-c", "sysctl -a"));
-        container.add(CommandOutputContent.runOnNode(node, "nodes/" + name + "/dmesg.txt", "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
-        container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/" + name + "/userid.txt", "/bin/sh", "-c", "id -a"));
-        container.add(new StringContent("nodes/" + name + "/dmi.txt", getDmiInfo(node)));
+                CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[]{name},  "/bin/sh", "-c", "sysctl -a"));
+        container.add(CommandOutputContent.runOnNode(node, "nodes/{0}/dmesg.txt", new String[]{name}, "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
+        container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/{0}/userid.txt", new String[]{name}, "/bin/sh", "-c", "id -a"));
+        container.add(new StringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)));
     }
 
     public String getDmiInfo(Node node) {

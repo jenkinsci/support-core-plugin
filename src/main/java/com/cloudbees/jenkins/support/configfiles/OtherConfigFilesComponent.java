@@ -76,7 +76,7 @@ public class OtherConfigFilesComponent extends Component {
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
-                        container.add(new XmlRedactedSecretFileContent("jenkins-root-configuration-files/" + configFile.getName(), configFile));
+                        container.add(new XmlRedactedSecretFileContent("jenkins-root-configuration-files/{0}", new String[] {configFile.getName()}, configFile));
                     }
                 }
             } else {
