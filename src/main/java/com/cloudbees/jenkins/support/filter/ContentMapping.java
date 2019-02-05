@@ -73,7 +73,7 @@ public class ContentMapping implements ContentFilter {
      * Constructs a ContentMapping using an original and replacement value.
      */
     public static ContentMapping of(@Nonnull String original, @Nonnull String replacement) {
-        return new ContentMapping(original, /*generatePattern(original),*/ replacement);
+        return new ContentMapping(original, replacement);
     }
 
     /**

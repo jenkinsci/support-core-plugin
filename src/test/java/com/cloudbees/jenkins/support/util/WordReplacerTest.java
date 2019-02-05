@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
 import hudson.Functions;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -62,8 +63,8 @@ public class WordReplacerTest {
         }
     }
 
-   // @Ignore("It was useful to make the decision to move out of Reg Exp. As the implementation of the Content Mapping is" +
-   //         "now WordReplacer, it has no sense to test. We keep it here for future cases.")
+   @Ignore("It was useful to make the decision to move out of Reg Exp. As the implementation of the Content Mapping is" +
+            "now WordReplacer, it has no sense to test. We keep it here for future cases.")
     @Test
     public void performanceTest() {
         // Create a lot of word and replaces (each character letter or digit. Aprox: 4070)
@@ -104,8 +105,8 @@ public class WordReplacerTest {
         // Filter using WordReplacer in the same way as ContentMapping
         for (String line: text) {
             String resultWR = line;
-            for(int i = 0; i < tokens.length; i++) {
-                resultWR = WordReplacer.replaceWordsIgnoreCase(resultWR, tokens[i][0], tokens[i][1]);
+            for (String[][] token : tokens) {
+                resultWR = WordReplacer.replaceWordsIgnoreCase(resultWR, token[0], token[1]);
             }
         }
         c.markFromPrevious("WordReplacer");
