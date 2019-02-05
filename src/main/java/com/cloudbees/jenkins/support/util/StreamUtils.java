@@ -25,18 +25,9 @@
 package com.cloudbees.jenkins.support.util;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.BulkChange;
-import hudson.XmlFile;
-import hudson.model.Saveable;
-import hudson.model.listeners.SaveableListener;
-import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
