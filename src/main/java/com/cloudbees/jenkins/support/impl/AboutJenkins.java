@@ -998,7 +998,7 @@ public class AboutJenkins extends Component {
     private class NodeChecksumsContent extends PrintedContent {
         private final Node node;
         NodeChecksumsContent(Node node) {
-            super("nodes/slave/" + node.getNodeName() + "/checksums.md5");
+            super("nodes/slave/{0}/checksums.md5", node.getNodeName());
             this.node = node;
         }
         @Override protected void printTo(PrintWriter out) throws IOException {

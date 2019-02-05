@@ -66,7 +66,7 @@ public class EnvironmentVariables extends Component {
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(
-                    new PrintedContent("nodes/slave/" + node.getNodeName() + "/environment.txt") {
+                    new PrintedContent("nodes/slave/{0}/environment.txt", node.getNodeName()) {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {

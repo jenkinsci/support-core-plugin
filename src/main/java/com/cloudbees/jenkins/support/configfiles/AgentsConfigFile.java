@@ -69,7 +69,7 @@ public class AgentsConfigFile extends Component {
         }
         for(File agentDir : agentDirs) {
             File config = new File(agentDir, "config.xml");
-            container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config));
+            container.add(new XmlRedactedSecretFileContent("nodes/slave/{0}/config.xml", new String[]{agentDir.getName()}, config));
         }
     }
 

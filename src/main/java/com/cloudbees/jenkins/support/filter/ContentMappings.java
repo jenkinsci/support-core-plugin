@@ -98,6 +98,9 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         // JENKINS-54688
         stopWords.addAll(getAllowedOSName());
 
+        // Add single character words
+        stopWords.addAll(getAllAsciiCharacters());
+
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
                 : proxy.mappings.stream()
@@ -110,9 +113,26 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
-                "everyone", "system", "admin",
-                Jenkins.VERSION
+                "everyone", "system", "admin", Jenkins.VERSION
         ));
+    }
+
+    /**
+     * To avoid corrupt the content of the files in the bundle just in case we have an object name as 'a' or '.', we
+     * avoid replacing one single characteres (ascii codes actually). A one single character in other languages could
+     * have a meaning, so we remain replacing them. Example: 日 (Sun)
+     * @return Set of characters in ascii code chart
+     */
+    private static Set<String> getAllAsciiCharacters() {
+        final int SPACE = ' '; //20
+        final int TILDE = '~'; //126
+        Set<String> singleChars = new HashSet<>(TILDE - SPACE + 1);
+
+        for (char i = SPACE; i <= TILDE; i++) {
+            singleChars.add(Character.toString(i));
+        }
+
+        return singleChars;
     }
 
     private static Set<String> getAllowedOSName() {

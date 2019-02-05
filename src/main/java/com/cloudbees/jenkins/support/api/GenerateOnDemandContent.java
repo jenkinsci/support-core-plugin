@@ -37,6 +37,9 @@ public abstract class GenerateOnDemandContent extends Content {
         super(name);
     }
 
+    public GenerateOnDemandContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
+    }
     public abstract void writeTo(OutputStream os) throws IOException;
 
 }

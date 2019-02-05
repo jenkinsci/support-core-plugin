@@ -38,6 +38,10 @@ public abstract class PrefilteredContent extends Content {
         super(name);
     }
 
+    protected PrefilteredContent(String name, String... filterableParameters) {
+        super(name, filterableParameters);
+    }
+
     /**
      * Write the component in the bundle filtering the content
      * @param os OutputStream where write the content

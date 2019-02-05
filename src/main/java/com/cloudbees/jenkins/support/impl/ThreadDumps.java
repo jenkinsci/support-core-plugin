@@ -105,7 +105,7 @@ public class ThreadDumps extends Component {
                 SupportLogFormatter.printStackTrace(e, out);
                 out.close();
                 result.add(
-                        new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", sw.toString()));
+                        new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()));
                 continue;
             }
             if (threadDump == null) {
@@ -114,10 +114,10 @@ public class ThreadDumps extends Component {
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/" + node.getNodeName() + "/thread-dump.txt", buf.toString()));
+                result.add(new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()));
             } else {
                 result.add(
-                        new Content("nodes/slave/" + node.getNodeName() + "/thread-dump.txt") {
+                        new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
                             @Override
                             public void writeTo(OutputStream os) throws IOException {
                                 PrintWriter out =

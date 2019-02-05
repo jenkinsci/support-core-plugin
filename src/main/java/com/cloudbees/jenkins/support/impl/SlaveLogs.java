@@ -96,7 +96,7 @@ public class SlaveLogs extends Component {
         for (final Node node : Jenkins.get().getNodes()) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
-                        new LogRecordContent("nodes/slave/" + node.getNodeName() + "/jenkins.log") {
+                        new LogRecordContent("nodes/slave/{0}/jenkins.log", node.getNodeName()) {
                             @Override
                             public Iterable<LogRecord> getLogRecords() throws IOException {
                                 Computer computer = node.toComputer();
@@ -169,7 +169,7 @@ public class SlaveLogs extends Component {
                         final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
                         for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                             result.add(new FileContent(
-                                    "nodes/slave/" + node.getNodeName() + "/logs/" + entry.getKey(),
+                                    "nodes/slave/{0}/logs/{1}", new String[]{node.getNodeName(), entry.getKey()},
                                     entry.getValue())
                             );
                         }
@@ -184,7 +184,7 @@ public class SlaveLogs extends Component {
         // but added nonetheless just in case.
         //
         // should be ignorable.
-        result.add(new LogRecordContent("nodes/slave/" + node.getNodeName() + "/logs/all_memory_buffer.log") {
+        result.add(new LogRecordContent("nodes/slave/{0}/logs/all_memory_buffer.log", node.getNodeName()) {
             @Override
             public Iterable<LogRecord> getLogRecords() throws IOException {
                 try {
@@ -209,7 +209,7 @@ public class SlaveLogs extends Component {
                     final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
-                                "nodes/slave/" + node.getNodeName() + "/logs/winsw/" + entry.getKey(),
+                                "nodes/slave/{0}/logs/winsw/{1}", new String[] {node.getNodeName(), entry.getKey()},
                                 entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
                         );
                     }
