@@ -152,7 +152,7 @@ public class SupportPlugin extends Plugin {
     private SupportProvider supportProvider;
 
     /**
-     * class names of {@link Component}
+     * class latestAddedContents of {@link Component}
      */
     private Set<String> excludedComponents;
 
@@ -214,7 +214,7 @@ public class SupportPlugin extends Plugin {
     /**
      * Sets the ids of the components to be excluded.
      *
-     * @param excludedComponents Component Ids (by default class names) to exclude.
+     * @param excludedComponents Component Ids (by default class latestAddedContents) to exclude.
      * @throws IOException if an error occurs while saving the configuration.
      * @see Component#getId
      */
@@ -282,13 +282,18 @@ public class SupportPlugin extends Plugin {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
-        appendManifestHeader(manifest);
-        List<Content> contents = appendManifestContents(manifest, errorWriter, components);
-        contents.add(new StringContent("manifest.md", manifest.toString()));
+
         try {
             try (BulkChange change = new BulkChange(ContentMappings.get());
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 Optional<ContentFilter> maybeFilter = getContentFilter();
+
+                // Generate the content of the manifest.md going trough all the components which will be included. It
+                // also returns the contents to include.
+                appendManifestHeader(manifest);
+                List<Content> contents = appendManifestContents(manifest, errorWriter, components, maybeFilter);
+                contents.add(new StringContent("manifest.md", manifest.toString()));
+
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
@@ -402,14 +407,25 @@ public class SupportPlugin extends Plugin {
                 .append("\n\n");
     }
 
-    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<Component> components) {
+    /**
+     * Populate the manifest with the content names which are going to be added to the bundle. In addition, it returns
+     * the list of content added. To be able to add the names in the manifest.md properly filtered, the current set of
+     * filters are specified.
+     * @param manifest where to append the names of the contents added to the bundle
+     * @param errors where to print error messages
+     * @param components components to add their contents to the bundle
+     * @param maybeFilter filter to be used when writing the content names
+     * @return the list of contents whose names has been added to the manifest and their content will be added to the
+     * bundle.
+     */
+    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<Component> components, Optional<ContentFilter> maybeFilter) {
         manifest.append("Requested components:\n\n");
-        ContentContainer contents = new ContentContainer();
+        ContentContainer contentsContainer = new ContentContainer(maybeFilter);
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
-                component.addContents(contents);
-                Set<String> names = contents.getLatestNames();
+                component.addContents(contentsContainer);
+                Set<String> names = contentsContainer.getLatestNames();
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
                 }
@@ -430,18 +446,25 @@ public class SupportPlugin extends Plugin {
                 errors.println();
             }
         }
-        return contents.contents;
+        return contentsContainer.contents;
     }
 
     private static class ContentContainer extends Container {
         private final List<Content> contents = new ArrayList<>();
         private final Set<String> names = new TreeSet<>();
 
+        //The filter to return the names filtered
+        private final Optional<ContentFilter> maybeFilter;
+
+        public ContentContainer(Optional<ContentFilter> maybeFilter) {
+            this.maybeFilter = maybeFilter;
+        }
+
         @Override
         public void add(Content content) {
             if (content != null) {
                 contents.add(content);
-                names.add(content.getName());
+                names.add(getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters()));
             }
         }
 
@@ -450,6 +473,7 @@ public class SupportPlugin extends Plugin {
             names.clear();
             return copy;
         }
+
     }
 
     public List<LogRecord> getAllLogRecords() {
