@@ -95,6 +95,12 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             stopWords.add(Jenkins.VERSION);
         }
 
+        // JENKINS-54688
+        stopWords.addAll(getAllowedOSName());
+
+        // Add single character words
+        stopWords.addAll(getAllAsciiCharacters());
+
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
                 : proxy.mappings.stream()
@@ -107,23 +113,13 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * @return the stop words to avoid being replaced.
      */
     private static Set<String> getDefaultStopWords() {
-        Set<String> defaultStopWords = new HashSet<>(Arrays.asList(
+        return new HashSet<>(Arrays.asList(
                 "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
-                "everyone", "system", "admin", Jenkins.VERSION
+                "everyone", "system", "admin",
+                Jenkins.VERSION
         ));
-
-        // We add here all the stop words we want, this method is invoked en several places, so it's better to gather
-        // all the stop words in this method.
-
-        // JENKINS-54688
-        defaultStopWords.addAll(getAllowedOSName());
-
-        // Add single character words
-        defaultStopWords.addAll(getAllAsciiCharacters());
-
-        return defaultStopWords;
     }
 
     /**
