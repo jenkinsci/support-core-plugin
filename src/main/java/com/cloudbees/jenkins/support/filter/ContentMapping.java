@@ -31,6 +31,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -56,17 +58,28 @@ public class ContentMapping implements ContentFilter {
         this.original = original;
         this.replacement = replacement;
 
-        // add variables of the original string to replace, just in case
-        originals = new String[4];
-        originals[0] = original;
-        originals[1] = Functions.escape(original);
-        originals[2] = original.replace("/", ALT_SEPARATOR);
-        originals[3] = Functions.escape(originals[2]);
+        // add flavors of the original string to replace, avoid add when equals
+        String slashChangedInOriginal = original.replace("/", ALT_SEPARATOR);
+        List<String> originalsList = new ArrayList<>(4);
+        originalsList.add(original);
+        addIfNotExist(originalsList, Functions.escape(original));
+        addIfNotExist(originalsList, slashChangedInOriginal);
+        addIfNotExist(originalsList, Functions.escape(slashChangedInOriginal));
+        originals = originalsList.toArray(new String[0]);
 
-        // the replacement is the same
-        replacements = new String[] {replacement, replacement, replacement, replacement};
+        // create the replacement array with the same length as the resulting originals
+        replacements = new String[originals.length];
+        for(int i = 0; i < replacements.length; i++) {
+            replacements[i] = replacement;
+        }
 
         this.hashCode = original.hashCode();
+    }
+
+    private void addIfNotExist(List<String> list, String element) {
+        if (!list.contains(element)) {
+            list.add(element);
+        }
     }
 
     /**
