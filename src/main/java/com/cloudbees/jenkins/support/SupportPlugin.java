@@ -152,7 +152,7 @@ public class SupportPlugin extends Plugin {
     private SupportProvider supportProvider;
 
     /**
-     * class latestAddedContents of {@link Component}
+     * class names of {@link Component}
      */
     private Set<String> excludedComponents;
 
@@ -214,7 +214,7 @@ public class SupportPlugin extends Plugin {
     /**
      * Sets the ids of the components to be excluded.
      *
-     * @param excludedComponents Component Ids (by default class latestAddedContents) to exclude.
+     * @param excludedComponents Component Ids (by default class names) to exclude.
      * @throws IOException if an error occurs while saving the configuration.
      * @see Component#getId
      */
@@ -289,7 +289,7 @@ public class SupportPlugin extends Plugin {
                 Optional<ContentFilter> maybeFilter = getContentFilter();
 
                 // Generate the content of the manifest.md going trough all the components which will be included. It
-                // also returns the contents to include.
+                // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
                 List<Content> contents = appendManifestContents(manifest, errorWriter, components, maybeFilter);
                 contents.add(new StringContent("manifest.md", manifest.toString()));
@@ -456,6 +456,10 @@ public class SupportPlugin extends Plugin {
         //The filter to return the names filtered
         private final Optional<ContentFilter> maybeFilter;
 
+        /**
+         * We need the filter to be able to filter the contents written to the manifest
+         * @param maybeFilter filter to use when writing the name of the contents
+         */
         public ContentContainer(Optional<ContentFilter> maybeFilter) {
             this.maybeFilter = maybeFilter;
         }
