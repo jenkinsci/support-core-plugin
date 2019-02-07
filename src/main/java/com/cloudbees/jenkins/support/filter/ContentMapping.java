@@ -31,9 +31,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Represents a mapping from some original string to a replacement. Useful both as an individual ContentFilter as well
@@ -60,12 +60,12 @@ public class ContentMapping implements ContentFilter {
 
         // add flavors of the original string to replace, avoid add when equals
         String slashChangedInOriginal = original.replace("/", ALT_SEPARATOR);
-        List<String> originalsList = new ArrayList<>(4);
-        originalsList.add(original);
-        addIfNotExist(originalsList, Functions.escape(original));
-        addIfNotExist(originalsList, slashChangedInOriginal);
-        addIfNotExist(originalsList, Functions.escape(slashChangedInOriginal));
-        originals = originalsList.toArray(new String[0]);
+        Set<String> originalsSet = new HashSet<>(4);
+        originalsSet.add(original);
+        originalsSet.add(Functions.escape(original));
+        originalsSet.add(slashChangedInOriginal);
+        originalsSet.add(Functions.escape(slashChangedInOriginal));
+        originals = originalsSet.toArray(new String[0]);
 
         // create the replacement array with the same length as the resulting originals
         replacements = new String[originals.length];
@@ -74,12 +74,6 @@ public class ContentMapping implements ContentFilter {
         }
 
         this.hashCode = original.hashCode();
-    }
-
-    private void addIfNotExist(List<String> list, String element) {
-        if (!list.contains(element)) {
-            list.add(element);
-        }
     }
 
     /**
