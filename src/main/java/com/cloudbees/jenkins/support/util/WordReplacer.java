@@ -38,7 +38,7 @@ public class WordReplacer {
      * @param replaces the new words to use
      */
     public static void replaceWords(StringBuilder input, String[] words, String[] replaces) {
-        replaceWordsIgnoreCase(input, words, replaces, false);
+        replaceWords(input, words, replaces, false);
     }
 
     /**
@@ -48,11 +48,11 @@ public class WordReplacer {
      * @param replaces the new words to use
      */
     public static void replaceWordsIgnoreCase(StringBuilder input, String[] words, String[] replaces) {
-        replaceWordsIgnoreCase(input, words, replaces, true);
+        replaceWords(input, words, replaces, true);
     }
 
     // To avoid repeat this code above
-    private static void replaceWordsIgnoreCase(StringBuilder input, String[] words, String[] replaces, boolean ignoreCase) {
+    private static void replaceWords(StringBuilder input, String[] words, String[] replaces, boolean ignoreCase) {
         if (input == null || input.length()==0 || words == null ||
                 words.length == 0 || replaces == null || replaces.length == 0) {
             return;
@@ -64,7 +64,7 @@ public class WordReplacer {
         }
 
         for(int i = 0; i < words.length; i++) {
-            replaceWordIgnoreCase(input, words[i], replaces[i]);
+            replaceWord(input, words[i], replaces[i], ignoreCase);
         }
     }
 
@@ -76,7 +76,7 @@ public class WordReplacer {
      * @param word the word to replace
      * @param replace the new text to use
      */
-    public String replaceWord(String input, String word, String replace) {
+    public static String replaceWord(String input, String word, String replace) {
         StringBuilder sb = new StringBuilder(input);
         replaceWord(sb, word, replace);
         return sb.toString();
@@ -90,7 +90,7 @@ public class WordReplacer {
      * @param word the word to replace
      * @param replace the new text to use
      */
-    public String replaceWordIgnoreCase(String input, String word, String replace) {
+    public static String replaceWordIgnoreCase(String input, String word, String replace) {
         StringBuilder sb = new StringBuilder(input);
         replaceWordIgnoreCase(sb, word, replace);
         return sb.toString();
@@ -115,17 +115,20 @@ public class WordReplacer {
 
     // Main method
     private static void replaceWord(StringBuilder input, String word, String replace, boolean ignoreCase) {
-        // The string where we look for
+        // The string where we look for (lower case if ignoreCase)
         StringBuilder workInput;
         // The string to find (lower case if ignoreCase)
-        String workWord = word;
+        String workWord;
 
         // Use the lowercase versions to compare, but replace in the original input
         if (ignoreCase) {
             workInput = new StringBuilder(input.toString().toLowerCase(Locale.ENGLISH));
             workWord = word.toLowerCase(Locale.ENGLISH);
         } else {
+            // Creates a StringBuilder to work with based in the input, we don't touch the input, to do the
+            // replaces there. So we use a new StringBuilder, not an assignment.
             workInput = new StringBuilder(input);
+            workWord = word;
         }
 
         int pos = 0;

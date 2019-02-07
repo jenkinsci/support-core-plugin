@@ -63,7 +63,7 @@ public class WordReplacerTest {
         }
     }
 
-   @Ignore("It was useful to make the decision to move out of Reg Exp. As the implementation of the Content Mapping is" +
+    @Ignore("It was useful to make the decision to move out of Reg Exp. As the implementation of the Content Mapping is" +
             "now WordReplacer, it has no sense to test. We keep it here for future cases.")
     @Test
     public void performanceTest() {
@@ -115,6 +115,42 @@ public class WordReplacerTest {
         System.out.println(c.printMeasure("WordReplacer"));
         Assert.assertTrue(c.getMeasure("ContentMapping#filter") > c.getMeasure("WordReplacer"));
 
+    }
+
+    /**
+     * Basic case replacements tests
+     */
+    @Test
+    public void caseReplacementsTest() {
+        String[] originals = new String[]{"a", "b", "c"};
+        String[] replaces  = new String[]{"1", "2", "3"};
+        String input = "a A b,B.c:C abc ABC ignored";
+
+        // Test string replacements with and without ignoring the case
+        Assert.assertEquals("1 A 2,B.3:C abc ABC ignored", WordReplacer.replaceWords(input, originals, replaces));
+        Assert.assertEquals("1 1 2,2.3:3 abc ABC ignored", WordReplacer.replaceWordsIgnoreCase(input, originals, replaces));
+
+        // Test string builder replacements
+        StringBuilder inputSB = new StringBuilder(input);
+        WordReplacer.replaceWords(inputSB, originals, replaces);
+        Assert.assertEquals("1 A 2,B.3:C abc ABC ignored", inputSB.toString());
+
+        inputSB = new StringBuilder(input);
+        WordReplacer.replaceWordsIgnoreCase(inputSB, originals, replaces);
+        Assert.assertEquals("1 1 2,2.3:3 abc ABC ignored", inputSB.toString());
+
+        // Test string replacement (one) with and without ignoring the case
+        Assert.assertEquals("1 A b,B.c:C abc ABC ignored", WordReplacer.replaceWord(input, originals[0], replaces[0]));
+        Assert.assertEquals("1 1 b,B.c:C abc ABC ignored", WordReplacer.replaceWordIgnoreCase(input, originals[0], replaces[0]));
+
+        // Test string builder replacement (one)
+        inputSB = new StringBuilder(input);
+        WordReplacer.replaceWord(inputSB, originals[0], replaces[0]);
+        Assert.assertEquals("1 A b,B.c:C abc ABC ignored", inputSB.toString());
+
+        inputSB = new StringBuilder(input);
+        WordReplacer.replaceWordIgnoreCase(inputSB, originals[0], replaces[0]);
+        Assert.assertEquals("1 1 b,B.c:C abc ABC ignored", inputSB.toString());
     }
 
     private List<String> generateFakeListString(int lines) {
