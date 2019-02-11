@@ -119,14 +119,18 @@ public class FileContent extends PrefilteredContent {
             if (maxSize == -1) {
                 for (String s : Files.readAllLines(file.toPath())) {
                     String filtered = filter.filter(s);
-                    IOUtils.write(filtered, os);
+                    IOUtils.write(filtered, os, ENCODING);
+                    // The new line
+                    IOUtils.write("\n", os, ENCODING);
                 }
             } else {
                 try (TruncatedFileReader reader = new TruncatedFileReader(file, maxSize)) {
                     String s;
                     while ((s = reader.readLine()) != null) {
                         String filtered = filter.filter(s);
-                        IOUtils.write(filtered, os);
+                        IOUtils.write(filtered, os, ENCODING);
+                        // The new line
+                        IOUtils.write("\n", os, ENCODING);
                     }
                 }
             }
@@ -260,7 +264,7 @@ public class FileContent extends PrefilteredContent {
             len -= length;
 
             byte[] dest = new byte[toRead];
-            System.arraycopy(line.getBytes(ENCODING), 0, new byte[toRead], 0, toRead);
+            System.arraycopy(line.getBytes(ENCODING), 0, dest, 0, toRead);
 
             return new String(dest, ENCODING);
         }

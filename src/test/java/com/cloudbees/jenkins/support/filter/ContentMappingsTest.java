@@ -28,6 +28,7 @@ import jenkins.model.Jenkins;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -107,6 +108,49 @@ public class ContentMappingsTest {
         });
         rr.then(r -> {
             assertThat(ContentMappings.get().getMappings(), hasEntry(mapping.getOriginal(), mapping.getReplacement()));
+        });
+    }
+
+    @Test
+    @Ignore("Bug to be resolved. Elements removed aren't removed from the persisted mapping (ContentMappings.xml")
+    public void contentMappingsRemovedSerialized() {
+        //To be final and reuse in the steps
+        StringBuilder jobReplacement = new StringBuilder();
+
+        // Create a project and check its mapping
+        rr.then(r -> {
+            //Create a project
+            r.createFreeStyleProject("ShortName");
+            ContentFilter.ALL.reload();
+
+            //Store their replacements
+            ContentMappings mappings = ContentMappings.get();
+            jobReplacement.append(mappings.getMappings().get("ShortName"));
+
+            //Check if the mapping exists
+            assertThat(mappings.getMappings(), hasEntry("ShortName", jobReplacement.toString()));
+        });
+
+        // Mapping persisted after restart and remove the project
+        rr.then(r -> {
+            ContentMappings mappings = ContentMappings.get();
+
+            //Check if the mapping exists after restart
+            assertThat(mappings.getMappings(), hasEntry("ShortName", jobReplacement.toString()));
+
+            //Remove the project
+            r.jenkins.remove(r.jenkins.getItem("ShortName"));
+
+            //Run the getMappingOrCreate of every mapping
+            SensitiveContentFilter.get().reload();
+        });
+
+        // Mapping removed after restart
+        rr.then(r -> {
+            ContentMappings mappings = ContentMappings.get();
+
+            //Check if the mapping exists after restart
+            assertThat("The mapping of a removed project shouldn't persist", mappings.getMappings(), not(hasEntry("ShortName", jobReplacement.toString())));
         });
     }
 

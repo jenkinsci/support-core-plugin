@@ -108,6 +108,10 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                     .collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
     }
 
+    /**
+     * Get the stop words by default
+     * @return the stop words to avoid being replaced.
+     */
     private static Set<String> getDefaultStopWords() {
         return new HashSet<>(Arrays.asList(
                 "jenkins", "node", "master", "computer",
@@ -118,8 +122,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     }
 
     /**
-     * To avoid corrupt the content of the files in the bundle just in case we have an object name as 'a' or '.', we
-     * avoid replacing one single characteres (ascii codes actually). A one single character in other languages could
+     * To avoid corrupting the content of the files in the bundle just in case we have an object name as 'a' or '.', we
+     * avoid replacing one single character (ascii codes actually). A one single character in other languages could
      * have a meaning, so we remain replacing them. Example: 日 (Sun)
      * @return Set of characters in ascii code chart
      */
