@@ -153,6 +153,20 @@ public class WordReplacerTest {
         Assert.assertEquals("1 1 b,B.c:C abc ABC ignored", inputSB.toString());
     }
 
+    @Test
+    public void indexOutOfBoundsExceptionTest() {
+        String input = "input one input";
+        String[] words = new String[]{   "input",   "one"};
+        String[] replaces = new String[]{"", ""};
+
+        String result = "  ";
+
+        String replaced = WordReplacer.replaceWords(input, words, replaces);
+
+        Assert.assertEquals(result, replaced);
+    }
+
+
     private List<String> generateFakeListString(int lines) {
         Assert.assertTrue(lines < 1001);
         return Stream.generate(() -> FilteredOutputStreamTest.FAKE_TEXT).limit(lines).collect(Collectors.toList());
