@@ -154,12 +154,12 @@ public class WordReplacerTest {
     }
 
     @Test
-    public void indexOutOfBoundsExceptionTest() {
+    public void replacementByShorterWordTest() {
         String input = "input one input";
         String[] words = new String[]{   "input",   "one"};
-        String[] replaces = new String[]{"", ""};
+        String[] replaces = new String[]{"i", "o"};
 
-        String result = "  ";
+        String result = "i o i";
 
         String replaced = WordReplacer.replaceWords(input, words, replaces);
 
