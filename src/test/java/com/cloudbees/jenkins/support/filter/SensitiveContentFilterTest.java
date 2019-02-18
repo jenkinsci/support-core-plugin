@@ -45,21 +45,23 @@ public class SensitiveContentFilterTest {
     @Test
     public void anonymizeSlavesAndLabels() throws Exception {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
-        jenkins.createSlave("foo", "bar", null);
-        jenkins.createSlave("jar", "war", null);
+        // using foo, bar, jar and war could raise flaky test failures. It happened to me when
+        // bar was changed by label_barrier :-O So we use stranger words to avoid this test to be flaky
+        jenkins.createSlave("foostrange", "barstrange", null);
+        jenkins.createSlave("jarstrange", "warstrange", null);
         filter.reload();
 
-        String foo = filter.filter("foo");
-        assertThat(foo).startsWith("computer_").doesNotContain("foo");
+        String foo = filter.filter("foostrange");
+        assertThat(foo).startsWith("computer_").doesNotContain("foostrange");
 
-        String bar = filter.filter("bar");
-        assertThat(bar).startsWith("label_").doesNotContain("bar");
+        String bar = filter.filter("barstrange");
+        assertThat(bar).startsWith("label_").doesNotContain("barstrange");
 
-        String jar = filter.filter("jar");
-        assertThat(jar).startsWith("computer_").doesNotContain("jar");
+        String jar = filter.filter("jarstrange");
+        assertThat(jar).startsWith("computer_").doesNotContain("jarstrange");
 
-        String war = filter.filter("war");
-        assertThat(war).startsWith("label_").doesNotContain("war");
+        String war = filter.filter("warstrange");
+        assertThat(war).startsWith("label_").doesNotContain("warstrange");
     }
 
     @Issue("JENKINS-21670")

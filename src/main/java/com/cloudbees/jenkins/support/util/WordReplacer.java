@@ -60,7 +60,7 @@ public class WordReplacer {
 
         // the same number of word to replace and replaces to use
         if (words.length != replaces.length) {
-            throw new IllegalArgumentException(String.format("Words (%d) and replaces (%d) lenghts should be equals", words.length, replaces.length));
+            throw new IllegalArgumentException(String.format("Words (%d) and replaces (%d) lengths should be equals", words.length, replaces.length));
         }
 
         for(int i = 0; i < words.length; i++) {
@@ -120,6 +120,14 @@ public class WordReplacer {
         // The string to find (lower case if ignoreCase)
         String workWord;
 
+        if (input == null || word == null || input.length() == 0 || word.length() == 0) {
+            return;
+        }
+
+        if (replace == null) {
+            replace = "";
+        }
+
         // Use the lowercase versions to compare, but replace in the original input
         if (ignoreCase) {
             workInput = new StringBuilder(input.toString().toLowerCase(Locale.ENGLISH));
@@ -161,11 +169,14 @@ public class WordReplacer {
                 }
             }
 
-            // replace this word but in the original input (without changing the case)
-            input.replace(pos, pos + workWord.length(), replace);
+            if (pos >= 0 && pos < input.length()) {
+                // replace this word but in the original input (without changing the case)
+                input.replace(pos, pos + workWord.length(), replace);
+                workInput.replace(pos, pos + workWord.length(), replace);
+            }
 
             // move to the next character after the replace word
             pos = pos + replace.length();
-        } while (pos > -1);
+        } while (pos > -1 && pos < workInput.length());
     }
 }
