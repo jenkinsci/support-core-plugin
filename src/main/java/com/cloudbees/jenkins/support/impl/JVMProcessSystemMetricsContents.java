@@ -2,9 +2,12 @@ package com.cloudbees.jenkins.support.impl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.Node;
+import jenkins.model.Jenkins;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,6 +20,11 @@ public abstract class JVMProcessSystemMetricsContents extends ProcFilesRetriever
         @NonNull
         public String getDisplayName() {
             return "Master JVM process system metrics (Linux only)";
+        }
+
+        @Override
+        protected List<Node> getNodes() {
+            return Collections.singletonList(Jenkins.get());
         }
     }
 
@@ -31,6 +39,11 @@ public abstract class JVMProcessSystemMetricsContents extends ProcFilesRetriever
         @Override
         public boolean isSelectedByDefault() {
             return false;
+        }
+
+        @Override
+        protected List<Node> getNodes() {
+            return Jenkins.get().getNodes();
         }
     }
 

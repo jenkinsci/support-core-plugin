@@ -14,6 +14,7 @@ import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -45,6 +46,8 @@ public abstract class ProcFilesRetriever extends Component {
      */
     abstract public Map<String, String> getFilesToRetrieve();
 
+    abstract protected List<Node> getNodes();
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -53,10 +56,7 @@ public abstract class ProcFilesRetriever extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Jenkins.getInstance();
-        addUnixContents(container, j);
-
-        for (Node node : j.getNodes()) {
+        for (Node node : getNodes()) {
             addUnixContents(container, node);
         }
     }

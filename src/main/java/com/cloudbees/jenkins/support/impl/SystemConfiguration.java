@@ -37,10 +37,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 
 /**
@@ -55,6 +58,11 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
         public String getDisplayName() {
             return "Master system configuration (Linux only)";
         }
+
+        @Override
+        protected List<Node> getNodes() {
+            return Collections.singletonList(Jenkins.get());
+        }
     }
 
     @Extension
@@ -68,6 +76,11 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
         @Override
         public boolean isSelectedByDefault() {
             return false;
+        }
+
+        @Override
+        protected List<Node> getNodes() {
+            return Jenkins.get().getNodes();
         }
     }
 
