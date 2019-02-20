@@ -93,7 +93,8 @@ public class SlaveLogs extends Component {
         SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
 
-        for (final Node node : Jenkins.get().getNodes()) {
+        List<Node> nodes = Jenkins.get().getNodes();
+        for (final Node node : nodes) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
                         new LogRecordContent("nodes/slave/{0}/jenkins.log", node.getNodeName()) {
@@ -117,6 +118,9 @@ public class SlaveLogs extends Component {
             addSlaveJulLogRecords(container, tasks, node, logFetcher);
             addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
         }
+
+        new SmartLogCleaner("winsw", nodes).execute();
+        new SmartLogCleaner("cache", nodes).execute();
 
         // execute all the expensive computations in parallel to speed up the time
         if (!tasks.isEmpty()) {
