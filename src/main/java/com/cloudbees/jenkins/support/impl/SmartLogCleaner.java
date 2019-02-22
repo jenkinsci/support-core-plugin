@@ -1,10 +1,8 @@
 package com.cloudbees.jenkins.support.impl;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.FileFilter;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,12 +10,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 
-import hudson.Util;
-import hudson.model.Node;
 
 /**
  * <p>
@@ -36,16 +31,16 @@ class SmartLogCleaner {
      * @param nodes
      *      Used to generate the cache keys to match within the target directory.
      */
-    SmartLogCleaner(final String id, final List<Node> nodes) {
+    SmartLogCleaner(final String id, final Set<String> cackeKeys) {
         this.rootCacheDir = new File(SupportPlugin.getRootDirectory(), id);
-        this.cacheKeys = getActiveCacheKeys(nodes);
+        this.cacheKeys = cackeKeys;
     }
 
     void execute() {
-        File[] cacheKeyDirs = rootCacheDir.listFiles(new FilenameFilter() {
+        File[] cacheKeyDirs = rootCacheDir.listFiles(new FileFilter() {
             @Override
-            public boolean accept(File current, String name) {
-              return new File(current, name).isDirectory();
+            public boolean accept(File file) {
+                return file.isDirectory();
             }
         });
 
@@ -58,12 +53,12 @@ class SmartLogCleaner {
                     @Override
                     public void run() {
                         for (File dir: cacheKeyDirs) {
-                            if (dir.isDirectory() && dir.exists() && cacheKeys.contains(dir.getName())) {
+                            if (cacheKeys.contains(dir.getName())) {
                                 LOGGER.log(Level.FINE, "cacheKey belongs to agent, keeping the directory '{0}'", dir.getName());
                             } else {
                                 try {
                                     FileUtils.deleteDirectory(dir);
-                                    LOGGER.log(Level.INFO, "The agent is no longer available, cache entry {0} was deleted", dir.getName());
+                                    LOGGER.log(Level.INFO, "The agent is no longer available, cache entry {0} was deleted", dir.getAbsolutePath() );
                                 } catch (IOException e) {
                                     LOGGER.log(Level.WARNING, "Couldn't remove the cache directory " + dir.getName(), e);
                                 }
@@ -77,17 +72,6 @@ class SmartLogCleaner {
                 executor.shutdown();
             }
         }
-    }
-
-    private Set<String> getActiveCacheKeys(final List<Node> nodes) {
-        Set<String> cacheKeys = new HashSet<>(nodes.size());
-        for (Node node : nodes) {
-            // can't use node.getRootPath() cause won't work with disconnected agents.
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + ((hudson.model.Slave)node).getRemoteFS());
-            LOGGER.log(Level.FINEST, "cacheKey {0} is active", cacheKey);
-            cacheKeys.add(StringUtils.right(cacheKey, 8));
-        }
-        return cacheKeys;
     }
 
     private static final Logger LOGGER = Logger.getLogger(SmartLogCleaner.class.getName());

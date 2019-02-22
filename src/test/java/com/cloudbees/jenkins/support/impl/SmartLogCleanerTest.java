@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.support.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +56,7 @@ public class SmartLogCleanerTest {
         assertEquals(cacheDir.list().length, 2);
         j.getInstance().removeNode(slave2);
 
-        new SmartLogCleaner("winsw", j.getInstance().getNodes()).execute();
+        generateBundle();
 
         // wait for completion of SmartLogFetcher async tasks during the bundle generation
         for (int i = 0; i <  10; i++) {
@@ -70,7 +69,6 @@ public class SmartLogCleanerTest {
         }
 
         assertEquals(cacheDir.list().length, 1);
-        j.getInstance().removeNode(slave1);
 
     }
 
