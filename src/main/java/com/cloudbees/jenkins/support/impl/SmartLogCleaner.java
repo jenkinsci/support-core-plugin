@@ -18,6 +18,7 @@ import com.cloudbees.jenkins.support.SupportPlugin;
  * <p>
  * Iterate over the cache entries stored by the {@link SmartLogFetcher} and remove those which 
  * belong to agents that are no longer attached.
+ * </p>
  */
 class SmartLogCleaner {
 
