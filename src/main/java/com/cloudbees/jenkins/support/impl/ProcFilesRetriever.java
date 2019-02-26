@@ -13,6 +13,7 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,14 @@ public abstract class ProcFilesRetriever extends Component {
      */
     abstract public Map<String, String> getFilesToRetrieve();
 
-    abstract protected List<Node> getNodes();
+    protected List<Node> getNodes() {
+        final Jenkins jenkins = Jenkins.get();
+        final List<Node> agents = jenkins.getNodes();
+        List<Node> allNodes = new ArrayList<>(agents.size() + 1);
+        allNodes.add(jenkins);
+        allNodes.addAll(agents);
+        return allNodes;
+    }
 
     @NonNull
     @Override
