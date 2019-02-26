@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,6 +59,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang.StringUtils;
 
 import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
 
@@ -93,7 +97,8 @@ public class SlaveLogs extends Component {
         SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
 
-        for (final Node node : Jenkins.get().getNodes()) {
+        List<Node> nodes = Jenkins.get().getNodes();
+        for (final Node node : nodes) {
             if (node.toComputer() instanceof SlaveComputer) {
                 container.add(
                         new LogRecordContent("nodes/slave/{0}/jenkins.log", node.getNodeName()) {
@@ -117,6 +122,10 @@ public class SlaveLogs extends Component {
             addSlaveJulLogRecords(container, tasks, node, logFetcher);
             addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
         }
+
+        Set<String> activeCacheKeys = getActiveCacheKeys(nodes);
+        new SmartLogCleaner("winsw", activeCacheKeys).execute();
+        new SmartLogCleaner("cache", activeCacheKeys).execute();
 
         // execute all the expensive computations in parallel to speed up the time
         if (!tasks.isEmpty()) {
@@ -219,4 +228,17 @@ public class SlaveLogs extends Component {
         }
     }
 
+    /**
+     * Build a Set including the cacheKeys associated to every agent in the instance
+     */
+    private Set<String> getActiveCacheKeys(final List<Node> nodes) {
+        Set<String> cacheKeys = new HashSet<>(nodes.size());
+        for (Node node : nodes) {
+            // can't use node.getRootPath() cause won't work with disconnected agents.
+            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + ((hudson.model.Slave)node).getRemoteFS());
+            LOGGER.log(Level.FINEST, "cacheKey {0} is active", cacheKey);
+            cacheKeys.add(StringUtils.right(cacheKey, 8));
+        }
+        return cacheKeys;
+    }
 }
