@@ -74,6 +74,10 @@ public class ItemsContent extends Component {
                 @Override
                 protected void printTo(PrintWriter out) throws IOException {
                     final Jenkins jenkins = Jenkins.getInstanceOrNull();
+                    if (jenkins == null) {
+                        return;
+                    }
+
                     Map<String,Integer> containerCounts = new TreeMap<>();
                     Map<String,ItemsContent.Stats> jobStats = new HashMap<>();
                     ItemsContent.Stats jobTotal = new ItemsContent.Stats();
