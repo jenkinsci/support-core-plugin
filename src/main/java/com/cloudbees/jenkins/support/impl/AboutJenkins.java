@@ -112,7 +112,6 @@ public class AboutJenkins extends Component {
         populatePluginsLists(activePlugins, disabledPlugins);
 
         container.add(new AboutContent(activePlugins));
-        container.add(new ItemsContent());
         container.add(new NodesContent());
         container.add(new ActivePlugins(activePlugins));
         container.add(new DisabledPlugins(disabledPlugins));
@@ -602,96 +601,6 @@ public class AboutJenkins extends Component {
                     }
                 }
             }
-        }
-    }
-
-    private static class ItemsContent extends PrintedContent {
-        ItemsContent() {
-            super("items.md");
-        }
-        @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
-            Map<String,Integer> containerCounts = new TreeMap<String,Integer>();
-            Map<String,Stats> jobStats = new HashMap<String,Stats>();
-            Stats jobTotal = new Stats();
-            Map<String,Stats> containerStats = new HashMap<String,Stats>();
-            // RunMap.createDirectoryFilter protected, so must do it by hand:
-            DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-            // historically did not use a consistent time zone, so use default
-            for (Item i : jenkins.getAllItems()) {
-                String key = i.getClass().getName();
-                Integer cnt = containerCounts.get(key);
-                containerCounts.put(key, cnt == null ? 1 : cnt + 1);
-                if (i instanceof Job) {
-                    Job<?,?> j = (Job) i;
-                    // too expensive: int builds = j.getBuilds().size();
-                    int builds = 0;
-                    // protected access: File buildDir = j.getBuildDir();
-                    File buildDir = jenkins.getBuildDirFor(j);
-                    boolean newFormat = new File(buildDir, "legacyIds").isFile(); // JENKINS-24380
-                    File[] buildDirs = buildDir.listFiles();
-                    if (buildDirs != null) {
-                        for (File d : buildDirs) {
-                            String name = d.getName();
-                            if (newFormat) {
-                                try {
-                                    Integer.parseInt(name);
-                                    if (d.isDirectory()) {
-                                        builds++;
-                                    }
-                                } catch (NumberFormatException x) {
-                                    // something else
-                                }
-                            } else /* legacy format */if (mayBeDate(name)) {
-                                // check for real
-                                try {
-                                    BUILD_FORMAT.parse(name);
-                                    if (d.isDirectory()) {
-                                        builds++;
-                                    }
-                                } catch (ParseException x) {
-                                    // symlink etc., ignore
-                                }
-                            }
-                        }
-                    }
-                    jobTotal.add(builds);
-                    Stats s = jobStats.get(key);
-                    if (s == null) {
-                        jobStats.put(key, s = new Stats());
-                    }
-                    s.add(builds);
-                }
-                if (i instanceof ItemGroup) {
-                    Stats s = containerStats.get(key);
-                    if (s == null) {
-                        containerStats.put(key, s = new Stats());
-                    }
-                    s.add(((ItemGroup) i).getItems().size());
-                }
-            }
-            out.println("Item statistics");
-            out.println("===============");
-            out.println();
-            for (Map.Entry<String,Integer> entry : containerCounts.entrySet()) {
-                String key = entry.getKey();
-                out.println("  * `" + key + "`");
-                out.println("    - Number of items: " + entry.getValue());
-                Stats s = jobStats.get(key);
-                if (s != null) {
-                    out.println("    - Number of builds per job: " + s);
-                }
-                s = containerStats.get(key);
-                if (s != null) {
-                    out.println("    - Number of items per container: " + s);
-                }
-            }
-            out.println();
-            out.println("Total job statistics");
-            out.println("======================");
-            out.println();
-            out.println("  * Number of jobs: " + jobTotal.n());
-            out.println("  * Number of builds per job: " + jobTotal);
         }
     }
 
