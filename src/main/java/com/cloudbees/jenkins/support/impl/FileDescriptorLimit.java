@@ -1,13 +1,13 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Functions;
 import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
@@ -93,7 +93,7 @@ public class FileDescriptorLimit extends Component {
                             try {
                                 out.println(getUlimit(node));
                             } catch (IOException e) {
-                                SupportLogFormatter.printStackTrace(e, out);
+                                Functions.printStackTrace(e, out);
                             } finally {
                                 out.flush();
                             }
@@ -125,17 +125,17 @@ public class FileDescriptorLimit extends Component {
             try {
                 getUlimit(pw);
             } catch (Exception e) {
-                SupportLogFormatter.printStackTrace(e, pw);
+                Functions.printStackTrace(e, pw);
             }
             try {
                 getOpenFileDescriptorCount(pw);
             } catch (Exception e) {
-                SupportLogFormatter.printStackTrace(e, pw);
+                Functions.printStackTrace(e, pw);
             }
             try {
                 listAllOpenFileDescriptors(pw);
             } catch (Exception e) {
-                SupportLogFormatter.printStackTrace(e, pw);
+                Functions.printStackTrace(e, pw);
             }
             pw.flush();
             return bos.toString();
