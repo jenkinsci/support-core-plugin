@@ -44,7 +44,7 @@ public class ReverseProxy extends Component {
     container.add(new PrintedContent("reverse-proxy.md") {
       @Override protected void printTo(PrintWriter out) throws IOException {
         out.println("Reverse Proxy");
-        out.println("========");
+        out.println("=============");
         out.println(String.format(" * Detected `%s` header: %b", X_FORWARDED_FOR_HEADER, isXForwardForHeaderDetected()));
       }
     });
