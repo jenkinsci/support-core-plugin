@@ -7,15 +7,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Attempts to detect reverse proxies in front of Jenkins.
@@ -23,7 +20,9 @@ import java.util.logging.Logger;
 @Extension
 public class ReverseProxy extends Component {
 
-  private static final Logger LOG = Logger.getLogger(ReverseProxy.class.getName());
+  public enum Trilean {
+    TRUE, FALSE, UNKNOWN
+  }
 
   static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
 
@@ -42,37 +41,23 @@ public class ReverseProxy extends Component {
   @Override
   public void addContents(@NonNull Container container) {
     container.add(new PrintedContent("reverse-proxy.md") {
-      @Override protected void printTo(PrintWriter out) throws IOException {
+      @Override protected void printTo(PrintWriter out) {
         out.println("Reverse Proxy");
         out.println("=============");
-        out.println(String.format(" * Detected `%s` header: %b", X_FORWARDED_FOR_HEADER, isXForwardForHeaderDetected()));
+        out.println(String.format(" * Detected `%s` header: %s", X_FORWARDED_FOR_HEADER, isXForwardForHeaderDetected()));
       }
     });
   }
 
-  private boolean isXForwardForHeaderDetected() {
-    try {
-      String rootUrl = Jenkins.get().getRootUrl();
-      if (rootUrl == null) {
-        return false;
-      }
-
-      HttpURLConnection.setFollowRedirects(true);
-      HttpURLConnection httpURLConnection = getHttpURLConnection(rootUrl);
-
-      if (httpURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-        return false;
-      }
-
-      return httpURLConnection.getHeaderField(X_FORWARDED_FOR_HEADER) != null;
+  private Trilean isXForwardForHeaderDetected() {
+    StaplerRequest req = getCurrentRequest();
+    if (req == null) {
+      return Trilean.UNKNOWN;
     }
-    catch (Exception e) {
-      LOG.log(Level.WARNING, String.format("Failed to detect %s header", X_FORWARDED_FOR_HEADER), e);
-      return false;
-    }
+    return req.getHeader(X_FORWARDED_FOR_HEADER) != null ? Trilean.TRUE : Trilean.FALSE;
   }
 
-  protected HttpURLConnection getHttpURLConnection(String url) throws IOException {
-    return (HttpURLConnection) new URL(url).openConnection();
+  protected StaplerRequest getCurrentRequest() {
+    return Stapler.getCurrentRequest();
   }
 }
