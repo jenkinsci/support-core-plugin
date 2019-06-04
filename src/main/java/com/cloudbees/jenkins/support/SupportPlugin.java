@@ -44,6 +44,7 @@ import hudson.BulkChange;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Main;
 import hudson.Plugin;
 import hudson.init.InitMilestone;
@@ -322,7 +323,7 @@ public class SupportPlugin extends Plugin {
                         errorWriter.println(msg);
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
-                        SupportLogFormatter.printStackTrace(e, errorWriter);
+                        Functions.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
                         maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
@@ -442,7 +443,7 @@ public class SupportPlugin extends Plugin {
                 errors.println(msg);
                 errors.println("-----------------------------------------------------------------------");
                 errors.println();
-                SupportLogFormatter.printStackTrace(e, errors);
+                Functions.printStackTrace(e, errors);
                 errors.println();
             }
         }

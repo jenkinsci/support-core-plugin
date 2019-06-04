@@ -24,8 +24,8 @@
 
 package com.cloudbees.jenkins.support.api;
 
-import com.cloudbees.jenkins.support.SupportLogFormatter;
 import hudson.FilePath;
+import hudson.Functions;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class FilePathContent extends Content {
                     try {
                         pw.println("--- WARNING: Could not attach " + file.getRemote() + " as it cannot currently be found ---");
                         pw.println();
-                        SupportLogFormatter.printStackTrace(e, pw);
+                        Functions.printStackTrace(e, pw);
                     } finally {
                         pw.flush();
                     }

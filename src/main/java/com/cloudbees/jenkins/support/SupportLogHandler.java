@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support;
 
+import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import hudson.util.IOUtils;
 import net.jcip.annotations.GuardedBy;
 

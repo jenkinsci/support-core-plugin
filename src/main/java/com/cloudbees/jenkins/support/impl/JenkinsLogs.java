@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportLogFormatter;
+import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;

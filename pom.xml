@@ -93,6 +93,11 @@
       <artifactId>uadetector-resources</artifactId>
       <version>2013.09</version>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.lib</groupId>
+      <artifactId>support-log-formatter</artifactId>
+      <version>1.0</version>
+    </dependency>
     <!-- plugin dependencies -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

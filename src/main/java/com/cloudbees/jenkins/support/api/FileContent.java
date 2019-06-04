@@ -24,10 +24,10 @@
 
 package com.cloudbees.jenkins.support.api;
 
-import com.cloudbees.jenkins.support.SupportLogFormatter;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.util.StreamUtils;
+import hudson.Functions;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -99,7 +99,7 @@ public class FileContent extends PrefilteredContent {
                 try {
                     pw.println("--- WARNING: Could not attach " + file + " as it cannot currently be found ---");
                     pw.println();
-                    SupportLogFormatter.printStackTrace(e, pw);
+                    Functions.printStackTrace(e, pw);
                 } finally {
                     pw.flush();
                 }
@@ -141,7 +141,7 @@ public class FileContent extends PrefilteredContent {
                 try {
                     pw.println("--- WARNING: Could not attach " + file + " as it cannot currently be found ---");
                     pw.println();
-                    SupportLogFormatter.printStackTrace(e, pw);
+                    Functions.printStackTrace(e, pw);
                 } finally {
                     pw.flush();
                 }
