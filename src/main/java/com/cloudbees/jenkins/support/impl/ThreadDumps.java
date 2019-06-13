@@ -4,7 +4,7 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.api.UnPrefilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -13,6 +13,8 @@ import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import jenkins.util.Timer;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -36,8 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.security.MasterToSlaveCallable;
-import jenkins.util.Timer;
 
 /**
  * Thread dumps from the nodes.
@@ -91,6 +91,12 @@ public class ThreadDumps extends Component {
                             os.flush();
                         }
                     }
+
+                    @Override
+                    public boolean shouldBeFiltered() {
+                        // The information of this content is not sensible, so it doesn't need to be filtered.
+                        return false;
+                    }
                 }
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
@@ -105,7 +111,14 @@ public class ThreadDumps extends Component {
                 Functions.printStackTrace(e, out);
                 out.close();
                 result.add(
-                        new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()));
+                    new UnPrefilteredStringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()) {
+
+                    @Override
+                    public boolean shouldBeFiltered() {
+                        // The information of this content is not sensible, so it doesn't need to be filtered.
+                        return false;
+                    }
+                });
                 continue;
             }
             if (threadDump == null) {
@@ -114,7 +127,13 @@ public class ThreadDumps extends Component {
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()));
+                result.add(new UnPrefilteredStringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()){
+                    @Override
+                    public boolean shouldBeFiltered() {
+                        // The information of this content is not sensible, so it doesn't need to be filtered.
+                        return false;
+                    }
+                });
             } else {
                 result.add(
                         new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
@@ -158,6 +177,12 @@ public class ThreadDumps extends Component {
                                 } finally {
                                     out.flush();
                                 }
+                            }
+
+                            @Override
+                            public boolean shouldBeFiltered() {
+                                // The information of this content is not sensible, so it doesn't need to be filtered.
+                                return false;
                             }
                         }
                 );

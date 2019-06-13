@@ -98,6 +98,12 @@ import java.util.TreeMap;
                         }
                     }
                 }
+
+                @Override
+                public boolean shouldBeFiltered() {
+                    // The information of this content is not sensible, so it doesn't need to be filtered.
+                    return false;
+                }
             });
         }
     }

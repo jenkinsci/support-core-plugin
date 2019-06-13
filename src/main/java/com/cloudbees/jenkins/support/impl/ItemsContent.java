@@ -133,6 +133,12 @@ public class ItemsContent extends Component {
                     out.println("  * Number of jobs: " + jobTotal.n());
                     out.println("  * Number of builds per job: " + jobTotal);
                 }
+
+                @Override
+                public boolean shouldBeFiltered() {
+                    // The information of this content is not sensible, so it doesn't need to be filtered.
+                    return false;
+                }
             });
         }
     }

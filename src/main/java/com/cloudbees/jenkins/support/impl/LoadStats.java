@@ -141,6 +141,12 @@ public class LoadStats extends Component {
         public void writeTo(OutputStream os) throws IOException {
             ImageIO.write(image, "png", os);
         }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            // The information of this content is not sensible, so it doesn't need to be filtered.
+            return false;
+        }
     }
 
     private static final List<Field> FIELDS = findFields();
@@ -238,6 +244,12 @@ public class LoadStats extends Component {
                 out.println();
             }
         }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            // The information of this content is not sensible, so it doesn't need to be filtered.
+            return false;
+        }
     }
 
     private static class GnuPlotScript extends PrintedContent {
@@ -283,6 +295,12 @@ public class LoadStats extends Component {
                 }
                 out.println(";");
             }
+        }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            // The information of this content is not sensible, so it doesn't need to be filtered.
+            return false;
         }
     }
 

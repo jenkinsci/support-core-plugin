@@ -71,6 +71,12 @@ public class AboutBrowser extends Component {
                     out.println("      - Version:  " + operatingSystem.getVersionNumber().toVersionString());
                     out.println();
                 }
+
+                @Override
+                public boolean shouldBeFiltered() {
+                    // The information of this content is not sensible, so it doesn't need to be filtered.
+                    return false;
+                }
             });
         }
     }

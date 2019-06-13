@@ -46,6 +46,12 @@ public class ReverseProxy extends Component {
         out.println("=============");
         out.println(String.format(" * Detected `%s` header: %s", X_FORWARDED_FOR_HEADER, isXForwardForHeaderDetected()));
       }
+
+      @Override
+      public boolean shouldBeFiltered() {
+        // The information of this content is not sensible, so it doesn't need to be filtered.
+        return false;
+      }
     });
   }
 

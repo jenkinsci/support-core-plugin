@@ -2,7 +2,8 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Computer;
@@ -11,7 +12,6 @@ import hudson.node_monitors.NodeMonitor;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
@@ -35,9 +35,9 @@ public class NodeMonitors extends Component{
 
     @Override
     public void addContents(@NonNull Container container) {
-        container.add(new PrintedContent("node-monitors.md") {
+        container.add(new PrefilteredPrintedContent("node-monitors.md") {
             @Override
-            protected void printTo(PrintWriter out) throws IOException {
+            protected void printTo(PrintWriter out, ContentFilter filter) {
                 out.println("Node monitors");
                 out.println("=============");
                 try {
@@ -51,7 +51,7 @@ public class NodeMonitors extends Component{
                         if (!monitor.isIgnored()) {
                             out.println(" - Computers:");
                             for (Computer c : Jenkins.getInstance().getComputers()) {
-                                out.println("   * " + c.getDisplayName() + ": " + monitor.data(c));
+                                out.println("   * " + (filter != null ? filter.filter(c.getDisplayName()) : c.getDisplayName()) + ": " + monitor.data(c));
                             }
                         }
                     }

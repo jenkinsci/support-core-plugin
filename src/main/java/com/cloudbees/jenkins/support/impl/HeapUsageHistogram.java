@@ -65,6 +65,12 @@ public class HeapUsageHistogram extends Component {
                 public void writeTo(OutputStream os) throws IOException {
                     os.write(getLiveHistogram().getBytes("UTF-8"));
                 }
+
+                @Override
+                public boolean shouldBeFiltered() {
+                    // The information of this content is not sensible, so it doesn't need to be filtered.
+                    return false;
+                }
             }
         );
     }

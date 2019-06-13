@@ -27,11 +27,13 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.api.UnPrefilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,9 +44,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * System configuration data (CPU information, swap configuration, mount points,
@@ -115,7 +114,13 @@ public abstract class SystemConfiguration extends ProcFilesRetriever {
                 CommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[]{name},  "/bin/sh", "-c", "sysctl -a"));
         container.add(CommandOutputContent.runOnNode(node, "nodes/{0}/dmesg.txt", new String[]{name}, "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
         container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/{0}/userid.txt", new String[]{name}, "/bin/sh", "-c", "id -a"));
-        container.add(new StringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)));
+        container.add(new UnPrefilteredStringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)) {
+            @Override
+            public boolean shouldBeFiltered() {
+                // The information of this content is not sensible, so it doesn't need to be filtered.
+                return false;
+            }
+        });
     }
 
     public String getDmiInfo(Node node) {

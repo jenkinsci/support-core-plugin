@@ -3,7 +3,8 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -37,9 +38,9 @@ public class AboutUser extends Component {
     public void addContents(@NonNull Container result) {
         final Authentication authentication = SupportPlugin.getRequesterAuthentication();
         if (authentication != null) {
-            result.add(new PrintedContent("user.md") {
+            result.add(new PrefilteredPrintedContent("user.md") {
                 @Override
-                protected void printTo(PrintWriter out) throws IOException {
+                protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
                     out.println("User");
                     out.println("====");
                     out.println();
@@ -47,7 +48,7 @@ public class AboutUser extends Component {
                     out.println("--------------");
                     out.println();
                     out.println("  * Authenticated: " + authentication.isAuthenticated());
-                    out.println("  * Name: " + authentication.getName());
+                    out.println("  * Name: " + (filter != null ? filter.filter(authentication.getName()) : authentication.getName()));
                     GrantedAuthority[] authorities = authentication.getAuthorities();
                     if (authorities != null) {
                         out.println("  * Authorities ");
