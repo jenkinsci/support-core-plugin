@@ -255,8 +255,8 @@ public class CheckFilterTest {
             fileSet.add(of("nodes/master/proc/self/cmdline", "java", false));
             fileSet.add(of("nodes/slave/*/proc/self/cmdline", "java", false));
 
-            fileSet.add(of("nodes/master/proc/self/environ", "path", false));
-            fileSet.add(of("nodes/slave/*/proc/self/environ", "path", false));
+            fileSet.add(of("nodes/master/proc/self/environ", "path", true));
+            fileSet.add(of("nodes/slave/*/proc/self/environ", "path", true));
 
             fileSet.add(of("nodes/master/proc/self/limits.txt", "max", false));
             fileSet.add(of("nodes/slave/*/proc/self/limits.txt", "max", false));
