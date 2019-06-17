@@ -48,6 +48,7 @@ public class FileListCap {
             }
         });
 
+        //TODO: first time files may have more entries than allowed (size)
         files.addAll(Arrays.asList(sortedFiles));
     }
 
@@ -56,6 +57,8 @@ public class FileListCap {
     }
 
     public synchronized void add(File f) {
+        // If the number of files included are the same of the allowed size, remove the oldest ones until the number of
+        // files is under the size allowed.
         if (size <= files.size()) {
             Iterator<File> itr = files.iterator();
             while (size <= files.size()) {
@@ -67,6 +70,7 @@ public class FileListCap {
             }
         }
 
+        // And then, add the file
         files.add(f);
     }
 

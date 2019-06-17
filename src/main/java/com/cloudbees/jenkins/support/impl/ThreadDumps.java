@@ -4,7 +4,8 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.api.UnPrefilteredStringContent;
+import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -16,6 +17,7 @@ import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import jenkins.util.Timer;
 
+import javax.annotation.CheckForNull;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -91,12 +93,6 @@ public class ThreadDumps extends Component {
                             os.flush();
                         }
                     }
-
-                    @Override
-                    public boolean shouldBeFiltered() {
-                        // The information of this content is not sensible, so it doesn't need to be filtered.
-                        return false;
-                    }
                 }
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
@@ -111,14 +107,7 @@ public class ThreadDumps extends Component {
                 Functions.printStackTrace(e, out);
                 out.close();
                 result.add(
-                    new UnPrefilteredStringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()) {
-
-                    @Override
-                    public boolean shouldBeFiltered() {
-                        // The information of this content is not sensible, so it doesn't need to be filtered.
-                        return false;
-                    }
-                });
+                        new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()));
                 continue;
             }
             if (threadDump == null) {
@@ -127,13 +116,7 @@ public class ThreadDumps extends Component {
                 buf.append("======\n");
                 buf.append("\n");
                 buf.append("N/A: No connection to node.\n");
-                result.add(new UnPrefilteredStringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()){
-                    @Override
-                    public boolean shouldBeFiltered() {
-                        // The information of this content is not sensible, so it doesn't need to be filtered.
-                        return false;
-                    }
-                });
+                result.add(new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()));
             } else {
                 result.add(
                         new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
@@ -177,12 +160,6 @@ public class ThreadDumps extends Component {
                                 } finally {
                                     out.flush();
                                 }
-                            }
-
-                            @Override
-                            public boolean shouldBeFiltered() {
-                                // The information of this content is not sensible, so it doesn't need to be filtered.
-                                return false;
                             }
                         }
                 );
@@ -281,19 +258,21 @@ public class ThreadDumps extends Component {
         writer.flush();
     }
 
-    // TODO Functions.sortThreadsAndGetGroupMap + Functions.Functions.dumpThreadInfo not showing lock owners in some cases
+    public static void printThreadInfo(PrintWriter writer, ThreadInfo t, ThreadMXBean mbean) {
+        printThreadInfo(writer, t, mbean, null);
+    }
+
     /**
-     * Prints the {@link ThreadInfo} (because {@link ThreadInfo#toString()} caps out the stack trace at 8 frames)
+     * Prints the {@link ThreadInfo} (because {@link ThreadInfo#toString()} caps out the stack trace at 8 frames). It
+     * filters the content with the filter. It's used by other components, like {@link com.cloudbees.jenkins.support.timer.DeadlockRequestComponent}
+     * via {@link com.cloudbees.jenkins.support.timer.DeadlockTrackChecker}
      *
      * @param writer the writer to print to.
      * @param t      the thread to print
      * @param mbean  the {@link ThreadMXBean} to use.
+     * @param filter the {@link ContentFilter} to use for filtering the thread name.
      */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
-            justification = "We don't want platform specific"
-    )
-    public static void printThreadInfo(PrintWriter writer, ThreadInfo t, ThreadMXBean mbean) {
+    public static void printThreadInfo(PrintWriter writer, ThreadInfo t, ThreadMXBean mbean, @CheckForNull ContentFilter filter) {
         long cpuPercentage;
         try {
             long cpuTime = mbean.getThreadCpuTime(t.getThreadId());
@@ -304,21 +283,21 @@ public class ThreadDumps extends Component {
             cpuPercentage = 0;
         }
         writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
-                t.getThreadName(),
+                filter == null ? t.getThreadName() : filter.filter(t.getThreadName()),
                 t.getThreadId(),
                 t.getThreadId(),
                 t.getThreadState(),
                 cpuPercentage);
         final LockInfo lock = t.getLockInfo();
         if (lock != null && t.getThreadState() != Thread.State.BLOCKED) {
-            writer.printf("\n    - waiting on <0x%08x> (a %s)",
+            writer.printf("%n    - waiting on <0x%08x> (a %s)",
                     lock.getIdentityHashCode(),
                     lock.getClassName());
-            writer.printf("\n    - locked <0x%08x> (a %s)",
+            writer.printf("%n    - locked <0x%08x> (a %s)",
                     lock.getIdentityHashCode(),
                     lock.getClassName());
         } else if (lock != null && t.getThreadState() == Thread.State.BLOCKED) {
-            writer.printf("\n    - waiting to lock <0x%08x> (a %s)",
+            writer.printf("%n    - waiting to lock <0x%08x> (a %s)",
                     lock.getIdentityHashCode(),
                     lock.getClassName());
         }
@@ -333,8 +312,8 @@ public class ThreadDumps extends Component {
 
         writer.println();
         if (t.getLockOwnerName() != null) {
-            writer.printf("      owned by \"%s\" id=%d (0x%x)\n",
-                    t.getLockOwnerName(),
+            writer.printf("      owned by \"%s\" id=%d (0x%x)%n",
+                    filter == null ? t.getLockOwnerName() : filter.filter(t.getLockOwnerName()),
                     t.getLockOwnerId(),
                     t.getLockOwnerId());
         }
@@ -344,11 +323,11 @@ public class ThreadDumps extends Component {
 
         for (int i = 0; i < elements.length; i++) {
             final StackTraceElement element = elements[i];
-            writer.printf("    at %s\n", element);
+            writer.printf("    at %s%n", element);
             for (int j = 1; j < monitors.length; j++) {
                 final MonitorInfo monitor = monitors[j];
                 if (monitor.getLockedStackDepth() == i) {
-                    writer.printf("      - locked %s\n", monitor);
+                    writer.printf("      - locked %s%n", monitor);
                 }
             }
         }
@@ -356,13 +335,14 @@ public class ThreadDumps extends Component {
 
         final LockInfo[] locks = t.getLockedSynchronizers();
         if (locks.length > 0) {
-            writer.printf("    Locked synchronizers: count = %d\n", locks.length);
+            writer.printf("    Locked synchronizers: count = %d%n", locks.length);
             for (LockInfo l : locks) {
-                writer.printf("      - %s\n", l);
+                writer.printf("      - %s%n", l);
             }
             writer.println();
         }
     }
+
 
     /** @deprecated use {@link #threadDump} */
     @Deprecated

@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.timer.FileListCapComponent;
+import com.cloudbees.jenkins.support.timer.UnFilteredFileListCapComponent;
 import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -12,7 +12,7 @@ import hudson.Extension;
  * @author Kohsuke Kawaguchi
  */
 @Extension
-public class SlowRequestComponent extends FileListCapComponent {
+public class SlowRequestComponent extends UnFilteredFileListCapComponent {
     @Inject
     SlowRequestChecker checker;
 

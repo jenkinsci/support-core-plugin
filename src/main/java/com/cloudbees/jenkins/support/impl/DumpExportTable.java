@@ -67,12 +67,6 @@ public class DumpExportTable extends Component {
                       "Could not record environment of node " + node.getNodeName(), e);
             }
           }
-
-          @Override
-          public boolean shouldBeFiltered() {
-            // The information of this content is not sensible, so it doesn't need to be filtered.
-            return false;
-          }
         }
       );
     }

@@ -29,7 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
-import com.cloudbees.jenkins.support.api.UnPrefilteredStringContent;
+import com.cloudbees.jenkins.support.api.UnFilteredStringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -287,19 +287,19 @@ public class SupportPlugin extends Plugin {
         try {
             try (BulkChange change = new BulkChange(ContentMappings.get());
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
+                // Get the filter to be used
                 Optional<ContentFilter> maybeFilter = getContentFilter();
+
+                // Recalculate the mappings and stop words and save it to disk
+                if(maybeFilter.isPresent()) {
+                    reloadAndSaveMappings(maybeFilter.get());
+                }
 
                 // Generate the content of the manifest.md going trough all the components which will be included. It
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
                 List<Content> contents = appendManifestContents(manifest, errorWriter, components, maybeFilter);
-                contents.add(new UnPrefilteredStringContent("manifest.md", manifest.toString()) {
-                    @Override
-                    public boolean shouldBeFiltered() {
-                        // The information of this content is not sensible, so it doesn't need to be filtered.
-                        return false;
-                    }
-                });
+                contents.add(new UnFilteredStringContent("manifest.md", manifest.toString()));
 
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
@@ -383,19 +383,32 @@ public class SupportPlugin extends Plugin {
         return filteredName;
     }
 
-    public static Optional<ContentFilter> getContentFilter() throws IOException {
+    /**
+     * Get the filter to be used in an {@link Optional} just in case.
+     * @return the filter.
+     */
+    public static Optional<ContentFilter> getContentFilter() {
         ContentFilters filters = ContentFilters.get();
         if (filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;
-            ContentMappings mappings = ContentMappings.get();
-            try (BulkChange change = new BulkChange(mappings)) {
-                mappings.reload();
-                filter.reload();
-                change.commit();
-            }
             return Optional.of(filter);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Reload mappings and filters and save it to disk.
+     * @param filter filter to reload.
+     */
+    private static void reloadAndSaveMappings(ContentFilter filter) {
+        ContentMappings mappings = ContentMappings.get();
+        try (BulkChange change = new BulkChange(mappings)) {
+            mappings.reload();
+            filter.reload();
+            change.commit();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void appendManifestHeader(StringBuilder manifest) {

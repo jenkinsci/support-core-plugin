@@ -26,8 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
-import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.api.UnFilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -41,7 +40,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -87,60 +85,45 @@ public class RootCAs extends Component {
     if (c == null) {
       return;
     }
+
     String name;
+    String[] params;
     if (node instanceof Jenkins) {
-      name = "master";
+      name = "nodes/master/RootCA.txt";
+      params = new String[0];
     } else {
-      name = "slave/" + node.getNodeName();
+      name = "nodes/slave/{0}/RootCA.txt";
+      params = new String[]{node.getNodeName()};
     }
-    container.add(
-            new PrefilteredPrintedContent("nodes/{0}/RootCA.txt", name) {
-              @Override
-              public void printTo(PrintWriter out, ContentFilter filter) {
-                try {
-                  out.println(getRootCA(node, filter));
-                } catch (IOException e) {
-                  Functions.printStackTrace(e, out);
-                } finally {
-                  out.flush();
-                }
-              }
-            }
-    );
+
+    try {
+      container.add(new UnFilteredStringContent(name, params, getRootCA(node)));
+    } catch (IOException e) {
+      container.add(new UnFilteredStringContent(name, params, Functions.printThrowable(e)));
+    }
   }
 
 
   public String getRootCA(Node node) throws IOException {
-    return AsyncResultCache.get(node, certCache, new GetRootCA(null), "Root CA info",
-            "N/A: Either no connection to node, or no cached result");
-  }
-
-  public String getRootCA(Node node, ContentFilter filter) throws IOException {
-    return AsyncResultCache.get(node, certCache, new GetRootCA(filter), "Root CA info",
+    return AsyncResultCache.get(node, certCache, new GetRootCA(), "Root CA info",
             "N/A: Either no connection to node, or no cached result");
   }
 
   private static final class GetRootCA extends MasterToSlaveCallable<String, RuntimeException> {
-    ContentFilter filter;
-
-    private GetRootCA(ContentFilter filter) {
-      this.filter = filter;
-    }
-
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
     )
     public String call() {
       StringWriter writer = new StringWriter();
-      getRootCAList(writer, filter);
+      getRootCAList(writer);
       return writer.toString();
     }
 
     private static final long serialVersionUID = 1L;
   }
 
-  public static void getRootCAList(StringWriter writer, ContentFilter filter) {
+  public static void getRootCAList(StringWriter writer) {
     try {
       // Inspired by:
       // https://github.com/jenkinsci/jenkins-scripts/pull/82/files
@@ -157,11 +140,7 @@ public class RootCAs extends Component {
                   .append(String.valueOf(acceptedIssuers.length))
                   .append(" certificates:\n");
           for (X509Certificate x509Certificate : acceptedIssuers) {
-            if(filter != null) {
-              writer.append(filter.filter(x509Certificate.getSubjectX500Principal().toString())).append('\n');
-            } else {
               writer.append(x509Certificate.getSubjectX500Principal().toString()).append('\n');
-            }
           }
         } else {
           writer.append("Skipping as it is not an X.509 Trust Manager.\n");
@@ -171,9 +150,5 @@ public class RootCAs extends Component {
     } catch (KeyStoreException | NoSuchAlgorithmException e) {
       writer.write(Functions.printThrowable(e));
     }
-  }
-
-  public static void getRootCAList(StringWriter writer) {
-    getRootCAList(writer, null);
   }
 }

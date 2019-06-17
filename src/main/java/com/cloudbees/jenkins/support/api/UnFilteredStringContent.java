@@ -32,16 +32,16 @@ import java.io.OutputStream;
  *
  * @author M Ramón León
  */
-public class UnPrefilteredStringContent extends Content {
+public class UnFilteredStringContent extends Content {
 
     private final String value;
 
-    public UnPrefilteredStringContent(String name, String value) {
+    public UnFilteredStringContent(String name, String value) {
         super(name);
         this.value = value;
     }
 
-    public UnPrefilteredStringContent(String name, String[] filterableParameters, String value) {
+    public UnFilteredStringContent(String name, String[] filterableParameters, String value) {
         super(name, filterableParameters);
         this.value = value;
     }
@@ -49,5 +49,10 @@ public class UnPrefilteredStringContent extends Content {
     @Override
     public void writeTo(OutputStream os) throws IOException {
         os.write(value.getBytes("utf-8"));
+    }
+
+    @Override
+    public boolean shouldBeFiltered() {
+        return false;
     }
 }
