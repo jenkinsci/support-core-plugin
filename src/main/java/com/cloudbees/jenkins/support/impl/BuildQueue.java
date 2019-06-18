@@ -76,10 +76,10 @@ public class BuildQueue extends Component {
 
             for (Queue.Item item : items) {
               if (item instanceof Item) {
-                out.println(" * Name of item: " + (filter != null ? filter.filter(((Item) item).getFullName()) : ((Item) item).getFullName()));
+                out.println(" * Name of item: " + ContentFilter.filter(filter, ((Item) item).getFullName()));
               }
               else {
-                out.println(" * Name of item: " + (filter != null ? filter.filter(Functions.escape(item.task.getFullDisplayName())) : Functions.escape(item.task.getFullDisplayName())));
+                out.println(" * Name of item: " + ContentFilter.filter(filter, Functions.escape(item.task.getFullDisplayName())));
               }
               out.println("    - In queue for: " + item.getInQueueForString());
               out.println("    - Is blocked: " + item.isBlocked());

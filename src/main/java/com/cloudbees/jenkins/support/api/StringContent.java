@@ -56,7 +56,7 @@ public class StringContent extends PrefilteredContent {
 
     @Override
     public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
-        String filtered = (filter == null ? value : filter.filter(value));
+        String filtered = ContentFilter.filter(filter, value);
         os.write(filtered.getBytes("UTF-8"));
     }
 }

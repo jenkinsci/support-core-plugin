@@ -26,7 +26,9 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 /**
@@ -63,4 +65,18 @@ public interface ContentFilter extends ExtensionPoint {
     default void reload() {
     }
 
+    /**
+     * An utility method to filter a text only when both, the filter and the text are not null and the text is not empty
+     * too.
+     * @param filter the filter to use when filtering
+     * @param text the text to filter
+     * @return the text filtered if it is not empty and the filter is not null
+     */
+    static String filter(@CheckForNull ContentFilter filter, @CheckForNull String text) {
+        if (filter != null && StringUtils.isNotEmpty(text)) {
+            return filter.filter(text);
+        } else {
+            return text;
+        }
+    }
 }

@@ -48,7 +48,7 @@ public class AboutUser extends Component {
                     out.println("--------------");
                     out.println();
                     out.println("  * Authenticated: " + authentication.isAuthenticated());
-                    out.println("  * Name: " + (filter != null ? filter.filter(authentication.getName()) : authentication.getName()));
+                    out.println("  * Name: " + ContentFilter.filter(filter, authentication.getName()));
                     GrantedAuthority[] authorities = authentication.getAuthorities();
                     if (authorities != null) {
                         out.println("  * Authorities ");

@@ -283,7 +283,7 @@ public class ThreadDumps extends Component {
             cpuPercentage = 0;
         }
         writer.printf("\"%s\" id=%d (0x%x) state=%s cpu=%d%%",
-                filter == null ? t.getThreadName() : filter.filter(t.getThreadName()),
+                ContentFilter.filter(filter, t.getThreadName()),
                 t.getThreadId(),
                 t.getThreadId(),
                 t.getThreadState(),
@@ -313,7 +313,7 @@ public class ThreadDumps extends Component {
         writer.println();
         if (t.getLockOwnerName() != null) {
             writer.printf("      owned by \"%s\" id=%d (0x%x)%n",
-                    filter == null ? t.getLockOwnerName() : filter.filter(t.getLockOwnerName()),
+                    ContentFilter.filter(filter, t.getLockOwnerName()),
                     t.getLockOwnerId(),
                     t.getLockOwnerId());
         }

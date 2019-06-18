@@ -344,7 +344,7 @@ public class CheckFilterTest {
         private void generateFilteredWords() {
             ContentFilter filter = SupportPlugin.getContentFilter().orElse(null);
             for(FileToCheck file : fileSet) {
-                file.wordFiltered = (filter != null && file.fileIsFiltered) ? filter.filter(file.word) : file.word;
+                file.wordFiltered = file.fileIsFiltered ? ContentFilter.filter(filter, file.word) : file.word;
             }
         }
 

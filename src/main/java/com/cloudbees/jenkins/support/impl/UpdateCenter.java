@@ -45,13 +45,8 @@ public class UpdateCenter extends Component {
                             hudson.model.UpdateCenter updateCenter = Jenkins.getInstance().getUpdateCenter();
                             out.println("=== Sites ===");
                             for (UpdateSite c : updateCenter.getSiteList()) {
-                                out.println(" - Url: " + (filter != null ? filter.filter(c.getUrl()) : c.getUrl()));
-                                String checkUrl = c.getConnectionCheckUrl();
-                                if(filter != null && checkUrl != null) {
-                                    out.println(" - Connection Url: " + filter.filter(checkUrl));
-                                } else {
-                                    out.println(" - Connection Url: " + checkUrl);
-                                }
+                                out.println(" - Url: " + ContentFilter.filter(filter, c.getUrl()));
+                                out.println(" - Connection Url: " + ContentFilter.filter(filter, c.getConnectionCheckUrl()));
                                 out.println(" - Implementation Type: " + c.getClass().getName());
                             }
 
@@ -77,12 +72,12 @@ public class UpdateCenter extends Component {
         out.println("=== Proxy ===");
         ProxyServer proxyServer = AHCUtils.getProxyServer();
         if (proxyServer != null) {
-            out.println(" - Host: " + (filter != null ? filter.filter(proxyServer.getHost()) : proxyServer.getHost()));
+            out.println(" - Host: " + ContentFilter.filter(filter, proxyServer.getHost()));
             out.println(" - Port: " + proxyServer.getPort());
 
             out.println(" - No Proxy Hosts: ");
             for (String noHost : proxyServer.getNonProxyHosts()) {
-                out.println(" * " + (filter != null ? filter.filter(noHost) : noHost));
+                out.println(" * " + ContentFilter.filter(filter, noHost));
             }
         }
     }

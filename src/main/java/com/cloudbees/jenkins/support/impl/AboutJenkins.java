@@ -495,16 +495,7 @@ public class AboutJenkins extends Component {
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
 
-            String url;
-            if (jlc == null) {
-                url = "No JenkinsLocationConfiguration available";
-            } else {
-                url = jlc.getUrl();
-                if (url != null && filter != null) {
-                    url = filter.filter(url);
-                }
-            }
-            out.println("  * Url:     " + url);
+            out.println("  * Url:     " + (jlc != null ? ContentFilter.filter(filter, jlc.getUrl()) : "No JenkinsLocationConfiguration available"));
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
@@ -711,29 +702,29 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("  * master (Jenkins)");
             out.println("      - Description:    _" +
-                    Markdown.escapeUnderscore(Util.fixNull(filter != null ? filter.filter(jenkins.getNodeDescription()) : jenkins.getNodeDescription())) + "_");
+                    Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, jenkins.getNodeDescription()))) + "_");
             out.println("      - Executors:      " + jenkins.getNumExecutors());
             out.println("      - FS root:        `" +
-                    Markdown.escapeBacktick(filter != null ? filter.filter(jenkins.getRootDir().getAbsolutePath()): jenkins.getRootDir().getAbsolutePath()) + "`");
-            out.println("      - Labels:         " + (filter != null ? filter.filter(getLabelString(jenkins)) : getLabelString(jenkins)));
+                    Markdown.escapeBacktick(ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
+            out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * `" + Markdown.escapeBacktick(filter != null ? filter.filter(node.getNodeName()) : node.getNodeName()) + "` (" +getDescriptorName(node) +
+                out.println("  * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, node.getNodeName())) + "` (" +getDescriptorName(node) +
                         ")");
                 out.println("      - Description:    _" +
-                        Markdown.escapeUnderscore(Util.fixNull(filter != null ? filter.filter(node.getNodeDescription()) : node.getNodeDescription())) + "_");
+                        Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, node.getNodeDescription()))) + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
-                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(filter != null ? filter.filter(rootPath.getRemote()) : rootPath.getRemote()) + "`");
+                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, rootPath.getRemote())) + "`");
                 } else if (node instanceof Slave) {
                     out.println("      - Remote FS root: `" +
-                            Markdown.escapeBacktick(filter != null ? filter.filter(Slave.class.cast(node).getRemoteFS()) : Slave.class.cast(node).getRemoteFS()) + "`");
+                            Markdown.escapeBacktick(ContentFilter.filter(filter, Slave.class.cast(node).getRemoteFS())) + "`");
                 }
-                out.println("      - Labels:         " + Markdown.escapeUnderscore(filter != null ? filter.filter(getLabelString(node)): getLabelString(node)));
+                out.println("      - Labels:         " + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;

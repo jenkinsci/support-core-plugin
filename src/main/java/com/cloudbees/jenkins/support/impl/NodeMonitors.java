@@ -51,7 +51,7 @@ public class NodeMonitors extends Component{
                         if (!monitor.isIgnored()) {
                             out.println(" - Computers:");
                             for (Computer c : Jenkins.getInstance().getComputers()) {
-                                out.println("   * " + (filter != null ? filter.filter(c.getDisplayName()) : c.getDisplayName()) + ": " + monitor.data(c));
+                                out.println("   * " + ContentFilter.filter(filter, c.getDisplayName()) + ": " + monitor.data(c));
                             }
                         }
                     }
