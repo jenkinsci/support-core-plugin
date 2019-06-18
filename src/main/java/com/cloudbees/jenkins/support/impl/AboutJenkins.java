@@ -494,7 +494,17 @@ public class AboutJenkins extends Component {
                 out.println("  * Mode:    WAR");
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
-            out.println("  * Url:     " + (jlc != null ? (filter == null ? jlc.getUrl() : filter.filter(jlc.getUrl())) : "No JenkinsLocationConfiguration available"));
+
+            String url;
+            if (jlc == null) {
+                url = "No JenkinsLocationConfiguration available";
+            } else {
+                url = jlc.getUrl();
+                if (url != null && filter != null) {
+                    url = filter.filter(url);
+                }
+            }
+            out.println("  * Url:     " + url);
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");

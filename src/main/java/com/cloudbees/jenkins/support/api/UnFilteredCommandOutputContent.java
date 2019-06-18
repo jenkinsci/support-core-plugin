@@ -6,7 +6,7 @@ import java.util.WeakHashMap;
 
 /**
  * Content of a command output. You can only instantiate this content with
- * a builder method which launch the command immediately. It doesn't pre filter the result.
+ * a builder method which launches the command immediately. It doesn't pre filter the result.
  */
 public class UnFilteredCommandOutputContent extends UnFilteredStringContent {
     private UnFilteredCommandOutputContent(String name, String[] filterableParameters, String value) {
