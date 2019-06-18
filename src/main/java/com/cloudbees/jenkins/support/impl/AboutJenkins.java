@@ -471,20 +471,14 @@ public class AboutJenkins extends Component {
         return format.format(number) + " " + measure + " (" + size + ")";
     }
 
-    private static class AboutContent extends PrintedContent {
+    private static class AboutContent extends PrefilteredPrintedContent {
         private final Iterable<PluginWrapper> plugins;
-
-        @Override
-        public boolean shouldBeFiltered() {
-            // The information of this content is not sensible, so it doesn't need to be filtered.
-            return false;
-        }
 
         AboutContent(Iterable<PluginWrapper> plugins) {
             super("about.md");
             this.plugins = plugins;
         }
-        @Override protected void printTo(PrintWriter out) throws IOException {
+        @Override protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
             out.println("=======");
@@ -500,7 +494,7 @@ public class AboutJenkins extends Component {
                 out.println("  * Mode:    WAR");
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
-            out.println("  * Url:     " + (jlc != null ? jlc.getUrl() : "No JenkinsLocationConfiguration available"));
+            out.println("  * Url:     " + (jlc != null ? (filter == null ? jlc.getUrl() : filter.filter(jlc.getUrl())) : "No JenkinsLocationConfiguration available"));
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
