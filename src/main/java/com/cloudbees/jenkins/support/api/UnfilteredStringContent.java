@@ -32,16 +32,16 @@ import java.io.OutputStream;
  *
  * @author M Ramón León
  */
-public class UnFilteredStringContent extends Content {
+public class UnfilteredStringContent extends Content {
 
     private final String value;
 
-    public UnFilteredStringContent(String name, String value) {
+    public UnfilteredStringContent(String name, String value) {
         super(name);
         this.value = value;
     }
 
-    public UnFilteredStringContent(String name, String[] filterableParameters, String value) {
+    public UnfilteredStringContent(String name, String[] filterableParameters, String value) {
         super(name, filterableParameters);
         this.value = value;
     }

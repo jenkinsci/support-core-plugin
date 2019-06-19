@@ -27,8 +27,8 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.UnFilteredCommandOutputContent;
-import com.cloudbees.jenkins.support.api.UnFilteredStringContent;
+import com.cloudbees.jenkins.support.api.UnfilteredCommandOutputContent;
+import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -113,10 +113,10 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
     @Override
     protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
         container.add(
-                UnFilteredCommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[]{name},  "/bin/sh", "-c", "sysctl -a"));
-        container.add(UnFilteredCommandOutputContent.runOnNode(node, "nodes/{0}/dmesg.txt", new String[]{name}, "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
+                UnfilteredCommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[]{name},  "/bin/sh", "-c", "sysctl -a"));
+        container.add(UnfilteredCommandOutputContent.runOnNode(node, "nodes/{0}/dmesg.txt", new String[]{name}, "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
         container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/{0}/userid.txt", new String[]{name}, "/bin/sh", "-c", "id -a"));
-        container.add(new UnFilteredStringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)));
+        container.add(new UnfilteredStringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)));
     }
 
     public String getDmiInfo(Node node) {

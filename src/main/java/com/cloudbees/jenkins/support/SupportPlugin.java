@@ -29,7 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
-import com.cloudbees.jenkins.support.api.UnFilteredStringContent;
+import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -299,7 +299,7 @@ public class SupportPlugin extends Plugin {
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
                 List<Content> contents = appendManifestContents(manifest, errorWriter, components, maybeFilter);
-                contents.add(new UnFilteredStringContent("manifest.md", manifest.toString()));
+                contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
 
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);

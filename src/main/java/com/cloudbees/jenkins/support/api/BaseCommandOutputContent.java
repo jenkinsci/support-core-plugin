@@ -19,7 +19,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * Common logic to CommandOutputContent and UnFilteredCommandOutputContent.
+ * Common logic to CommandOutputContent and UnfilteredCommandOutputContent.
  */
 @Restricted(NoExternalUse.class)
 class BaseCommandOutputContent {

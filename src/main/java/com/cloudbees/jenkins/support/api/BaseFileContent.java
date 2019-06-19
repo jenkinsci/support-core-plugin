@@ -47,7 +47,7 @@ import java.nio.file.NoSuchFileException;
 import java.util.function.Supplier;
 
 /**
- * Utility class with the common logic to FileContent and UnFilteredFileContent.
+ * Utility class with the common logic to FileContent and UnfilteredFileContent.
  *
  * @author Stephen Connolly, M Ramón León
  */

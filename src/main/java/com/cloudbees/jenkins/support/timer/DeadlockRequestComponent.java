@@ -11,7 +11,7 @@ import hudson.Extension;
  *         Time: 4:50 PM
  */
 @Extension
-public class DeadlockRequestComponent extends UnFilteredFileListCapComponent {
+public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
     @Inject
     DeadlockTrackChecker checker;
 

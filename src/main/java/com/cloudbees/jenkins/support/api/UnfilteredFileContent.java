@@ -40,27 +40,27 @@ import java.util.logging.Logger;
  * @author Stephen Connolly, M Ramón León
  */
 // The name is so because we have to keep compatibility with the existing FileContent which is pre-filtered.
-public class UnFilteredFileContent extends Content {
+public class UnfilteredFileContent extends Content {
     // to keep compatibility
     protected final File file;
     private BaseFileContent baseFileContent;
     private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
 
-    public UnFilteredFileContent(String name, File file) {
+    public UnfilteredFileContent(String name, File file) {
         this(name, file, -1);
     }
 
-    public UnFilteredFileContent(String name, File file, long maxSize) {
+    public UnfilteredFileContent(String name, File file, long maxSize) {
         super(name);
         this.file = file;
         baseFileContent = createBaseFileContent(file, maxSize);
     }
 
-    public UnFilteredFileContent(String name, String[] filterableParameters, File file) {
+    public UnfilteredFileContent(String name, String[] filterableParameters, File file) {
         this(name, filterableParameters, file, -1);
     }
 
-    public UnFilteredFileContent(String name, String[] filterableParameters, File file, long maxSize) {
+    public UnfilteredFileContent(String name, String[] filterableParameters, File file, long maxSize) {
         super(name, filterableParameters);
         this.file = file;
         baseFileContent = createBaseFileContent(file, maxSize);

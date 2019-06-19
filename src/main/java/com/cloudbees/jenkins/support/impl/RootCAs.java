@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.UnFilteredStringContent;
+import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -97,9 +97,9 @@ public class RootCAs extends Component {
     }
 
     try {
-      container.add(new UnFilteredStringContent(name, params, getRootCA(node)));
+      container.add(new UnfilteredStringContent(name, params, getRootCA(node)));
     } catch (IOException e) {
-      container.add(new UnFilteredStringContent(name, params, Functions.printThrowable(e)));
+      container.add(new UnfilteredStringContent(name, params, Functions.printThrowable(e)));
     }
   }
 
