@@ -24,39 +24,35 @@
 
 package com.cloudbees.jenkins.support.api;
 
-import com.cloudbees.jenkins.support.filter.ContentFilter;
-import com.cloudbees.jenkins.support.filter.PrefilteredContent;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Content that is a string.
+ * Content that is a string and cannot be pre-filtered.
  *
- * @author Stephen Connolly
+ * @author M Ramón León
  */
-public class StringContent extends PrefilteredContent {
+public class UnfilteredStringContent extends Content {
 
     private final String value;
 
-    public StringContent(String name, String value) {
+    public UnfilteredStringContent(String name, String value) {
         super(name);
         this.value = value;
     }
 
-    public StringContent(String name, String[] filterableParameters, String value) {
+    public UnfilteredStringContent(String name, String[] filterableParameters, String value) {
         super(name, filterableParameters);
         this.value = value;
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        writeTo(os, null);
+        os.write(value.getBytes("utf-8"));
     }
 
     @Override
-    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
-        String filtered = ContentFilter.filter(filter, value);
-        os.write(filtered.getBytes("UTF-8"));
+    public boolean shouldBeFiltered() {
+        return false;
     }
 }

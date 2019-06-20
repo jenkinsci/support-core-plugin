@@ -40,6 +40,8 @@ import hudson.remoting.Request;
 import hudson.remoting.Response;
 import hudson.security.Permission;
 import hudson.slaves.ComputerListener;
+import jenkins.model.Jenkins;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -50,7 +52,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
-import jenkins.model.Jenkins;
 
 @Extension
 public final class SlaveCommandStatistics extends Component {
@@ -73,6 +74,12 @@ public final class SlaveCommandStatistics extends Component {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 stats.print(out);
+            }
+
+            @Override
+            public boolean shouldBeFiltered() {
+                // The information of this content is not sensible, so it doesn't need to be filtered.
+                return false;
             }
         }));
     }

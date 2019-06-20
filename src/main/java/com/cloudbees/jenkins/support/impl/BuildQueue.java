@@ -25,7 +25,8 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -36,10 +37,6 @@ import hudson.model.queue.QueueTaskDispatcher;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
@@ -69,10 +66,9 @@ public class BuildQueue extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    container.add(new Content("buildqueue.md") {
+    container.add(new PrefilteredPrintedContent("buildqueue.md") {
         @Override
-        public void writeTo(OutputStream os) throws IOException {
-          PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+        public void printTo(PrintWriter out, ContentFilter filter) {
           try {
             List<Queue.Item> items = Jenkins.getInstance().getQueue().getApproximateItemsQuickly();
             out.println("Current build queue has " +  items.size() + " item(s).");
@@ -80,10 +76,10 @@ public class BuildQueue extends Component {
 
             for (Queue.Item item : items) {
               if (item instanceof Item) {
-                out.println(" * Name of item: " + ((Item) item).getFullName());
+                out.println(" * Name of item: " + ContentFilter.filter(filter, ((Item) item).getFullName()));
               }
               else {
-                out.println(" * Name of item: " + Functions.escape(item.task.getFullDisplayName()));
+                out.println(" * Name of item: " + ContentFilter.filter(filter, Functions.escape(item.task.getFullDisplayName())));
               }
               out.println("    - In queue for: " + item.getInQueueForString());
               out.println("    - Is blocked: " + item.isBlocked());

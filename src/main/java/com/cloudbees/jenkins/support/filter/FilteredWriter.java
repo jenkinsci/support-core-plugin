@@ -110,7 +110,7 @@ public class FilteredWriter extends FilterWriter {
         if (buf.position() > 0) {
             buf.flip();
             String original = buf.toString();
-            String filtered = contentFilter.filter(original);
+            String filtered = ContentFilter.filter(contentFilter, original);
             out.write(filtered);
             buf.clear();
         }
@@ -134,7 +134,7 @@ public class FilteredWriter extends FilterWriter {
             while (matcher.find()) {
                 int end = matcher.end();
                 String line = buf.subSequence(start, end).toString();
-                String filtered = contentFilter.filter(line);
+                String filtered = ContentFilter.filter(contentFilter, line);
                 out.write(filtered);
                 start = end;
             }

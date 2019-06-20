@@ -6,14 +6,15 @@ import hudson.model.Node;
 import jenkins.model.Jenkins;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
- * System metrics of the JVM process. Only supports Unix.
+ * System metrics of the JVM process. Only supports Unix. We use the advanced retriever to specify which files will be
+ * filtered.
  */
-public abstract class JVMProcessSystemMetricsContents extends ProcFilesRetriever {
+public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesRetriever {
     @Extension
     public static class Master extends JVMProcessSystemMetricsContents {
         @Override
@@ -47,22 +48,25 @@ public abstract class JVMProcessSystemMetricsContents extends ProcFilesRetriever
         }
     }
 
-    static final Map<String, String> UNIX_PROC_CONTENTS;
+    static final Set<ProcFile> UNIX_PROC_CONTENTS;
 
     static {
-        Map<String, String> contents = new HashMap<String, String>();
-        contents.put("/proc/meminfo", "meminfo.txt");
-        contents.put("/proc/self/status", "self/status.txt");
-        contents.put("/proc/self/cmdline", "self/cmdline");
-        contents.put("/proc/self/environ", "self/environ");
-        contents.put("/proc/self/limits", "self/limits.txt");
-        contents.put("/proc/self/mountstats", "self/mountstats.txt");
-        UNIX_PROC_CONTENTS = Collections.unmodifiableMap(contents);
+        Set<ProcFile> contents = new HashSet<>();
+        // These files don't need filtering
+        contents.add(ProcFile.of("/proc/meminfo", "meminfo.txt", false));
+        contents.add(ProcFile.of("/proc/self/status", "self/status.txt", false));
+        contents.add(ProcFile.of("/proc/self/cmdline", "self/cmdline", false));
+        // This one should be filtered
+        contents.add(ProcFile.of("/proc/self/environ", "self/environ", true));
+        // These files don't need filtering
+        contents.add(ProcFile.of("/proc/self/limits", "self/limits.txt", false));
+        contents.add(ProcFile.of("/proc/self/mountstats", "self/mountstats.txt", false));
+        UNIX_PROC_CONTENTS = Collections.unmodifiableSet(contents);
     }
 
 
     @Override
-    public Map<String, String> getFilesToRetrieve() {
+    public Set<ProcFile> getProcFilesToRetrieve() {
         return UNIX_PROC_CONTENTS;
     }
 }

@@ -67,7 +67,7 @@ public class InetAddressContentFilterTest {
         ContentMappings mappings = ContentMappings.get();
         try (BulkChange ignored = new BulkChange(mappings)) {
             qt().forAll(inetAddress()).checkAssert(address ->
-                    assertThat(filter.filter(address))
+                    assertThat(ContentFilter.filter(filter, address))
                             .contains("ip_")
                             .doesNotContain(address)
             );
@@ -80,7 +80,7 @@ public class InetAddressContentFilterTest {
         Jenkins.VERSION = "1.2.3.4";
         resetMappings();
         InetAddressContentFilter filter = InetAddressContentFilter.get();
-        assertThat(filter.filter(Jenkins.VERSION))
+        assertThat(ContentFilter.filter(filter, Jenkins.VERSION))
                 .isEqualTo(Jenkins.VERSION);
     }
 

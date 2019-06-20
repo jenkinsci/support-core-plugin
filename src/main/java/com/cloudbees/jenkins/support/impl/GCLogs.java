@@ -2,7 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.api.UnfilteredFileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -83,7 +83,7 @@ public class GCLogs extends Component {
                         "but file '" + gcLogFileLocation + "' not found");
                 return;
             }
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file));
+            result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "gc.log", file));
         }
     }
 
@@ -133,7 +133,7 @@ public class GCLogs extends Component {
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
             LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new FileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
+            result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
         }
     }
 

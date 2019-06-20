@@ -134,7 +134,7 @@ public class FilteredOutputStream extends FilterOutputStream {
         if (decodedBuf.position() > 0) {
             decodedBuf.flip();
             String contents = decodedBuf.toString();
-            String filtered = contentFilter.filter(contents);
+            String filtered = ContentFilter.filter(contentFilter, contents);
             out.write(filtered.getBytes(charset));
             decodedBuf.clear();
         }
@@ -182,7 +182,7 @@ public class FilteredOutputStream extends FilterOutputStream {
             while (matcher.find()) {
                 int end = matcher.end();
                 String line = decodedBuf.subSequence(start, end).toString();
-                String filtered = contentFilter.filter(line);
+                String filtered = ContentFilter.filter(contentFilter, line);
                 out.write(filtered.getBytes(charset));
                 start = end;
                 flushed = true;

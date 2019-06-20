@@ -16,6 +16,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import java.io.BufferedReader;
@@ -34,7 +35,6 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -97,6 +97,12 @@ public class FileDescriptorLimit extends Component {
                             } finally {
                                 out.flush();
                             }
+                        }
+
+                        @Override
+                        public boolean shouldBeFiltered() {
+                            // The information of this content is not sensible, so it doesn't need to be filtered.
+                            return false;
                         }
                     }
             );

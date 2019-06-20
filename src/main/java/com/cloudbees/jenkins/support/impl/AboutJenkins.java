@@ -8,8 +8,10 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
@@ -23,9 +25,6 @@ import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.lifecycle.Lifecycle;
 import hudson.model.Describable;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Slave;
 import hudson.remoting.Launcher;
@@ -34,6 +33,7 @@ import hudson.security.Permission;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
 
@@ -49,31 +49,25 @@ import java.lang.management.MemoryManagerMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.RuntimeMXBean;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Contributes basic information about Jenkins.
@@ -477,14 +471,14 @@ public class AboutJenkins extends Component {
         return format.format(number) + " " + measure + " (" + size + ")";
     }
 
-    private static class AboutContent extends PrintedContent {
+    private static class AboutContent extends PrefilteredPrintedContent {
         private final Iterable<PluginWrapper> plugins;
 
         AboutContent(Iterable<PluginWrapper> plugins) {
             super("about.md");
             this.plugins = plugins;
         }
-        @Override protected void printTo(PrintWriter out) throws IOException {
+        @Override protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
             out.println("=======");
@@ -500,7 +494,8 @@ public class AboutJenkins extends Component {
                 out.println("  * Mode:    WAR");
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
-            out.println("  * Url:     " + (jlc != null ? jlc.getUrl() : "No JenkinsLocationConfiguration available"));
+
+            out.println("  * Url:     " + (jlc != null ? ContentFilter.filter(filter, jlc.getUrl()) : "No JenkinsLocationConfiguration available"));
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
@@ -678,14 +673,14 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private class NodesContent extends PrintedContent {
+    private class NodesContent extends PrefilteredPrintedContent {
         NodesContent() {
             super("nodes.md");
         }
         private String getLabelString(Node n) {
             return Markdown.prettyNone(n.getLabelString());
         }
-        @Override protected void printTo(PrintWriter out) throws IOException {
+        @Override protected void printTo(PrintWriter out,  ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.getInstance();
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
             if (supportPlugin != null) {
@@ -707,29 +702,29 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("  * master (Jenkins)");
             out.println("      - Description:    _" +
-                    Markdown.escapeUnderscore(Util.fixNull(jenkins.getNodeDescription())) + "_");
+                    Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, jenkins.getNodeDescription()))) + "_");
             out.println("      - Executors:      " + jenkins.getNumExecutors());
             out.println("      - FS root:        `" +
-                    Markdown.escapeBacktick(jenkins.getRootDir().getAbsolutePath()) + "`");
-            out.println("      - Labels:         " + getLabelString(jenkins));
+                    Markdown.escapeBacktick(ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
+            out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").call());
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * `" + Markdown.escapeBacktick(node.getNodeName()) + "` (" +getDescriptorName(node) +
+                out.println("  * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, node.getNodeName())) + "` (" +getDescriptorName(node) +
                         ")");
                 out.println("      - Description:    _" +
-                        Markdown.escapeUnderscore(Util.fixNull(node.getNodeDescription())) + "_");
+                        Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, node.getNodeDescription()))) + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
-                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(rootPath.getRemote()) + "`");
+                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, rootPath.getRemote())) + "`");
                 } else if (node instanceof Slave) {
                     out.println("      - Remote FS root: `" +
-                            Markdown.escapeBacktick(Slave.class.cast(node).getRemoteFS()) + "`");
+                            Markdown.escapeBacktick(ContentFilter.filter(filter, Slave.class.cast(node).getRemoteFS())) + "`");
                 }
-                out.println("      - Labels:         " + Markdown.escapeUnderscore(getLabelString(node)));
+                out.println("      - Labels:         " + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;
@@ -846,6 +841,12 @@ public class AboutJenkins extends Component {
                 }
             }
         }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            // The information of this content is not sensible, so it doesn't need to be filtered.
+            return false;
+        }
     }
 
     private class NodeChecksumsContent extends PrintedContent {
@@ -865,6 +866,12 @@ public class AboutJenkins extends Component {
                 logger.log(Level.WARNING,
                         "Could not compute checksums on slave " + node.getNodeName(), e);
             }
+        }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            // The information of this content is not sensible, so it doesn't need to be filtered.
+            return false;
         }
     }
 

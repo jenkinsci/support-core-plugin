@@ -26,7 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -39,11 +39,7 @@ import jenkins.security.MasterToSlaveCallable;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -89,34 +85,29 @@ public class RootCAs extends Component {
     if (c == null) {
       return;
     }
+
     String name;
+    String[] params;
     if (node instanceof Jenkins) {
-      name = "master";
+      name = "nodes/master/RootCA.txt";
+      params = new String[0];
     } else {
-      name = "slave/" + node.getNodeName();
+      name = "nodes/slave/{0}/RootCA.txt";
+      params = new String[]{node.getNodeName()};
     }
-    container.add(
-            new Content("nodes/{0}/RootCA.txt", name) {
-              @Override
-              public void writeTo(OutputStream os) throws IOException {
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
-                try {
-                  out.println(getRootCA(node));
-                } catch (IOException e) {
-                  Functions.printStackTrace(e, out);
-                } finally {
-                  out.flush();
-                }
-              }
-            }
-    );
+
+    try {
+      container.add(new UnfilteredStringContent(name, params, getRootCA(node)));
+    } catch (IOException e) {
+      container.add(new UnfilteredStringContent(name, params, Functions.printThrowable(e)));
+    }
   }
+
 
   public String getRootCA(Node node) throws IOException {
     return AsyncResultCache.get(node, certCache, new GetRootCA(), "Root CA info",
             "N/A: Either no connection to node, or no cached result");
   }
-
 
   private static final class GetRootCA extends MasterToSlaveCallable<String, RuntimeException> {
     @edu.umd.cs.findbugs.annotations.SuppressWarnings(
@@ -149,7 +140,7 @@ public class RootCAs extends Component {
                   .append(String.valueOf(acceptedIssuers.length))
                   .append(" certificates:\n");
           for (X509Certificate x509Certificate : acceptedIssuers) {
-            writer.append(x509Certificate.getSubjectX500Principal().toString()).append('\n');
+              writer.append(x509Certificate.getSubjectX500Principal().toString()).append('\n');
           }
         } else {
           writer.append("Skipping as it is not an X.509 Trust Manager.\n");

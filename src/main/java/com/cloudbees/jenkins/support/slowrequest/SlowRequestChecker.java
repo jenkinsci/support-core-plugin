@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.inject.Inject;
@@ -16,6 +18,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +76,9 @@ public class SlowRequestChecker extends PeriodicWork {
             return;
         }
 
+        // We filter the information written to the slow-requests files
+        Optional<ContentFilter> contentFilter = SupportPlugin.getContentFilter();
+
         final long now = System.currentTimeMillis();
 
         long iota = System.currentTimeMillis();
@@ -95,7 +101,7 @@ public class SlowRequestChecker extends PeriodicWork {
                         logs.add(req.record);
 
                         w = new PrintWriter(req.record,"UTF-8");
-                        req.writeHeader(w);
+                        req.writeHeader(w, contentFilter);
                     } else {
                         w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true),"UTF-8"));
                         logs.touch(req.record);
@@ -105,17 +111,17 @@ public class SlowRequestChecker extends PeriodicWork {
                       continue;
                     ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId(), Integer.MAX_VALUE);
                     if (lockedThread != null ) {
-                        w.println(lockedThread);
-                        w.println(totalTime + "msec elapsed in " + lockedThread.getThreadName());
-                        printThreadStackElements(lockedThread, w);
+                        w.println(contentFilter.map(cf -> cf.filter(lockedThread.toString())).orElse(lockedThread.toString()));
+                        w.println(totalTime + "msec elapsed in " + contentFilter.map(cf -> cf.filter(lockedThread.getThreadName())).orElse(lockedThread.getThreadName()));
+                        printThreadStackElements(lockedThread, w, contentFilter);
 
                         long lockOwnerId = lockedThread.getLockOwnerId();
                         if (lockOwnerId != -1) // If the thread is not locked, then getLockOwnerId returns -1.
                         {
                             ThreadInfo threadInfo = ManagementFactory.getThreadMXBean().getThreadInfo(lockOwnerId, Integer.MAX_VALUE);
-                            w.println(threadInfo);
+                            w.println(contentFilter.map(cf -> cf.filter(lockedThread.toString())).orElse(lockedThread.toString()));
                             if (threadInfo != null) {
-                                printThreadStackElements(threadInfo, w);
+                                printThreadStackElements(threadInfo, w, contentFilter);
                             }
                         }
                     }
@@ -126,9 +132,9 @@ public class SlowRequestChecker extends PeriodicWork {
         }
     }
 
-    private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer) {
+    private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer, Optional<ContentFilter> contentFilter) {
         for (StackTraceElement element : threadinfo.getStackTrace()) {
-            writer.println("    " + element);
+            writer.println("    " + contentFilter.map(cf -> cf.filter(element.toString())).orElse(element.toString()));
         }
     }
 
