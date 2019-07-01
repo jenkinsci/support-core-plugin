@@ -327,7 +327,7 @@ public class AboutJenkins extends Component {
          * @return the Java information.
          */
         @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-        public String getInfo(ContentFilter filter) {
+        private String getInfo(ContentFilter filter) {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
