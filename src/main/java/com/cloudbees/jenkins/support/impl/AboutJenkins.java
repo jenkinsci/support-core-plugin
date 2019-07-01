@@ -315,8 +315,19 @@ public class AboutJenkins extends Component {
             this.min = minorBullet;
         }
 
-        @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
         public String call() throws RuntimeException {
+            return getInfo(null);
+        }
+
+        /**
+         * Method used to retrieve the info filtered if a filter is set. When used in a node, from the {@link #call()}
+         * method, the filter is not passed because it's not going to work in a node through remote.
+         * because it doesn't work in an agent.
+         * @param filter the filter to use.
+         * @return the Java information.
+         */
+        @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
+        public String getInfo(ContentFilter filter) {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
@@ -441,7 +452,8 @@ public class AboutJenkins extends Component {
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
-                result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(arg))
+                // The master endpoint may be in the args
+                result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
             return result.toString();
@@ -506,7 +518,7 @@ public class AboutJenkins extends Component {
             } catch (NullPointerException e) {
                 // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
-            out.print(new GetJavaInfo("  *", "      -").call());
+            out.print(new GetJavaInfo("  *", "      -").getInfo(filter));
             out.println();
             out.println("Important configuration");
             out.println("---------------");
@@ -709,7 +721,7 @@ public class AboutJenkins extends Component {
             out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             out.println("      - Slave Version:  " + Launcher.VERSION);
-            out.print(new GetJavaInfo("      -", "          +").call());
+            out.print(new GetJavaInfo("      -", "          +").getInfo(filter));
             out.println();
             for (Node node : jenkins.getNodes()) {
                 out.println("  * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, node.getNodeName())) + "` (" +getDescriptorName(node) +
@@ -752,7 +764,11 @@ public class AboutJenkins extends Component {
                                     "Could not get Java info for {0} and no cached value available",
                                     node.getNodeName());
                         } else {
-                            out.print(javaInfo);
+                            // We make sure the output is filtered, maybe some labels are going to be filtered, but
+                            // to avoid that:
+                            // TODO: we have to change the MasterToSlaveCallable (GetJavaInfo) call to return a Map of
+                            //  values (key: value) and filter all the values here.
+                            out.print(ContentFilter.filter(filter, javaInfo));
                         }
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not get Java info for " + node.getNodeName(), e);

@@ -61,7 +61,7 @@ public abstract class LogRecordContent extends PrefilteredContent {
     protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
         for (LogRecord logRecord : getLogRecords()) {
             String filtered = LOG_FORMATTER.format(logRecord);
-            ContentFilter.filter(filter,filtered);
+            filtered = ContentFilter.filter(filter,filtered);
             out.print(filtered);
         }
 
