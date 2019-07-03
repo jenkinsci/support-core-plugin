@@ -736,7 +736,7 @@ public class AboutJenkins extends Component {
                     out.println("      - Remote FS root: `" +
                             Markdown.escapeBacktick(ContentFilter.filter(filter, Slave.class.cast(node).getRemoteFS())) + "`");
                 }
-                out.println("      - Labels:         " + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
+                out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(node)));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;
