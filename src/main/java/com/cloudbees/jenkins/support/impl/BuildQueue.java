@@ -27,6 +27,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.util.Markdown;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
@@ -83,10 +84,10 @@ public class BuildQueue extends Component {
               }
               out.println("    - In queue for: " + item.getInQueueForString());
               out.println("    - Is blocked: " + item.isBlocked());
-              out.println("    - Why in queue: " + item.getWhy());
+              out.println("    - Why in queue: " + Markdown.escapeUnderscore(ContentFilter.filter(filter, item.getWhy())));
 
               for (Cause cause : item.getCauses()) {
-                out.println("    - Current queue trigger cause: " + cause.getShortDescription());
+                out.println("    - Current queue trigger cause: " + Markdown.escapeUnderscore(ContentFilter.filter(filter, cause.getShortDescription())));
               }
 
               for (QueueTaskDispatcher taskDispatcher : QueueTaskDispatcher.all()) {

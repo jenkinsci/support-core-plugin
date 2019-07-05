@@ -31,8 +31,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,20 +65,19 @@ public class InetAddressContentFilter implements ContentFilter {
     public @Nonnull String filter(@Nonnull String input) {
         ContentMappings mappings = ContentMappings.get();
         Matcher m = IP_ADDRESS.matcher(input);
-        List<String> searchList = new ArrayList<>();
-        List<String> replacementList = new ArrayList<>();
+        // Use the map keys to filter every IP found without repeating the filtering if the same is found twice.
+        Map<String, String> searchAndReplacementValues = new HashMap<>();
         while (m.find()) {
             String ip = m.group();
 
             if (!mappings.getStopWords().contains(ip)) {
                 ContentMapping map = mappings.getMappingOrCreate(ip, InetAddressContentFilter::newMapping);
-                searchList.add(ip);
-                replacementList.add(map.getReplacement());
+                searchAndReplacementValues.put(ip, map.getReplacement());
             }
         }
         String filtered = input;
-        if (!searchList.isEmpty()) {
-            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
+        if (!searchAndReplacementValues.isEmpty()) {
+            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchAndReplacementValues.keySet().toArray(new String[0]), searchAndReplacementValues.values().toArray(new String[0]));
         }
 
         return filtered;

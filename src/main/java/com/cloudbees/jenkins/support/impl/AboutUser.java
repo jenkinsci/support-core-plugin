@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.util.Markdown;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -58,7 +59,8 @@ public class AboutUser extends Component {
                                             "`", "&#96;") + "`"));
                         }
                     }
-                    out.println("  * Raw: `" + authentication.toString().replaceAll("`", "&#96;") + "`");
+                    // The raw data has the user name. We print it like code wrapping it with `
+                    out.println("  * Raw: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, authentication.toString())) + "`");
                     out.println();
                 }
             });
