@@ -285,7 +285,7 @@ public class SupportPlugin extends Plugin {
         PrintWriter errorWriter = new PrintWriter(errors);
 
         try {
-            try (BulkChange change = new BulkChange(ContentMappings.get());
+            try (BulkChange change = new BulkChange(ContentMappings.get()); 
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 // Get the filter to be used
                 Optional<ContentFilter> maybeFilter = getContentFilter();
@@ -312,8 +312,20 @@ public class SupportPlugin extends Plugin {
                     }
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
+                    
                     try {
                         entry.setTime(content.getTime());
+                    } catch (IOException ioe) {
+                        String msg = "Could not set the mtime for ''" + name + "'' in the support bundle";
+                        logger.log(Level.WARNING, msg, ioe);
+                        errorWriter.println(msg);
+                        errorWriter.println("-----------------------------------------------------------------------");
+                        errorWriter.println();
+                        Functions.printStackTrace(ioe, errorWriter);
+                        errorWriter.println();
+                    }
+                    
+                    try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
