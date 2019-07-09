@@ -312,8 +312,8 @@ public class SupportPlugin extends Plugin {
                     }
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
                     final ZipArchiveEntry entry = new ZipArchiveEntry(name);
-                    entry.setTime(content.getTime());
                     try {
+                        entry.setTime(content.getTime());
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
