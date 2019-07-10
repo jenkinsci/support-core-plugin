@@ -285,7 +285,7 @@ public class SupportPlugin extends Plugin {
         PrintWriter errorWriter = new PrintWriter(errors);
 
         try {
-            try (BulkChange change = new BulkChange(ContentMappings.get()); 
+            try (BulkChange change = new BulkChange(ContentMappings.get());
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
                 // Get the filter to be used
                 Optional<ContentFilter> maybeFilter = getContentFilter();
