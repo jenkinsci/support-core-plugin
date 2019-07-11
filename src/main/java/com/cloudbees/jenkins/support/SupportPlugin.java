@@ -310,22 +310,12 @@ public class SupportPlugin extends Plugin {
                     if (content == null) {
                         continue;
                     }
+                    
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
-                    final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                     
                     try {
+                        final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                         entry.setTime(content.getTime());
-                    } catch (IOException ioe) {
-                        String msg = "Could not set the mtime for ''" + name + "'' in the support bundle";
-                        logger.log(Level.WARNING, msg, ioe);
-                        errorWriter.println(msg);
-                        errorWriter.println("-----------------------------------------------------------------------");
-                        errorWriter.println();
-                        Functions.printStackTrace(ioe, errorWriter);
-                        errorWriter.println();
-                    }
-                    
-                    try {
                         binaryOut.putArchiveEntry(entry);
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
@@ -335,6 +325,9 @@ public class SupportPlugin extends Plugin {
                             content.writeTo(out);
                         }
                         out.flush();
+                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
+                        selector.reset();
+                        binaryOut.closeArchiveEntry();
                     } catch (Throwable e) {
                         String msg = "Could not attach ''" + name + "'' to support bundle";
                         logger.log(Level.WARNING, msg, e);
@@ -343,10 +336,6 @@ public class SupportPlugin extends Plugin {
                         errorWriter.println();
                         Functions.printStackTrace(e, errorWriter);
                         errorWriter.println();
-                    } finally {
-                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
-                        selector.reset();
-                        binaryOut.closeArchiveEntry();
                     }
                 }
                 errorWriter.close();
