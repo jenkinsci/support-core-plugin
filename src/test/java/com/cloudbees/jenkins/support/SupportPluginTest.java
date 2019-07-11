@@ -3,7 +3,11 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.impl.AboutJenkins;
+import com.cloudbees.jenkins.support.impl.BuildQueue;
+import com.cloudbees.jenkins.support.impl.SystemProperties;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.ExtensionList;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.junit.Assert;
@@ -17,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +38,7 @@ public class SupportPluginTest {
     @Test
     @Issue("JENKINS-58393")
     public void testGenerateBundleExceptionHandler() throws Exception {
-        List<Component> componentsToCreate = Collections.singletonList(new Component() {
+        List<Component> componentsToCreate = Arrays.asList(new Component() {
             @NonNull
             @Override
             public Set<Permission> getRequiredPermissions() {
@@ -60,7 +65,11 @@ public class SupportPluginTest {
                     }
                 });
             }
-        });
+        },
+                ExtensionList.lookup(Component.class).get(AboutJenkins.class),
+                ExtensionList.lookup(Component.class).get(BuildQueue.class),
+                ExtensionList.lookup(Component.class).get(SystemProperties.class)
+        );
 
         File bundleFile = temp.newFile();
         
@@ -69,8 +78,12 @@ public class SupportPluginTest {
         }
         
         ZipFile zip = new ZipFile(bundleFile);
-        Assert.assertNotNull(zip.getEntry("test/testGenerateBundleExceptionHandler.md"));
+        Assert.assertNull(zip.getEntry("test/testGenerateBundleExceptionHandler.md"));
         Assert.assertNotNull(zip.getEntry("manifest.md"));
         Assert.assertNotNull(zip.getEntry("manifest/errors.txt"));
+        Assert.assertNotNull(zip.getEntry("buildqueue.md"));
+        Assert.assertNotNull(zip.getEntry("nodes/master/system.properties"));
+        Assert.assertNotNull(zip.getEntry("about.md"));
+        Assert.assertNotNull(zip.getEntry("nodes.md"));
     }
 }
