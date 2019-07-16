@@ -79,7 +79,7 @@ public class FileContent extends PrefilteredContent {
     }
 
     @Override
-    public long getTime() throws IOException {
+    public long getTime() {
         return baseFileContent.getTime();
     }
 

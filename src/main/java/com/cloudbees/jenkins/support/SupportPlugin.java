@@ -306,15 +306,19 @@ public class SupportPlugin extends Plugin {
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
                 IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
+                boolean entryCreated = false;
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
                     }
+
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
-                    final ZipArchiveEntry entry = new ZipArchiveEntry(name);
-                    entry.setTime(content.getTime());
+                    
                     try {
+                        final ZipArchiveEntry entry = new ZipArchiveEntry(name);
+                        entry.setTime(content.getTime());
                         binaryOut.putArchiveEntry(entry);
+                        entryCreated = true;
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
                         if (content instanceof PrefilteredContent && maybeFilter.isPresent()) {
@@ -334,7 +338,10 @@ public class SupportPlugin extends Plugin {
                     } finally {
                         maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
                         selector.reset();
-                        binaryOut.closeArchiveEntry();
+                        if (entryCreated) {
+                            binaryOut.closeArchiveEntry();
+                            entryCreated = false;
+                        }
                     }
                 }
                 errorWriter.close();
@@ -342,11 +349,15 @@ public class SupportPlugin extends Plugin {
                 if (StringUtils.isNotBlank(errorContent)) {
                     try {
                         binaryOut.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
+                        entryCreated = true;
                         textOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
                         textOut.flush();
-                        binaryOut.closeArchiveEntry();
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not write manifest/errors.txt to zip archive", e);
+                    } finally {
+                        if (entryCreated) {
+                            binaryOut.closeArchiveEntry();
+                        }
                     }
                 }
                 binaryOut.flush();
