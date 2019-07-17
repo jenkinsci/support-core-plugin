@@ -27,12 +27,14 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.google.common.annotations.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Computer;
+import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.remoting.Channel;
 import hudson.remoting.Command;
@@ -41,12 +43,19 @@ import hudson.remoting.Response;
 import hudson.security.Permission;
 import hudson.slaves.ComputerListener;
 import jenkins.model.Jenkins;
+import jenkins.model.NodeListener;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.GuardedBy;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +65,14 @@ import java.util.regex.Pattern;
 @Extension
 public final class SlaveCommandStatistics extends Component {
 
+    /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
+
+    private final Object statLock = new Object();
+    @GuardedBy("statLock")
     private final Map<String, Statistics> statistics = Collections.synchronizedSortedMap(new TreeMap<>());
+    // Log of statistics for late rotation that no longer has its computer. Oldest entries first.
+    @GuardedBy("statLock")
+    private final LinkedHashMap<String, Statistics> statLog = new LinkedHashMap<>();
 
     @Override
     public String getDisplayName() {
@@ -70,7 +86,7 @@ public final class SlaveCommandStatistics extends Component {
 
     @Override
     public void addContents(Container container) {
-        statistics.forEach((name, stats) -> container.add(new PrintedContent("nodes/slave/{0}/command-stats.md", name) {
+        getStatistics().forEach((name, stats) -> container.add(new PrintedContent("nodes/slave/{0}/command-stats.md", name) {
             @Override
             protected void printTo(PrintWriter out) throws IOException {
                 stats.print(out);
@@ -82,6 +98,16 @@ public final class SlaveCommandStatistics extends Component {
                 return false;
             }
         }));
+    }
+
+    @VisibleForTesting
+    /*package*/ Map<String, Statistics> getStatistics() {
+        synchronized (statLock) {
+            Map<String, Statistics> out = new HashMap<>(statistics.size() + statLog.size());
+            out.putAll(statistics);
+            out.putAll(statLog);
+            return out;
+        }
     }
 
     private static final class Statistics extends Channel.Listener {
@@ -164,7 +190,6 @@ public final class SlaveCommandStatistics extends Component {
             out.println("# JARs sent");
             jars.forEach(jar -> out.printf("* `%s`: %db%n", jar.getName(), jar.length()));
         }
-
     }
 
     @Extension
@@ -174,7 +199,25 @@ public final class SlaveCommandStatistics extends Component {
         public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
             channel.addListener(ExtensionList.lookupSingleton(SlaveCommandStatistics.class).statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
         }
-
     }
 
+    // Rotate Statistics entries between #statistics and #statLog separating the live entries from historical ones so we
+    // can put a capacity constrain on the latter.
+    @Extension @Restricted(NoExternalUse.class)
+    public static final class NodeListenerImpl extends NodeListener {
+        @Override protected void onDeleted(@Nonnull Node node) {
+            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
+            synchronized (scs.statLock) {
+                Statistics listener = scs.statistics.remove(node.getNodeName());
+                if (MAX_STATS_SIZE > 0 && listener != null) {
+                    LinkedHashMap<String, Statistics> log = scs.statLog;
+                    while (log.size() >= MAX_STATS_SIZE) {
+                        String head = log.keySet().iterator().next();
+                        log.remove(head);
+                    }
+                    log.put(node.getNodeName(), listener);
+                }
+            }
+        }
+    }
 }

@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
@@ -77,4 +78,44 @@ public class SlaveCommandStatisticsTest {
         }
     }
 
+    @Test @Issue("JENKINS-58528")
+    public void statisticsAreRotatedWithComputers() throws Exception {
+        SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
+
+        SlaveCommandStatistics.MAX_STATS_SIZE = 0;
+        assertThat(scs.getStatistics().size(), equalTo(0));
+        DumbSlave s0 = r.createOnlineSlave();
+        assertThat(scs.getStatistics().size(), equalTo(1));
+        r.jenkins.removeNode(s0);
+        assertThat(scs.getStatistics().size(), equalTo(0));
+
+        SlaveCommandStatistics.MAX_STATS_SIZE = 1;
+        DumbSlave s1 = r.createOnlineSlave();
+        DumbSlave s2 = r.createOnlineSlave();
+        DumbSlave s3 = r.createOnlineSlave();
+        assertThat(scs.getStatistics().size(), equalTo(3));
+        r.jenkins.removeNode(s1);
+        assertThat(scs.getStatistics().size(), equalTo(3));
+        r.jenkins.removeNode(s2);
+        assertThat(scs.getStatistics().size(), equalTo(2));
+        r.jenkins.removeNode(s3);
+        assertThat(scs.getStatistics().size(), equalTo(1));
+        assertThat("Latest preserved", scs.getStatistics().keySet(), contains(s3.getNodeName()));
+
+        SlaveCommandStatistics.MAX_STATS_SIZE = 3;
+        s0 = r.createOnlineSlave();
+        s1 = r.createOnlineSlave();
+        s2 = r.createOnlineSlave();
+        s3 = r.createOnlineSlave();
+        assertThat(scs.getStatistics().size(), equalTo(4));
+        r.jenkins.removeNode(s0);
+        assertThat(scs.getStatistics().size(), equalTo(4));
+        r.jenkins.removeNode(s1);
+        assertThat(scs.getStatistics().size(), equalTo(4));
+        r.jenkins.removeNode(s2);
+        assertThat(scs.getStatistics().size(), equalTo(4));
+        r.jenkins.removeNode(s3);
+        assertThat(scs.getStatistics().size(), equalTo(3));
+        assertThat("Latest preserved", scs.getStatistics().keySet(), contains(s3.getNodeName(), s2.getNodeName(), s1.getNodeName()));
+    }
 }
