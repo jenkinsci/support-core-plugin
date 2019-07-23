@@ -116,6 +116,8 @@ public class SlaveCommandStatisticsTest {
         assertThat(scs.getStatistics().size(), equalTo(4));
         r.jenkins.removeNode(s3);
         assertThat(scs.getStatistics().size(), equalTo(3));
-        assertThat("Latest preserved", scs.getStatistics().keySet(), contains(s3.getNodeName(), s2.getNodeName(), s1.getNodeName()));
+        assertThat("Latest preserved", scs.getStatistics().keySet(), containsInAnyOrder(
+                s3.getNodeName(), s2.getNodeName(), s1.getNodeName()
+        ));
     }
 }

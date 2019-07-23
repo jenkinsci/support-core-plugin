@@ -69,7 +69,7 @@ public final class SlaveCommandStatistics extends Component {
 
     private final Object statLock = new Object();
     @GuardedBy("statLock")
-    private final Map<String, Statistics> statistics = Collections.synchronizedSortedMap(new TreeMap<>());
+    private final Map<String, Statistics> statistics = new HashMap<>();
     // Log of statistics for late rotation that no longer has its computer. Oldest entries first.
     @GuardedBy("statLock")
     private final LinkedHashMap<String, Statistics> statLog = new LinkedHashMap<>();
@@ -103,7 +103,7 @@ public final class SlaveCommandStatistics extends Component {
     @VisibleForTesting
     /*package*/ Map<String, Statistics> getStatistics() {
         synchronized (statLock) {
-            Map<String, Statistics> out = new HashMap<>(statistics.size() + statLog.size());
+            Map<String, Statistics> out = new TreeMap<>();
             out.putAll(statistics);
             out.putAll(statLog);
             return out;
@@ -197,12 +197,15 @@ public final class SlaveCommandStatistics extends Component {
 
         @Override
         public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
-            channel.addListener(ExtensionList.lookupSingleton(SlaveCommandStatistics.class).statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
+            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
+            synchronized (scs.statLock) {
+                channel.addListener(scs.statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
+            }
         }
     }
 
     // Rotate Statistics entries between #statistics and #statLog separating the live entries from historical ones so we
-    // can put a capacity constrain on the latter.
+    // can put a capacity constraint on the latter.
     @Extension @Restricted(NoExternalUse.class)
     public static final class NodeListenerImpl extends NodeListener {
         @Override protected void onDeleted(@Nonnull Node node) {
