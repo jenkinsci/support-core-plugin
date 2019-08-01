@@ -102,14 +102,16 @@ public class AboutJenkins extends Component {
     public void addContents(@NonNull Container container) {
         List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();
         List<PluginWrapper> disabledPlugins = new ArrayList<PluginWrapper>();
+        List<PluginWrapper> backupPlugins = new ArrayList<>();
 
-        populatePluginsLists(activePlugins, disabledPlugins);
+        populatePluginsLists(activePlugins, disabledPlugins, backupPlugins);
 
         container.add(new AboutContent(activePlugins));
         container.add(new NodesContent());
         container.add(new ActivePlugins(activePlugins));
         container.add(new DisabledPlugins(disabledPlugins));
         container.add(new FailedPlugins());
+        container.add(new BackupPlugins(backupPlugins));
 
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
@@ -618,6 +620,27 @@ public class AboutJenkins extends Component {
         }
     }
 
+    private static class BackupPlugins extends PrintedContent {
+        private final Iterable<PluginWrapper> plugins;
+
+        public BackupPlugins(Iterable<PluginWrapper> plugins) {
+            super("plugins/backup.txt");
+            this.plugins = plugins;
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            for (PluginWrapper w : plugins) {
+                out.println(w.getShortName() + ":" + w.getBackupVersion());
+            }
+        }
+
+        @Override
+        public boolean shouldBeFiltered() {
+            return false;
+        }
+    }
+
     private static class Dockerfile extends PrintedContent {
         private final List<PluginWrapper> activated;
         private final List<PluginWrapper> disabled;
@@ -911,12 +934,15 @@ public class AboutJenkins extends Component {
         return sorted;
     }
 
-    private static void populatePluginsLists(List<PluginWrapper> activePlugins, List<PluginWrapper> disabledPlugins) {
+    private static void populatePluginsLists(List<PluginWrapper> activePlugins, List<PluginWrapper> disabledPlugins, List<PluginWrapper> backupPlugins) {
         for(PluginWrapper plugin : getPluginsSorted()){
             if(plugin.isActive()) {
                 activePlugins.add(plugin);
             } else {
                 disabledPlugins.add(plugin);
+            }
+            if (plugin.getBackupVersion() != null) {
+                backupPlugins.add(plugin);
             }
         }
     }
