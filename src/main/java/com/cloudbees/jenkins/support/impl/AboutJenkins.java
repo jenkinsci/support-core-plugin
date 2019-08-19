@@ -502,7 +502,7 @@ public class AboutJenkins extends Component {
             out.println("---------------");
             out.println();
             out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
-            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.getInstanceOrNull().getLegacyInstanceId()) + "`");
+            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId()) + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
