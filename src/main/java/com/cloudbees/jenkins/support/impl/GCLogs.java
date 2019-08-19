@@ -15,6 +15,7 @@ import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,14 @@ public class GCLogs extends Component {
     static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
 
     static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
+
+    private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getCanonicalName() + ".retention";
+
+    /**
+     * How many days of garbage collector log files should be included in the bundle. 
+     * By default {@code 3} days. Any value less or equals to {@code 0} disables the retention.
+     */
+    private static final Integer GCLOGS_RETENTION_DAYS = Math.max(0, Integer.getInteger(GCLOGS_RETENTION_PROPERTY, 2));
 
     private static final String GCLOGS_BUNDLE_ROOT = "/nodes/master/logs/gc/";
 
@@ -132,8 +141,10 @@ public class GCLogs extends Component {
 
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
-            LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
+            if (GCLOGS_RETENTION_DAYS <= 0 || (gcLog.lastModified() > (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(GCLOGS_RETENTION_DAYS)))) {
+                LOGGER.finest("Adding '" + gcLog.getName() + "' file");
+                result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
+            }
         }
     }
 
