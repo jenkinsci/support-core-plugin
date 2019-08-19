@@ -3,8 +3,15 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportTestUtils;
+import com.cloudbees.jenkins.support.api.Component;
+import hudson.ExtensionList;
+import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -13,8 +20,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class AboutJenkinsTest {
 
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
+
     @Test
-    public void mayBeDateSmokes() throws Exception {
+    public void mayBeDateSmokes() {
         assertThat("null not a date", AboutJenkins.mayBeDate(null), is(false));
         assertThat("empty not a date", AboutJenkins.mayBeDate(""), is(false));
         assertThat("number not a date", AboutJenkins.mayBeDate("1"), is(false));
@@ -47,5 +57,13 @@ public class AboutJenkinsTest {
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-60"), is(false));
         assertThat("malformatted", AboutJenkins.mayBeDate("2000-01-01-00-00-0-"), is(false));
         assertThat("valid", AboutJenkins.mayBeDate("2014-03-24_12-48-41"), is(true));
+    }
+
+    @Test
+    @Issue("JENKINS-58393")
+    public void testGenerateBundleExceptionHandler() {
+        String contentToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "about.md");
+        
+        assertThat(contentToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
     }
 }
