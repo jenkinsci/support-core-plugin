@@ -74,7 +74,7 @@ public class GCLogs extends Component {
             return;
         }
 
-        if (isGcLogRotationConfigured()) {
+        if (isGcLogRotationConfigured() || isFileLocationParameterized(gcLogFileLocation)) {
             handleRotatedLogs(gcLogFileLocation, result);
         } else {
             File file = new File(gcLogFileLocation);
@@ -95,7 +95,7 @@ public class GCLogs extends Component {
     /**
      * Two cases:
      * <ul>
-     * <li>The file name contains <code>%t</code> or <code>%p</code> somewhere in the middle:
+     * <li>The file name contains <code>%t</code>, <code>%p</code> or <code>%n</code> somewhere in the middle:
      * then we are simply going to replace those by <code>.*</code> to find associated logs and match files by regex.
      * This will match GC logs from the current JVM execution, or possibly previous ones.</li>
      * <li>or that feature is not used, then we simply match by "starts with"</li>
@@ -109,7 +109,7 @@ public class GCLogs extends Component {
         File gcLogFile = new File(gcLogFileLocation);
 
         // always add .* in the end because this is where the numbering is going to happen
-        String regex = gcLogFile.getName().replaceAll("%[pt]", ".*") + ".*";
+        String regex = gcLogFile.getName().replaceAll("%[ptn]", ".*") + ".*";
         final Pattern gcLogFilesPattern = Pattern.compile(regex);
 
         File parentDirectory = gcLogFile.getParentFile();
@@ -146,6 +146,10 @@ public class GCLogs extends Component {
             return null;
         }
         return gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+    }
+    
+    public boolean isFileLocationParameterized(String fileLocation) {
+        return Pattern.compile(".*%[tnp].*").matcher(fileLocation).find();
     }
 
     private boolean isGcLogRotationConfigured() {
