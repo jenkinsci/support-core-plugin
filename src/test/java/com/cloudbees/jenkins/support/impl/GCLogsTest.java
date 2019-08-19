@@ -40,6 +40,7 @@ public class GCLogsTest {
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
         when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tempDir.getAbsolutePath()+"/gc.log");
 
         TestContainer container = new TestContainer();
 
