@@ -62,7 +62,7 @@ public class GCLogsTest {
         for (int count = 0; count < 10; count++) {
             File gcLogFile = new File(tempDir, "gc5625.log" + count);
             Files.touch(gcLogFile);
-            gcLogFile.setLastModified(currentTime - TimeUnit.DAYS.toMillis(2));
+            gcLogFile.setLastModified(currentTime - TimeUnit.DAYS.toMillis(5));
         }
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc3421.log" + count));

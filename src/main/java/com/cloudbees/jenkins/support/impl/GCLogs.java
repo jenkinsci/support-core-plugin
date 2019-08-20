@@ -39,9 +39,9 @@ public class GCLogs extends Component {
 
     /**
      * How many days of garbage collector log files should be included in the bundle. 
-     * By default {@code 3} days. Any value less or equals to {@code 0} disables the retention.
+     * By default {@code 5} days. Any value less or equals to {@code 0} disables the retention.
      */
-    private static final Integer GCLOGS_RETENTION_DAYS = Math.max(0, Integer.getInteger(GCLOGS_RETENTION_PROPERTY, 2));
+    private static final Integer GCLOGS_RETENTION_DAYS = Math.max(0, Integer.getInteger(GCLOGS_RETENTION_PROPERTY, 5));
 
     private static final String GCLOGS_BUNDLE_ROOT = "/nodes/master/logs/gc/";
 
