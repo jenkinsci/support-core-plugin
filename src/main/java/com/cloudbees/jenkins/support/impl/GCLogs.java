@@ -109,7 +109,7 @@ public class GCLogs extends Component {
         File gcLogFile = new File(gcLogFileLocation);
 
         // always add .* in the end because this is where the numbering is going to happen
-        String regex = gcLogFile.getName().replaceAll("%[ptn]", ".*") + ".*";
+        String regex = gcLogFile.getName().replaceAll("%[pt]", ".*") + ".*";
         final Pattern gcLogFilesPattern = Pattern.compile(regex);
 
         File parentDirectory = gcLogFile.getParentFile();

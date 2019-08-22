@@ -60,7 +60,7 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc.%t.%p.log.%n").getAbsolutePath());
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc.%t.%p.log").getAbsolutePath());
 
         TestContainer container = new TestContainer();
 
