@@ -60,8 +60,8 @@ public class AboutJenkinsTest {
     }
 
     @Test
-    @Issue("JENKINS-58393")
-    public void testGenerateBundleExceptionHandler() {
+    @Issue("JENKINS-56245")
+    public void testAboutJenkinsContent() {
         String contentToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "about.md");
         
         assertThat(contentToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
