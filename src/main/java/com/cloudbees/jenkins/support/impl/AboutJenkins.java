@@ -375,6 +375,7 @@ public class AboutJenkins extends Component {
                     break;
                 }
             }
+            result.append(min).append(" Available CPUs:   ").append(Runtime.getRuntime().availableProcessors()).append("\n");
 
             result.append(maj).append(" Java Runtime Specification\n");
             result.append(min).append(" Name:    ").append(System.getProperty("java.specification.name")).append("\n");
