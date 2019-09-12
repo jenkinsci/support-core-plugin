@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
@@ -21,6 +22,8 @@ import java.util.Set;
 
 @Extension
 public class RunningJobs extends Component {
+
+    static final String MESSAGE_FORMAT = "%s build: %d";
 
     @NonNull
     @Override
@@ -46,7 +49,10 @@ public class RunningJobs extends Component {
                                 .stream()
                                 .filter(Job::isBuilding)
                                 .forEach(job -> {
-                                    out.println(job.getFullName());
+                                    ((Job<?, ?>) job)
+                                        .getBuilds()
+                                        .filter(Run::isBuilding)
+                                        .forEach(run -> out.println(String.format(MESSAGE_FORMAT, job.getFullName(), run.getNumber())));
                                 }));
 
                     } finally {

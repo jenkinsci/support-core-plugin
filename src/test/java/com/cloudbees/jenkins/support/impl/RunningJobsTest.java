@@ -25,6 +25,6 @@ public class RunningJobsTest {
 
         String output = SupportTestUtils.invokeComponentToString(new RunningJobs());
 
-        assertThat(output, containsString(jobName));
+        assertThat(output, containsString(String.format(RunningJobs.MESSAGE_FORMAT, jobName, build.get().getNumber())));
     }
 }
