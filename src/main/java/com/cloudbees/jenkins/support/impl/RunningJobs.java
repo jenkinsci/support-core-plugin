@@ -43,7 +43,7 @@ public class RunningJobs extends Component {
             new Content("nodes/master/running-jobs.txt") {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
-                    try (PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)))) {
+                    try (OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8); BufferedWriter bw = new BufferedWriter(osw); PrintWriter out = new PrintWriter(bw)) {
                         Optional.ofNullable(Jenkins.getInstanceOrNull())
                             .ifPresent(jenkins -> jenkins.getAllItems(Job.class)
                                 .stream()
