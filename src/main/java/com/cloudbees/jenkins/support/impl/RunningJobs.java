@@ -56,7 +56,7 @@ public class RunningJobs extends Component {
                                 }));
 
                     } finally {
-                        os.flush();
+                        out.flush();
                     }
                 }
             }
