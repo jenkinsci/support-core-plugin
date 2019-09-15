@@ -510,7 +510,7 @@ public class AboutJenkins extends Component {
             }
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
 
-            out.println("  * Url:     " + (jlc != null ? ContentFilter.filter(filter, jlc.getUrl()) : "No JenkinsLocationConfiguration available"));
+            out.println("  * Url:     " + (ContentFilter.filter(filter, jlc.getUrl())));
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
