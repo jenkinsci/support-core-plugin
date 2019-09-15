@@ -2,7 +2,8 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -33,15 +34,15 @@ public class RunningJobs extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(
-            new PrintedContent("nodes/master/running-jobs.txt") {
+            new PrefilteredPrintedContent("nodes/master/running-jobs.txt") {
                 @Override
-                protected void printTo(PrintWriter out) {
+                protected void printTo(PrintWriter out, ContentFilter filter) {
                     Optional.ofNullable(Jenkins.getInstanceOrNull())
                         .ifPresent(jenkins -> Arrays.stream(jenkins.getComputers())
                             .flatMap(computer -> computer.getAllExecutors().stream())
                             .collect(Collectors.toList())
                             .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
-                                .ifPresent(out::println)
+                                .ifPresent(executable -> out.println(ContentFilter.filter(filter, executable.toString())))
                             )
                         );
                 }
