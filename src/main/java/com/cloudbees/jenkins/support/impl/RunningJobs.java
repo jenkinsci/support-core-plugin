@@ -43,7 +43,9 @@ public class RunningJobs extends Component {
                             .filter(Executor::isBusy)
                             .collect(Collectors.toList())
                             .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
-                                .ifPresent(executable -> out.println(executable.getParent().getOwnerTask().getUrl()))));
+                                .ifPresent(out::println)
+                            )
+                        );
                 }
             });
     }
