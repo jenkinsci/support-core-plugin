@@ -5,7 +5,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.Executor;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
@@ -40,7 +39,6 @@ public class RunningJobs extends Component {
                     Optional.ofNullable(Jenkins.getInstanceOrNull())
                         .ifPresent(jenkins -> Arrays.stream(jenkins.getComputers())
                             .flatMap(computer -> computer.getAllExecutors().stream())
-                            .filter(Executor::isBusy)
                             .collect(Collectors.toList())
                             .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
                                 .ifPresent(out::println)

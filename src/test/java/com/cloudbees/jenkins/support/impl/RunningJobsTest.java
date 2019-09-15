@@ -40,6 +40,6 @@ public class RunningJobsTest {
         String output = SupportTestUtils.invokeComponentToString(new RunningJobs());
 
         assertThat(output, containsString(p.getName()));
-
     }
+
 }
