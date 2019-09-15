@@ -8,6 +8,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.workflow.support.steps.ExecutorStepExecution;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ public class RunningJobs extends Component {
                             .flatMap(computer -> computer.getAllExecutors().stream())
                             .collect(Collectors.toList())
                             .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
+                                .filter(executable -> !(executable.getParent() instanceof ExecutorStepExecution.PlaceholderTask))
                                 .ifPresent(executable -> out.println(ContentFilter.filter(filter, executable.toString())))
                             )
                         );
