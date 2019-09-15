@@ -39,7 +39,7 @@ public class RunningJobs extends Component {
                 protected void printTo(PrintWriter out) {
                     Optional.ofNullable(Jenkins.getInstanceOrNull())
                         .ifPresent(jenkins -> Arrays.stream(jenkins.getComputers())
-                            .flatMap(computer -> computer.getExecutors().stream())
+                            .flatMap(computer -> computer.getAllExecutors().stream())
                             .filter(Executor::isBusy)
                             .collect(Collectors.toList())
                             .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
