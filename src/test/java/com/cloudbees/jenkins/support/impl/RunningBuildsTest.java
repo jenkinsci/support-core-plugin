@@ -4,11 +4,14 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.queue.QueueTaskFuture;
+import junit.framework.AssertionFailedError;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
@@ -16,6 +19,7 @@ import static org.junit.Assert.assertThat;
 public class RunningBuildsTest {
 
     private static final String JOB_NAME = "job-name";
+    private static final String EXPECTED_OUTPUT_FORMAT = "%s #%d";
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -23,23 +27,25 @@ public class RunningBuildsTest {
     @Test
     public void addContents() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject(JOB_NAME);
-        QueueTaskFuture<FreeStyleBuild> build = p.scheduleBuild2(0);
-        build.waitForStart();
+        QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
+        FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
-        assertThat(output, containsString(p.getName()));
+        assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber())));
     }
 
     @Test
     public void addContentsPipeline() throws Exception {
         WorkflowJob p = j.createProject(WorkflowJob.class, JOB_NAME);
-        QueueTaskFuture<WorkflowRun> build = p.scheduleBuild2(0);
-        build.waitForStart();
+        Optional<QueueTaskFuture<WorkflowRun>> optionalWorkflowRunQueueTaskFuture = Optional.ofNullable(p.scheduleBuild2(0));
+        QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = optionalWorkflowRunQueueTaskFuture
+            .orElseThrow(AssertionFailedError::new);
+        WorkflowRun workflowRun = workflowRunQueueTaskFuture.waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
-        assertThat(output, containsString(p.getName()));
+        assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), workflowRun.getNumber())));
     }
 
 }
