@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Extension
-public class RunningJobs extends Component {
+public class RunningBuilds extends Component {
 
     @NonNull
     @Override
@@ -29,13 +29,13 @@ public class RunningJobs extends Component {
     @Override
     @NonNull
     public String getDisplayName() {
-        return "Running Jobs";
+        return "Running Builds";
     }
 
     @Override
     public void addContents(@NonNull Container result) {
         result.add(
-            new PrefilteredPrintedContent("nodes/master/running-jobs.txt") {
+            new PrefilteredPrintedContent("nodes/master/running-builds.txt") {
                 @Override
                 protected void printTo(PrintWriter out, ContentFilter filter) {
                     Optional.ofNullable(Jenkins.getInstanceOrNull())

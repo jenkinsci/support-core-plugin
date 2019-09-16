@@ -13,7 +13,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
-public class RunningJobsTest {
+public class RunningBuildsTest {
 
     private static final String JOB_NAME = "job-name";
 
@@ -26,7 +26,7 @@ public class RunningJobsTest {
         QueueTaskFuture<FreeStyleBuild> build = p.scheduleBuild2(0);
         build.waitForStart();
 
-        String output = SupportTestUtils.invokeComponentToString(new RunningJobs());
+        String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
         assertThat(output, containsString(p.getName()));
     }
@@ -37,7 +37,7 @@ public class RunningJobsTest {
         QueueTaskFuture<WorkflowRun> build = p.scheduleBuild2(0);
         build.waitForStart();
 
-        String output = SupportTestUtils.invokeComponentToString(new RunningJobs());
+        String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
         assertThat(output, containsString(p.getName()));
     }
