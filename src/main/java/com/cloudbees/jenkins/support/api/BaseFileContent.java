@@ -83,7 +83,7 @@ class BaseFileContent {
                     is.close();
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) { // TODO FilePathContent.isFileNotFound?
             OutputStreamWriter osw = new OutputStreamWriter(os, ENCODING);
             try {
                 PrintWriter pw = new PrintWriter(osw, true);
@@ -124,7 +124,7 @@ class BaseFileContent {
                     }
                 }
             }
-        } catch (FileNotFoundException | NoSuchFileException e ) {
+        } catch (FileNotFoundException | NoSuchFileException e ) { // TODO FilePathContent.isFileNotFound?
             OutputStreamWriter osw = new OutputStreamWriter(os, ENCODING);
             try {
                 PrintWriter pw = new PrintWriter(osw, true);
