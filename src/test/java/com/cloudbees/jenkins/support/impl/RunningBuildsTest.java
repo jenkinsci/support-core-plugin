@@ -5,8 +5,10 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.queue.QueueTaskFuture;
 import junit.framework.AssertionFailedError;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -53,10 +55,12 @@ public class RunningBuildsTest {
     @Test
     public void addContentsPipeline() throws Exception {
         WorkflowJob p = j.createProject(WorkflowJob.class, JOB_NAME);
+        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
         Optional<QueueTaskFuture<WorkflowRun>> optionalWorkflowRunQueueTaskFuture = Optional.ofNullable(p.scheduleBuild2(0));
         QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = optionalWorkflowRunQueueTaskFuture
             .orElseThrow(AssertionFailedError::new);
         WorkflowRun workflowRun = workflowRunQueueTaskFuture.waitForStart();
+        SemaphoreStep.waitForStart("wait/1", workflowRun);
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
