@@ -35,7 +35,7 @@ public class RunningBuilds extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(
-            new PrefilteredPrintedContent("nodes/master/running-builds.txt") {
+            new PrefilteredPrintedContent("running-builds.txt") {
                 @Override
                 protected void printTo(PrintWriter out, ContentFilter filter) {
                     Optional.ofNullable(Jenkins.getInstanceOrNull())
