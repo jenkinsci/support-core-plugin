@@ -37,14 +37,12 @@ public class RunningBuilds extends Component {
             new PrefilteredPrintedContent("running-builds.txt") {
                 @Override
                 protected void printTo(PrintWriter out, ContentFilter filter) {
-                    Optional.ofNullable(Jenkins.getInstanceOrNull())
-                        .ifPresent(jenkins -> Arrays.stream(jenkins.getComputers())
-                            .flatMap(computer -> computer.getAllExecutors().stream())
-                            .collect(Collectors.toList())
-                            .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
-                                .filter(executable -> executable.getParent() == executable.getParent().getOwnerTask())
-                                .ifPresent(executable -> out.println(ContentFilter.filter(filter, executable.toString())))
-                            )
+                    Arrays.stream(Jenkins.get().getComputers())
+                        .flatMap(computer -> computer.getAllExecutors().stream())
+                        .collect(Collectors.toList())
+                        .forEach(executor -> Optional.ofNullable(executor.getCurrentExecutable())
+                            .filter(executable -> executable.getParent() == executable.getParent().getOwnerTask())
+                            .ifPresent(executable -> out.println(ContentFilter.filter(filter, executable.toString())))
                         );
                 }
             });
