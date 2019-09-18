@@ -1,6 +1,11 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.filter.ContentMapping;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.queue.QueueTaskFuture;
@@ -17,11 +22,16 @@ import org.jvnet.hudson.test.MockFolder;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 public class RunningBuildsTest {
 
     private static final String JOB_NAME = "job-name";
+    private static final String SENSITIVE_WORD = "authenticated";
+    private static final String SENSITIVE_JOB_NAME = SENSITIVE_WORD + "-" + JOB_NAME;
+    private static final String FILTERED_SENSITIVE_WORD = "filtered";
+    private static final String FILTERED_JOB_NAME = FILTERED_SENSITIVE_WORD + "-" + JOB_NAME;
     private static final String FOLDER_NAME = "folder-name";
     private static final String EXPECTED_OUTPUT_FORMAT = "%s #%d";
     private static final String EXPECTED_FOLDER_OUTPUT_FORMAT = "%s/" + EXPECTED_OUTPUT_FORMAT;
@@ -38,6 +48,22 @@ public class RunningBuildsTest {
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber())));
+    }
+
+    @Test
+    public void addContentsFiltered() throws Exception {
+        ContentFilters.get().setEnabled(true);
+        ContentMapping mapping = ContentMapping.of(SENSITIVE_WORD, FILTERED_SENSITIVE_WORD);
+        ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
+        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
+        QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
+        FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
+
+        String output = SupportTestUtils.invokeComponentToString(new RunningBuilds(), filter);
+
+        assertThat(output, not(containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber()))));
+        assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, FILTERED_JOB_NAME, build.getNumber())));
     }
 
     @Test
