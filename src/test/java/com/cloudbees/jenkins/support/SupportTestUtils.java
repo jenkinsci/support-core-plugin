@@ -42,20 +42,20 @@ public class SupportTestUtils {
     /**
      * Invoke a component with {@link ContentFilter}, and return the component contents as a String.
      */
-    public static String invokeComponentToString(final Component component, final ContentFilter filter) {
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        component.addContents(
-            new Container() {
-                @Override
-                public void add(@CheckForNull Content content) {
-                    try {
-                        ((PrefilteredContent) Objects.requireNonNull(content)).writeTo(baos, filter);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+    public static String invokeComponentToString(final Component component, final ContentFilter filter) throws IOException {
+        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            component.addContents(
+                new Container() {
+                    @Override
+                    public void add(@CheckForNull Content content) {
+                        try {
+                            ((PrefilteredContent) Objects.requireNonNull(content)).writeTo(baos, filter);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
-
-        return baos.toString();
+                });
+            return baos.toString();
+        }
     }
 }
