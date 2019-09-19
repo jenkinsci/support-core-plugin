@@ -817,7 +817,7 @@ public class SupportPlugin extends Plugin {
 
         @Override
         public long getInitialDelay() {
-            return TimeUnit.MINUTES.toMillis(5);
+            return TimeUnit.MINUTES.toMillis(3);
         }
 
         @Override
