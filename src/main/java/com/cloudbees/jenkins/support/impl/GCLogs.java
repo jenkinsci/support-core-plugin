@@ -11,7 +11,6 @@ import jenkins.model.Jenkins;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
@@ -128,12 +127,7 @@ public class GCLogs extends Component {
             return;
         }
 
-        File[] gcLogs = parentDirectory.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return gcLogFilesPattern.matcher(name).matches();
-            }
-        });
+        File[] gcLogs = parentDirectory.listFiles((dir, name) -> gcLogFilesPattern.matcher(name).matches());
         if (gcLogs == null || gcLogs.length == 0) {
             LOGGER.warning("No GC logging files found, although the VM argument was found. This is probably a bug.");
             return;
@@ -141,7 +135,7 @@ public class GCLogs extends Component {
 
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
-            if (GCLOGS_RETENTION_DAYS <= 0 || (gcLog.lastModified() > (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(GCLOGS_RETENTION_DAYS)))) {
+            if (shouldConsiderFile(gcLog)) {
                 LOGGER.finest("Adding '" + gcLog.getName() + "' file");
                 result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
             }
@@ -157,6 +151,17 @@ public class GCLogs extends Component {
             return null;
         }
         return gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+    }
+
+    /**
+     * Returns if the file passed in should be considered following the retention  @{link GCLOGS_RETENTION_DAYS}
+     * configured.
+     * @param gcLog the file
+     * @return true if the the file should be considered
+     */
+    private boolean shouldConsiderFile(File gcLog) {
+        return GCLOGS_RETENTION_DAYS <= 0 || 
+                gcLog.lastModified() > (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(GCLOGS_RETENTION_DAYS));
     }
 
     private boolean isGcLogRotationConfigured() {
