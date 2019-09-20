@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.google.common.io.Files;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -77,6 +78,10 @@ public class GCLogsTest {
         new GCLogs(finder).addContents(container);
 
         assertEquals(5, container.getContents().size());
+        Assertions.assertThat(container.getContents())
+                .extracting("file", File.class)
+                .extractingResultOf("getName")
+                .contains("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4"); 
     }
 
     private static class TestContainer extends Container {
