@@ -6,6 +6,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
+import jenkins.model.identity.IdentityRootAction;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -62,8 +63,12 @@ public class AboutJenkinsTest {
     @Test
     @Issue("JENKINS-56245")
     public void testAboutJenkinsContent() {
-        String contentToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "about.md");
+        String aboutMdToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "about.md");
+        String identityToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "identity.md");
         
-        assertThat(contentToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
+        assertThat(aboutMdToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
+        IdentityRootAction idRootaction = j.getInstance().getExtensionList(IdentityRootAction.class).get(0);
+        assertThat(identityToString, containsString(idRootaction.getPublicKey()));
+        assertThat(identityToString, containsString(idRootaction.getFingerprint()));
     }
 }
