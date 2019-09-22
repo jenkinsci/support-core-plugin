@@ -71,8 +71,8 @@ public class BuildQueue extends Component {
         @Override
         public void printTo(PrintWriter out, ContentFilter filter) {
           try {
-            List<Queue.Item> items = Jenkins.getInstance().getQueue().getApproximateItemsQuickly();
-            out.println("Current build queue has " +  items.size() + " item(s).");
+            Queue.Item[] items = Jenkins.getInstance().getQueue().getItems();
+            out.println("Current build queue has " +  items.length + " item(s).");
             out.println("---------------");
 
             for (Queue.Item item : items) {
