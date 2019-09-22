@@ -30,10 +30,9 @@ import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.remoting.RemoteOutputStream;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.kohsuke.args4j.Argument;
 
 import java.io.FileOutputStream;
@@ -80,8 +79,7 @@ public class SupportCommand extends CLICommand {
         }
         SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
         try {
-            SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-            try {
+            try (ACLContext old = ACL.as(ACL.SYSTEM)) {
                 OutputStream os;
                 if (channel != null) { // Remoting mode
                     os = channel.call(new SaveBundle(SupportPlugin.getBundleFileName()));
@@ -89,8 +87,6 @@ public class SupportCommand extends CLICommand {
                     os = new CloseProofOutputStream(stdout);
                 }
                 SupportPlugin.writeBundle(os, selected);
-            } finally {
-                SecurityContextHolder.setContext(old);
             }
         } finally {
             SupportPlugin.clearRequesterAuthentication();
