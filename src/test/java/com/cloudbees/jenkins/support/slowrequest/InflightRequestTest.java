@@ -5,7 +5,7 @@ import hudson.model.RootAction;
 import hudson.util.HttpResponses;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.HttpResponse;
@@ -26,7 +26,7 @@ public class InflightRequestTest {
     @Rule public JenkinsRule r = new JenkinsRule();
 
     @Test
-    @Bug(24671)
+    @Issue("JENKINS-24671")
     public void verifyUsernameInflightRequest() throws Exception {
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
         JenkinsRule.WebClient webClient = r.createWebClient().login("bob", "bob");
@@ -39,7 +39,7 @@ public class InflightRequestTest {
     }
 
     @Test
-    @Bug(24671)
+    @Issue("JENKINS-24671")
     public void verifyRefererHeaderFromInflightRequest() throws Exception {
         JenkinsRule.WebClient webClient = r.createWebClient();
 
