@@ -62,7 +62,7 @@ public class InflightRequestTest {
                                  "    <a href='" + req.getContextPath() + "/mockSlowURLCall/submit"+ "' id='link'>link</a>" +
                                  "  </body>" +
                                  "</html>";
-            return HttpResponses.html(literalHTML);
+            return HttpResponses.literalHtml(literalHTML);
         }
 
         public HttpResponse doSubmit(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
