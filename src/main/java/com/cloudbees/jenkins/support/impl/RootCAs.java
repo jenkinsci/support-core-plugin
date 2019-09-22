@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Computer;
@@ -110,7 +111,7 @@ public class RootCAs extends Component {
   }
 
   private static final class GetRootCA extends MasterToSlaveCallable<String, RuntimeException> {
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
     )

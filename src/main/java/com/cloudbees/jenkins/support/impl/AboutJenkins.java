@@ -17,7 +17,7 @@ import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.PluginManager;
@@ -283,8 +283,8 @@ public class AboutJenkins extends Component {
     private static class GetSlaveVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-                value = {"NP_LOAD_OF_KNOWN_NULL_VALUE"},
+        @SuppressFBWarnings(
+                value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
                 justification = "Findbugs mis-diagnosing closeQuietly's built-in null check"
         )
         public String call() throws RuntimeException {
@@ -328,7 +328,7 @@ public class AboutJenkins extends Component {
          * @param filter the filter to use.
          * @return the Java information.
          */
-        @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
+        @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
         private String getInfo(ContentFilter filter) {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();

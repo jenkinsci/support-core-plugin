@@ -40,6 +40,7 @@ import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.OutputStreamSelector;
 import com.codahale.metrics.Histogram;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -864,7 +865,7 @@ public class SupportPlugin extends Plugin {
             }
         }
 
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+        @SuppressFBWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "IS2_INCONSISTENT_SYNC"},
                 justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, " +
                         "IS2_INCONSISTENT_SYNC=only called from an already synchronized method"
