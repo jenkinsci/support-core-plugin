@@ -11,6 +11,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
 import hudson.WebAppMain;
+import hudson.init.Terminator;
 import hudson.logging.LogRecorder;
 import hudson.model.PeriodicWork;
 import hudson.security.Permission;
@@ -290,6 +291,10 @@ public class JenkinsLogs extends Component {
         }
 
         @Override protected void doRun() throws Exception {
+            flush();
+        }
+
+        @Terminator public static void flush() {
             Handler[] handlers;
             synchronized (LogFlusher.class) {
                 handlers = unflushedHandlers.toArray(new Handler[unflushedHandlers.size()]);
