@@ -58,4 +58,28 @@ public class SupportTestUtils {
             return baos.toString();
         }
     }
+
+    /**
+     * Invoke a component, and return a component content as a String.
+     * Useful to unit test a specific content.
+     */
+    public static String invokeContentToString(final Component component, final String contentName) {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        component.addContents(
+                new Container() {
+                    @Override
+                    public void add(@CheckForNull Content content) {
+                        if(!contentName.equals(content.getName())) {
+                            return;
+                        }
+                        try {
+                            content.writeTo(baos);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+        return baos.toString();
+    }
 }
