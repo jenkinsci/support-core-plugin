@@ -63,12 +63,11 @@ public class AboutJenkinsTest {
     @Test
     @Issue("JENKINS-56245")
     public void testAboutJenkinsContent() {
-        String aboutMdToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "about.md");
-        String identityToString = SupportTestUtils.invokeContentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class), "identity.md");
+        String aboutMdToString = SupportTestUtils.invokeComponentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
         
         assertThat(aboutMdToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
         IdentityRootAction idRootaction = j.getInstance().getExtensionList(IdentityRootAction.class).get(0);
-        assertThat(identityToString, containsString(idRootaction.getPublicKey()));
-        assertThat(identityToString, containsString(idRootaction.getFingerprint()));
+        assertThat(aboutMdToString, containsString(idRootaction.getPublicKey()));
+        assertThat(aboutMdToString, containsString(idRootaction.getFingerprint()));
     }
 }
