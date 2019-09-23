@@ -1,26 +1,33 @@
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.file.Files;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 
-import java.io.File;
-
-import static org.hamcrest.Matchers.equalToIgnoringWhiteSpace;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-/**
- * Created by valentina on 28/10/16.
- */
 public class OtherConfigFilesComponentTest {
 
     @Rule
     public JenkinsRule r = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logging = new LoggerRule().recordPackage(OtherConfigFilesComponent.class, Level.WARNING).capture(100);
 
     private String xml;
 
@@ -92,6 +99,29 @@ public class OtherConfigFilesComponentTest {
         String patchedXml = SecretHandler.findSecrets(file);
         assertThat(patchedXml, equalToIgnoringWhiteSpace(expectedXml));
     }
+
+    @Test
+    public void missingFile() throws Exception {
+        File file = new File(r.jenkins.root, "x.xml");
+        FileUtils.writeStringToFile(file, xml);
+        Map<String, Content> contents = new HashMap<>();
+        new OtherConfigFilesComponent().addContents(new Container() {
+            @Override
+            public void add(Content content) {
+                contents.put(MessageFormat.format(content.getName(), (Object[]) content.getFilterableParameters()), content);
+            }
+        });
+        Files.delete(file.toPath());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Content content = contents.get("jenkins-root-configuration-files/x.xml");
+        assertNotNull(content);
+        content.writeTo(baos);
+        assertThat("routine build should not issue warnings",
+            logging.getRecords().stream().
+                filter(lr -> lr.getLevel().intValue() >= Level.WARNING.intValue()). // TODO .record(…, WARNING) does not accomplish this
+                map(lr -> lr.getSourceClassName() + "." + lr.getSourceMethodName() + ": " + lr.getMessage()).collect(Collectors.toList()), // LogRecord does not override toString
+            emptyIterable());
+        assertThat(baos.toString(), allOf(containsString("FileNotFoundException"), containsString(file.getAbsolutePath())));
+    }
+
 }
-
-

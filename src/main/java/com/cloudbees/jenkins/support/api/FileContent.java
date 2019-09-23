@@ -26,15 +26,15 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
-
+import hudson.Functions;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Content that is stored as a file on disk. The content is filtered with the {@link ContentFilter} defined in the
@@ -46,7 +46,6 @@ public class FileContent extends PrefilteredContent {
     protected BaseFileContent baseFileContent;
     // to keep compatibility
     protected final File file;
-    private final Logger LOGGER = Logger.getLogger(this.getClass().getName());
 
     public FileContent(String name, File file) {
         this(name, file, -1);
@@ -97,8 +96,7 @@ public class FileContent extends PrefilteredContent {
             try {
                 return getInputStream();
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Error opening file " + file, e);
-                return null;
+                return new ByteArrayInputStream(Functions.printThrowable(e).getBytes(StandardCharsets.UTF_8));
             }
         };
         return  new BaseFileContent(file, supplier, maxSize);
