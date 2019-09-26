@@ -816,6 +816,11 @@ public class SupportPlugin extends Plugin {
         }
 
         @Override
+        public long getInitialDelay() {
+            return TimeUnit.MINUTES.toMillis(3);
+        }
+
+        @Override
         protected synchronized void doRun() throws Exception {
             if (Main.isUnitTest) {
                 return;
