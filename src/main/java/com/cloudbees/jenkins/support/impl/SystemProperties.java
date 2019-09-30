@@ -60,7 +60,7 @@ public class SystemProperties extends Component {
                         try {
                             Properties properties = new SortedProperties();
                             properties.putAll(RemotingDiagnostics
-                                    .getSystemProperties(Jenkins.getInstance().getChannel()));
+                                    .getSystemProperties(Jenkins.get().getChannel()));
                             properties.store(os, null);
                         } catch (IOException e) {
                             logger.log(Level.WARNING, "Could not record system properties for master", e);
@@ -70,7 +70,7 @@ public class SystemProperties extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             result.add(
                     new Content("nodes/slave/{0}/system.properties", node.getNodeName()) {
                         @Override

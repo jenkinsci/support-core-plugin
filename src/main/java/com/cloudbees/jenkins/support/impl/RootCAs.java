@@ -73,7 +73,7 @@ public class RootCAs extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    Jenkins j = Jenkins.getInstance();
+    Jenkins j = Jenkins.get();
     addContents(container, j);
     for (Node node : j.getNodes()) {
       addContents(container, node);
@@ -110,7 +110,7 @@ public class RootCAs extends Component {
   }
 
   private static final class GetRootCA extends MasterToSlaveCallable<String, RuntimeException> {
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
     )

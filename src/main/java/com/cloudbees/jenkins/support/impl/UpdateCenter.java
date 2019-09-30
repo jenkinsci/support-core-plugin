@@ -42,7 +42,7 @@ public class UpdateCenter extends Component {
                     @Override
                     public void printTo(PrintWriter out, ContentFilter filter) {
                         try {
-                            hudson.model.UpdateCenter updateCenter = Jenkins.getInstance().getUpdateCenter();
+                            hudson.model.UpdateCenter updateCenter = Jenkins.get().getUpdateCenter();
                             out.println("=== Sites ===");
                             for (UpdateSite c : updateCenter.getSiteList()) {
                                 out.println(" - Url: " + ContentFilter.filter(filter, c.getUrl()));
@@ -55,7 +55,7 @@ public class UpdateCenter extends Component {
                             out.println("Last updated: " + updateCenter.getLastUpdatedString());
 
                             // Only do this part of the async-http-client plugin is installed.
-                            if (Jenkins.getInstance().getPlugin("async-http-client") != null) {
+                            if (Jenkins.get().getPlugin("async-http-client") != null) {
                                 addProxyInformation(out, filter);
                             } else {
                                 out.println("Proxy: 'async-http-client' not installed, so no proxy info available.");

@@ -85,7 +85,7 @@ public abstract class Component implements ExtensionPoint {
      * @return {@code true} if the current authentication can include this component in a bundle.
      */
     public boolean isEnabled() {
-        ACL acl = Jenkins.getInstance().getAuthorizationStrategy().getRootACL();
+        ACL acl = Jenkins.get().getAuthorizationStrategy().getRootACL();
         if (acl != null) {
             Authentication authentication = Jenkins.getAuthentication();
             assert authentication != null;

@@ -128,7 +128,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         return "no dmi info";
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"DMI_HARDCODED_ABSOLUTE_FILENAME"})
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings({"DMI_HARDCODED_ABSOLUTE_FILENAME"})
     static public class GetDmiInfo extends MasterToSlaveCallable<String, Exception> {
         private static final long serialVersionUID = 1L;
         public String call() {

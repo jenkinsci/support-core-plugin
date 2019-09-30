@@ -17,7 +17,7 @@ import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.PluginManager;
@@ -116,7 +116,7 @@ public class AboutJenkins extends Component {
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
         container.add(new MasterChecksumsContent());
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             container.add(new NodeChecksumsContent(node));
         }
     }
@@ -283,7 +283,7 @@ public class AboutJenkins extends Component {
     private static class GetSlaveVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+        @SuppressFBWarnings(
                 value = {"NP_LOAD_OF_KNOWN_NULL_VALUE"},
                 justification = "Findbugs mis-diagnosing closeQuietly's built-in null check"
         )
@@ -606,7 +606,7 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.get().getPluginManager();
             List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
             // no need to sort
             for (PluginManager.FailedPlugin w : plugins) {
@@ -654,7 +654,7 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
 
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.get().getPluginManager();
             String fullVersion = Jenkins.VERSION;
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
@@ -716,7 +716,7 @@ public class AboutJenkins extends Component {
             return Markdown.prettyNone(n.getLabelString());
         }
         @Override protected void printTo(PrintWriter out,  ContentFilter filter) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
+            final Jenkins jenkins = Jenkins.get();
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
             if (supportPlugin != null) {
                 out.println("Node statistics");
@@ -807,12 +807,7 @@ public class AboutJenkins extends Component {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins == null) {
-                // Lifecycle.get() depends on Jenkins instance, hence this method won't work in any case
-                throw new IOException("Jenkins has not been started, or was already shut down");
-            }
-
+            final Jenkins jenkins = Jenkins.get();
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar != null) {
                 try {
@@ -920,7 +915,7 @@ public class AboutJenkins extends Component {
      * @return new copy of the PluginManager.getPlugins sorted
      */
     private static Iterable<PluginWrapper> getPluginsSorted() {
-        PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+        PluginManager pluginManager = Jenkins.get().getPluginManager();
         return getPluginsSorted(pluginManager);
     }
 

@@ -95,7 +95,7 @@ public class ThreadDumps extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
             final Future<String> threadDump;
             try {
@@ -186,7 +186,7 @@ public class ThreadDumps extends Component {
     }
 
     private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+        @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
                 justification = "Best effort"
         )
@@ -209,7 +209,7 @@ public class ThreadDumps extends Component {
      * @param out an output stream.
      * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
             value = {"VA_FORMAT_STRING_USES_NEWLINE"},
             justification = "We don't want platform specific"
     )

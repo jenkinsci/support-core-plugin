@@ -79,7 +79,6 @@ public abstract class SupportProvider extends AbstractDescribableImpl<SupportPro
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public SupportProviderDescriptor getDescriptor() {
         return (SupportProviderDescriptor) super.getDescriptor();
     }

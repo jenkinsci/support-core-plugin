@@ -70,12 +70,12 @@ public class NetworkInterfaces extends Component {
                 new Content("nodes/master/networkInterface.md") {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes("UTF-8"));
+                        os.write(getNetworkInterface(Jenkins.get()).getBytes("UTF-8"));
                     }
                 }
         );
 
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             result.add(
                     new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
                         @Override

@@ -90,7 +90,7 @@ public class LoadStats extends Component {
      */
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.get();
         add(container, "no-label", jenkins.unlabeledLoad);
         add(container, "overall", jenkins.overallLoad);
         for (Label l : jenkins.getLabels()) {

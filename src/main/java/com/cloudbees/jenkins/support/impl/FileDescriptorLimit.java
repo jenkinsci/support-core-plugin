@@ -58,7 +58,7 @@ public class FileDescriptorLimit extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Jenkins.getInstance();
+        Jenkins j = Jenkins.get();
         addContents(container, j);
         for (Node node : j.getNodes()) {
             addContents(container, node);
@@ -191,7 +191,7 @@ public class FileDescriptorLimit extends Component {
     /**
      * This method executes the command "bash -c ulimit -a" on the machine.
      */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
     private static void getUlimit(PrintWriter writer) throws IOException {
         // TODO should first check whether /bin/bash even exists
         InputStream is = new ProcessBuilder("bash", "-c", "ulimit -a").start().getInputStream();

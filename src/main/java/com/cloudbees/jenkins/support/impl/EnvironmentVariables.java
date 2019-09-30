@@ -55,7 +55,7 @@ public class EnvironmentVariables extends Component {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
-                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance()).entrySet()) {
+                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.get()).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -64,7 +64,7 @@ public class EnvironmentVariables extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             result.add(
                     new PrintedContent("nodes/slave/{0}/environment.txt", node.getNodeName()) {
                         @Override

@@ -47,7 +47,7 @@ public class DumpExportTable extends Component {
 
   @Override
   public void addContents(@NonNull Container result) {
-    for (final Node node : Jenkins.getInstance().getNodes()) {
+    for (final Node node : Jenkins.get().getNodes()) {
       result.add(
         new TruncatedContent("nodes/slave/{0}/exportTable.txt", node.getNodeName()) {
           @Override

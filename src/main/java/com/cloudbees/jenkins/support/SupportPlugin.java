@@ -57,6 +57,7 @@ import hudson.model.TaskListener;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
@@ -67,8 +68,6 @@ import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -835,8 +834,7 @@ public class SupportPlugin extends Plugin {
                         thread.setName(String.format("%s periodic bundle generator: since %s",
                                 SupportPlugin.class.getSimpleName(), new Date()));
                         clearRequesterAuthentication();
-                        SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                        try {
+                        try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
                             File bundleDir = getRootDirectory();
                             if (!bundleDir.exists()) {
                                 if (!bundleDir.mkdirs()) {
@@ -853,8 +851,6 @@ public class SupportPlugin extends Plugin {
                             cleanupOldBundles(bundleDir, file);
                         } catch (Throwable t) {
                             logger.log(Level.WARNING, "Could not save support bundle", t);
-                        } finally {
-                            SecurityContextHolder.setContext(old);
                         }
                     }, SupportPlugin.class.getSimpleName() + " periodic bundle generator");
                     thread.start();
@@ -864,7 +860,7 @@ public class SupportPlugin extends Plugin {
             }
         }
 
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+        @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "IS2_INCONSISTENT_SYNC"},
                 justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, " +
                         "IS2_INCONSISTENT_SYNC=only called from an already synchronized method"

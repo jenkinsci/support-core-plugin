@@ -131,7 +131,7 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
             justification = "Best effort"
     )
@@ -228,7 +228,7 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
     )
