@@ -328,7 +328,7 @@ public class AboutJenkins extends Component {
          * @param filter the filter to use.
          * @return the Java information.
          */
-        @SuppressWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
+        @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
         private String getInfo(ContentFilter filter) {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
