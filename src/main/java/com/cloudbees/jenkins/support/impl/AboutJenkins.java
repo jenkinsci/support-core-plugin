@@ -19,6 +19,7 @@ import com.codahale.metrics.Snapshot;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.PluginManager;
 import hudson.PluginWrapper;
@@ -33,6 +34,7 @@ import hudson.security.Permission;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.model.identity.IdentityRootAction;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
@@ -107,6 +109,7 @@ public class AboutJenkins extends Component {
         populatePluginsLists(activePlugins, disabledPlugins, backupPlugins);
 
         container.add(new AboutContent(activePlugins));
+        container.add(new IdentityContent());
         container.add(new NodesContent());
         container.add(new ActivePlugins(activePlugins));
         container.add(new DisabledPlugins(disabledPlugins));
@@ -502,6 +505,7 @@ public class AboutJenkins extends Component {
             out.println("---------------");
             out.println();
             out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
+            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId()) + "`");
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -555,6 +559,25 @@ public class AboutJenkins extends Component {
                     }
                 }
             }
+        }
+    }
+    
+    private static class IdentityContent extends PrintedContent {
+
+        public IdentityContent() {
+            super("identity.md");
+        }
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
+            IdentityRootAction idRootAction = ExtensionList.lookupSingleton(IdentityRootAction.class);
+            out.println("Public Key");
+            out.println("---------------");
+            out.println(idRootAction.getPublicKey());
+            out.println();
+            out.println("Fingerprint");
+            out.println("---------------");
+            out.println(idRootAction.getFingerprint());
         }
     }
 
