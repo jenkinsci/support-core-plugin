@@ -11,10 +11,10 @@ import jenkins.model.Jenkins;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -33,6 +33,14 @@ public class GCLogs extends Component {
     static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
 
     static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
+
+    private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
+
+    /**
+     * How many days of garbage collector log files should be included in the bundle. 
+     * By default {@code 5} days. Any value less or equals to {@code 0} disables the retention.
+     */
+    private static final Integer GCLOGS_RETENTION_DAYS = Integer.getInteger(GCLOGS_RETENTION_PROPERTY, 5);
 
     private static final String GCLOGS_BUNDLE_ROOT = "/nodes/master/logs/gc/";
 
@@ -119,12 +127,7 @@ public class GCLogs extends Component {
             return;
         }
 
-        File[] gcLogs = parentDirectory.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return gcLogFilesPattern.matcher(name).matches();
-            }
-        });
+        File[] gcLogs = parentDirectory.listFiles((dir, name) -> gcLogFilesPattern.matcher(name).matches());
         if (gcLogs == null || gcLogs.length == 0) {
             LOGGER.warning("No GC logging files found, although the VM argument was found. This is probably a bug.");
             return;
@@ -132,8 +135,10 @@ public class GCLogs extends Component {
 
         LOGGER.finest("Found " + gcLogs.length + " matching files in " + parentDirectory.getAbsolutePath());
         for (File gcLog : gcLogs) {
-            LOGGER.finest("Adding '" + gcLog.getName() + "' file");
-            result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
+            if (shouldConsiderFile(gcLog)) {
+                LOGGER.finest("Adding '" + gcLog.getName() + "' file");
+                result.add(new UnfilteredFileContent(GCLOGS_BUNDLE_ROOT + "{0}", new String[]{gcLog.getName()}, gcLog));
+            }
         }
     }
 
@@ -150,6 +155,17 @@ public class GCLogs extends Component {
     
     public boolean isFileLocationParameterized(String fileLocation) {
         return Pattern.compile(".*%[tnp].*").matcher(fileLocation).find();
+    }
+
+    /**
+     * Returns if the file passed in should be considered following the retention  @{link GCLOGS_RETENTION_DAYS}
+     * configured.
+     * @param gcLog the file
+     * @return true if the the file should be considered
+     */
+    private boolean shouldConsiderFile(File gcLog) {
+        return GCLOGS_RETENTION_DAYS <= 0 || 
+                gcLog.lastModified() > (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(GCLOGS_RETENTION_DAYS));
     }
 
     private boolean isGcLogRotationConfigured() {
