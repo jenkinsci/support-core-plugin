@@ -5,8 +5,8 @@ import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
-import hudson.util.IOUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -106,28 +106,16 @@ class SmartLogFetcher {
                     final long localLength = local.length();
                     if (entry.getValue() < Long.MAX_VALUE) {
                         // only copy the new content
-                        FileOutputStream fos = null;
-                        InputStream is = null;
-                        try {
-                            fos = new FileOutputStream(local, true);
-                            is = remoteDir.child(entry.getKey()).readFromOffset(localLength);
+                        try (FileOutputStream fos = new FileOutputStream(local, true);
+                             InputStream is = remoteDir.child(entry.getKey()).readFromOffset(localLength)) {
                             IOUtils.copy(is, fos);
-                        } finally {
-                            IOUtils.closeQuietly(is);
-                            IOUtils.closeQuietly(fos);
                         }
                     }
                     result.put(entry.getKey(), local);
                 } else {
-                    FileOutputStream fos = null;
-                    InputStream is = null;
-                    try {
-                        fos = new FileOutputStream(local, false);
-                        is = remoteDir.child(entry.getKey()).read();
+                    try (FileOutputStream fos = new FileOutputStream(local, false);
+                         InputStream is = remoteDir.child(entry.getKey()).read()) {
                         IOUtils.copy(is, fos);
-                    } finally {
-                        IOUtils.closeQuietly(is);
-                        IOUtils.closeQuietly(fos);
                     }
                     result.put(entry.getKey(), local);
                 }

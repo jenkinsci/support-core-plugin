@@ -30,11 +30,10 @@ import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -200,13 +199,10 @@ public class SupportAction implements RootAction {
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
             try {
-                SecurityContext old = ACL.impersonate(ACL.SYSTEM);
-                try {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
+                try (ACLContext old = ACL.as(ACL.SYSTEM)) {
+                     SupportPlugin.writeBundle(servletOutputStream, components);
                 } catch (IOException e) {
                     logger.log(Level.FINE, e.getMessage(), e);
-                } finally {
-                    SecurityContextHolder.setContext(old);
                 }
             } finally {
                 SupportPlugin.clearRequesterAuthentication();

@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Node;
@@ -186,7 +187,7 @@ public class ThreadDumps extends Component {
     }
 
     private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
-        @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+        @SuppressFBWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
                 justification = "Best effort"
         )
@@ -209,8 +210,8 @@ public class ThreadDumps extends Component {
      * @param out an output stream.
      * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"VA_FORMAT_STRING_USES_NEWLINE"},
+    @SuppressFBWarnings(
+            value = "VA_FORMAT_STRING_USES_NEWLINE",
             justification = "We don't want platform specific"
     )
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {

@@ -24,8 +24,9 @@
 
 package com.cloudbees.jenkins.support;
 
-import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.IOUtils;
+import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import net.jcip.annotations.GuardedBy;
 
 import java.io.BufferedOutputStream;
@@ -131,8 +132,8 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
-            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
+    @SuppressFBWarnings(
+            value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
             justification = "Best effort"
     )
     private void rollOver() {
@@ -228,7 +229,7 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(
+    @SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
             justification = "Best effort"
     )

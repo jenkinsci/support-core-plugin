@@ -30,6 +30,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.UnfilteredCommandOutputContent;
 import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
@@ -128,7 +129,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         return "no dmi info";
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings({"DMI_HARDCODED_ABSOLUTE_FILENAME"})
+    @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
     static public class GetDmiInfo extends MasterToSlaveCallable<String, Exception> {
         private static final long serialVersionUID = 1L;
         public String call() {
