@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -581,19 +582,19 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class ActivePlugins extends PrintedContent {
+    private static class Plugins extends PrintedContent {
         private final Iterable<PluginWrapper> plugins;
+        private final Function<? super PluginWrapper, String> stringify;
 
-        public ActivePlugins(Iterable<PluginWrapper> plugins) {
-            super("plugins/active.txt");
+        public Plugins(Iterable<PluginWrapper> plugins, String name, Function<? super PluginWrapper, String> stringify) {
+            super(name);
             this.plugins = plugins;
+            this.stringify = stringify;
         }
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            for (PluginWrapper w : plugins) {
-                out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
-            }
+            plugins.forEach(w -> out.println(stringify.apply(w)));
         }
 
         @Override
@@ -602,24 +603,15 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class DisabledPlugins extends PrintedContent {
-        private final Iterable<PluginWrapper> plugins;
+    private static class ActivePlugins extends Plugins {
+        public ActivePlugins(Iterable<PluginWrapper> plugins) {
+            super(plugins, "plugins/active.txt", w -> w.getShortName() + ":" + w.getVersion());
+        }
+    }
 
+    private static class DisabledPlugins extends Plugins {
         public DisabledPlugins(Iterable<PluginWrapper> plugins) {
-            super("plugins/disabled.txt");
-            this.plugins = plugins;
-        }
-
-        @Override
-        protected void printTo(PrintWriter out) throws IOException {
-            for (PluginWrapper w : plugins) {
-                out.println(w.getShortName() + ":" + w.getVersion() + ":" + (w.isPinned() ? "pinned" : "not-pinned"));
-            }
-        }
-
-        @Override
-        public boolean shouldBeFiltered() {
-            return false;
+            super(plugins, "plugins/disabled.txt", w -> w.getShortName() + ":" + w.getVersion());
         }
     }
 
@@ -644,24 +636,10 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class BackupPlugins extends PrintedContent {
-        private final Iterable<PluginWrapper> plugins;
+    private static class BackupPlugins extends Plugins {
 
         public BackupPlugins(Iterable<PluginWrapper> plugins) {
-            super("plugins/backup.txt");
-            this.plugins = plugins;
-        }
-
-        @Override
-        protected void printTo(PrintWriter out) throws IOException {
-            for (PluginWrapper w : plugins) {
-                out.println(w.getShortName() + ":" + w.getBackupVersion());
-            }
-        }
-
-        @Override
-        public boolean shouldBeFiltered() {
-            return false;
+            super(plugins, "plugins/backup.txt", w -> w.getShortName() + ":" + w.getBackupVersion());
         }
     }
 

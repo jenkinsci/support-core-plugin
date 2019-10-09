@@ -6,6 +6,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
+import hudson.PluginWrapper;
 import jenkins.model.identity.IdentityRootAction;
 import org.junit.Rule;
 import org.junit.Test;
