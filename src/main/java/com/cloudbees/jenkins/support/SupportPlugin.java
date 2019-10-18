@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.ComponentVisitor;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.SupportProvider;
@@ -43,7 +44,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.Main;
@@ -107,6 +107,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Main entry point for the support plugin.
@@ -271,15 +272,27 @@ public class SupportPlugin extends Plugin {
         return Jenkins.get().getPlugin(SupportPlugin.class);
     }
 
-    public static ExtensionList<Component> getComponents() {
-        return Jenkins.get().getExtensionList(Component.class);
+    public static List<Component> getComponents() {
+        return Jenkins.get().getExtensionList(Component.class)
+                .stream()
+                .filter(component -> component.isApplicable(Jenkins.class))
+                .collect(Collectors.toList());
     }
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
         writeBundle(outputStream, getComponents());
     }
+    
+    public static void writeBundle(OutputStream outputStream, final List<? extends Component> components) throws IOException {
+        writeBundle(outputStream, components, new ComponentVisitor() {
+            @Override
+            public <T extends Component> void visit(Container container, T component) {
+                component.addContents(container);
+            }
+        });
+    }
 
-    public static void writeBundle(OutputStream outputStream, final List<Component> components) throws IOException {
+    public static void writeBundle(OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer) throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
@@ -298,7 +311,7 @@ public class SupportPlugin extends Plugin {
                 // Generate the content of the manifest.md going trough all the components which will be included. It
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
-                List<Content> contents = appendManifestContents(manifest, errorWriter, components, maybeFilter);
+                List<Content> contents = appendManifestContents(manifest, errorWriter, components, componentConsumer, maybeFilter);
                 contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
 
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
@@ -375,7 +388,7 @@ public class SupportPlugin extends Plugin {
      * @param filterableParameters filterableParameters in the name to be filtered. If null, no filter takes place to avoid corruption
      * @return the name filtered
      */
-    private static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] filterableParameters) {
+    static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] filterableParameters) {
         String filteredName;
 
         if (filterableParameters != null) {
@@ -448,14 +461,44 @@ public class SupportPlugin extends Plugin {
      * @param maybeFilter filter to be used when writing the content names
      * @return the list of contents whose names has been added to the manifest and their content will be added to the
      * bundle.
+     * @deprecated use {@link #appendManifestContents(StringBuilder, PrintWriter, List, ComponentVisitor, Optional)}
      */
-    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<Component> components, Optional<ContentFilter> maybeFilter) {
+    @Deprecated
+    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<? extends Component> components, 
+            Optional<ContentFilter> maybeFilter) {
+        return appendManifestContents(manifest, errors, components, new ComponentVisitor() {
+
+            @Override
+            public <T extends Component> void visit(Container container, T component) {
+                component.addContents(container);
+            }
+        }, maybeFilter);
+    }
+
+    /**
+     * Populate the manifest with the content names which are going to be added to the bundle. In addition, it returns
+     * the list of content added. To be able to add the names in the manifest.md properly filtered, the current set of
+     * filters are specified.
+     * @param manifest where to append the names of the contents added to the bundle
+     * @param errors where to print error messages
+     * @param components components to add their contents to the bundle
+     * @param componentVisitor visitor to be used when wlaing throuhg components
+     * @param maybeFilter filter to be used when writing the content names
+     * @return the list of contents whose names has been added to the manifest and their content will be added to the
+     * bundle.
+     */
+    private static List<Content> appendManifestContents(StringBuilder manifest, 
+                                                        PrintWriter errors, 
+                                                        List<? extends Component> components,
+                                                        ComponentVisitor componentVisitor,
+                                                        Optional<ContentFilter> maybeFilter) {
+        
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(maybeFilter);
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
-                component.addContents(contentsContainer);
+                componentVisitor.visit(contentsContainer, component);
                 Set<String> names = contentsContainer.getLatestNames();
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
@@ -478,6 +521,7 @@ public class SupportPlugin extends Plugin {
             }
         }
         return contentsContainer.contents;
+        
     }
 
     private static class ContentContainer extends Container {
