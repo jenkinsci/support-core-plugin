@@ -1,15 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
-import com.cloudbees.jenkins.support.api.StringContent;
+import com.cloudbees.jenkins.support.api.*;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
+import hudson.model.AbstractModelObject;
+import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
@@ -17,21 +16,12 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import jenkins.util.Timer;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.lang.management.LockInfo;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MonitorInfo;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.io.*;
+import java.lang.management.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,9 +38,13 @@ import java.util.logging.Logger;
  * @author Stephen Connolly
  */
 @Extension(ordinal = -100.0) // run this last as it blocks the channel
-public class ThreadDumps extends Component {
+public class ThreadDumps extends ObjectComponent<Computer> {
 
     private final Logger logger = Logger.getLogger(ThreadDumps.class.getName());
+
+    @DataBoundConstructor
+    public ThreadDumps() {
+    }
 
     @NonNull
     @Override
@@ -62,6 +56,16 @@ public class ThreadDumps extends Component {
     @NonNull
     public String getDisplayName() {
         return "Thread dumps";
+    }
+    
+    @Override
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public boolean isApplicable(Computer item) {
+        return item != Jenkins.get().toComputer();
     }
 
     @Override
@@ -96,76 +100,85 @@ public class ThreadDumps extends Component {
                     }
                 }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
-            // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
-            final Future<String> threadDump;
-            try {
-                threadDump = getThreadDump(node);
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
-                final StringWriter sw = new StringWriter();
-                PrintWriter out = new PrintWriter(sw);
-                Functions.printStackTrace(e, out);
-                out.close();
-                result.add(
-                        new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()));
-                continue;
-            }
-            if (threadDump == null) {
-                StringBuilder buf = new StringBuilder();
-                buf.append(node.getNodeName()).append("\n");
-                buf.append("======\n");
-                buf.append("\n");
-                buf.append("N/A: No connection to node.\n");
-                result.add(new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()));
-            } else {
-                result.add(
-                        new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
-                            @Override
-                            public void writeTo(OutputStream os) throws IOException {
-                                PrintWriter out =
-                                        new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+        Jenkins.get().getNodes().stream()
+                .filter(node -> node.toComputer() != null)
+                .map(Node::toComputer)
+                .forEach(computer -> addContents(result, computer));
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, Computer item) {
+        Node node = item.getNode();
+        if(item == null) {
+            return;
+        }
+        // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
+        final Future<String> threadDump;
+        try {
+            threadDump = getThreadDump(node);
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
+            final StringWriter sw = new StringWriter();
+            PrintWriter out = new PrintWriter(sw);
+            Functions.printStackTrace(e, out);
+            out.close();
+            container.add(
+                    new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, sw.toString()));
+            return;
+        }
+        if (threadDump == null) {
+            StringBuilder buf = new StringBuilder();
+            buf.append(node.getNodeName()).append("\n");
+            buf.append("======\n");
+            buf.append("\n");
+            buf.append("N/A: No connection to node.\n");
+            container.add(new StringContent("nodes/slave/{0}/thread-dump.txt", new String[]{node.getNodeName()}, buf.toString()));
+        } else {
+            container.add(
+                    new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
+                        @Override
+                        public void writeTo(OutputStream os) throws IOException {
+                            PrintWriter out =
+                                    new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                            try {
+                                out.println(node.getNodeName());
+                                out.println("======");
+                                out.println();
+                                String content = null;
                                 try {
-                                    out.println(node.getNodeName());
-                                    out.println("======");
-                                    out.println();
-                                    String content = null;
-                                    try {
-                                        // We want to wait here a bit longer than normal
-                                        // as we will not fall back to a cache
-                                        content = threadDump.get(Math.min(
-                                                SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS * 8,
-                                                TimeUnit.SECONDS
-                                                        .toMillis(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)
-                                        ), TimeUnit.MILLISECONDS);
-                                    } catch (InterruptedException e) {
-                                        logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
-                                                e);
-                                        Functions.printStackTrace(e, out);
-                                    } catch (ExecutionException e) {
-                                        logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
-                                                e);
-                                        Functions.printStackTrace(e, out);
-                                    } catch (TimeoutException e) {
-                                        logger.log(Level.WARNING,
-                                                "Could not record thread dump for " + node.getNodeName(),
-                                                e);
-                                        Functions.printStackTrace(e, out);
-                                        threadDump.cancel(true);
-                                    }
-                                    if (content != null) {
-                                        out.println(content);
-                                    }
-                                } finally {
-                                    out.flush();
+                                    // We want to wait here a bit longer than normal
+                                    // as we will not fall back to a cache
+                                    content = threadDump.get(Math.min(
+                                            SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS * 8,
+                                            TimeUnit.SECONDS
+                                                    .toMillis(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)
+                                    ), TimeUnit.MILLISECONDS);
+                                } catch (InterruptedException e) {
+                                    logger.log(Level.WARNING,
+                                            "Could not record thread dump for " + node.getNodeName(),
+                                            e);
+                                    Functions.printStackTrace(e, out);
+                                } catch (ExecutionException e) {
+                                    logger.log(Level.WARNING,
+                                            "Could not record thread dump for " + node.getNodeName(),
+                                            e);
+                                    Functions.printStackTrace(e, out);
+                                } catch (TimeoutException e) {
+                                    logger.log(Level.WARNING,
+                                            "Could not record thread dump for " + node.getNodeName(),
+                                            e);
+                                    Functions.printStackTrace(e, out);
+                                    threadDump.cancel(true);
                                 }
+                                if (content != null) {
+                                    out.println(content);
+                                }
+                            } finally {
+                                out.flush();
                             }
                         }
-                );
-            }
-
+                    }
+            );
         }
     }
 
@@ -355,6 +368,26 @@ public class ThreadDumps extends Component {
     @Deprecated
     public static void threadDumpLegacy(OutputStream out) throws UnsupportedEncodingException {
         threadDump(out);
+    }
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+    }
+
+    @Extension
+    @Symbol("threadDumpsComponent")
+    public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return "Agent Thread Dumps";
+        }
+
     }
 
 }

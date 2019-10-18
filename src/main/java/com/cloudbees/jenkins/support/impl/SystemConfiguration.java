@@ -25,25 +25,22 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.api.CommandOutputContent;
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.UnfilteredCommandOutputContent;
-import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
+import com.cloudbees.jenkins.support.api.*;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractModelObject;
+import hudson.model.Computer;
 import hudson.model.Node;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +51,12 @@ import java.util.logging.Logger;
 public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
     @Extension
     public static class Master extends SystemConfiguration {
+
+        @DataBoundConstructor
+        public Master() {
+            super();
+        }
+        
         @Override
         @NonNull
         public String getDisplayName() {
@@ -64,10 +67,46 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         protected List<Node> getNodes() {
             return Collections.singletonList(Jenkins.get());
         }
+
+        @Override
+        public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+            return Jenkins.class.isAssignableFrom(clazz);
+        }
+
+        @Override
+        public boolean isApplicable(Computer item) {
+            return item == Jenkins.get().toComputer();
+        }
+        
+        @Override
+        public DescriptorImpl getDescriptor() {
+            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("masterSystemConfigurationComponent")
+        public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+            /**
+             * {@inheritDoc}
+             */
+            @NonNull
+            @Override
+            public String getDisplayName() {
+                return "Master system configuration (Linux only)";
+            }
+
+        }
     }
 
     @Extension
     public static class Agents extends SystemConfiguration {
+
+        @DataBoundConstructor
+        public Agents() {
+            super();
+        }
+        
         @Override
         @NonNull
         public String getDisplayName() {
@@ -82,6 +121,36 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         @Override
         protected List<Node> getNodes() {
             return Jenkins.get().getNodes();
+        }
+
+        @Override
+        public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+            return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
+        }
+
+        @Override
+        public boolean isApplicable(Computer item) {
+            return item != Jenkins.get().toComputer();
+        }
+
+        @Override
+        public DescriptorImpl getDescriptor() {
+            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("agentSystemConfigurationComponent")
+        public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+            /**
+             * {@inheritDoc}
+             */
+            @NonNull
+            @Override
+            public String getDisplayName() {
+                return "Agent system configuration (Linux only)";
+            }
+
         }
     }
 

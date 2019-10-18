@@ -23,6 +23,6 @@
  -->
 <?jelly escape-by-default='true'?>
 <div>
-  This support plugin allows generation of a support request bundle that contains diagnostic information to
+  This support plugin allows generation of support request bundles that contains diagnostic information to
   aid with resolving issues.
 </div>

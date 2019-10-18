@@ -1,24 +1,20 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FilePathContent;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
+import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -26,7 +22,7 @@ import java.util.logging.Logger;
 /**
  * Base class for gathering specified /proc files
  */
-public abstract class ProcFilesRetriever extends Component {
+public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
     private static final Logger LOGGER = Logger.getLogger(ProcFilesRetriever.class.getName());
     private final WeakHashMap<Node, SystemPlatform> systemPlatformCache = new WeakHashMap<>();
 
@@ -65,8 +61,13 @@ public abstract class ProcFilesRetriever extends Component {
     @Override
     public void addContents(@NonNull Container container) {
         for (Node node : getNodes()) {
-            addUnixContents(container, node);
+            Optional.ofNullable(node.toComputer()).ifPresent(computer -> addContents(container, computer));
         }
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, Computer item) {
+        Optional.ofNullable(item.getNode()).ifPresent(node -> addUnixContents(container, node));
     }
 
     protected void addUnixContents(@NonNull Container container, final @NonNull Node node) {
@@ -118,5 +119,10 @@ public abstract class ProcFilesRetriever extends Component {
             LOGGER.log(record);
         }
         return SystemPlatform.UNKNOWN;
+    }
+
+    @Override
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return Computer.class.isAssignableFrom(clazz);
     }
 }
