@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
+import hudson.model.AbstractModelObject;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -44,7 +45,7 @@ import java.util.Set;
  * @author Stephen Connolly
  */
 public abstract class Component implements ExtensionPoint {
-
+    
     /**
      * Returns the (possibly empty, never null) list of permissions that are required for the user to include this
      * in a bundle. An empty list indicates that any user can include this bundle.
@@ -102,8 +103,25 @@ public abstract class Component implements ExtensionPoint {
         return true;
     }
 
+    /**
+     * Return if this component is applicable to a specific class of item.
+     *
+     * @param clazz the class
+     * @param <C> Object that extends {@link AbstractModelObject}
+     * @return
+     */
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return Jenkins.class.isAssignableFrom(clazz); 
+    }
+
     @NonNull
     public abstract String getDisplayName();
+
+    /**
+     * Add contents to a container
+     * @param container a {@link Container}
+     */
+    public abstract void addContents(@NonNull Container container);
 
     /**
      * Returns the component id.
@@ -113,8 +131,6 @@ public abstract class Component implements ExtensionPoint {
     @NonNull public String getId() {
         return getClass().getSimpleName();
     }
-
-    public abstract void addContents(@NonNull Container container);
 
     public void start(@NonNull SupportContext context) {
 
