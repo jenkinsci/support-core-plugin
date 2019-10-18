@@ -136,9 +136,8 @@ public class AbstractItemComponentTest {
 
         String prefix = "items/" + FOLDER_NAME + "/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));
-        // Default max depth is 2
-        assertFalse(output.containsKey(prefix + "/builds/1/build.xml"));
-        assertFalse(output.containsKey(prefix + "/builds/1/log"));
+        assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
+        assertTrue(output.containsKey(prefix + "/builds/1/log"));
         assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<project>"));
     }
 
@@ -163,10 +162,9 @@ public class AbstractItemComponentTest {
         String prefix = "items/" + FOLDER_NAME + "/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/nextBuildNumber"));
-        // Default max depth prevent the following
-        assertFalse(output.containsKey(prefix + "/builds/1/build.xml"));
-        assertFalse(output.containsKey(prefix + "/builds/1/log"));
-        assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
+        assertTrue(output.containsKey(prefix + "/builds/1/log"));
+        assertTrue(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
         assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<flow-definition>"));
         assertThat(output.get(prefix + "/nextBuildNumber"), Matchers.containsString("2"));
     }
