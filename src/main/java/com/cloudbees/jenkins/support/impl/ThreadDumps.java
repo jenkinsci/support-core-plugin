@@ -107,9 +107,9 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     }
 
     @Override
-    public void addContents(@NonNull Container container, Computer item) {
+    public void addContents(@NonNull Container container, @NonNull Computer item) {
         Node node = item.getNode();
-        if(item == null) {
+        if(node == null) {
             return;
         }
         // let's start collecting thread dumps now... this gives us until the end of the bundle to finish

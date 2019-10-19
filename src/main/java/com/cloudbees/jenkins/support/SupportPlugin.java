@@ -458,31 +458,7 @@ public class SupportPlugin extends Plugin {
      * @param manifest where to append the names of the contents added to the bundle
      * @param errors where to print error messages
      * @param components components to add their contents to the bundle
-     * @param maybeFilter filter to be used when writing the content names
-     * @return the list of contents whose names has been added to the manifest and their content will be added to the
-     * bundle.
-     * @deprecated use {@link #appendManifestContents(StringBuilder, PrintWriter, List, ComponentVisitor, Optional)}
-     */
-    @Deprecated
-    private static List<Content> appendManifestContents(StringBuilder manifest, PrintWriter errors, List<? extends Component> components, 
-            Optional<ContentFilter> maybeFilter) {
-        return appendManifestContents(manifest, errors, components, new ComponentVisitor() {
-
-            @Override
-            public <T extends Component> void visit(Container container, T component) {
-                component.addContents(container);
-            }
-        }, maybeFilter);
-    }
-
-    /**
-     * Populate the manifest with the content names which are going to be added to the bundle. In addition, it returns
-     * the list of content added. To be able to add the names in the manifest.md properly filtered, the current set of
-     * filters are specified.
-     * @param manifest where to append the names of the contents added to the bundle
-     * @param errors where to print error messages
-     * @param components components to add their contents to the bundle
-     * @param componentVisitor visitor to be used when wlaing throuhg components
+     * @param componentVisitor visitor to be used when walking through components
      * @param maybeFilter filter to be used when writing the content names
      * @return the list of contents whose names has been added to the manifest and their content will be added to the
      * bundle.

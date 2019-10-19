@@ -69,7 +69,7 @@ public abstract class ObjectComponent<T extends AbstractModelObject> extends Com
      * @param container the {@link Container}
      * @param item      the item
      */
-    public abstract void addContents(@NonNull Container container, T item);
+    public abstract void addContents(@NonNull Container container, @NonNull T item);
 
     /**
      * All applicable {@link ObjectComponent}s for the class.

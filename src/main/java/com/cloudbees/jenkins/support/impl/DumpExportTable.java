@@ -63,28 +63,28 @@ public class DumpExportTable extends ObjectComponent<Computer> {
     }
 
     @Override
-    public void addContents(@NonNull Container container, Computer item) {
-        Optional.of(item).ifPresent(computer -> container.add(
-                new TruncatedContent("nodes/slave/{0}/exportTable.txt", computer.getName()) {
+    public void addContents(@NonNull Container container, @NonNull Computer item) {
+        container.add(
+                new TruncatedContent("nodes/slave/{0}/exportTable.txt", item.getName()) {
                     @Override
-                    protected void printTo(PrintWriter out) throws IOException {
+                    protected void printTo(PrintWriter out) {
                         try {
 
-                            VirtualChannel channel = computer.getChannel();
+                            VirtualChannel channel = item.getChannel();
                             if (channel instanceof Channel) // Should never be false but just in case.
                             {
                                 ((Channel) channel).dumpExportTable(out);
                             }
                         } catch (TruncationException e) {
                             logger.log(Level.WARNING,
-                                    "Truncated the output of export table for node: " + computer.getName(), e);
+                                    "Truncated the output of export table for node: " + item.getName(), e);
                         } catch (IOException e) {
                             logger.log(Level.WARNING,
-                                    "Could not record environment of node " + computer.getName(), e);
+                                    "Could not record environment of node " + item.getName(), e);
                         }
                     }
                 }
-        ));
+        );
     }
 
 //  @Override

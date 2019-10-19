@@ -111,7 +111,7 @@ public class AgentsConfigFile extends Component {
         }
 
         @Override
-        public void addContents(@NonNull Container container, Computer item) {
+        public void addContents(@NonNull Container container, @NonNull Computer item) {
             addContentForNode(container, item);
         }
 

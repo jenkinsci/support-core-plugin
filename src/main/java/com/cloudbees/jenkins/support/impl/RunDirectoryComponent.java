@@ -39,7 +39,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     }
 
     @Override
-    public void addContents(@NonNull Container container, Run item) {
+    public void addContents(@NonNull Container container, @NonNull Run item) {
         try {
             String relativeToParentPath = item.getParent().getRootDir().toPath().relativize(item.getRootDir().toPath()).toString();
             list(item.getRootDir(), new FileVisitor() {

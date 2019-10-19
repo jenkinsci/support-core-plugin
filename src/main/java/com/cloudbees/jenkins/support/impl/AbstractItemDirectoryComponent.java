@@ -39,7 +39,7 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
     }
 
     @Override
-    public void addContents(@NonNull Container container, AbstractItem item) {
+    public void addContents(@NonNull Container container, @NonNull AbstractItem item) {
         try {
             list(item.getRootDir(), new FileVisitor() {
 
