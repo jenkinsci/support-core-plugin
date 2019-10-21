@@ -21,6 +21,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.logging.Level;
 
 /**
@@ -41,12 +42,14 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
     @Override
     public void addContents(@NonNull Container container, @NonNull AbstractItem item) {
         try {
-            list(item.getRootDir(), new FileVisitor() {
+            File itemRootDir = item.getRootDir();
+            Path relativeToRoot = new File(Jenkins.get().getRootDir(), "jobs").toPath()
+                    .relativize(itemRootDir.toPath());
+            list(itemRootDir, new FileVisitor() {
 
                 @Override
                 public void visitSymlink(File link, String target, String relativePath) {
-                    container.add(new PrintedContent("items/{0}/{1}",
-                            item.getFullName(), relativePath) {
+                    container.add(new PrintedContent("items/{0}/{1}", relativeToRoot.toString(), relativePath) {
 
                         @Override
                         protected void printTo(PrintWriter out) {
@@ -55,14 +58,14 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
 
                         @Override
                         public boolean shouldBeFiltered() {
-                            return false;
+                            return true;
                         }
                     });
                 }
 
                 @Override
                 public void visit(File file, String s) {
-                    container.add(new FileContent("items/{0}/{1}", new String[]{item.getFullName(), s}, file));
+                    container.add(new FileContent("items/{0}/{1}", new String[]{relativeToRoot.toString(), s}, file));
                 }
 
                 @Override

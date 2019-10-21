@@ -134,7 +134,7 @@ public class AbstractItemComponentTest {
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AbstractItemDirectoryComponent(), p);
 
-        String prefix = "items/" + FOLDER_NAME + "/" + JOB_NAME;
+        String prefix = "items/" + FOLDER_NAME + "/jobs/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
@@ -159,7 +159,7 @@ public class AbstractItemComponentTest {
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AbstractItemDirectoryComponent(), p);
 
-        String prefix = "items/" + FOLDER_NAME + "/" + JOB_NAME;
+        String prefix = "items/" + FOLDER_NAME + "/jobs/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/nextBuildNumber"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));

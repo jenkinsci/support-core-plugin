@@ -43,7 +43,7 @@ public class SupportRunActionTest {
                 SupportPlugin.class,
                 j.createWebClient());
         
-        String buildsEntryPrefix = "items/testFolder/testFreestyle/builds/" + fBuild.number;
+        String buildsEntryPrefix = "items/testFolder/jobs/testFreestyle/builds/" + fBuild.number;
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(buildsEntryPrefix + "/build.xml"));
     }

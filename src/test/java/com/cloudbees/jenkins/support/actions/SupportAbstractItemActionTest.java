@@ -70,7 +70,7 @@ public class SupportAbstractItemActionTest {
                 SupportPlugin.class,
                 j.createWebClient());
 
-        String itemEntryPrefix = "items/testFolder/testFreestyle";
+        String itemEntryPrefix = "items/testFolder/jobs/testFreestyle";
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/config.xml"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/nextBuildNumber"));

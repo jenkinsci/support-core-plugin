@@ -21,6 +21,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.logging.Level;
 
 /**
@@ -41,13 +42,15 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     @Override
     public void addContents(@NonNull Container container, @NonNull Run item) {
         try {
-            String relativeToParentPath = item.getParent().getRootDir().toPath().relativize(item.getRootDir().toPath()).toString();
+            File itemRootDir = item.getRootDir();
+            Path relativeToRoot = new File(Jenkins.get().getRootDir(), "jobs").toPath()
+                    .relativize(itemRootDir.toPath());
             list(item.getRootDir(), new FileVisitor() {
 
                 @Override
                 public void visitSymlink(File link, String target, String relativePath) {
-                    container.add(new PrintedContent("items/{0}/{1}/{2}", 
-                            item.getParent().getFullName(), relativeToParentPath, relativePath) {
+                    container.add(new PrintedContent("items/{0}/{1}", relativeToRoot.toString(), relativePath) {
+
                         @Override
                         protected void printTo(PrintWriter out) {
                             out.println("symlink -> " + target);
@@ -55,17 +58,14 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
 
                         @Override
                         public boolean shouldBeFiltered() {
-                            return false;
+                            return true;
                         }
                     });
                 }
                 
                 @Override
                 public void visit(File file, String s) {
-                    container.add(new FileContent(
-                            "items/{0}/{1}/{2}",
-                            new String[]{item.getParent().getFullName(), relativeToParentPath, s},
-                            file)
+                    container.add(new FileContent("items/{0}/{1}", new String[]{relativeToRoot.toString(), s}, file)
                     );
                 }
 
