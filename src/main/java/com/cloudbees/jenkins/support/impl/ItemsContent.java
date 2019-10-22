@@ -23,30 +23,32 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.google.common.collect.Iterators;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Items content
@@ -65,81 +67,112 @@ public class ItemsContent extends Component {
     public String getDisplayName() {
         return "Items Content (Computationally expensive)";
     }
+    
+    private final DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     @Override
     public void addContents(@NonNull Container result) {
-        final Authentication authentication = SupportPlugin.getRequesterAuthentication();
-        if (authentication != null) {
-            result.add(new PrintedContent("items.md") {
-                @Override
-                protected void printTo(PrintWriter out) throws IOException {
-                    final Jenkins jenkins = Jenkins.getInstanceOrNull();
-                    if (jenkins == null) {
-                        return;
-                    }
+        result.add(new PrintedContent("items.md") {
 
-                    Map<String,Integer> containerCounts = new TreeMap<>();
-                    Map<String,ItemsContent.Stats> jobStats = new HashMap<>();
-                    ItemsContent.Stats jobTotal = new ItemsContent.Stats();
-                    Map<String,ItemsContent.Stats> containerStats = new HashMap<String,ItemsContent.Stats>();
-
-                    long startTime = System.currentTimeMillis();
-                    for (Item i : jenkins.getAllItems()) {
-                        String key = i.getClass().getName();
-                        Integer cnt = containerCounts.get(key);
-                        containerCounts.put(key, cnt == null ? 1 : cnt + 1);
-                        if (i instanceof Job) {
-                            Job<?,?> j = (Job) i;
-                            int builds = 0;
-                            Iterator buildsIterator = j.getBuilds().iterator();
-                            builds = Iterators.size(buildsIterator);
-                            jobTotal.add(builds);
-                            ItemsContent.Stats s = jobStats.get(key);
-                            if (s == null) {
-                                jobStats.put(key, s = new ItemsContent.Stats());
-                            }
-                            s.add(builds);
-                        }
-                        if (i instanceof ItemGroup) {
-                            ItemsContent.Stats s = containerStats.get(key);
-                            if (s == null) {
-                                containerStats.put(key, s = new ItemsContent.Stats());
-                            }
-                            s.add(((ItemGroup) i).getItems().size());
-                        }
-                    }
-                    long endTime = System.currentTimeMillis();
-                    LOGGER.log(Level.FINE, "Time to compute all the build is {0}", endTime - startTime);
-                    out.println("Item statistics");
-                    out.println("===============");
-                    out.println();
-                    for (Map.Entry<String,Integer> entry : containerCounts.entrySet()) {
-                        String key = entry.getKey();
-                        out.println("  * `" + key + "`");
-                        out.println("    - Number of items: " + entry.getValue());
-                        ItemsContent.Stats s = jobStats.get(key);
-                        if (s != null) {
-                            out.println("    - Number of builds per job: " + s);
-                        }
-                        s = containerStats.get(key);
-                        if (s != null) {
-                            out.println("    - Number of items per container: " + s);
-                        }
-                    }
-                    out.println();
-                    out.println("Total job statistics");
-                    out.println("======================");
-                    out.println();
-                    out.println("  * Number of jobs: " + jobTotal.n());
-                    out.println("  * Number of builds per job: " + jobTotal);
+            @Override
+            protected void printTo(PrintWriter out) {
+                final Jenkins jenkins = Jenkins.getInstanceOrNull();
+                if (jenkins == null) {
+                    return;
                 }
-
-                @Override
-                public boolean shouldBeFiltered() {
-                    // The information of this content is not sensible, so it doesn't need to be filtered.
-                    return false;
+                Map<String, Integer> containerCounts = new TreeMap<>();
+                Map<String, Stats> jobStats = new HashMap<>();
+                Stats jobTotal = new Stats();
+                Map<String, Stats> containerStats = new HashMap<>();
+                jenkins.allItems().forEach(item -> {
+                    String key = item.getClass().getName();
+                    Integer cnt = containerCounts.get(key);
+                    containerCounts.put(key, cnt == null ? 1 : cnt + 1);
+                    if (item instanceof Job) {
+                        Job<?, ?> j = (Job) item;
+                        // too expensive: int builds = j.getBuilds().size();
+                        int builds = 0;
+                        File buildDir = jenkins.getBuildDirFor(j);
+                        if(new File(buildDir, "legacyIds").isFile()) {
+                            try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDir.toPath())) {
+                                for (Path path : stream) {
+                                    if (Files.isDirectory(path) && parseInt(path.toFile().getName()).isPresent()) {
+                                        builds++;
+                                    }
+                                }
+                            } catch (IOException e) {
+                                // ignore
+                            }
+                        } else {
+                            try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDir.toPath())) {
+                                for (Path path : stream) {
+                                    if (!Files.isDirectory(path) && parseDate(path.toFile().getName()).isPresent()) {
+                                        builds++;
+                                    }
+                                }
+                            } catch (IOException e) {
+                                // ignore
+                            }
+                        }
+                        jobTotal.add(builds);
+                        Stats s = jobStats.get(key);
+                        if (s == null) {
+                            jobStats.put(key, s = new Stats());
+                        }
+                        s.add(builds);
+                    }
+                    if (item instanceof ItemGroup) {
+                        Stats s = containerStats.get(key);
+                        if (s == null) {
+                            containerStats.put(key, s = new Stats());
+                        }
+                        s.add(((ItemGroup) item).getItems().size());
+                    }
+                });
+                out.println("Item statistics");
+                out.println("===============");
+                out.println();
+                for (Map.Entry<String, Integer> entry : containerCounts.entrySet()) {
+                    String key = entry.getKey();
+                    out.println("  * `" + key + "`");
+                    out.println("    - Number of items: " + entry.getValue());
+                    Stats s = jobStats.get(key);
+                    if (s != null) {
+                        out.println("    - Number of builds per job: " + s);
+                    }
+                    s = containerStats.get(key);
+                    if (s != null) {
+                        out.println("    - Number of items per container: " + s);
+                    }
                 }
-            });
+                out.println();
+                out.println("Total job statistics");
+                out.println("======================");
+                out.println();
+                out.println("  * Number of jobs: " + jobTotal.n());
+                out.println("  * Number of builds per job: " + jobTotal);
+            }
+
+            @Override
+            public boolean shouldBeFiltered() {
+                return false;
+            }
+        });
+    } 
+    
+    private Optional<Integer> parseInt(String fileName) {
+        try {
+            return Optional.of(Integer.parseInt(fileName));
+        } catch (NumberFormatException x) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Date> parseDate(String fileName) {
+        try {
+            return Optional.of(BUILD_FORMAT.parse(fileName));
+        } catch (ParseException x) {
+            return Optional.empty();
         }
     }
 
@@ -189,9 +222,9 @@ public class ItemsContent extends Component {
                 return "N/A";
             }
             if (s0 == 1) {
-                return Long.toString(s1) + " [n=" + s0 + "]";
+                return s1 + " [n=" + s0 + "]";
             }
-            return Double.toString(x()) + " [n=" + s0 + ", s=" + s() + "]";
+            return x() + " [n=" + s0 + ", s=" + s() + "]";
         }
 
         public synchronized int n() {
@@ -201,8 +234,6 @@ public class ItemsContent extends Component {
 
     @Override
     public boolean isSelectedByDefault() {
-        return false;
+        return true;
     }
-
-    private static final Logger LOGGER = Logger.getLogger(ItemsContent.class.getName());
 }
