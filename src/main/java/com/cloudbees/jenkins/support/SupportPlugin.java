@@ -400,7 +400,7 @@ public class SupportPlugin extends Plugin {
      */
     public static Optional<ContentFilter> getContentFilter() {
         ContentFilters filters = ContentFilters.get();
-        if (filters.isEnabled()) {
+        if (filters != null  && filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;
             return Optional.of(filter);
         }

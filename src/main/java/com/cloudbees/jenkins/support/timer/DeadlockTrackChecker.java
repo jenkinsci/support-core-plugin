@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.timer;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -22,12 +21,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension
 public class DeadlockTrackChecker extends PeriodicWork {
-    final ContentFilter filter;
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        filter = SupportPlugin.getContentFilter().orElse(null);
     }
     final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
 
@@ -58,7 +55,8 @@ public class DeadlockTrackChecker extends PeriodicWork {
 
                 for (ThreadInfo threadInfo : deadLockThreads) {
                     try {
-                        ThreadDumps.printThreadInfo(builder, threadInfo, mbean, filter);
+                        ThreadDumps.printThreadInfo(builder, threadInfo, mbean, 
+                                SupportPlugin.getContentFilter().orElse(null));
                     } catch (LinkageError e) {
                         builder.println(threadInfo);
                     }
