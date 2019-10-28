@@ -86,10 +86,7 @@ public abstract class ObjectComponent<T extends AbstractModelObject> extends Com
      * All applicable {@link ObjectComponentDescriptor}s for the class.
      */
     public static <T extends AbstractModelObject> List<ObjectComponentDescriptor<T>> for_(T item) {
-        return Jenkins.get().getExtensionList(ObjectComponent.class).stream()
-                .filter(component -> component.isApplicable(item.getClass()))
-                .map(component -> ((ObjectComponent<T>) component))
-                .filter(component -> component.isApplicable(item))
+        return allInstances(item).stream()
                 .map(ObjectComponent::getDescriptor)
                 .collect(Collectors.toList());
     }
