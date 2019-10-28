@@ -126,10 +126,11 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
         rsp.setContentType("application/zip");
 
         JSONObject json = req.getSubmittedForm();
-        if (!json.has("components")) {
+        if (json == null || !json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+        
         LOGGER.fine("Parsing request...");
         List<ObjectComponent<T>> components = new ArrayList<>(parseRequest(req));
 
@@ -163,15 +164,11 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
     protected final List<ObjectComponent<T>> parseRequest(StaplerRequest req)
             throws ServletException, Descriptor.FormException {
 
-        LOGGER.fine("Parsing request...");
         // Inspired by https://github.com/jenkinsci/workflow-job-plugin/blob/workflow-job-2.35/src/main/java/org/jenkinsci/plugins/workflow/job/properties/PipelineTriggersJobProperty.java
         DescribableList<ObjectComponent<T>, ObjectComponentDescriptor<T>> components =
                 new DescribableList<>(Saveable.NOOP);
         try {
-            JSONObject componentsSection = new JSONObject();
-            if (req.getSubmittedForm() != null) {
-                componentsSection = req.getSubmittedForm().getJSONObject("components");
-            }
+            JSONObject componentsSection = req.getSubmittedForm().getJSONObject("components");
             components.rebuild(req, componentsSection, getApplicableComponentsDescriptors());
         } catch (IOException e) {
             throw new Descriptor.FormException(e, "components");
