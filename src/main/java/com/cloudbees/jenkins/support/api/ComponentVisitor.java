@@ -1,9 +1,16 @@
 package com.cloudbees.jenkins.support.api;
 
 /**
- * @author Allan Burdajewicz
+ * A Visitor that define actions to carry out when visiting {@link Component}s. 
  */
-public abstract class ComponentVisitor {
-    
-    public abstract <T extends Component> void visit(Container container, T component);
+public interface ComponentVisitor {
+
+    /**
+     * Call for each {@link Component}.
+     *
+     * @param container a {@link Container}
+     * @param component the {@link Component} being visited
+     * @param <T> must be a subclass of {@link Component}
+     */
+    <T extends Component> void visit(Container container, T component);
 }
