@@ -97,10 +97,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
         static final int DEFAULT_MAX_DEPTH = 10;
 
         public DescriptorImpl() {
-            setIncludes("");
-            setExcludes("**/artifacts/**, **/stashes/**");
-            setDefaultExcludes(true);
-            setMaxDepth(DEFAULT_MAX_DEPTH);
+            super("", "**/artifacts/**, **/stashes/**", true, DEFAULT_MAX_DEPTH);
         }
 
         /**

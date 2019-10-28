@@ -45,6 +45,7 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
     }
 
     public DirectoryComponent(String includes, String excludes, boolean defaultExcludes, int maxDepth) {
+        super();
         setExcludes(excludes);
         setIncludes(includes);
         setDefaultExcludes(defaultExcludes);
@@ -135,10 +136,15 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
         private int maxDepth;
 
         public DirectoryComponentsDescriptor() {
-            setExcludes("");
-            setIncludes("");
-            setMaxDepth(DEFAULT_MAX_DEPTH);
-            setDefaultExcludes(true);
+            this("", "", true, DEFAULT_MAX_DEPTH);
+        }
+
+        public DirectoryComponentsDescriptor(String includes, String excludes, boolean defaultExcludes, int maxDepth) {
+            super();
+            setExcludes(includes);
+            setIncludes(excludes);
+            setMaxDepth(maxDepth);
+            setDefaultExcludes(defaultExcludes);
         }
 
         /**
