@@ -142,8 +142,8 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
 
         public DirectoryComponentsDescriptor(String includes, String excludes, boolean defaultExcludes, int maxDepth) {
             super();
-            setExcludes(includes);
-            setIncludes(excludes);
+            setIncludes(includes);
+            setExcludes(excludes);
             setMaxDepth(maxDepth);
             setDefaultExcludes(defaultExcludes);
         }

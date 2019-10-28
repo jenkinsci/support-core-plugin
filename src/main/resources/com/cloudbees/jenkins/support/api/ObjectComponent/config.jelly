@@ -22,4 +22,7 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" />
+<j:jelly xmlns:j="jelly:core"
+         xmlns:st="jelly:stapler">
+    <st:include page="component.jelly" optional="true" class="${descriptor.clazz}"/>
+</j:jelly>
