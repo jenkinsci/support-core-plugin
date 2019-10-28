@@ -25,7 +25,11 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.api.*;
+import com.cloudbees.jenkins.support.api.CommandOutputContent;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
+import com.cloudbees.jenkins.support.api.UnfilteredCommandOutputContent;
+import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;

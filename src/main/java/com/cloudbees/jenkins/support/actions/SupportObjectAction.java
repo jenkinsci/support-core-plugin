@@ -1,8 +1,16 @@
 package com.cloudbees.jenkins.support.actions;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.api.*;
-import hudson.model.*;
+import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.api.ComponentVisitor;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.ObjectComponent;
+import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
+import com.cloudbees.jenkins.support.api.SupportProvider;
+import hudson.model.AbstractModelObject;
+import hudson.model.Action;
+import hudson.model.Descriptor;
+import hudson.model.Saveable;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.DescribableList;

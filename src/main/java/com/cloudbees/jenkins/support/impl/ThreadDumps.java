@@ -1,7 +1,11 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.api.*;
+import com.cloudbees.jenkins.support.api.Container;
+import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.ObjectComponent;
+import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
+import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
