@@ -217,13 +217,13 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
             if (Util.fixEmpty(this.includes) == null && this.excludes == null) {
                 (new DirScanner.Full()).scan(dir, visitor);
             } else {
-                FileSet fs = Util.createFileSet(dir, this.includes, this.excludes);
-                fs.setDefaultexcludes(this.useDefaultExcludes);
-                fs.setFollowSymlinks(followSymlinks);
+                FileSet fileSet = Util.createFileSet(dir, this.includes, this.excludes);
+                fileSet.setDefaultexcludes(this.useDefaultExcludes);
+                fileSet.setFollowSymlinks(followSymlinks);
                 if (dir.exists()) {
-                    DirectoryScanner ds = fs.getDirectoryScanner(new Project());
-                    String[] var5 = (String [])ArrayUtils.addAll(ds.getIncludedFiles(), 
-                            Stream.of(ds.getNotFollowedSymlinks())
+                    DirectoryScanner dirScanner = fileSet.getDirectoryScanner(new Project());
+                    String[] var5 = (String [])ArrayUtils.addAll(dirScanner.getIncludedFiles(), 
+                            Stream.of(dirScanner.getNotFollowedSymlinks())
                                     .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
                                     .toArray()
                     );
