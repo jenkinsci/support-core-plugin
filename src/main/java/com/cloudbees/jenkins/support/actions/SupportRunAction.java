@@ -9,14 +9,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * A {@link SupportObjectAction} applicable to {@link Run}.
  */
 public class SupportRunAction extends SupportObjectAction<Run> {
-
-    private final Logger logger = Logger.getLogger(SupportRunAction.class.getName());
 
     @DataBoundConstructor
     public SupportRunAction(Run target) {

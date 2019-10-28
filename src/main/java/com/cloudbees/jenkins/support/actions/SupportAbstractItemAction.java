@@ -9,14 +9,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * A {@link SupportObjectAction} applicable to {@link AbstractItem}.
  */
 public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem> {
-
-    private final Logger logger = Logger.getLogger(SupportAbstractItemAction.class.getName());
 
     @DataBoundConstructor
     public SupportAbstractItemAction(AbstractItem target) {

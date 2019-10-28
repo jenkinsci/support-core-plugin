@@ -10,14 +10,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * A {@link SupportObjectAction} applicable to {@link Computer}.
  */
 public class SupportComputerAction extends SupportObjectAction<Computer> {
-
-    private final Logger logger = Logger.getLogger(SupportComputerAction.class.getName());
 
     @DataBoundConstructor
     public SupportComputerAction(Computer target) {
