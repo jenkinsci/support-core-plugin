@@ -23,12 +23,12 @@
  */
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
@@ -38,6 +38,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -47,7 +48,7 @@ import java.util.Set;
  * Unselected by default.
  */
 @Extension
-public class AgentsConfigFile extends Component {
+public class AgentsConfigFile extends ObjectComponent<Computer> {
 
     @DataBoundConstructor
     public AgentsConfigFile() {
@@ -57,6 +58,11 @@ public class AgentsConfigFile extends Component {
     @Override
     public boolean isSelectedByDefault() {
         return false;
+    }
+
+    @Override
+    public boolean isSelectedByDefault(Computer item) {
+        return true;
     }
 
     @NonNull
@@ -73,10 +79,11 @@ public class AgentsConfigFile extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins.get().getNodes().forEach(node -> addContentForNode(container, node.toComputer()));
+        Jenkins.get().getNodes().forEach(node -> addContents(container, Objects.requireNonNull(node.toComputer())));
     }
 
-    static void addContentForNode(@NonNull Container container, Computer item) {
+    @Override
+    public void addContents(@NonNull Container container, Computer item) {
         if (item.getNode() == null) {
             return;
         }
@@ -84,60 +91,35 @@ public class AgentsConfigFile extends Component {
         File config = new File(agentDir, "config.xml");
         container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config));
     }
-    
+
+
+    @Override
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public boolean isApplicable(Computer item) {
+        return item != Jenkins.get().toComputer();
+    }
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+    }
+
     @Extension
-    public static class AgentConfigFile extends ObjectComponent<Computer> {
+    @Symbol("agentsConfigFileComponent")
+    public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
 
-        @DataBoundConstructor
-        public AgentConfigFile() {
-            super();
-        }
-
-        @Override
-        public boolean isSelectedByDefault() {
-            return true;
-        }
-
-        @NonNull
-        @Override
-        public Set<Permission> getRequiredPermissions() {
-            return Collections.singleton(Jenkins.ADMINISTER);
-        }
-
+        /**
+         * {@inheritDoc}
+         */
         @NonNull
         @Override
         public String getDisplayName() {
             return "Agent Configuration File";
         }
 
-        @Override
-        public void addContents(@NonNull Container container, @NonNull Computer item) {
-            addContentForNode(container, item);
-        }
-
-        @Override
-        public boolean isApplicable(Computer item) {
-            return item != Jenkins.get().toComputer();
-        }
-
-        @Override
-        public DescriptorImpl getDescriptor() {
-            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
-        }
-
-        @Extension
-        @Symbol("agentsConfigFileComponent")
-        public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
-
-            /**
-             * {@inheritDoc}
-             */
-            @NonNull
-            @Override
-            public String getDisplayName() {
-                return "Agent Configuration File";
-            }
-
-        }
     }
 }
