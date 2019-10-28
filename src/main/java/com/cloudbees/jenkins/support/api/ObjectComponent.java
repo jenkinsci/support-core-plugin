@@ -32,7 +32,6 @@ import jenkins.model.Jenkins;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -44,8 +43,6 @@ import java.util.stream.Collectors;
  */
 public abstract class ObjectComponent<T extends AbstractModelObject> extends Component
         implements Describable<ObjectComponent<T>>, ExtensionPoint {
-
-    static final Logger LOGGER = Logger.getLogger(ObjectComponent.class.getName());
 
     /**
      * {@inheritDoc}
