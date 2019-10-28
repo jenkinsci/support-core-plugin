@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -214,26 +215,25 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
         }
 
         public void scan(File dir, FileVisitor visitor) throws IOException {
-            if (Util.fixEmpty(this.includes) == null && this.excludes == null) {
-                (new DirScanner.Full()).scan(dir, visitor);
-            } else {
-                FileSet fileSet = Util.createFileSet(dir, this.includes, this.excludes);
-                fileSet.setDefaultexcludes(this.useDefaultExcludes);
-                fileSet.setFollowSymlinks(followSymlinks);
-                if (dir.exists()) {
-                    DirectoryScanner dirScanner = fileSet.getDirectoryScanner(new Project());
-                    String[] var5 = (String [])ArrayUtils.addAll(dirScanner.getIncludedFiles(), 
-                            Stream.of(dirScanner.getNotFollowedSymlinks())
-                                    .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
-                                    .toArray()
-                    );
+            FileSet fileSet = Util.createFileSet(dir,
+                    Optional.ofNullable(Util.fixEmpty(this.includes)).orElse("**/*"),
+                    Optional.ofNullable(Util.fixEmpty(this.excludes)).orElse(""));
+            fileSet.setDefaultexcludes(this.useDefaultExcludes);
+            fileSet.setFollowSymlinks(followSymlinks);
+            if (dir.exists()) {
+                DirectoryScanner dirScanner = fileSet.getDirectoryScanner(new Project());
+                String[] var5 = (String[]) ArrayUtils.addAll(dirScanner.getIncludedFiles(),
+                        Stream.of(dirScanner.getNotFollowedSymlinks())
+                                .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
+                                .toArray()
+                );
+                int var6 = var5.length;
 
-                    for (String f : var5) {
-                        File file = new File(dir, f);
-                        this.scanSingle(file, f, visitor);
-                    }
+                for (int var7 = 0; var7 < var6; ++var7) {
+                    String f = var5[var7];
+                    File file = new File(dir, f);
+                    this.scanSingle(file, f, visitor);
                 }
-
             }
         }
     }
