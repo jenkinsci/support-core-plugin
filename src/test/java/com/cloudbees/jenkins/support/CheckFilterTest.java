@@ -56,6 +56,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,7 +71,8 @@ public class CheckFilterTest {
     private final static String JOB_NAME = "thejob";
     private final static String SLAVE_NAME = "slave0"; //it's the name used by createOnlineSlave
     private final static String VIEW_ALL_NEW_NAME = "all-view";
-
+    private final static String ENV_VAR = getFirstEnvVar();
+    
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
@@ -114,7 +116,9 @@ public class CheckFilterTest {
 
     private QueueTaskFuture<FreeStyleBuild> createObjectsWithNames() throws Exception {
         // For an environment variable
-        User.getOrCreateByIdOrFullName("path");
+        if (ENV_VAR != null) {
+            User.getOrCreateByIdOrFullName("path");
+        }
 
         // For JVMProcessSytemMetricsContents
         User.getOrCreateByIdOrFullName("kb");
@@ -197,6 +201,19 @@ public class CheckFilterTest {
         return content;
     }
 
+    /**
+     * We get the first env var key as a word to check if it is included in the environment.txt file in the bundle. We
+     * cannot use a static one because it may not be in the running environment. For example, path is not always set.
+     * @return the first env var key or null if there is no env vars
+     */
+    private static String getFirstEnvVar() {
+        try {
+            return System.getenv().keySet().iterator().next();
+        } catch (NoSuchElementException unlikely) {
+            return null;
+        }
+    }
+    
     private static class FileChecker {
         private Set<FileToCheck> fileSet = new HashSet<>();
         private Set<String> words = new HashSet<>();
@@ -233,8 +250,10 @@ public class CheckFilterTest {
 
             // EnvironmentVariables --> nodes/master/environment.txt and nodes/slave/*/environment.txt. A well known
             // and also existing in all OS environment variable
-            fileSet.add(of("nodes/master/environment.txt", "path", true));
-            fileSet.add(of("nodes/slave/*/environment.txt", "path", true));
+            if (ENV_VAR != null) {
+                fileSet.add(of("nodes/master/environment.txt", ENV_VAR, true));
+                fileSet.add(of("nodes/slave/*/environment.txt", ENV_VAR, true));
+            }
 
 //            JVMProcessSystemMetricsContents -->
 //            nodes/master/proc/meminfo.txt
@@ -255,9 +274,11 @@ public class CheckFilterTest {
             fileSet.add(of("nodes/master/proc/self/cmdline", "java", false));
             fileSet.add(of("nodes/slave/*/proc/self/cmdline", "java", false));
 
-            fileSet.add(of("nodes/master/proc/self/environ", "path", true));
-            fileSet.add(of("nodes/slave/*/proc/self/environ", "path", true));
-
+            if (ENV_VAR != null) {
+                fileSet.add(of("nodes/master/proc/self/environ", ENV_VAR, true));
+                fileSet.add(of("nodes/slave/*/proc/self/environ", ENV_VAR, true));
+            }
+            
             fileSet.add(of("nodes/master/proc/self/limits.txt", "max", false));
             fileSet.add(of("nodes/slave/*/proc/self/limits.txt", "max", false));
 
