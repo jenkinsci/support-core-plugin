@@ -25,7 +25,6 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
-import hudson.ExtensionList;
 import jenkins.model.GlobalConfiguration;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -44,7 +43,7 @@ import javax.annotation.Nonnull;
 public class ContentFilters extends GlobalConfiguration {
 
     public static ContentFilters get() {
-        return ExtensionList.lookupSingleton(ContentFilters.class);
+        return GlobalConfiguration.all().get(ContentFilters.class);
     }
 
     private boolean enabled;

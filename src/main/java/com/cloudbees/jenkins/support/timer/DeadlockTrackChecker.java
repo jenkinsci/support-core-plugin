@@ -14,6 +14,7 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -22,12 +23,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Extension
 public class DeadlockTrackChecker extends PeriodicWork {
-    final ContentFilter filter;
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        filter = SupportPlugin.getContentFilter().orElse(null);
     }
     final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
 
@@ -56,9 +55,10 @@ public class DeadlockTrackChecker extends PeriodicWork {
                 builder.println("==============");
                 ThreadInfo[] deadLockThreads = mbean.getThreadInfo(deadLocks, Integer.MAX_VALUE);
 
+                ContentFilter contentFilter = SupportPlugin.getContentFilter().orElse(null);
                 for (ThreadInfo threadInfo : deadLockThreads) {
                     try {
-                        ThreadDumps.printThreadInfo(builder, threadInfo, mbean, filter);
+                        ThreadDumps.printThreadInfo(builder, threadInfo, mbean, contentFilter);
                     } catch (LinkageError e) {
                         builder.println(threadInfo);
                     }
