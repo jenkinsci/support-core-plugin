@@ -136,9 +136,9 @@ public class CheckFilterTest {
         jenkins.jenkins.getView("all").rename(VIEW_ALL_NEW_NAME);
         jenkins.jenkins.save();
 
-        // Create the slave slave0 for some components
-        jenkins.createOnlineSlave();
-
+        // Create the slave slave0 for some components and wait until it's online
+        jenkins.waitOnline(jenkins.createOnlineSlave());
+        
         // Create a job to have something pending in the queue for the BuilQueue component
         FreeStyleProject project = jenkins.createFreeStyleProject(JOB_NAME);
         project.setAssignedLabel(new LabelAtom("foo")); //it's mandatory
