@@ -117,7 +117,7 @@ public class CheckFilterTest {
     private QueueTaskFuture<FreeStyleBuild> createObjectsWithNames() throws Exception {
         // For an environment variable
         if (ENV_VAR != null) {
-            User.getOrCreateByIdOrFullName("path");
+            User.getOrCreateByIdOrFullName(ENV_VAR);
         }
 
         // For JVMProcessSytemMetricsContents
