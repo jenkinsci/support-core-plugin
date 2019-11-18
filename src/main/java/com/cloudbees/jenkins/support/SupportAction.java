@@ -35,7 +35,10 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -56,14 +59,20 @@ import java.util.logging.Logger;
  * Main root action for generating support.
  */
 @Extension
-public class SupportAction implements RootAction {
-
+public class SupportAction implements RootAction, StaplerProxy {
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
 
+    @Override
+    @Restricted(NoExternalUse.class)
+    public Object getTarget() {
+        Jenkins.get().checkPermission(CREATE_BUNDLE);
+        return this;
+    }
+    
     public String getIconFileName() {
         return "/plugin/support-core/images/24x24/support.png";
     }
@@ -102,7 +111,7 @@ public class SupportAction implements RootAction {
         return Messages._SupportAction_DefaultActionBlurb();
     }
 
-    @SuppressWarnings("unused") // used by Stapler
+    @SuppressWarnings("unused") // used by Jelly
     public List<Component> getComponents() {
         return SupportPlugin.getComponents();
     }
@@ -132,9 +141,14 @@ public class SupportAction implements RootAction {
             return;
         }
         Set<String> bundlesToDelete = new HashSet<>();
+        List<String> existingBundles = getBundles();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
             if (s.isSelected()) {
-                bundlesToDelete.add(s.getName());
+                if (existingBundles.contains(s.getName())) {
+                    bundlesToDelete.add(s.getName());
+                } else {
+                    logger.log(Level.FINE, "The bundle to delete {0} does not exist, so it will not be deleted", s.getName());
+                }
             }
         }
         File rootDirectory = SupportPlugin.getRootDirectory();
@@ -143,7 +157,7 @@ public class SupportAction implements RootAction {
             logger.fine("Trying to delete bundle file "+ fileToDelete.getAbsolutePath());
             try {
                 if (fileToDelete.delete()) {
-                    logger.info("Bundle " + fileToDelete.getAbsolutePath() + " successfully delete.");
+                    logger.info("Bundle " + fileToDelete.getAbsolutePath() + " successfully deleted.");
                 } else {
                     logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath());
                 }
@@ -168,9 +182,6 @@ public class SupportAction implements RootAction {
 
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        final Jenkins instance = Jenkins.get();
-        instance.getAuthorizationStrategy().getACL(instance).checkPermission(CREATE_BUNDLE);
-
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
