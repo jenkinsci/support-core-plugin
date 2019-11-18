@@ -1,12 +1,14 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.configfiles.OtherConfigFilesComponent;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
+import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -22,6 +24,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
@@ -29,8 +33,10 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,8 +48,12 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -55,6 +65,9 @@ public class SupportActionTest {
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
+    @Rule
+    public LoggerRule logger = new LoggerRule();
+    
     @Inject
     SupportAction root;
 
@@ -73,6 +86,70 @@ public class SupportActionTest {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
     }
 
+    /**
+     * Trying to remove not existing bundles will do nothing, just a message in the log. 
+     * @throws IOException 
+     * @throws SAXException
+     */
+    @Test
+    public void deleteNotExistingBundleWillFail() throws IOException, SAXException {
+        String bundle = "../config.xml";
+        logger.record(SupportAction.class, Level.FINE).capture(1);
+        deleteBundle(bundle, "admin");
+        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("The bundle to delete %s does not exist", bundle))));
+    }
+
+    /**
+     * Trying to remove an existing bundle (a zip or log file in JH/support directory) will success.
+     * @throws IOException
+     */
+    @Test
+    public void deleteExistingBundleWillSucceed() throws IOException {
+        // Create a zip file as if it is a support bundle
+        Path bundle = createFakeSupportBundle();
+        assertTrue(Files.exists(bundle));
+        deleteBundle(bundle.getFileName().toString(), "admin");
+        assertTrue(Files.notExists(bundle));
+    }
+
+    @Test
+    public void deleteExistingBundleWithoutPermissionWillFail() throws IOException {
+        // Create a zip file as if it is a support bundle
+        Path bundle = createFakeSupportBundle();
+        assertTrue(Files.exists(bundle));
+        WebResponse response = deleteBundle(bundle.getFileName().toString(), "user");
+        assertThat(response.getContentAsString(), containsString(String.format("user is missing the %s/%s permission", SupportAction.CREATE_BUNDLE.group.title, SupportAction.CREATE_BUNDLE.name)));
+        assertThat(response.getStatusCode(), equalTo(403));
+    }
+    
+    private Path createFakeSupportBundle() throws IOException {
+        return Files.createTempFile(SupportPlugin.getRootDirectory().toPath(), "fake-bundle-", ".zip");
+    }
+
+    /**
+     * Delete the bundle by requesting the <i>deleteBundles</i> page being logged in as user
+     * @param bundle the bundle file to delete
+     * @param user the user logged in
+     * @return the page
+     * @throws IOException when any exception creating the url to call
+     */
+    private WebResponse deleteBundle(String bundle, String user) throws IOException {
+        rule.jenkins.setCrumbIssuer(null);
+
+        rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
+        rule.jenkins.setAuthorizationStrategy(
+                new MockAuthorizationStrategy()
+                        .grant(Jenkins.ADMINISTER).everywhere().to("admin")
+                        .grant(Jenkins.READ).everywhere().to("user")
+        );
+        WebClient wc = rule.createWebClient()
+                .withBasicCredentials(user)
+                .withThrowExceptionOnFailingStatusCode(false);
+
+        WebRequest request = new WebRequest(new URL(rule.getURL()+ root.getUrlName() + "/deleteBundles?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}"), HttpMethod.POST);
+        return wc.getPage(request).getWebResponse();
+    }
+    
     private void downloadBundle(String s) throws IOException, SAXException {
         JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
         File zipFile = File.createTempFile("test", "zip");
