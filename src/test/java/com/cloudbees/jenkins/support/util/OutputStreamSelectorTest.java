@@ -163,10 +163,10 @@ public class OutputStreamSelectorTest {
         for (int i = 0; i < 1024; i++) {
             selector.write(0);
         }
-        verify(binaryOut, never()).flush();
+        verify(textOut, never()).flush();
         selector.flush();
-        verify(binaryOut).flush();
-        verifyNoMoreInteractions(textOut);
+        verify(textOut).flush();
+        verifyNoMoreInteractions(binaryOut);
     }
 
     @Test

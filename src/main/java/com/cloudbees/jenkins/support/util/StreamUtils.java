@@ -72,6 +72,6 @@ public final class StreamUtils {
 
     private static boolean isNonWhitespaceControlCharacter(byte b) {
         char c = (char) (b & 0xff);
-        return Character.isISOControl(c) && c != '\t' && c != '\n' && c != '\r';
+        return Character.isISOControl(c) && c != '\t' && c != '\n' && c != '\r' && c != '\0';
     }
 }
