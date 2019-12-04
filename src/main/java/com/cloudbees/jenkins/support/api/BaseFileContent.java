@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.util.StreamUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Functions;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.accmod.Restricted;
@@ -145,6 +146,10 @@ class BaseFileContent {
         return file.lastModified();
     }
 
+    @SuppressFBWarnings(
+            value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "https://github.com/spotbugs/spotbugs/issues/756"
+    )
     // Check if the file is binary or not
     private boolean isBinary() {
         try (InputStream in = inputStreamSupplier.get()) {
