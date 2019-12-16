@@ -177,18 +177,22 @@ public class ItemsContent extends Component {
     }
 
     private static class Stats {
-        private int s0 = 0;
-        private long s1 = 0;
-        private long s2 = 0;
+        private int count = 0;
+        private long sumOfValues = 0;
+        private long sumOfSquaredValues = 0;
 
         public synchronized void add(int x) {
-            s0++;
-            s1 += x;
-            s2 += x * (long) x;
+            count++;
+            sumOfValues += x;
+            sumOfSquaredValues += x * (long) x;
         }
 
-        public synchronized double x() {
-            return s1 / (double) s0;
+        /**
+         * Compute the mean
+         * @return the mean
+         */
+        public synchronized double mean() {
+            return sumOfValues / (double) count;
         }
 
         private static double roundToSigFig(double num, int sigFig) {
@@ -202,13 +206,17 @@ public class ItemsContent extends Component {
             return shifted / mag;
         }
 
-        public synchronized double s() {
-            if (s0 >= 2) {
-                double v = Math.sqrt((s0 * (double) s2 - s1 * (double) s1) / s0 / (s0 - 1));
-                if (s0 <= 100) {
+        /**
+         * Compute the Standard Deviation (or Variance) as a measure of dispersion
+         * @return the standard deviation 
+         */
+        public synchronized double standardDeviation() {
+            if (count >= 2) {
+                double v = Math.sqrt((count * (double) sumOfSquaredValues - sumOfValues * (double) sumOfValues) / count / (count - 1));
+                if (count <= 100) {
                     return roundToSigFig(v, 1); // 0.88*SD to 1.16*SD
                 }
-                if (s0 <= 1000) {
+                if (count <= 1000) {
                     return roundToSigFig(v, 2); // 0.96*SD to 1.05*SD
                 }
                 return v;
@@ -218,17 +226,17 @@ public class ItemsContent extends Component {
         }
 
         public synchronized String toString() {
-            if (s0 == 0) {
+            if (count == 0) {
                 return "N/A";
             }
-            if (s0 == 1) {
-                return s1 + " [n=" + s0 + "]";
+            if (count == 1) {
+                return sumOfValues + " [n=" + count + "]";
             }
-            return x() + " [n=" + s0 + ", s=" + s() + "]";
+            return mean() + " [n=" + count + ", s=" + standardDeviation() + "]";
         }
 
         public synchronized int n() {
-            return s0;
+            return count;
         }
     }
 
