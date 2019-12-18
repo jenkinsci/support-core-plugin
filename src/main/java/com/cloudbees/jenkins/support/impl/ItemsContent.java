@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * Items content
@@ -94,25 +95,9 @@ public class ItemsContent extends Component {
                         int builds = 0;
                         File buildDir = jenkins.getBuildDirFor(j);
                         if(new File(buildDir, "legacyIds").isFile()) {
-                            try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDir.toPath())) {
-                                for (Path path : stream) {
-                                    if (Files.isDirectory(path) && parseInt(path.toFile().getName()).isPresent()) {
-                                        builds++;
-                                    }
-                                }
-                            } catch (IOException e) {
-                                // ignore
-                            }
+                            builds += countBuilds(buildDir.toPath(), this::parseInt);
                         } else {
-                            try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDir.toPath())) {
-                                for (Path path : stream) {
-                                    if (!Files.isDirectory(path) && parseDate(path.toFile().getName()).isPresent()) {
-                                        builds++;
-                                    }
-                                }
-                            } catch (IOException e) {
-                                // ignore
-                            }
+                            builds += countBuilds(buildDir.toPath(), this::parseDate);
                         }
                         jobTotal.add(builds);
                         Stats s = jobStats.get(key);
@@ -153,27 +138,41 @@ public class ItemsContent extends Component {
                 out.println("  * Number of builds per job: " + jobTotal);
             }
 
+            private Optional<Integer> parseInt(String fileName) {
+                try {
+                    return Optional.of(Integer.parseInt(fileName));
+                } catch (NumberFormatException x) {
+                    return Optional.empty();
+                }
+            }
+
+            private Optional<Date> parseDate(String fileName) {
+                try {
+                    return Optional.of(BUILD_FORMAT.parse(fileName));
+                } catch (ParseException x) {
+                    return Optional.empty();
+                }
+            }
+            
+            private Integer countBuilds(Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
+                int builds = 0;
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDirPath)) {
+                    for (Path path : stream) {
+                        if (Files.isDirectory(path) && parseMethod.apply(path.toFile().getName()).isPresent()) {
+                            builds++;
+                        }
+                    }
+                } catch (IOException e) {
+                    // ignore
+                }
+                return builds;
+            }
+
             @Override
             public boolean shouldBeFiltered() {
                 return false;
             }
         });
-    } 
-    
-    private Optional<Integer> parseInt(String fileName) {
-        try {
-            return Optional.of(Integer.parseInt(fileName));
-        } catch (NumberFormatException x) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<Date> parseDate(String fileName) {
-        try {
-            return Optional.of(BUILD_FORMAT.parse(fileName));
-        } catch (ParseException x) {
-            return Optional.empty();
-        }
     }
 
     private static class Stats {
