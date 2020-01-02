@@ -49,7 +49,6 @@ public class SupportAbstractItemActionTest {
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/config.xml"));
         assertNull("'**/jobs/**' should be excluded by default", z.getEntry(itemEntryPrefix + "/jobs/subFolder/jobs/testFreestyle/config.xml"));
-        assertNull("'**/jobs/**' should be excluded by default", z.getEntry(itemEntryPrefix + "/jobs/subFolder/jobs/testFreestyle/config.xml"));
     }
 
     /**

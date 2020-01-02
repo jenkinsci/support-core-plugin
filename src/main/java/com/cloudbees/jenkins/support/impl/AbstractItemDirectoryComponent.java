@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Functions;
 import hudson.model.AbstractItem;
 import hudson.util.FileVisitor;
 import hudson.util.FormValidation;
@@ -21,7 +22,6 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Path;
 import java.util.logging.Level;
 
 /**
@@ -43,13 +43,17 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
     public void addContents(@NonNull Container container, @NonNull AbstractItem item) {
         try {
             File itemRootDir = item.getRootDir();
-            Path relativeToRoot = new File(Jenkins.get().getRootDir(), "jobs").toPath()
-                    .relativize(itemRootDir.toPath());
+            String relativeToRoot = Functions.isWindows() 
+                    ? new File(Jenkins.get().getRootDir(), "jobs").toPath()
+                        .relativize(itemRootDir.toPath()).toString().replace('\\','/')
+                    : new File(Jenkins.get().getRootDir(), "jobs").toPath()
+                        .relativize(itemRootDir.toPath()).toString();
             list(itemRootDir, new FileVisitor() {
 
                 @Override
                 public void visitSymlink(File link, String target, String relativePath) {
-                    container.add(new PrintedContent("items/{0}/{1}", relativeToRoot.toString(), relativePath) {
+                    container.add(new PrintedContent("items/{0}/{1}", relativeToRoot,
+                            Functions.isWindows() ? relativePath.replace('\\','/') : relativePath) {
 
                         @Override
                         protected void printTo(PrintWriter out) {
@@ -65,7 +69,10 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
 
                 @Override
                 public void visit(File file, String s) {
-                    container.add(new FileContent("items/{0}/{1}", new String[]{relativeToRoot.toString(), s}, file));
+                    container.add(new FileContent("items/{0}/{1}", 
+                            new String[]{relativeToRoot, Functions.isWindows() ? s.replace('\\','/') : s}, 
+                            file)
+                    );
                 }
 
                 @Override

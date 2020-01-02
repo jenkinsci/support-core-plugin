@@ -5,6 +5,7 @@ import com.cloudbees.jenkins.support.api.FilePathContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.util.FormValidation;
@@ -59,7 +60,9 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
                         if (relativePath.getNameCount() <= getMaxDepth()) {
                             container.add(new FilePathContent(
                                     "nodes/slave/{0}/remote/{1}",
-                                    new String[]{node.getNodeName(), relativePath.toString()},
+                                    new String[]{node.getNodeName(), Functions.isWindows() 
+                                            ? relativePath.toString().replace('\\','/') 
+                                            : relativePath.toString()},
                                     filePath)
                             );
                         }
