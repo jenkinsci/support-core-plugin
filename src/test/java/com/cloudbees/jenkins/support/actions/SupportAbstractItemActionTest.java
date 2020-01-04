@@ -9,7 +9,6 @@ import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -75,7 +74,6 @@ public class SupportAbstractItemActionTest {
         assertNotNull(z.getEntry(itemEntryPrefix + "/nextBuildNumber"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/builds/1/build.xml"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/builds/1/log"));
-        
     }
 
     /**
@@ -85,12 +83,11 @@ public class SupportAbstractItemActionTest {
     public void generatePipelineBundleDefaultsAndCheckContent() throws Exception {
 
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
-        Optional<QueueTaskFuture<WorkflowRun>> optionalWorkflowRunQueueTaskFuture = Optional.ofNullable(p.scheduleBuild2(0));
-        QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = optionalWorkflowRunQueueTaskFuture
-                .orElseThrow(AssertionFailedError::new);
-        WorkflowRun workflowRun = workflowRunQueueTaskFuture.waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
+        WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart();
+        j.waitForCompletion(workflowRun);
 
         // Check that the generation does not show any warnings
         ZipFile z = SupportTestUtils.generateBundleWithoutWarnings(p.getUrl(),

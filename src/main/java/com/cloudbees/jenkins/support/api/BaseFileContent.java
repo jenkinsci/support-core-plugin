@@ -74,14 +74,11 @@ class BaseFileContent {
 
     protected void writeTo(OutputStream os) throws IOException {
         try {
-            InputStream is = inputStreamSupplier.get();
-            if (maxSize == -1) {
-                IOUtils.copy(is, os);
-            } else {
-                try {
+            try (InputStream is = inputStreamSupplier.get()) {
+                if (maxSize == -1) {
+                    IOUtils.copy(is, os);
+                } else {
                     IOUtils.copy(new TruncatedInputStream(is, maxSize), os);
-                } finally {
-                    is.close();
                 }
             }
         } catch (FileNotFoundException e) { // TODO FilePathContent.isFileNotFound?
