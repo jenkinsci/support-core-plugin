@@ -1,9 +1,19 @@
 ## Changelog
 
+### Version 2.65 (2019 Dec 4)
+
+-   [JENKINS-59455](https://issues.jenkins-ci.org/browse/JENKINS-59455) - Fix the checking of env vars using an existing env var instead of path
+
 ### Version 2.64 (2019 Nov 21)
 
 -   [Fix security
     issues](https://jenkins.io/security/advisory/2019-11-21/#SECURITY-1634)
+    
+### Version 2.63 (2019 Nov 4)
+
+-   [JENKINS-59696](https://issues.jenkins-ci.org/browse/JENKINS-59696) - Fix ContentFilters dynamic loading issue
+
+-   [JENKINS-59714](https://issues.jenkins-ci.org/browse/JENKINS-59714) - Remove the pinned/unpinned information
 
 ### Version 2.62 (2019 Oct 4)
 
