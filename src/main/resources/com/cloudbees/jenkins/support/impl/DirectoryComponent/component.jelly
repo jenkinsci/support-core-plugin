@@ -1,7 +1,7 @@
 <!--
  ~ The MIT License
  ~
- ~ Copyright (c) 2013, CloudBees, Inc.
+ ~ Copyright (c) 2018, CloudBees, Inc.
  ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
  ~ of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,22 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<div>
-  This support plugin allows generation of support request bundles that contains diagnostic information to
-  aid with resolving issues.
-</div>
+<j:jelly xmlns:j="jelly:core"
+         xmlns:st="jelly:stapler"
+         xmlns:f="/lib/form">
+    <f:block>
+        <f:entry title="${%Includes}" field="includes">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%Excludes}" field="excludes">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%Max Depth}" field="maxDepth">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%Default Excludes}" field="defaultExcludes">
+            <f:checkbox/>
+        </f:entry>
+        <st:include page="config-detail.jelly" optional="true" class="${descriptor.clazz}"/>
+    </f:block>
+</j:jelly>

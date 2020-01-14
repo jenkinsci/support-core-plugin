@@ -55,20 +55,20 @@ public class SystemProperties extends Component {
     @Override
     public void addContents(@NonNull Container result) {
         result.add(new Content("nodes/master/system.properties") {
-                    @Override
-                    public void writeTo(OutputStream os) {
-                        try {
-                            Properties properties = new SortedProperties();
-                            properties.putAll(RemotingDiagnostics
-                                    .getSystemProperties(Jenkins.getInstance().getChannel()));
-                            properties.store(os, null);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not record system properties for master", e);
-                        } catch (InterruptedException e) {
-                            logger.log(Level.WARNING, "Could not record system properties for master", e);
-                        }
-                    }
-                }
+                       @Override
+                       public void writeTo(OutputStream os) {
+                           try {
+                               Properties properties = new SortedProperties();
+                               properties.putAll(RemotingDiagnostics
+                                       .getSystemProperties(Jenkins.getInstance().getChannel()));
+                               properties.store(os, null);
+                           } catch (IOException e) {
+                               logger.log(Level.WARNING, "Could not record system properties for master", e);
+                           } catch (InterruptedException e) {
+                               logger.log(Level.WARNING, "Could not record system properties for master", e);
+                           }
+                       }
+                   }
         );
         for (final Node node : Jenkins.getInstance().getNodes()) {
             result.add(

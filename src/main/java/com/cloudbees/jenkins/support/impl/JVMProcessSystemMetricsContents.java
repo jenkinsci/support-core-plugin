@@ -1,9 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.AbstractModelObject;
+import hudson.model.Computer;
 import hudson.model.Node;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -15,8 +20,15 @@ import java.util.Set;
  * filtered.
  */
 public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesRetriever {
+    
     @Extension
     public static class Master extends JVMProcessSystemMetricsContents {
+
+        @DataBoundConstructor
+        public Master() {
+            super();
+        }
+        
         @Override
         @NonNull
         public String getDisplayName() {
@@ -27,10 +39,46 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         protected List<Node> getNodes() {
             return Collections.singletonList(Jenkins.get());
         }
+
+        @Override
+        public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+            return Jenkins.class.isAssignableFrom(clazz);
+        }
+
+        @Override
+        public boolean isApplicable(Computer item) {
+            return item == Jenkins.get().toComputer();
+        }
+
+        @Override
+        public DescriptorImpl getDescriptor() {
+            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("masterJVMProcessSystemMetricsComponent")
+        public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+            /**
+             * {@inheritDoc}
+             */
+            @NonNull
+            @Override
+            public String getDisplayName() {
+                return "Master JVM process system metrics (Linux only)";
+            }
+
+        }
     }
 
     @Extension
     public static class Agents extends JVMProcessSystemMetricsContents {
+
+        @DataBoundConstructor
+        public Agents() {
+            super();
+        }
+        
         @Override
         @NonNull
         public String getDisplayName() {
@@ -45,6 +93,36 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         @Override
         protected List<Node> getNodes() {
             return Jenkins.get().getNodes();
+        }
+
+        @Override
+        public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+            return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
+        }
+
+        @Override
+        public boolean isApplicable(Computer item) {
+            return item != Jenkins.get().toComputer();
+        }
+
+        @Override
+        public DescriptorImpl getDescriptor() {
+            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("agentJVMProcessSystemMetricsComponent")
+        public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+            /**
+             * {@inheritDoc}
+             */
+            @NonNull
+            @Override
+            public String getDisplayName() {
+                return "Agent JVM process system metrics (Linux only)";
+            }
+
         }
     }
 
