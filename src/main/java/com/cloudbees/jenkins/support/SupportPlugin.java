@@ -44,6 +44,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.Main;
@@ -272,12 +273,22 @@ public class SupportPlugin extends Plugin {
         return Jenkins.get().getPlugin(SupportPlugin.class);
     }
 
-    public static List<Component> getComponents() {
-        return Jenkins.get().getExtensionList(Component.class)
-                .stream()
-                .filter(component -> component.isApplicable(Jenkins.class))
-                .collect(Collectors.toList());
+    public static ExtensionList<Component> getComponents() {
+        ExtensionList list = ExtensionList.create(Jenkins.get(), NonExistentComponent.class);
+
+        if (list.isEmpty()) {
+            List<Component> applicableComponents = Jenkins.get().getExtensionList(Component.class)
+                    .stream()
+                    .filter(component -> component.isApplicable(Jenkins.class))
+                    .collect(Collectors.toList());
+
+            list.addAll(applicableComponents);
+        }
+
+        return list;
     }
+
+    private static abstract class NonExistentComponent extends Component {}
 
     public static void writeBundle(OutputStream outputStream) throws IOException {
         writeBundle(outputStream, getComponents());
