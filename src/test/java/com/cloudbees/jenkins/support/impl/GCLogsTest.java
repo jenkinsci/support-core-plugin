@@ -1,10 +1,12 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.google.common.io.Files;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.assertj.core.api.Assertions;
+import org.junit.Assume;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -21,6 +23,7 @@ public class GCLogsTest {
 
     @Test
     public void simpleFile() throws Exception {
+        Assume.assumeTrue(SupportTestUtils.isJava8OrBelow());
         File tmpFile = File.createTempFile("gclogs", "");
         Files.touch(tmpFile);
 
@@ -36,6 +39,7 @@ public class GCLogsTest {
 
     @Test
     public void rotatedFiles() throws Exception {
+        Assume.assumeTrue(SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc.log." + count));
@@ -53,7 +57,27 @@ public class GCLogsTest {
     }
 
     @Test
+    public void rotatedJava9Files() throws Exception {
+        Assume.assumeFalse(SupportTestUtils.isJava8OrBelow());
+        File tempDir = Files.createTempDir();
+        for (int count = 0; count < 5; count++) {
+            Files.touch(new File(tempDir, "gc.log." + count));
+        }
+
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" 
+                + tempDir.getAbsolutePath()+ "/gc.log.%p:filecount=10,filesize=50m");
+
+        TestContainer container = new TestContainer();
+
+        new GCLogs(finder).addContents(container);
+
+        assertEquals(5, container.getContents().size());
+    }
+
+    @Test
     public void parameterizedFiles() throws Exception {
+        Assume.assumeTrue(SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".1423.log." + count));
@@ -63,7 +87,30 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc.%t.%p.log").getAbsolutePath());
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH 
+                + new File(tempDir, "gc.%t.%p.log").getAbsolutePath());
+
+        TestContainer container = new TestContainer();
+
+        new GCLogs(finder).addContents(container);
+
+        assertEquals(8, container.getContents().size());
+    }
+
+    @Test
+    public void parameterizedJava9Files() throws Exception {
+        Assume.assumeFalse(SupportTestUtils.isJava8OrBelow());
+        File tempDir = Files.createTempDir();
+        for (int count = 0; count < 5; count++) {
+            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".1423.log." + count));
+        }
+        for (int count = 0; count < 3; count++) {
+            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".2534.log." + count));
+        }
+
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH 
+                + "*:file=" + tempDir.getAbsolutePath()+ "/gc.%t.%p.log");
 
         TestContainer container = new TestContainer();
 
@@ -74,6 +121,7 @@ public class GCLogsTest {
 
     @Test
     public void parameterizedAndRotatedFiles() throws Exception {
+        Assume.assumeTrue(SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 10; count++) {
             Files.touch(new File(tempDir, "gc5625.log." + count));
@@ -96,6 +144,7 @@ public class GCLogsTest {
     @Test
     @Issue("JENKINS-58980")
     public void latestFiles() throws Exception {
+        Assume.assumeTrue(SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         long currentTime = System.currentTimeMillis();
         for (int count = 0; count < 10; count++) {
