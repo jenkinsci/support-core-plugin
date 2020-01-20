@@ -47,7 +47,8 @@ public class GCLogsTest {
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
         when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tempDir.getAbsolutePath()+"/gc.log");
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH 
+                + tempDir.getAbsolutePath() + File.separator + "gc.log");
 
         TestContainer container = new TestContainer();
 
@@ -65,8 +66,8 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" 
-                + tempDir.getAbsolutePath()+ "/gc.log.%p:filecount=10,filesize=50m");
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
+                + tempDir.getAbsolutePath() + File.separator + "gc.log.%p:filecount=10,filesize=50m");
 
         TestContainer container = new TestContainer();
 
@@ -87,7 +88,7 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH 
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH
                 + new File(tempDir, "gc.%t.%p.log").getAbsolutePath());
 
         TestContainer container = new TestContainer();
@@ -109,8 +110,8 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH 
-                + "*:file=" + tempDir.getAbsolutePath()+ "/gc.%t.%p.log");
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH
+                + "*:file=" + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log");
 
         TestContainer container = new TestContainer();
 
@@ -168,7 +169,7 @@ public class GCLogsTest {
         Assertions.assertThat(container.getContents())
                 .extracting("file", File.class)
                 .extractingResultOf("getName")
-                .contains("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4"); 
+                .contains("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4");
     }
 
     private static class TestContainer extends Container {
