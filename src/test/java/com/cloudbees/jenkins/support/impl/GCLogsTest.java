@@ -59,15 +59,35 @@ public class GCLogsTest {
 
     @Test
     public void rotatedJava9Files() throws Exception {
-        Assume.assumeFalse(SupportTestUtils.isJava8OrBelow());
+        Assume.assumeTrue(!SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc.log." + count));
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
-                + tempDir.getAbsolutePath() + File.separator + "gc.log.%p:filecount=10,filesize=50m");
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" 
+            + tempDir.getAbsolutePath() + File.separator + "gc.log.%p" + ":filecount=10,filesize=50m");
+
+        TestContainer container = new TestContainer();
+
+        new GCLogs(finder).addContents(container);
+
+        assertEquals(5, container.getContents().size());
+    }
+
+    @Test
+    public void rotatedJava9FilesWithQuotes() throws Exception {
+        Assume.assumeTrue(!SupportTestUtils.isJava8OrBelow());
+        File tempDir = Files.createTempDir();
+        for (int count = 0; count < 5; count++) {
+            Files.touch(new File(tempDir, "gc.log." + count));
+        }
+
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
+        // In Windows, the file locations must be wrapped with quotes
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" 
+                + tempDir.getAbsolutePath() + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
 
         TestContainer container = new TestContainer();
 
@@ -100,7 +120,7 @@ public class GCLogsTest {
 
     @Test
     public void parameterizedJava9Files() throws Exception {
-        Assume.assumeFalse(SupportTestUtils.isJava8OrBelow());
+        Assume.assumeTrue(!SupportTestUtils.isJava8OrBelow());
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".1423.log." + count));
@@ -110,8 +130,31 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH
-                + "*:file=" + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log");
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" 
+                + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log");
+
+        TestContainer container = new TestContainer();
+
+        new GCLogs(finder).addContents(container);
+
+        assertEquals(8, container.getContents().size());
+    }
+
+    @Test
+    public void parameterizedJava9FilesWithQuotes() throws Exception {
+        Assume.assumeTrue(!SupportTestUtils.isJava8OrBelow());
+        File tempDir = Files.createTempDir();
+        for (int count = 0; count < 5; count++) {
+            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".1423.log." + count));
+        }
+        for (int count = 0; count < 3; count++) {
+            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".2534.log." + count));
+        }
+
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
+        // In Windows, the file locations must be wrapped with quotes
+        when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" 
+                + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log\"");
 
         TestContainer container = new TestContainer();
 

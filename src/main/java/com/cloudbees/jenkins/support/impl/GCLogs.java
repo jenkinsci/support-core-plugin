@@ -33,7 +33,8 @@ public class GCLogs extends Component {
 
     static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
     static final String GCLOGS_JRE9_SWITCH = "-Xlog:gc";
-    static final String GCLOGS_JRE9_LOCATION = ".*:file=(?<location>[^:]*).*";
+    // We need (?:[a-zA-Z]\:\\)? to handle Windows disk drive 
+    static final String GCLOGS_JRE9_LOCATION = ".*:file=[\"]?(?<location>(?:[a-zA-Z]:\\\\)?[^\":]*).*";
     static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
 
     private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
