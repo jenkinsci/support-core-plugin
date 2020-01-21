@@ -85,7 +85,7 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        // In Windows, the file locations must be wrapped with quotes
+        // The file locations may be wrapped with quotes
         when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" 
                 + tempDir.getAbsolutePath() + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
 
@@ -152,7 +152,7 @@ public class GCLogsTest {
         }
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        // In Windows, the file locations must be wrapped with quotes
+        // The file locations may be wrapped with quotes
         when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" 
                 + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log\"");
 
