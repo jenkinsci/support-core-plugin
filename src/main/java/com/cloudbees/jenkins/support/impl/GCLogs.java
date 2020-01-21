@@ -149,27 +149,27 @@ public class GCLogs extends Component {
 
         String fileLocation;
         
-        if(!isJava8OrBelow()) {
-            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
-            if (gcLogSwitch == null) {
-                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
-                fileLocation = null;
-            } else {
-                Matcher fileLocationMatcher = Pattern.compile(GCLOGS_JRE9_LOCATION).matcher(gcLogSwitch);
-                if(fileLocationMatcher.matches()) { 
-                    fileLocation = fileLocationMatcher.group("location");
-                } else {
-                    LOGGER.fine("No GC Logging custom file location found.");
-                    fileLocation = null;
-                }
-            }
-        } else {
+        if(isJava8OrBelow()) {
             String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE_SWITCH);
             if (gcLogSwitch == null) {
                 LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
                 fileLocation = null;
             } else {
                 fileLocation = gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+            }
+        } else {
+            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
+            if (gcLogSwitch == null) {
+                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
+                fileLocation = null;
+            } else {
+                Matcher fileLocationMatcher = Pattern.compile(GCLOGS_JRE9_LOCATION).matcher(gcLogSwitch);
+                if(fileLocationMatcher.matches()) {
+                    fileLocation = fileLocationMatcher.group("location");
+                } else {
+                    LOGGER.fine("No GC Logging custom file location found.");
+                    fileLocation = null;
+                }
             }
         }
         return fileLocation;
