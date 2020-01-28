@@ -23,30 +23,34 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
-import com.google.common.collect.Iterators;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.function.Function;
 
 /**
  * Items content
@@ -65,97 +69,134 @@ public class ItemsContent extends Component {
     public String getDisplayName() {
         return "Items Content (Computationally expensive)";
     }
+    
+    private final DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     @Override
     public void addContents(@NonNull Container result) {
-        final Authentication authentication = SupportPlugin.getRequesterAuthentication();
-        if (authentication != null) {
-            result.add(new PrintedContent("items.md") {
-                @Override
-                protected void printTo(PrintWriter out) throws IOException {
-                    final Jenkins jenkins = Jenkins.getInstanceOrNull();
-                    if (jenkins == null) {
-                        return;
-                    }
+        result.add(new PrintedContent("items.md") {
 
-                    Map<String,Integer> containerCounts = new TreeMap<>();
-                    Map<String,ItemsContent.Stats> jobStats = new HashMap<>();
-                    ItemsContent.Stats jobTotal = new ItemsContent.Stats();
-                    Map<String,ItemsContent.Stats> containerStats = new HashMap<String,ItemsContent.Stats>();
-
-                    long startTime = System.currentTimeMillis();
-                    for (Item i : jenkins.getAllItems()) {
-                        String key = i.getClass().getName();
-                        Integer cnt = containerCounts.get(key);
-                        containerCounts.put(key, cnt == null ? 1 : cnt + 1);
-                        if (i instanceof Job) {
-                            Job<?,?> j = (Job) i;
-                            int builds = 0;
-                            Iterator buildsIterator = j.getBuilds().iterator();
-                            builds = Iterators.size(buildsIterator);
-                            jobTotal.add(builds);
-                            ItemsContent.Stats s = jobStats.get(key);
-                            if (s == null) {
-                                jobStats.put(key, s = new ItemsContent.Stats());
-                            }
-                            s.add(builds);
-                        }
-                        if (i instanceof ItemGroup) {
-                            ItemsContent.Stats s = containerStats.get(key);
-                            if (s == null) {
-                                containerStats.put(key, s = new ItemsContent.Stats());
-                            }
-                            s.add(((ItemGroup) i).getItems().size());
-                        }
-                    }
-                    long endTime = System.currentTimeMillis();
-                    LOGGER.log(Level.FINE, "Time to compute all the build is {0}", endTime - startTime);
-                    out.println("Item statistics");
-                    out.println("===============");
-                    out.println();
-                    for (Map.Entry<String,Integer> entry : containerCounts.entrySet()) {
-                        String key = entry.getKey();
-                        out.println("  * `" + key + "`");
-                        out.println("    - Number of items: " + entry.getValue());
-                        ItemsContent.Stats s = jobStats.get(key);
-                        if (s != null) {
-                            out.println("    - Number of builds per job: " + s);
-                        }
-                        s = containerStats.get(key);
-                        if (s != null) {
-                            out.println("    - Number of items per container: " + s);
-                        }
-                    }
-                    out.println();
-                    out.println("Total job statistics");
-                    out.println("======================");
-                    out.println();
-                    out.println("  * Number of jobs: " + jobTotal.n());
-                    out.println("  * Number of builds per job: " + jobTotal);
+            @Override
+            protected void printTo(PrintWriter out) {
+                final Jenkins jenkins = Jenkins.getInstanceOrNull();
+                if (jenkins == null) {
+                    return;
                 }
-
-                @Override
-                public boolean shouldBeFiltered() {
-                    // The information of this content is not sensible, so it doesn't need to be filtered.
-                    return false;
+                Map<String, Integer> containerCounts = new TreeMap<>();
+                Map<String, Stats> jobStats = new HashMap<>();
+                Stats jobTotal = new Stats();
+                Map<String, Stats> containerStats = new HashMap<>();
+                jenkins.allItems().forEach(item -> {
+                    String key = item.getClass().getName();
+                    Integer cnt = containerCounts.get(key);
+                    containerCounts.put(key, cnt == null ? 1 : cnt + 1);
+                    if (item instanceof Job) {
+                        Job<?, ?> j = (Job) item;
+                        // too expensive: int builds = j.getBuilds().size();
+                        int builds = 0;
+                        File buildDir = jenkins.getBuildDirFor(j);
+                        if(new File(buildDir, "legacyIds").isFile()) {
+                            builds += countBuilds(buildDir.toPath(), this::parseInt);
+                        } else {
+                            builds += countBuilds(buildDir.toPath(), this::parseDate);
+                        }
+                        jobTotal.add(builds);
+                        Stats s = jobStats.get(key);
+                        if (s == null) {
+                            jobStats.put(key, s = new Stats());
+                        }
+                        s.add(builds);
+                    }
+                    if (item instanceof ItemGroup) {
+                        Stats s = containerStats.get(key);
+                        if (s == null) {
+                            containerStats.put(key, s = new Stats());
+                        }
+                        s.add(((ItemGroup) item).getItems().size());
+                    }
+                });
+                out.println("Item statistics");
+                out.println("===============");
+                out.println();
+                for (Map.Entry<String, Integer> entry : containerCounts.entrySet()) {
+                    String key = entry.getKey();
+                    out.println("  * `" + key + "`");
+                    out.println("    - Number of items: " + entry.getValue());
+                    Stats s = jobStats.get(key);
+                    if (s != null) {
+                        out.println("    - Number of builds per job: " + s);
+                    }
+                    s = containerStats.get(key);
+                    if (s != null) {
+                        out.println("    - Number of items per container: " + s);
+                    }
                 }
-            });
-        }
+                out.println();
+                out.println("Total job statistics");
+                out.println("======================");
+                out.println();
+                out.println("  * Number of jobs: " + jobTotal.n());
+                out.println("  * Number of builds per job: " + jobTotal);
+            }
+
+            private Optional<Integer> parseInt(String fileName) {
+                try {
+                    return Optional.of(Integer.parseInt(fileName));
+                } catch (NumberFormatException x) {
+                    return Optional.empty();
+                }
+            }
+
+            private Optional<Date> parseDate(String fileName) {
+                try {
+                    return Optional.of(BUILD_FORMAT.parse(fileName));
+                } catch (ParseException x) {
+                    return Optional.empty();
+                }
+            }
+
+            @SuppressFBWarnings(
+                    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+                    justification = "https://github.com/spotbugs/spotbugs/issues/756"
+            )
+            private Integer countBuilds(Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
+                int builds = 0;
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDirPath)) {
+                    for (Path path : stream) {
+                        if (Files.isDirectory(path) && parseMethod.apply(path.toFile().getName()).isPresent()) {
+                            builds++;
+                        }
+                    }
+                } catch (IOException e) {
+                    // ignore
+                }
+                return builds;
+            }
+
+            @Override
+            public boolean shouldBeFiltered() {
+                return false;
+            }
+        });
     }
 
     private static class Stats {
-        private int s0 = 0;
-        private long s1 = 0;
-        private long s2 = 0;
+        private int count = 0;
+        private long sumOfValues = 0;
+        private long sumOfSquaredValues = 0;
 
         public synchronized void add(int x) {
-            s0++;
-            s1 += x;
-            s2 += x * (long) x;
+            count++;
+            sumOfValues += x;
+            sumOfSquaredValues += x * (long) x;
         }
 
-        public synchronized double x() {
-            return s1 / (double) s0;
+        /**
+         * Compute the mean
+         * @return the mean
+         */
+        public synchronized double mean() {
+            return sumOfValues / (double) count;
         }
 
         private static double roundToSigFig(double num, int sigFig) {
@@ -169,13 +210,17 @@ public class ItemsContent extends Component {
             return shifted / mag;
         }
 
-        public synchronized double s() {
-            if (s0 >= 2) {
-                double v = Math.sqrt((s0 * (double) s2 - s1 * (double) s1) / s0 / (s0 - 1));
-                if (s0 <= 100) {
+        /**
+         * Compute the Standard Deviation (or Variance) as a measure of dispersion
+         * @return the standard deviation 
+         */
+        public synchronized double standardDeviation() {
+            if (count >= 2) {
+                double v = Math.sqrt((count * (double) sumOfSquaredValues - sumOfValues * (double) sumOfValues) / count / (count - 1));
+                if (count <= 100) {
                     return roundToSigFig(v, 1); // 0.88*SD to 1.16*SD
                 }
-                if (s0 <= 1000) {
+                if (count <= 1000) {
                     return roundToSigFig(v, 2); // 0.96*SD to 1.05*SD
                 }
                 return v;
@@ -185,24 +230,22 @@ public class ItemsContent extends Component {
         }
 
         public synchronized String toString() {
-            if (s0 == 0) {
+            if (count == 0) {
                 return "N/A";
             }
-            if (s0 == 1) {
-                return Long.toString(s1) + " [n=" + s0 + "]";
+            if (count == 1) {
+                return sumOfValues + " [n=" + count + "]";
             }
-            return Double.toString(x()) + " [n=" + s0 + ", s=" + s() + "]";
+            return mean() + " [n=" + count + ", s=" + standardDeviation() + "]";
         }
 
         public synchronized int n() {
-            return s0;
+            return count;
         }
     }
 
     @Override
     public boolean isSelectedByDefault() {
-        return false;
+        return true;
     }
-
-    private static final Logger LOGGER = Logger.getLogger(ItemsContent.class.getName());
 }
