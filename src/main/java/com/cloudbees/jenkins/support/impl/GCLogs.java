@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -31,7 +32,9 @@ import java.util.regex.Pattern;
 public class GCLogs extends Component {
 
     static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
-
+    static final String GCLOGS_JRE9_SWITCH = "-Xlog:gc";
+    // We need (?:[a-zA-Z]\:\\)? to handle Windows disk drive 
+    static final String GCLOGS_JRE9_LOCATION = ".*:file=[\"]?(?<location>(?:[a-zA-Z]:\\\\)?[^\":]*).*";
     static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
 
     private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
@@ -82,7 +85,7 @@ public class GCLogs extends Component {
             return;
         }
 
-        if (isGcLogRotationConfigured() || isFileLocationParameterized(gcLogFileLocation)) {
+        if (isFileLocationParameterized(gcLogFileLocation) || isGcLogRotationConfigured()) {
             handleRotatedLogs(gcLogFileLocation, result);
         } else {
             File file = new File(gcLogFileLocation);
@@ -145,16 +148,36 @@ public class GCLogs extends Component {
     @CheckForNull
     private String getGcLogFileLocation() {
 
-        String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE_SWITCH);
-        if (gcLogSwitch == null) {
-            LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
-            return null;
+        String fileLocation;
+        
+        if(isJava8OrBelow()) {
+            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE_SWITCH);
+            if (gcLogSwitch == null) {
+                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
+                fileLocation = null;
+            } else {
+                fileLocation = gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+            }
+        } else {
+            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
+            if (gcLogSwitch == null) {
+                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
+                fileLocation = null;
+            } else {
+                Matcher fileLocationMatcher = Pattern.compile(GCLOGS_JRE9_LOCATION).matcher(gcLogSwitch);
+                if(fileLocationMatcher.matches()) {
+                    fileLocation = fileLocationMatcher.group("location");
+                } else {
+                    LOGGER.fine("No GC Logging custom file location found.");
+                    fileLocation = null;
+                }
+            }
         }
-        return gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
+        return fileLocation;
     }
     
     public boolean isFileLocationParameterized(String fileLocation) {
-        return Pattern.compile(".*%[tnp].*").matcher(fileLocation).find();
+        return Pattern.compile(".*%[tp].*").matcher(fileLocation).find();
     }
 
     /**
@@ -169,7 +192,17 @@ public class GCLogs extends Component {
     }
 
     private boolean isGcLogRotationConfigured() {
-        return vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
+        return isJava8OrBelow() && vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
+    }
+
+    /**
+     * Return if this instance if running Java 8 or a lower version
+     * (Can be replaced by JavaUtils.isRunningWithJava8OrBelow() since 2.164.1)
+     * @ See https://openjdk.java.net/jeps/223
+     * @return true if running java 8 or an older version
+     */
+    private boolean isJava8OrBelow() {
+        return System.getProperty("java.specification.version").startsWith("1.");
     }
 
     /**
