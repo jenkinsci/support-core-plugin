@@ -47,6 +47,8 @@ public class RunningBuildsTest {
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
+        j.waitForCompletion(build);
+
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber())));
     }
 
@@ -62,6 +64,8 @@ public class RunningBuildsTest {
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds(), filter);
 
+        j.waitForCompletion(build);
+
         assertThat(output, not(containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber()))));
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, FILTERED_JOB_NAME, build.getNumber())));
     }
@@ -74,6 +78,8 @@ public class RunningBuildsTest {
         FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
+
+        j.waitForCompletion(build);
 
         assertThat(output, containsString(String.format(EXPECTED_FOLDER_OUTPUT_FORMAT, folder.getName(), p.getName(), build.getNumber())));
     }
@@ -90,7 +96,9 @@ public class RunningBuildsTest {
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
+        SemaphoreStep.success("wait/1", null);
+        j.waitForCompletion(workflowRun);
+
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), workflowRun.getNumber())));
     }
-
 }

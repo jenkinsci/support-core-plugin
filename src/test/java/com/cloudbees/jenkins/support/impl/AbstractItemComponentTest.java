@@ -7,7 +7,6 @@ import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -148,11 +147,10 @@ public class AbstractItemComponentTest {
     public void addContentsFromPipeline() throws Exception {
         MockFolder folder = j.createFolder(FOLDER_NAME);
         WorkflowJob p = folder.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
         j.waitForCompletion(workflowRun);
 
         j.waitUntilNoActivity();
@@ -175,11 +173,10 @@ public class AbstractItemComponentTest {
     @Test
     public void addContentsFromJobWithExcludes() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
         j.waitForCompletion(workflowRun);
 
         j.waitUntilNoActivity();
@@ -202,11 +199,10 @@ public class AbstractItemComponentTest {
     @Test
     public void addContentsFromJobWithIncludes() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
         j.waitForCompletion(workflowRun);
 
         j.waitUntilNoActivity();
@@ -227,11 +223,10 @@ public class AbstractItemComponentTest {
     @Test
     public void addContentsFromJobWithMaxDepth() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
         j.waitForCompletion(workflowRun);
 
         j.waitUntilNoActivity();
@@ -252,11 +247,10 @@ public class AbstractItemComponentTest {
     @Test
     public void addContentsFromJobWithIncludesExcludes() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
+        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        SemaphoreStep.success("wait/1", workflowRun);
         j.waitForCompletion(workflowRun);
 
         j.waitUntilNoActivity();
