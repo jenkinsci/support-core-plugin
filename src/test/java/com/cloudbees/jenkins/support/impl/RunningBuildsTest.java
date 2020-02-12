@@ -6,9 +6,12 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.queue.QueueTaskFuture;
+import hudson.util.OneShotEvent;
 import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -18,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.TestBuilder;
 
 import java.util.Optional;
 
@@ -42,11 +46,13 @@ public class RunningBuildsTest {
     @Test
     public void addContents() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject(JOB_NAME);
-        QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
-        FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
+        SemaphoreBuilder semaphore = new SemaphoreBuilder();
+        p.getBuildersList().add(semaphore);
+        FreeStyleBuild build = p.scheduleBuild2(0).waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
+        semaphore.release();
         j.waitForCompletion(build);
 
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber())));
@@ -59,11 +65,13 @@ public class RunningBuildsTest {
         ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
-        QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
-        FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
+        SemaphoreBuilder semaphore = new SemaphoreBuilder();
+        p.getBuildersList().add(semaphore);
+        FreeStyleBuild build = p.scheduleBuild2(0).waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds(), filter);
 
+        semaphore.release();
         j.waitForCompletion(build);
 
         assertThat(output, not(containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber()))));
@@ -74,11 +82,13 @@ public class RunningBuildsTest {
     public void addContentsInFolder() throws Exception {
         MockFolder folder = j.createFolder(FOLDER_NAME);
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, JOB_NAME);
-        QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
-        FreeStyleBuild build = freeStyleBuildQueueTaskFuture.waitForStart();
+        SemaphoreBuilder semaphore = new SemaphoreBuilder();
+        p.getBuildersList().add(semaphore);
+        FreeStyleBuild build = p.scheduleBuild2(0).waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
+        semaphore.release();
         j.waitForCompletion(build);
 
         assertThat(output, containsString(String.format(EXPECTED_FOLDER_OUTPUT_FORMAT, folder.getName(), p.getName(), build.getNumber())));
@@ -88,11 +98,9 @@ public class RunningBuildsTest {
     public void addContentsPipeline() throws Exception {
         WorkflowJob p = j.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
-        Optional<QueueTaskFuture<WorkflowRun>> optionalWorkflowRunQueueTaskFuture = Optional.ofNullable(p.scheduleBuild2(0));
-        QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = optionalWorkflowRunQueueTaskFuture
-            .orElseThrow(AssertionFailedError::new);
-        WorkflowRun workflowRun = workflowRunQueueTaskFuture.waitForStart();
-        SemaphoreStep.waitForStart("wait/1", workflowRun);
+        WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());
 
@@ -100,5 +108,21 @@ public class RunningBuildsTest {
         j.waitForCompletion(workflowRun);
 
         assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), workflowRun.getNumber())));
+    }
+
+    private static class SemaphoreBuilder extends TestBuilder {
+
+        private final OneShotEvent event = new OneShotEvent();
+
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
+            System.err.println("Waiting for semaphore...");
+            event.block();
+            return true;
+        }
+
+        void release() {
+            event.signal();
+        }
     }
 }
