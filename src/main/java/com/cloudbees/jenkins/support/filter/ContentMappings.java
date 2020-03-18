@@ -246,4 +246,12 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     public @Nonnull String getUrlName() {
         return "anonymizedMappings";
     }
+    
+    /**
+     * Name of the category for this management link.
+     * TBD: Use getCategory when core requirement is greater or equal to 2.226 
+     */
+    public @Nonnull String getCategoryName() {
+        return "SECURITY";
+    }    
 }
