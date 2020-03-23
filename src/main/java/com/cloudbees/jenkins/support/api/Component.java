@@ -31,6 +31,8 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import java.util.Collections;
 import java.util.Set;
@@ -44,6 +46,7 @@ import java.util.Set;
  *
  * @author Stephen Connolly
  */
+@ExportedBean
 public abstract class Component implements ExtensionPoint {
     
     /**
@@ -85,6 +88,7 @@ public abstract class Component implements ExtensionPoint {
      *
      * @return {@code true} if the current authentication can include this component in a bundle.
      */
+    @Exported
     public boolean isEnabled() {
         ACL acl = Jenkins.getInstance().getAuthorizationStrategy().getRootACL();
         if (acl != null) {
@@ -99,6 +103,7 @@ public abstract class Component implements ExtensionPoint {
         return true;
     }
 
+    @Exported
     public boolean isSelectedByDefault() {
         return true;
     }
@@ -115,6 +120,7 @@ public abstract class Component implements ExtensionPoint {
     }
 
     @NonNull
+    @Exported
     public abstract String getDisplayName();
 
     /**
@@ -128,6 +134,7 @@ public abstract class Component implements ExtensionPoint {
      *
      * @return by default, the {@link Class#getSimpleName} of the component implementation.
      */
+    @Exported
     @NonNull public String getId() {
         return getClass().getSimpleName();
     }

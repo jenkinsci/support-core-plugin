@@ -1,9 +1,11 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.configfiles.ConfigFileComponent;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
+import com.cloudbees.jenkins.support.impl.AboutUser;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
@@ -21,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
@@ -50,6 +53,8 @@ import java.util.zip.ZipFile;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -61,6 +66,9 @@ import static org.junit.Assert.fail;
 public class SupportActionTest {
     @Rule
     public JenkinsRule rule = new JenkinsRule();
+
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -150,13 +158,41 @@ public class SupportActionTest {
         return wc.getPage(request).getWebResponse();
     }
     
-    private void downloadBundle(String s) throws IOException, SAXException {
+    private ZipFile downloadBundle(String s) throws IOException, SAXException {
         JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
         File zipFile = File.createTempFile("test", "zip");
         IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
-        ZipFile z = new ZipFile(zipFile);
+        return new ZipFile(zipFile);
         // Zip file is valid
     }
+
+    @Test
+    public void generateBundleFailsWhenNoParameter() throws IOException, SAXException {
+        exceptionRule.expectMessage(startsWith("Server returned HTTP response code: 400 for URL:"));
+        downloadBundle("/generateBundle");
+    }
+
+    @Test
+    public void generateBundleWithSingleComponent() throws IOException, SAXException {
+        ZipFile zip = downloadBundle("/generateBundle?components="+ componentIdsOf(ConfigFileComponent.class));
+        assertNotNull(zip.getEntry("manifest.md"));
+        assertNotNull(zip.getEntry("jenkins-root-configuration-files/config.xml"));
+        assertEquals(2, zip.size());
+    }
+
+    @Test
+    public void generateBundleWith2Components() throws IOException, SAXException {
+        ZipFile zip = downloadBundle("/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class, AboutUser.class));
+        assertNotNull(zip.getEntry("manifest.md"));
+        assertNotNull(zip.getEntry("jenkins-root-configuration-files/config.xml"));
+        assertNotNull(zip.getEntry("user.md"));
+        assertEquals(3, zip.size());
+    }
+
+    private String componentIdsOf(Class<? extends Component>... components) {
+        return Arrays.asList(components).stream().map(c -> ExtensionList.lookupSingleton(c).getId()).collect(Collectors.joining(","));
+    }
+
 
     /**
      * Integration test that simulates the user action of clicking the button to generate the bundle.

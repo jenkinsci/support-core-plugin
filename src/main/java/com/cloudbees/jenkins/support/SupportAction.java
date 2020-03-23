@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.Extension;
+import hudson.model.Api;
 import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -38,9 +39,13 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.WebMethod;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
@@ -49,16 +54,19 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Main root action for generating support.
  */
 @Extension
+@ExportedBean
 public class SupportAction implements RootAction, StaplerProxy {
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
     /**
@@ -112,6 +120,8 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @SuppressWarnings("unused") // used by Jelly
+    @Exported
+    @WebMethod(name = "components")
     public List<Component> getComponents() {
         return SupportPlugin.getComponents();
     }
@@ -127,6 +137,13 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
 
         return res;
+    }
+
+    /**
+     * Remote API access.
+     */
+    public final Api getApi() {
+        return new Api(this);
     }
 
     public boolean isAnonymized() {
@@ -169,7 +186,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     /**
-     * Generates a support bundle.
+     * Generates a support bundle with default components.
      * @param req The stapler request
      * @param rsp The stapler response
      * @throws ServletException
@@ -180,6 +197,13 @@ public class SupportAction implements RootAction, StaplerProxy {
         doGenerateAllBundles(req, rsp);
     }
 
+    /**
+     * Generates a supoprt bundle with default components, adding and excluding components based on form input.
+     * @param req
+     * @param rsp
+     * @throws ServletException
+     * @throws IOException
+     */
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
@@ -202,9 +226,29 @@ public class SupportAction implements RootAction, StaplerProxy {
         if (supportPlugin != null) {
             supportPlugin.setExcludedComponents(remove);
         }
+        prepareBundle(rsp, components);
+    }
+
+    /**
+     * Generates a support bundle with only requested components.
+     * @param components component names separated by comma.
+     * @param rsp
+     * @throws IOException
+     */
+    @RequirePOST
+    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp) throws IOException {
+        if (components == null) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
+            return;
+        }
+        List<String> componentNames = Arrays.asList(components.split(","));
+        logger.fine("Selecting components...");
+        prepareBundle(rsp, getComponents().stream().filter(c -> componentNames.contains(c.getId())).collect(Collectors.toList()));
+     }
+
+    private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
-
         rsp.addHeader("Content-Disposition", "inline; filename=" + SupportPlugin.getBundleFileName() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
