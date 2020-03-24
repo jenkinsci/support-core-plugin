@@ -243,7 +243,12 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
         List<String> componentNames = Arrays.asList(components.split(","));
         logger.fine("Selecting components...");
-        prepareBundle(rsp, getComponents().stream().filter(c -> componentNames.contains(c.getId())).collect(Collectors.toList()));
+        List<Component> selectedComponents = getComponents().stream().filter(c -> componentNames.contains(c.getId())).collect(Collectors.toList());
+        if (selectedComponents.isEmpty()) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "selected component list is empty");
+            return;
+        }
+        prepareBundle(rsp, selectedComponents);
      }
 
     private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
