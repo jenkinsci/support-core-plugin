@@ -186,11 +186,11 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     /**
-     * Generates a support bundle with default components.
+     * Generates a support bundle with selected components from the UI.
      * @param req The stapler request
      * @param rsp The stapler response
      * @throws ServletException
-     * @throws IOException
+     * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
     public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
@@ -198,11 +198,11 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     /**
-     * Generates a supoprt bundle with default components, adding and excluding components based on form input.
-     * @param req
-     * @param rsp
+     * Generates a support bundle with selected components from the UI.
+     * @param req The stapler request
+     * @param rsp The stapler response
      * @throws ServletException
-     * @throws IOException
+     * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
     public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
@@ -232,8 +232,8 @@ public class SupportAction implements RootAction, StaplerProxy {
     /**
      * Generates a support bundle with only requested components.
      * @param components component names separated by comma.
-     * @param rsp
-     * @throws IOException
+     * @param rsp The stapler response
+     * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
     public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp) throws IOException {
