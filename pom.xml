@@ -73,6 +73,7 @@
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
+    <configuration-as-code.version>1.36</configuration-as-code.version>
   </properties>
 
   <repositories>
@@ -129,6 +130,14 @@
       <artifactId>wordnet-random-name</artifactId>
       <version>1.3</version>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${configuration-as-code.version}</version>
+      <!-- Optional instead of scope=test to add the category when exporting the configuration -->
+      <optional>true</optional>
+    </dependency>
+    
     <!-- test dependencies -->
     <dependency>
       <groupId>org.assertj</groupId>
@@ -177,6 +186,12 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-support</artifactId>
       <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.configuration-as-code</groupId>
+      <artifactId>test-harness</artifactId>
+      <version>${configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
