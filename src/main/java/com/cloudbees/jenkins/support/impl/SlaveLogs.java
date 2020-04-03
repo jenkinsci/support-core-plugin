@@ -38,8 +38,6 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
-import hudson.util.DaemonThreadFactory;
-import hudson.util.ExceptionCatchingThreadFactory;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -52,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -129,14 +125,10 @@ public class SlaveLogs extends Component {
 
         // execute all the expensive computations in parallel to speed up the time
         if (!tasks.isEmpty()) {
-            ExecutorService service = Executors.newFixedThreadPool(
-                    Math.max(1, Math.min(Runtime.getRuntime().availableProcessors() * 2, tasks.size())),
-                    new ExceptionCatchingThreadFactory(new DaemonThreadFactory())
-            );
             try {
                 long expiresNanoTime =
                         System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
-                for (java.util.concurrent.Future<List<FileContent>> r : service
+                for (java.util.concurrent.Future<List<FileContent>> r : Computer.threadPoolForRemoting
                         .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
                                 TimeUnit.SECONDS)) {
                     try {
@@ -153,8 +145,6 @@ public class SlaveLogs extends Component {
                 }
             } catch (InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
-            } finally {
-                service.shutdown();
             }
         }
 
