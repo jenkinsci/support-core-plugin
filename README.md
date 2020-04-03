@@ -137,7 +137,7 @@ you do not wish to disclose the names of custom proprietary plugins.
 
 ## <a name="casc"></a>Configuration as Code
 
-As of 2.68 support-core is compatible with [Jenkins Configuration as Code](https://github.com/jenkinsci/configuration-as-code-plugin) (CasC).
+As of 2.68 version, support-core is compatible with [Jenkins Configuration as Code](https://github.com/jenkinsci/configuration-as-code-plugin) (CasC).
 
 The configuration looks like:
 
@@ -155,4 +155,5 @@ unclassified:
   contentFilters:
     enabled: false
 ```
-This version fixes the configuration fields to be more intuitive.
+This version fixes the configuration fields to be more intuitive. Please update your yaml file if
+you update support-core to version 2.68 or later.
