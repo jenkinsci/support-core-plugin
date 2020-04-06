@@ -155,5 +155,5 @@ unclassified:
   contentFilters:
     enabled: false
 ```
-This version fixes the configuration fields to be more intuitive. Please update your yaml file if
+This version changes the configuration fields to be more intuitive. Please update your yaml file if
 you update support-core to version 2.68 or later.
