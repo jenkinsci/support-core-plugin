@@ -137,7 +137,10 @@
       <!-- Optional instead of scope=test to add the category when exporting the configuration -->
       <optional>true</optional>
     </dependency>
-    
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>structs</artifactId>
+    </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>org.assertj</groupId>
