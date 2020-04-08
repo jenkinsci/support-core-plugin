@@ -1,7 +1,21 @@
 ## Changelog
 
-### Version 2.68 (TBD)
--   [JENKINS-61796](https://issues.jenkins-ci.org/browse/JENKINS-61796) - Add JCasC compatibility. See [CasC configuration](README.md#casc) to get more details.
+### Version 2.68 (2020 Apr 8)
+-   [JENKINS-36929](https://issues.jenkins-ci.org/browse/JENKINS-36929) - Collect agent protocols information
+-   [JENKINS-59498](https://issues.jenkins-ci.org/browse/JENKINS-59498) - Improve computation performance
+-   [JENKINS-60009](https://issues.jenkins-ci.org/browse/JENKINS-60009) - Add support for Java 9+ for GCLogs
+-   [JENKINS-61659](https://issues.jenkins-ci.org/browse/JENKINS-61659) - Allow generating custom support bundle through API
+-   [JENKINS-61796](https://issues.jenkins-ci.org/browse/JENKINS-61796) - Add JCasC compatibility. See [CasC configuration](README.md#casc) to get more details
+-   Parent POM and dependencies updated. Fixed an InputStream leak and tests improved
+-   "Security" as category for the management link
+
+### Version 2.67 (2020 Jan 18)
+
+-   [JENKINS-60805](https://issues.jenkins-ci.org/browse/JENKINS-60805) - Fix backward incompatible change introduced in the previous release 
+
+### Version 2.66 (2020 Jan 14)
+
+-   [JENKINS-59342](https://issues.jenkins-ci.org/browse/JENKINS-59342) - Administrators are able to download contents for Builds, Items and Nodes
 
 ### Version 2.65 (2019 Dec 4)
 
