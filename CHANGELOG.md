@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 2.68 (TBD)
+-   [JENKINS-61796](https://issues.jenkins-ci.org/browse/JENKINS-61796) - Add JCasC compatibility. See [CasC configuration](README.md#casc) to get more details.
+
 ### Version 2.65 (2019 Dec 4)
 
 -   [JENKINS-59455](https://issues.jenkins-ci.org/browse/JENKINS-59455) - Fix the checking of env vars using an existing env var instead of path

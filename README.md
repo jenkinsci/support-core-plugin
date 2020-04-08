@@ -134,3 +134,26 @@ These reports are in the
 files `plugins/active.txt`, `plugins/disabled.txt`, `plugins/failed.txt`,
 and `docker/Dockerfile`. These files should all be manually reviewed if
 you do not wish to disclose the names of custom proprietary plugins.
+
+## <a name="casc"></a>Configuration as Code
+
+As of 2.68 version, support-core is compatible with [Jenkins Configuration as Code](https://github.com/jenkinsci/configuration-as-code-plugin) (CasC).
+
+The configuration looks like:
+
+```
+security:
+  anonymizeSupportBundle:
+    enabled: true
+```
+It enables (_true_) or disables (_false_) the anonymization of the bundle.
+
+Previous versions of this plugin could be configured by CasC as well, but the configuration was so:
+
+```
+unclassified:
+  contentFilters:
+    enabled: false
+```
+This version changes the configuration fields to be more intuitive. Please update your yaml file if
+you update support-core to version 2.68 or later.

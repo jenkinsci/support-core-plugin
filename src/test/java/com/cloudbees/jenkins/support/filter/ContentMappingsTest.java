@@ -160,6 +160,9 @@ public class ContentMappingsTest {
     public void jenkinsVersionIncludedAsStopWord() {
         rr.then(r -> {
             Jenkins.VERSION = "1.2.3.4";
+            // With JCasC the ContentMappings is created before Jenkins.VERSION is called, so the previous instruction
+            // doesn't take effect in the mappings. We have to force the mappings to reload after the version is set.
+            ContentMappings.get().clear();
             ContentMappings mappings = ContentMappings.get();
 
             // Jenkins version added to stop words

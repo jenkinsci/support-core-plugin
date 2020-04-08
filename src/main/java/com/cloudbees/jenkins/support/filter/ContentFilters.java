@@ -26,6 +26,8 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
 import jenkins.model.GlobalConfiguration;
+import jenkins.model.GlobalConfigurationCategory;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -40,6 +42,7 @@ import javax.annotation.Nonnull;
  */
 @Extension
 @Restricted(NoExternalUse.class)
+@Symbol("anonymizeSupportBundle")
 public class ContentFilters extends GlobalConfiguration {
 
     public static ContentFilters get() {
@@ -68,4 +71,12 @@ public class ContentFilters extends GlobalConfiguration {
         return Messages.ContentFilters_DisplayName();
     }
 
+    /**
+     * 
+     * @return the global configuration category for CasC where this config lands
+     */
+    @Override
+    public @Nonnull GlobalConfigurationCategory getCategory() {
+        return GlobalConfigurationCategory.get(GlobalConfigurationCategory.Security.class);
+    }
 }
