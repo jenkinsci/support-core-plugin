@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleProject;
 import junit.framework.AssertionFailedError;
-import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -15,6 +14,7 @@ import org.jvnet.hudson.test.MockFolder;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 
 public class AbstractItemComponentTest {
@@ -45,7 +45,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/config.xml"));
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/jobs/" + JOB_NAME + "/config.xml"));
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/jobs/" + JOB_NAME + "/1/build.xml"));
-        assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<org.jvnet.hudson.test.MockFolder>"));
+        assertThat(output.get(prefix + "/config.xml"), containsString("<org.jvnet.hudson.test.MockFolder>"));
     }
 
     /**
@@ -137,7 +137,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
-        assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<project>"));
+        assertThat(output.get(prefix + "/config.xml"), containsString("<project>"));
     }
 
     /**
@@ -163,8 +163,8 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
         assertTrue(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
-        assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<flow-definition>"));
-        assertThat(output.get(prefix + "/nextBuildNumber"), Matchers.containsString("2"));
+        assertThat(output.get(prefix + "/config.xml"), containsString("<flow-definition>"));
+        assertThat(output.get(prefix + "/nextBuildNumber"), containsString("2"));
     }
 
     /**
