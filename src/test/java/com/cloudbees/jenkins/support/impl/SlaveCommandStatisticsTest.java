@@ -48,15 +48,15 @@ import org.jvnet.hudson.test.TestBuilder;
 public class SlaveCommandStatisticsTest {
 
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveComputer.class, Level.FINEST);
 
     @Test
     public void smokes() throws Exception {
-        DumbSlave s = r.createSlave();
-        FreeStyleProject p = r.createFreeStyleProject();
+        DumbSlave s = j.createSlave();
+        FreeStyleProject p = j.createFreeStyleProject();
         p.setAssignedNode(s);
         p.getBuildersList().add(new TestBuilder() {
             @Override
@@ -65,7 +65,8 @@ public class SlaveCommandStatisticsTest {
                 return true;
             }
         });
-        r.buildAndAssertSuccess(p);
+        j.buildAndAssertSuccess(p);
+
         String dump = SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveCommandStatistics.class));
         System.out.println(dump);
         assertThat(dump, containsString(SampleCallable.class.getName()));
@@ -84,37 +85,37 @@ public class SlaveCommandStatisticsTest {
 
         SlaveCommandStatistics.MAX_STATS_SIZE = 0;
         assertThat(scs.getStatistics().size(), equalTo(0));
-        DumbSlave s0 = r.createOnlineSlave();
+        DumbSlave s0 = j.createOnlineSlave();
         assertThat(scs.getStatistics().size(), equalTo(1));
-        r.jenkins.removeNode(s0);
+        j.jenkins.removeNode(s0);
         assertThat(scs.getStatistics().size(), equalTo(0));
 
         SlaveCommandStatistics.MAX_STATS_SIZE = 1;
-        DumbSlave s1 = r.createOnlineSlave();
-        DumbSlave s2 = r.createOnlineSlave();
-        DumbSlave s3 = r.createOnlineSlave();
+        DumbSlave s1 = j.createOnlineSlave();
+        DumbSlave s2 = j.createOnlineSlave();
+        DumbSlave s3 = j.createOnlineSlave();
         assertThat(scs.getStatistics().size(), equalTo(3));
-        r.jenkins.removeNode(s1);
+        j.jenkins.removeNode(s1);
         assertThat(scs.getStatistics().size(), equalTo(3));
-        r.jenkins.removeNode(s2);
+        j.jenkins.removeNode(s2);
         assertThat(scs.getStatistics().size(), equalTo(2));
-        r.jenkins.removeNode(s3);
+        j.jenkins.removeNode(s3);
         assertThat(scs.getStatistics().size(), equalTo(1));
         assertThat("Latest preserved", scs.getStatistics().keySet(), contains(s3.getNodeName()));
 
         SlaveCommandStatistics.MAX_STATS_SIZE = 3;
-        s0 = r.createOnlineSlave();
-        s1 = r.createOnlineSlave();
-        s2 = r.createOnlineSlave();
-        s3 = r.createOnlineSlave();
+        s0 = j.createOnlineSlave();
+        s1 = j.createOnlineSlave();
+        s2 = j.createOnlineSlave();
+        s3 = j.createOnlineSlave();
         assertThat(scs.getStatistics().size(), equalTo(4));
-        r.jenkins.removeNode(s0);
+        j.jenkins.removeNode(s0);
         assertThat(scs.getStatistics().size(), equalTo(4));
-        r.jenkins.removeNode(s1);
+        j.jenkins.removeNode(s1);
         assertThat(scs.getStatistics().size(), equalTo(4));
-        r.jenkins.removeNode(s2);
+        j.jenkins.removeNode(s2);
         assertThat(scs.getStatistics().size(), equalTo(4));
-        r.jenkins.removeNode(s3);
+        j.jenkins.removeNode(s3);
         assertThat(scs.getStatistics().size(), equalTo(3));
         assertThat("Latest preserved", scs.getStatistics().keySet(), containsInAnyOrder(
                 s3.getNodeName(), s2.getNodeName(), s1.getNodeName()

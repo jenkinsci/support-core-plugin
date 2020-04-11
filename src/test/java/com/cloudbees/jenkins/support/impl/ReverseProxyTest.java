@@ -29,7 +29,7 @@ public class ReverseProxyTest {
   private static final String HEADER_VALUE = "value";
 
   @Rule
-  public JenkinsRule r = new JenkinsRule();
+  public JenkinsRule j = new JenkinsRule();
 
   @Mock
   private StaplerRequest staplerRequest;

@@ -17,7 +17,7 @@ import static org.junit.Assert.assertThat;
 
 public class NetworkInterfacesTest {
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void testGetNetworkInterface() throws Exception {

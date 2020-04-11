@@ -17,7 +17,7 @@ public class BundleNamePrefixTest {
     private static final String CURRENT_YEAR = new SimpleDateFormat("YYYY").format(new Date());
 
     @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void checkOriginalBehaviour() throws Exception {

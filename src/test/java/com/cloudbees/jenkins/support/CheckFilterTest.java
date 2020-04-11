@@ -77,12 +77,12 @@ public class CheckFilterTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void checkFilterTest() throws Exception {
         // Create the files to check
-        FileChecker checker = new FileChecker(jenkins.jenkins);
+        FileChecker checker = new FileChecker(j.jenkins);
         // Create the objects needed for some contents to be included
         QueueTaskFuture<FreeStyleBuild> build = createObjectsWithNames();
 
@@ -133,14 +133,14 @@ public class CheckFilterTest {
         User.getOrCreateByIdOrFullName("encoding");
 
         // For ConfigFileComponent --> config.xml
-        jenkins.jenkins.getView("all").rename(VIEW_ALL_NEW_NAME);
-        jenkins.jenkins.save();
+        j.jenkins.getView("all").rename(VIEW_ALL_NEW_NAME);
+        j.jenkins.save();
 
         // Create the slave slave0 for some components and wait until it's online
-        jenkins.waitOnline(jenkins.createOnlineSlave());
-        
+        j.waitOnline(j.createOnlineSlave());
+
         // Create a job to have something pending in the queue for the BuilQueue component
-        FreeStyleProject project = jenkins.createFreeStyleProject(JOB_NAME);
+        FreeStyleProject project = j.createFreeStyleProject(JOB_NAME);
         project.setAssignedLabel(new LabelAtom("foo")); //it's mandatory
 
         //project.getBuildersList().add(new SimpleBuilder());
