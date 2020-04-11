@@ -28,7 +28,7 @@ public class SupportAbstractItemActionTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    /**
+    /*
      * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
      */
     @Test
@@ -50,7 +50,7 @@ public class SupportAbstractItemActionTest {
         assertNull("'**/jobs/**' should be excluded by default", z.getEntry(itemEntryPrefix + "/jobs/subFolder/jobs/testFreestyle/config.xml"));
     }
 
-    /**
+    /*
      * Integration test that simulates the user action of clicking the button to generate the bundl from a Freesttle job.
      */
     @Test
@@ -76,7 +76,7 @@ public class SupportAbstractItemActionTest {
         assertNotNull(z.getEntry(itemEntryPrefix + "/builds/1/log"));
     }
 
-    /**
+    /*
      * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
      */
     @Test

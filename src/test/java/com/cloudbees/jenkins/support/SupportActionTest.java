@@ -94,10 +94,8 @@ public class SupportActionTest {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
     }
 
-    /**
-     * Trying to remove not existing bundles will do nothing, just a message in the log. 
-     * @throws IOException 
-     * @throws SAXException
+    /*
+     * Trying to remove not existing bundles will do nothing, just a message in the log.
      */
     @Test
     public void deleteNotExistingBundleWillFail() throws IOException, SAXException {
@@ -107,9 +105,8 @@ public class SupportActionTest {
         assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("The bundle to delete %s does not exist", bundle))));
     }
 
-    /**
+    /*
      * Trying to remove an existing bundle (a zip or log file in JH/support directory) will success.
-     * @throws IOException
      */
     @Test
     public void deleteExistingBundleWillSucceed() throws IOException {
@@ -194,9 +191,8 @@ public class SupportActionTest {
     }
 
 
-    /**
+    /*
      * Integration test that simulates the user action of clicking the button to generate the bundle.
-     *
      * <p>
      * If any warning is reported to j.u.l logger, treat that as a sign of failure, because
      * support-core plugin works darn hard to try to generate something in the presence of failing
@@ -294,9 +290,8 @@ public class SupportActionTest {
         }
     }
 
-    /**
+    /*
      * Check if the zip loses the folders due to anonymize '/' because there is an object with such a name. For example, a label.
-     * @throws Exception If exception happened during the test
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
@@ -312,10 +307,9 @@ public class SupportActionTest {
         bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
     }
 
-    /**
+    /*
      * Check if the file names in the zip are corrupt due to anonymize '.' because there is an object with such a name.
      * For example, a label.
-     * @throws Exception If exception happened during the test
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
@@ -330,10 +324,9 @@ public class SupportActionTest {
         bundlesMatch(zip, anonymizedZip,  OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
     }
 
-    /**
+    /*
      * Check if the file names in the zip are corrupt due to anonymize words in the file names because there is an object
      * with such a name. For example, a label.
-     * @throws Exception If exception happened during the test
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {

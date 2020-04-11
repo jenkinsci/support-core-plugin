@@ -23,7 +23,7 @@ public class SupportRunActionTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    /**
+    /*
      * Integration test that simulates the user action of clicking the button to generate the bundle.
      */
     @Test

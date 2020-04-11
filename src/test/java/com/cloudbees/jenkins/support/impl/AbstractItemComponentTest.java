@@ -25,7 +25,7 @@ public class AbstractItemComponentTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    /**
+    /*
      * Test adding item directory content with defaults for a folder.
      */
     @Test
@@ -48,7 +48,7 @@ public class AbstractItemComponentTest {
         assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<org.jvnet.hudson.test.MockFolder>"));
     }
 
-    /**
+    /*
      * Test adding item directory content with includes patterns for a folder.
      */
     @Test
@@ -72,7 +72,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/jobs/" + JOB_NAME + "/1/log"));
     }
 
-    /**
+    /*
      * Test adding item directory content with excludes patterns for a folder.
      */
     @Test
@@ -96,7 +96,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/jobs/" + JOB_NAME + "/1/log"));
     }
 
-    /**
+    /*
      * Test adding item directory content with excludes patterns for a freestyle job.
      */
     @Test
@@ -120,7 +120,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/jobs/subFolder/jobs/" + JOB_NAME + "/1/log"));
     }
 
-    /**
+    /*
      * Test adding item directory content with defaults for a freestyle job.
      */
     @Test
@@ -140,7 +140,7 @@ public class AbstractItemComponentTest {
         assertThat(output.get(prefix + "/config.xml"), Matchers.containsString("<project>"));
     }
 
-    /**
+    /*
      * Test adding item directory content with defaults for a pipeline.
      */
     @Test
@@ -167,7 +167,7 @@ public class AbstractItemComponentTest {
         assertThat(output.get(prefix + "/nextBuildNumber"), Matchers.containsString("2"));
     }
 
-    /**
+    /*
      * Test adding item directory content with excludes patterns.
      */
     @Test
@@ -193,7 +193,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
     }
 
-    /**
+    /*
      * Test adding item directory content with includes patterns.
      */
     @Test
@@ -217,7 +217,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
     }
 
-    /**
+    /*
      * Test adding item directory content with includes patterns.
      */
     @Test
@@ -241,7 +241,7 @@ public class AbstractItemComponentTest {
         assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
     }
 
-    /**
+    /*
      * Test adding item directory content with includes / excludes patterns.
      */
     @Test
