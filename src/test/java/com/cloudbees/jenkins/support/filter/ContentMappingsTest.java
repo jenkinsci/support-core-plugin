@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -42,9 +41,11 @@ import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -95,7 +96,7 @@ public class ContentMappingsTest {
         List<String> originals = StreamSupport.stream(mappings.spliterator(), false)
                 .map(ContentMapping::getOriginal)
                 .collect(toList());
-        Assertions.assertThat(originals).containsExactly("LongestNameHere", "LongerName", "ShortName");
+        assertThat(originals, contains("LongestNameHere", "LongerName", "ShortName"));
         });
     }
 
@@ -209,7 +210,7 @@ public class ContentMappingsTest {
             Set<String> stopWords = contentMappings.getStopWords();
             assertTrue(stopWords.contains(ALT_VERSION));
             assertFalse(stopWords.contains(originalVersion));
-            assertTrue(contentMappings.getMappings().size() == initialMappingsSize);
+            assertEquals(contentMappings.getMappings().size(), initialMappingsSize);
 
             Jenkins.VERSION = originalVersion;
             contentMappings.clear();

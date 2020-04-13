@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.util;
 import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
 import hudson.Functions;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -11,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class WordReplacerTest {
     @Test
@@ -30,7 +32,7 @@ public class WordReplacerTest {
 
         String result = WordReplacer.replaceWordsIgnoreCase(input, search, replace);
         System.out.format("%s ->\n%s", input, result);
-        Assert.assertEquals(expected, result);
+        assertEquals(expected, result);
     }
 
     @Test
@@ -59,7 +61,7 @@ public class WordReplacerTest {
             String resultWordReplacer = WordReplacer.replaceWordsIgnoreCase(input, searches, replaces);
 
             // Both filtered strings should be the same
-            Assert.assertEquals("The string replaced should be the same using RegExp or WordReplacer", resultCM, resultWordReplacer);
+            assertEquals("The string replaced should be the same using RegExp or WordReplacer", resultCM, resultWordReplacer);
         }
     }
 
@@ -113,8 +115,7 @@ public class WordReplacerTest {
 
         System.out.println(c.printMeasure("ContentMapping#filter"));
         System.out.println(c.printMeasure("WordReplacer"));
-        Assert.assertTrue(c.getMeasure("ContentMapping#filter") > c.getMeasure("WordReplacer"));
-
+        assertTrue(c.getMeasure("ContentMapping#filter") > c.getMeasure("WordReplacer"));
     }
 
     /**
@@ -127,30 +128,30 @@ public class WordReplacerTest {
         String input = "a A b,B.c:C abc ABC ignored";
 
         // Test string replacements with and without ignoring the case
-        Assert.assertEquals("1 A 2,B.3:C abc ABC ignored", WordReplacer.replaceWords(input, originals, replaces));
-        Assert.assertEquals("1 1 2,2.3:3 abc ABC ignored", WordReplacer.replaceWordsIgnoreCase(input, originals, replaces));
+        assertEquals("1 A 2,B.3:C abc ABC ignored", WordReplacer.replaceWords(input, originals, replaces));
+        assertEquals("1 1 2,2.3:3 abc ABC ignored", WordReplacer.replaceWordsIgnoreCase(input, originals, replaces));
 
         // Test string builder replacements
         StringBuilder inputSB = new StringBuilder(input);
         WordReplacer.replaceWords(inputSB, originals, replaces);
-        Assert.assertEquals("1 A 2,B.3:C abc ABC ignored", inputSB.toString());
+        assertEquals("1 A 2,B.3:C abc ABC ignored", inputSB.toString());
 
         inputSB = new StringBuilder(input);
         WordReplacer.replaceWordsIgnoreCase(inputSB, originals, replaces);
-        Assert.assertEquals("1 1 2,2.3:3 abc ABC ignored", inputSB.toString());
+        assertEquals("1 1 2,2.3:3 abc ABC ignored", inputSB.toString());
 
         // Test string replacement (one) with and without ignoring the case
-        Assert.assertEquals("1 A b,B.c:C abc ABC ignored", WordReplacer.replaceWord(input, originals[0], replaces[0]));
-        Assert.assertEquals("1 1 b,B.c:C abc ABC ignored", WordReplacer.replaceWordIgnoreCase(input, originals[0], replaces[0]));
+        assertEquals("1 A b,B.c:C abc ABC ignored", WordReplacer.replaceWord(input, originals[0], replaces[0]));
+        assertEquals("1 1 b,B.c:C abc ABC ignored", WordReplacer.replaceWordIgnoreCase(input, originals[0], replaces[0]));
 
         // Test string builder replacement (one)
         inputSB = new StringBuilder(input);
         WordReplacer.replaceWord(inputSB, originals[0], replaces[0]);
-        Assert.assertEquals("1 A b,B.c:C abc ABC ignored", inputSB.toString());
+        assertEquals("1 A b,B.c:C abc ABC ignored", inputSB.toString());
 
         inputSB = new StringBuilder(input);
         WordReplacer.replaceWordIgnoreCase(inputSB, originals[0], replaces[0]);
-        Assert.assertEquals("1 1 b,B.c:C abc ABC ignored", inputSB.toString());
+        assertEquals("1 1 b,B.c:C abc ABC ignored", inputSB.toString());
     }
 
     @Test
@@ -163,12 +164,12 @@ public class WordReplacerTest {
 
         String replaced = WordReplacer.replaceWords(input, words, replaces);
 
-        Assert.assertEquals(result, replaced);
+        assertEquals(result, replaced);
     }
 
 
     private List<String> generateFakeListString(int lines) {
-        Assert.assertTrue(lines < 1001);
+        assertTrue(lines < 1001);
         return Stream.generate(() -> FilteredOutputStreamTest.FAKE_TEXT).limit(lines).collect(Collectors.toList());
     }
 

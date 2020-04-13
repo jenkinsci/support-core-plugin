@@ -36,14 +36,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
-import static org.hamcrest.Matchers.*;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
 public class SlaveCommandStatisticsTest {
 

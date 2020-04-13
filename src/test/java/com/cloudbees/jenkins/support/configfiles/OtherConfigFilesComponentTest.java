@@ -13,13 +13,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class OtherConfigFilesComponentTest {
 
@@ -97,7 +98,7 @@ public class OtherConfigFilesComponentTest {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml);
         String patchedXml = SecretHandler.findSecrets(file);
-        assertThat(patchedXml, equalToIgnoringWhiteSpace(expectedXml));
+        assertThat(patchedXml, equalToCompressingWhiteSpace(expectedXml));
     }
 
     @Test

@@ -24,13 +24,13 @@
 package com.cloudbees.jenkins.support.timer;
 
 import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -102,8 +102,8 @@ public class DeadlockTest {
         assertNotNull("There should be at least one deadlock file", files);
         assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
         String text = FileUtils.readFileToString(files[initialCount]);
-        assertThat(text, Matchers.containsString("secondMethod"));
-        assertThat(text, Matchers.containsString("firstMethod"));
+        assertThat(text, containsString("secondMethod"));
+        assertThat(text, containsString("firstMethod"));
       } finally {
         t2.stop();
       }

@@ -10,7 +10,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -26,6 +25,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class SupportPluginTest {
 
@@ -78,12 +80,12 @@ public class SupportPluginTest {
         }
         
         ZipFile zip = new ZipFile(bundleFile);
-        Assert.assertNull(zip.getEntry("test/testGenerateBundleExceptionHandler.md"));
-        Assert.assertNotNull(zip.getEntry("manifest.md"));
-        Assert.assertNotNull(zip.getEntry("manifest/errors.txt"));
-        Assert.assertNotNull(zip.getEntry("buildqueue.md"));
-        Assert.assertNotNull(zip.getEntry("nodes/master/system.properties"));
-        Assert.assertNotNull(zip.getEntry("about.md"));
-        Assert.assertNotNull(zip.getEntry("nodes.md"));
+        assertNull(zip.getEntry("test/testGenerateBundleExceptionHandler.md"));
+        assertNotNull(zip.getEntry("manifest.md"));
+        assertNotNull(zip.getEntry("manifest/errors.txt"));
+        assertNotNull(zip.getEntry("buildqueue.md"));
+        assertNotNull(zip.getEntry("nodes/master/system.properties"));
+        assertNotNull(zip.getEntry("about.md"));
+        assertNotNull(zip.getEntry("nodes.md"));
     }
 }

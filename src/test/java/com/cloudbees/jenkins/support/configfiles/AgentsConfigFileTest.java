@@ -27,13 +27,15 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.EnvVars;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AgentsConfigFileTest {
 
@@ -51,11 +53,11 @@ public class AgentsConfigFileTest {
                 try {
                     content.writeTo(baos);
                 } catch (IOException e) {
-                    Assert.fail(e.getMessage());
+                    fail(e.getMessage());
                 }
             }
         });
         String fileContent = baos.toString();
-        Assert.assertTrue(fileContent.contains("<name>node1</name>"));
+        assertTrue(fileContent.contains("<name>node1</name>"));
     }
 }
