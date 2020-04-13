@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 public class OtherConfigFilesComponentTest {
 
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Rule
     public LoggerRule logging = new LoggerRule().recordPackage(OtherConfigFilesComponent.class, Level.WARNING).capture(100);
@@ -103,7 +103,7 @@ public class OtherConfigFilesComponentTest {
 
     @Test
     public void missingFile() throws Exception {
-        File file = new File(r.jenkins.root, "x.xml");
+        File file = new File(j.jenkins.root, "x.xml");
         FileUtils.writeStringToFile(file, xml);
         Map<String, Content> contents = new HashMap<>();
         new OtherConfigFilesComponent().addContents(new Container() {

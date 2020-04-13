@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SensitiveContentFilterTest {
 
     @ClassRule
-    public static JenkinsRule jenkins = new JenkinsRule();
+    public static JenkinsRule j = new JenkinsRule();
 
     @Issue("JENKINS-21670")
     @Test
@@ -47,8 +47,8 @@ public class SensitiveContentFilterTest {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         // using foo, bar, jar and war could raise flaky test failures. It happened to me when
         // bar was changed by label_barrier :-O So we use stranger words to avoid this test to be flaky
-        jenkins.createSlave("foostrange", "barstrange", null);
-        jenkins.createSlave("jarstrange", "warstrange", null);
+        j.createSlave("foostrange", "barstrange", null);
+        j.createSlave("jarstrange", "warstrange", null);
         filter.reload();
 
         String foo = filter.filter("foostrange");
@@ -68,7 +68,7 @@ public class SensitiveContentFilterTest {
     @Test
     public void anonymizeItems() throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
-        FreeStyleProject project = jenkins.createFreeStyleProject();
+        FreeStyleProject project = j.createFreeStyleProject();
         filter.reload();
         String name = project.getName();
 
@@ -81,7 +81,7 @@ public class SensitiveContentFilterTest {
     @Test
     public void anonymizeViews() throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
-        jenkins.getInstance().addView(new ListView("foobar"));
+        j.getInstance().addView(new ListView("foobar"));
         filter.reload();
 
         String foobar = filter.filter("foobar");
@@ -107,7 +107,7 @@ public class SensitiveContentFilterTest {
         final String os = "Linux";
         final String label = "fake";
         SensitiveContentFilter filter = SensitiveContentFilter.get();
-        jenkins.createSlave("foo", String.format("%s %s", os, label), null);
+        j.createSlave("foo", String.format("%s %s", os, label), null);
         filter.reload();
         assertThat(filter.filter(os)).isEqualTo(os);
         assertThat(filter.filter(label)).startsWith("label_").isNotEqualTo(label);

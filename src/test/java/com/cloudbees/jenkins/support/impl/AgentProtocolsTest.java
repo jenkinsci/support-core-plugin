@@ -14,7 +14,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 public class AgentProtocolsTest {
 
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void testAgentProtocolsContents() {

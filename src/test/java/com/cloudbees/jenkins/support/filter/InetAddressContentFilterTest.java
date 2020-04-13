@@ -42,7 +42,7 @@ public class InetAddressContentFilterTest {
     private static String originalVersion;
 
     @ClassRule
-    public static JenkinsRule jenkins = new JenkinsRule();
+    public static JenkinsRule j = new JenkinsRule();
 
     @Before
     public void resetMappings() {

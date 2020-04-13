@@ -23,13 +23,15 @@ import static org.junit.Assert.assertNotNull;
  * @author schristou88
  */
 public class InflightRequestTest {
-    @Rule public JenkinsRule r = new JenkinsRule();
+
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
     @Issue("JENKINS-24671")
     public void verifyUsernameInflightRequest() throws Exception {
-        r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
-        JenkinsRule.WebClient webClient = r.createWebClient().login("bob", "bob");
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        JenkinsRule.WebClient webClient = j.createWebClient().login("bob", "bob");
         MockSlowURLCall.seconds = 5;
         webClient.goTo("mockSlowURLCall/submit");
         InflightRequest request = MockSlowURLCall.request;
@@ -41,7 +43,7 @@ public class InflightRequestTest {
     @Test
     @Issue("JENKINS-24671")
     public void verifyRefererHeaderFromInflightRequest() throws Exception {
-        JenkinsRule.WebClient webClient = r.createWebClient();
+        JenkinsRule.WebClient webClient = j.createWebClient();
 
         URL refererUrl = new URL(webClient.getContextPath() + "mockSlowURLCall/submitReferer");
 

@@ -65,7 +65,7 @@ import static org.junit.Assert.fail;
  */
 public class SupportActionTest {
     @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
@@ -81,7 +81,7 @@ public class SupportActionTest {
 
     @Before
     public void setUp() {
-        rule.jenkins.getInjector().injectMembers(this);
+        j.jenkins.getInjector().injectMembers(this);
     }
 
     @Test
@@ -142,24 +142,24 @@ public class SupportActionTest {
      * @throws IOException when any exception creating the url to call
      */
     private WebResponse deleteBundle(String bundle, String user) throws IOException {
-        rule.jenkins.setCrumbIssuer(null);
+        j.jenkins.setCrumbIssuer(null);
 
-        rule.jenkins.setSecurityRealm(rule.createDummySecurityRealm());
-        rule.jenkins.setAuthorizationStrategy(
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        j.jenkins.setAuthorizationStrategy(
                 new MockAuthorizationStrategy()
                         .grant(Jenkins.ADMINISTER).everywhere().to("admin")
                         .grant(Jenkins.READ).everywhere().to("user")
         );
-        WebClient wc = rule.createWebClient()
+        WebClient wc = j.createWebClient()
                 .withBasicCredentials(user)
                 .withThrowExceptionOnFailingStatusCode(false);
 
-        WebRequest request = new WebRequest(new URL(rule.getURL()+ root.getUrlName() + "/deleteBundles?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}"), HttpMethod.POST);
+        WebRequest request = new WebRequest(new URL(j.getURL() + root.getUrlName() + "/deleteBundles?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}"), HttpMethod.POST);
         return wc.getPage(request).getWebResponse();
     }
     
     private ZipFile downloadBundle(String s) throws IOException, SAXException {
-        JenkinsRule.JSONWebResponse jsonWebResponse = rule.postJSON(root.getUrlName() + s, "");
+        JenkinsRule.JSONWebResponse jsonWebResponse = j.postJSON(root.getUrlName() + s, "");
         File zipFile = File.createTempFile("test", "zip");
         IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
         return new ZipFile(zipFile);
@@ -204,8 +204,8 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        rule.createSlave("slave1","test",null).getComputer().connect(false).get();
-        rule.createSlave("slave2","test",null).getComputer().connect(false).get();
+        j.createSlave("slave1","test",null).getComputer().connect(false).get();
+        j.createSlave("slave2","test",null).getComputer().connect(false).get();
 
         RingBufferLogHandler checker = new RingBufferLogHandler();
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
@@ -213,7 +213,7 @@ public class SupportActionTest {
         logger.addHandler(checker);
 
         try {
-            WebClient wc = rule.createWebClient();
+            WebClient wc = j.createWebClient();
             HtmlPage p = wc.goTo(root.getUrlName());
 
             HtmlForm form = p.getFormByName("bundle-contents");
@@ -269,7 +269,7 @@ public class SupportActionTest {
 
     @Test
     public void anonymizationSmokes() throws Exception {
-        Slave node = rule.createSlave(Label.get("super_secret_node"));
+        Slave node = j.createSlave(Label.get("super_secret_node"));
         File bundleFile = temp.newFile();
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
@@ -301,7 +301,7 @@ public class SupportActionTest {
     @Test
     public void corruptZipTestBySlash() throws Exception {
         final String OBJECT_NAME = "slave";
-        Slave node = rule.createSlave(OBJECT_NAME, "/", null);
+        Slave node = j.createSlave(OBJECT_NAME, "/", null);
 
         // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -320,7 +320,7 @@ public class SupportActionTest {
     @Test
     public void corruptZipTestByDot() throws Exception {
         final String OBJECT_NAME = "slave";
-        Slave node = rule.createSlave(OBJECT_NAME, ".", null);
+        Slave node = j.createSlave(OBJECT_NAME, ".", null);
         // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
@@ -339,7 +339,7 @@ public class SupportActionTest {
     public void corruptZipTestByWordsInFileName() throws Exception {
         final String OBJECT_NAME = "slave";
         // Create a slave with very bad words
-        Slave node = rule.createSlave(OBJECT_NAME, "active plugins checksums md5 items about nodes manifest errors", null);
+        j.createSlave(OBJECT_NAME, "active plugins checksums md5 items about nodes manifest errors", null);
 
         /* This words are in the stopWords, so they won't never be replaced
         "jenkins", "node", "master", "computer", "item", "label", "view", "all", "unknown", "user", "anonymous",

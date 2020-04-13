@@ -19,7 +19,7 @@ import static org.junit.Assert.assertThat;
 public class SecretHandlerTest {
 
     @Rule
-    public JenkinsRule r = new JenkinsRule();
+    public JenkinsRule j = new JenkinsRule();
 
     private String xml;
 
