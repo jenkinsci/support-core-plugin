@@ -80,5 +80,4 @@ public class NodeRemoteDirectoryComponentTest {
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
         assertFalse(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
     }
-
 }

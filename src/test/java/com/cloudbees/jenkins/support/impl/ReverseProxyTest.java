@@ -23,77 +23,77 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ReverseProxyTest {
 
-  private static final String X_FORWARDED_FOR_HEADER_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: TRUE";
-  private static final String X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: FALSE";
-  private static final String X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE = "Detected `X-Forwarded-For` header: UNKNOWN";
-  private static final String HEADER_VALUE = "value";
+    private static final String X_FORWARDED_FOR_HEADER_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: TRUE";
+    private static final String X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: FALSE";
+    private static final String X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE = "Detected `X-Forwarded-For` header: UNKNOWN";
+    private static final String HEADER_VALUE = "value";
 
-  @Rule
-  public JenkinsRule j = new JenkinsRule();
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-  @Mock
-  private StaplerRequest staplerRequest;
+    @Mock
+    private StaplerRequest staplerRequest;
 
-  private ReverseProxy subject;
+    private ReverseProxy subject;
 
-  @Before
-  public void setUp() {
-    subject = new ReverseProxy() {
-      @Override
-      protected StaplerRequest getCurrentRequest() {
-        return staplerRequest;
-      }
-    };
-  }
+    @Before
+    public void setUp() {
+        subject = new ReverseProxy() {
+            @Override
+            protected StaplerRequest getCurrentRequest() {
+                return staplerRequest;
+            }
+        };
+    }
 
-  @Test
-  public void addContents() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Container container = createContainer(baos);
-    when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(HEADER_VALUE);
+    @Test
+    public void addContents() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Container container = createContainer(baos);
+        when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(HEADER_VALUE);
 
-    subject.addContents(container);
+        subject.addContents(container);
 
-    assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_FOUND_MESSAGE));
-  }
+        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_FOUND_MESSAGE));
+    }
 
-  @Test
-  public void addContents_NoHeader() {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Container container = createContainer(baos);
-    when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(null);
+    @Test
+    public void addContents_NoHeader() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Container container = createContainer(baos);
+        when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(null);
 
-    subject.addContents(container);
+        subject.addContents(container);
 
-    assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE));
-  }
+        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE));
+    }
 
-  @Test
-  public void addContents_NoCurrentRequest() {
-    subject = new ReverseProxy() {
-      @Override
-      protected StaplerRequest getCurrentRequest() {
-        return null;
-      }
-    };
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    Container container = createContainer(baos);
+    @Test
+    public void addContents_NoCurrentRequest() {
+        subject = new ReverseProxy() {
+            @Override
+            protected StaplerRequest getCurrentRequest() {
+                return null;
+            }
+        };
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Container container = createContainer(baos);
 
-    subject.addContents(container);
+        subject.addContents(container);
 
-    assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE));
-  }
+        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE));
+    }
 
-  private static Container createContainer(final OutputStream os) {
-    return new Container() {
-      @Override
-      public void add(@CheckForNull Content content) {
-        try {
-          content.writeTo(os);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    };
-  }
+    private static Container createContainer(OutputStream os) {
+        return new Container() {
+            @Override
+            public void add(@CheckForNull Content content) {
+                try {
+                    content.writeTo(os);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+    }
 }

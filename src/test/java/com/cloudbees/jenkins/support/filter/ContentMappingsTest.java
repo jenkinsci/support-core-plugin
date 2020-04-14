@@ -69,34 +69,34 @@ public class ContentMappingsTest {
 
     @Rule
     public RestartableJenkinsRule rr = new RestartableJenkinsRule();
-    
+
     @Test
     public void dynamicStopWordsAreAddedWhenReloading() throws Exception {
         rr.then(r -> {
-        FreeStyleProject job = r.createFreeStyleProject();
-        String[] expectedStopWords = {
-            job.getPronoun().toLowerCase(Locale.ENGLISH), 
-            job.getTaskNoun().toLowerCase(Locale.ENGLISH) 
-        };
-        ContentMappings mappings = ContentMappings.get();
-        assertThat(mappings.getStopWords(), not(hasItems(expectedStopWords)));
-        mappings.reload();
-        assertThat(mappings.getStopWords(), hasItems(expectedStopWords));
+            FreeStyleProject job = r.createFreeStyleProject();
+            String[] expectedStopWords = {
+                job.getPronoun().toLowerCase(Locale.ENGLISH),
+                job.getTaskNoun().toLowerCase(Locale.ENGLISH)
+            };
+            ContentMappings mappings = ContentMappings.get();
+            assertThat(mappings.getStopWords(), not(hasItems(expectedStopWords)));
+            mappings.reload();
+            assertThat(mappings.getStopWords(), hasItems(expectedStopWords));
         });
     }
 
     @Test
     public void contentMappingsOrderedByLengthDescending() throws IOException {
         rr.then(r -> {
-        r.createFreeStyleProject("ShortName");
-        r.createFreeStyleProject("LongerName");
-        r.createFreeStyleProject("LongestNameHere");
-        ContentFilter.ALL.reload();
-        ContentMappings mappings = ContentMappings.get();
-        List<String> originals = StreamSupport.stream(mappings.spliterator(), false)
-                .map(ContentMapping::getOriginal)
-                .collect(toList());
-        assertThat(originals, contains("LongestNameHere", "LongerName", "ShortName"));
+            r.createFreeStyleProject("ShortName");
+            r.createFreeStyleProject("LongerName");
+            r.createFreeStyleProject("LongestNameHere");
+            ContentFilter.ALL.reload();
+            ContentMappings mappings = ContentMappings.get();
+            List<String> originals = StreamSupport.stream(mappings.spliterator(), false)
+                    .map(ContentMapping::getOriginal)
+                    .collect(toList());
+            assertThat(originals, contains("LongestNameHere", "LongerName", "ShortName"));
         });
     }
 
@@ -189,6 +189,7 @@ public class ContentMappingsTest {
             assertTrue(mappings.getMappings().isEmpty());
         });
     }
+
     private static ContentMapping identityMapping(String original) {
         return ContentMapping.of(original, original);
     }

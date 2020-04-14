@@ -29,11 +29,10 @@ public class SupportAbstractItemActionTest {
     public JenkinsRule j = new JenkinsRule();
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
+     * Integration test that simulates the user action of clicking the button to generate the bundle of a Folder.
      */
     @Test
     public void generateFolderBundleDefaultsAndCheckContent() throws Exception {
-
         MockFolder folder = j.createFolder("testFolder");
         MockFolder subFolder = folder.createProject(MockFolder.class, "subFolder");
         subFolder.createProject(FreeStyleProject.class, "testFreestyle");
@@ -51,11 +50,10 @@ public class SupportAbstractItemActionTest {
     }
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundl from a Freesttle job.
+     * Integration test that simulates the user action of clicking the button to generate the bundle of a Freestyle job.
      */
     @Test
     public void generateFreestyleBundleDefaultsAndCheckContent() throws Exception {
-
         MockFolder folder = j.createFolder("testFolder");
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, "testFreestyle");
         QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
@@ -77,11 +75,10 @@ public class SupportAbstractItemActionTest {
     }
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
+     * Integration test that simulates the user action of clicking the button to generate the bundle of a Pipeline job.
      */
     @Test
     public void generatePipelineBundleDefaultsAndCheckContent() throws Exception {
-
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))

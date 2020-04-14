@@ -49,7 +49,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -72,7 +72,7 @@ public class CheckFilterTest {
     private final static String SLAVE_NAME = "slave0"; //it's the name used by createOnlineSlave
     private final static String VIEW_ALL_NEW_NAME = "all-view";
     private final static String ENV_VAR = getFirstEnvVar();
-    
+
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
@@ -144,8 +144,7 @@ public class CheckFilterTest {
         project.setAssignedLabel(new LabelAtom("foo")); //it's mandatory
 
         //project.getBuildersList().add(new SimpleBuilder());
-        QueueTaskFuture<FreeStyleBuild> buildQueued = project.scheduleBuild2(0);
-        return buildQueued;
+        return project.scheduleBuild2(0);
     }
 
     private void assertComponent(List<Class<? extends Component>> componentClasses, FileChecker checker) throws IOException {
@@ -158,7 +157,7 @@ public class CheckFilterTest {
             SupportPlugin.writeBundle(zipOutputStream, componentsRequested);
 
             //ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(fileZip));
-            try(ZipFile zip = new ZipFile(fileZip)) {
+            try (ZipFile zip = new ZipFile(fileZip)) {
                 Enumeration<ZipArchiveEntry> zipFileEntries = zip.getEntries();
 
                 while (zipFileEntries.hasMoreElements()) {
@@ -184,19 +183,19 @@ public class CheckFilterTest {
         }
 
         String content;
-        try(ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
             BufferedInputStream is = new BufferedInputStream(zip.getInputStream(entry))) {
 
             int currentByte;
             // buffer of same size as the entry
-            byte data[] = new byte[(int) entry.getSize()];
+            byte[] data = new byte[(int) entry.getSize()];
 
             // read and write until last byte is encountered
             while ((currentByte = is.read(data, 0, (int) entry.getSize())) != -1) {
                 out.write(data, 0, currentByte);
             }
             out.flush();
-            content = new String(out.toByteArray(), Charset.forName("UTF-8"));
+            content = new String(out.toByteArray(), StandardCharsets.UTF_8);
         }
         return content;
     }
@@ -213,11 +212,10 @@ public class CheckFilterTest {
             return null;
         }
     }
-    
+
     private static class FileChecker {
         private Set<FileToCheck> fileSet = new HashSet<>();
         private Set<String> words = new HashSet<>();
-
 
         private FileChecker(Jenkins jenkins) throws UnknownHostException {
             fileSet.add(of("manifest.md", "about", false));
@@ -278,7 +276,7 @@ public class CheckFilterTest {
                 fileSet.add(of("nodes/master/proc/self/environ", ENV_VAR, true));
                 fileSet.add(of("nodes/slave/*/proc/self/environ", ENV_VAR, true));
             }
-            
+
             fileSet.add(of("nodes/master/proc/self/limits.txt", "max", false));
             fileSet.add(of("nodes/slave/*/proc/self/limits.txt", "max", false));
 
@@ -313,7 +311,7 @@ public class CheckFilterTest {
 
             //NetworkInterfaces --> nodes/master/networkInterface.md, nodes/slave/*/networkInterface.md
             String anIP = getInetAddress();
-            if(anIP != null) {
+            if (anIP != null) {
                 fileSet.add(of("nodes/master/networkInterface.md", anIP, true));
                 fileSet.add(of("nodes/slave/*/networkInterface.md", anIP, true));
             }
@@ -322,7 +320,7 @@ public class CheckFilterTest {
             fileSet.add(of("node-monitors.md", SLAVE_NAME, true));
 
             //UpdateCenter --> update-center.md
-            if(getUpdateCenterURL(jenkins) != null) {
+            if (getUpdateCenterURL(jenkins) != null) {
                 fileSet.add(of("update-center.md", getUpdateCenterURL(jenkins), true));
             }
 
@@ -364,7 +362,7 @@ public class CheckFilterTest {
          */
         private void generateFilteredWords() {
             ContentFilter filter = SupportPlugin.getContentFilter().orElse(null);
-            for(FileToCheck file : fileSet) {
+            for (FileToCheck file : fileSet) {
                 file.wordFiltered = file.fileIsFiltered ? ContentFilter.filter(filter, file.word) : file.word;
             }
         }
@@ -391,7 +389,7 @@ public class CheckFilterTest {
             final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE;
             for (FileToCheck value : fileSet) {
                 // If there is a filePattern to check that matches this entry of the bundle, we check
-                if(value.match(file)) {
+                if (value.match(file)) {
                     if (content == null) {
                         fail(String.format("Error checking the file %s because its content was null", file));
                     } else {
@@ -420,7 +418,6 @@ public class CheckFilterTest {
             String pattern = filePattern.replace(".", "\\.").replace("*", "[^/]+");
             return Pattern.matches(pattern, s);
         }
-
     }
 
     private static class SimpleBuilder extends Builder implements SimpleBuildStep, Serializable {

@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.support.filter;
 
 import org.apache.commons.io.IOUtils;
@@ -41,7 +40,7 @@ public class FilteredWriterTest {
     @Issue("JENKINS-21670")
     @Test
     public void shouldModifyStream() throws Exception {
-        final int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
+        int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
         String inputContents = IntStream.range(0, nrLines)
                 .mapToObj(i -> "ManagedNode" + i)
                 .collect(joining(System.lineSeparator()));
@@ -82,7 +81,5 @@ public class FilteredWriterTest {
         assertThat(output.toString())
                 .isNotEmpty()
                 .matches("^-+$");
-
     }
-
 }

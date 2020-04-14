@@ -28,6 +28,5 @@ public class ChronoTest {
         assertEquals(c.getMeasure("After 400"), c.getMeasures("After 400").get("After 3s from beginning"));
 
         System.out.println(c.printMeasures());
-
     }
 }

@@ -1,7 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
+import hudson.ExtensionList;
+import hudson.slaves.DumbSlave;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,17 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipFile;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.filter.ContentFilters;
-
-import hudson.ExtensionList;
-import hudson.slaves.DumbSlave;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class SmartLogCleanerTest {
 
@@ -33,7 +31,6 @@ public class SmartLogCleanerTest {
 
     @Test
     public void cleanUp() throws Exception {
-
         File supportDir = new File(j.getInstance().getRootDir(), "support");
         File cacheDir = new File(supportDir, "winsw");
 
@@ -41,12 +38,12 @@ public class SmartLogCleanerTest {
         DumbSlave slave2 = j.createOnlineSlave();
         generateBundle();
 
-        assertNotNull("The cache directory is empty",cacheDir.list());
+        assertNotNull("The cache directory is empty", cacheDir.list());
 
         // wait for completion of SmartLogFetcher async tasks during the bundle generation
-        for (int i = 0; i <  10; i++) {
+        for (int i = 0; i < 10; i++) {
             int cacheDirsCount = cacheDir.list().length;
-            if (cacheDir != null && cacheDir.list() != null && cacheDirsCount == 2) {
+            if (cacheDir.list() != null && cacheDirsCount == 2) {
                 break;
             } else {
                 Thread.sleep(1000 * 10);
@@ -59,9 +56,9 @@ public class SmartLogCleanerTest {
         generateBundle();
 
         // wait for completion of SmartLogFetcher async tasks during the bundle generation
-        for (int i = 0; i <  10; i++) {
+        for (int i = 0; i < 10; i++) {
             int cacheDirsCount = cacheDir.list().length;
-            if (cacheDir != null && cacheDir.list() != null && cacheDirsCount == 1) {
+            if (cacheDir.list() != null && cacheDirsCount == 1) {
                 break;
             } else {
                 Thread.sleep(1000 * 10);
@@ -78,8 +75,7 @@ public class SmartLogCleanerTest {
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(false);
             SupportPlugin.writeBundle(os, componentsToCreate);
-            ZipFile zip = new ZipFile(bundleFile);
-            return zip;
+            return new ZipFile(bundleFile);
         }
     }
 }

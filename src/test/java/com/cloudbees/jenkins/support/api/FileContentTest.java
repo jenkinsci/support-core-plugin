@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.support.api;
 
 import org.apache.commons.io.FileUtils;
@@ -41,15 +40,17 @@ public class FileContentTest {
     @Test public void truncation() throws Exception {
         File f = tmp.newFile();
         FileUtils.writeStringToFile(f, "hello world\n");
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent("-", f).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
+
         baos.reset();
         new FileContent("-", f, 10).writeTo(baos);
         assertEquals("hello worl", baos.toString());
+
         baos.reset();
         new FileContent("-", f, 20).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
     }
-
 }

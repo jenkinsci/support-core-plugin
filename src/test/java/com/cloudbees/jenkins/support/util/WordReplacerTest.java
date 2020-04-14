@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class WordReplacerTest {
+
     @Test
     public void wordReplacerTest() {
         //The ignore case doesn't work in these cases:
@@ -72,8 +73,8 @@ public class WordReplacerTest {
         // Create a lot of word and replaces (each character letter or digit. Aprox: 4070)
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
-        for(char c=0; c < Character.MAX_VALUE; c++) {
-            if(Character.isLetterOrDigit(c)) {
+        for (char c = 0; c < Character.MAX_VALUE; c++) {
+            if (Character.isLetterOrDigit(c)) {
                 words.add(String.valueOf(c));
                 replaceList.add("**" + c + "**" );
             }
@@ -166,7 +167,6 @@ public class WordReplacerTest {
 
         assertEquals(result, replaced);
     }
-
 
     private List<String> generateFakeListString(int lines) {
         assertTrue(lines < 1001);

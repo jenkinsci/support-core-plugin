@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
@@ -104,8 +103,8 @@ public class SensitiveContentFilterTest {
     @Issue("JENKINS-54688")
     @Test
     public void shouldNotFilterOperatingSystem() throws Exception {
-        final String os = "Linux";
-        final String label = "fake";
+        String os = "Linux";
+        String label = "fake";
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         j.createSlave("foo", String.format("%s %s", os, label), null);
         filter.reload();

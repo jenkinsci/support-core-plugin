@@ -36,7 +36,7 @@ public class ItemsContentTest {
         j.waitUntilNoActivity();
 
         String itemsContentToString = SupportTestUtils.invokeComponentToString(ExtensionList.lookup(Component.class).get(ItemsContent.class));
-        
+
         assertThat(itemsContentToString, containsString("  * `hudson.model.FreeStyleProject`"));
         assertThat(itemsContentToString, containsString("    - Number of items: 3"));
         assertThat(itemsContentToString, containsString("    - Number of builds per job: 1.0 [n=3, s=1.0]"));

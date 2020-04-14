@@ -46,7 +46,7 @@ public class AgentsConfigFileTest {
     public void agentsConfigFile() throws Exception {
         j.createSlave("node1", "node1", new EnvVars());
         AgentsConfigFile comp = new AgentsConfigFile();
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         comp.addContents(new Container() {
             @Override
             public void add(@CheckForNull Content content) {

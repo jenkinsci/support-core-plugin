@@ -28,7 +28,7 @@ public class AboutJenkinsTest {
     @Issue("JENKINS-56245")
     public void testAboutJenkinsContent() {
         String aboutMdToString = SupportTestUtils.invokeComponentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
-        
+
         assertThat(aboutMdToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
         IdentityRootAction idRootaction = j.getInstance().getExtensionList(IdentityRootAction.class).get(0);
         assertThat(aboutMdToString, containsString(idRootaction.getPublicKey()));

@@ -141,5 +141,4 @@ public class RunDirectoryComponentTest {
         assertFalse(output.containsKey(prefix + "/log"));
         assertFalse(output.containsKey(prefix + "/workflow/2.xml"));
     }
-
 }

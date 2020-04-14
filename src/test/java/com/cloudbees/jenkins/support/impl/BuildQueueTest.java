@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2015 schristou88
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,48 +50,49 @@ import static org.junit.Assert.assertThat;
  * @author schristou88
  */
 public class BuildQueueTest {
-  @Rule public JenkinsRule j = new JenkinsRule();
 
-  @Ignore("Unit test fails when performing a release. The queue has a race condition" +
-          "which is resolved in 1.607+ (TODO).")
-  @Test
-  public void verifyMinimumBuildQueue() throws Exception {
-    // Given
-    QueueTaskFuture<FreeStyleBuild> build;
-    String assignedLabel = "foo";
-    FreeStyleProject p = j.createFreeStyleProject("bar");
-    p.setAssignedLabel(new LabelAtom(assignedLabel));
-    BuildQueue queue = new BuildQueue();
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-    // When
-    build = p.scheduleBuild2(0);
-    queue.addContents(createContainer(baos));
+    @Ignore("Unit test fails when performing a release. The queue has a race condition" +
+            "which is resolved in 1.607+ (TODO).")
+    @Test
+    public void verifyMinimumBuildQueue() throws Exception {
+        // Given
+        QueueTaskFuture<FreeStyleBuild> build;
+        String assignedLabel = "foo";
+        FreeStyleProject p = j.createFreeStyleProject("bar");
+        p.setAssignedLabel(new LabelAtom(assignedLabel));
+        BuildQueue queue = new BuildQueue();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    // Then
-    build.cancel(true);
-    List<String> output = new ArrayList<String>(Arrays.asList(baos.toString().split("\n")));
+        // When
+        build = p.scheduleBuild2(0);
+        queue.addContents(createContainer(baos));
 
+        // Then
+        build.cancel(true);
+        List<String> output = new ArrayList<>(Arrays.asList(baos.toString().split("\n")));
 
-    assertContains(output, "1 item");
-    assertContains(output, p.getDisplayName());
-    assertContains(output, "Waiting for next available executor");
-  }
+        assertContains(output, "1 item");
+        assertContains(output, p.getDisplayName());
+        assertContains(output, "Waiting for next available executor");
+    }
 
-  public void assertContains(List<String> list, String search) {
-    assertThat(list, hasItems(containsString(search)));
-  }
+    public void assertContains(List<String> list, String search) {
+        assertThat(list, hasItems(containsString(search)));
+    }
 
-  public Container createContainer(final OutputStream os) {
-    return new Container() {
-      @Override
-      public void add(@CheckForNull Content content) {
-        try {
-          content.writeTo(os);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    };
-  }
+    public Container createContainer(final OutputStream os) {
+        return new Container() {
+            @Override
+            public void add(@CheckForNull Content content) {
+                try {
+                    content.writeTo(os);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+    }
 }
