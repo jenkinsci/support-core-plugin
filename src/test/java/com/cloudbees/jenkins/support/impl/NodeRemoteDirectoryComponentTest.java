@@ -20,7 +20,7 @@ public class NodeRemoteDirectoryComponentTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    /**
+    /*
      * Test adding agent remote directory content with the defaults.
      */
     @Test
@@ -33,7 +33,7 @@ public class NodeRemoteDirectoryComponentTest {
         assertTrue(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
     }
 
-    /**
+    /*
      * Test adding agent remote directory content with excludes pattern(s).
      */
     @Test
@@ -49,7 +49,7 @@ public class NodeRemoteDirectoryComponentTest {
         assertFalse(output.keySet().stream().anyMatch(key -> key.matches(prefix + ".*/.*.log")));
     }
 
-    /**
+    /*
      * Test adding agent remote directory content with includes pattern(s).
      */
     @Test
@@ -65,7 +65,7 @@ public class NodeRemoteDirectoryComponentTest {
         assertTrue(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
     }
 
-    /**
+    /*
      * Test adding agent remote directory content with includes pattern(s).
      */
     @Test
