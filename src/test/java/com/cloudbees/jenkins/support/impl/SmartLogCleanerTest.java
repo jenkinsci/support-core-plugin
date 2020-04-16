@@ -43,7 +43,7 @@ public class SmartLogCleanerTest {
         // wait for completion of SmartLogFetcher async tasks during the bundle generation
         for (int i = 0; i < 10; i++) {
             int cacheDirsCount = cacheDir.list().length;
-            if (cacheDir.list() != null && cacheDirsCount == 2) {
+            if (cacheDirsCount == 2) {
                 break;
             } else {
                 Thread.sleep(1000 * 10);
@@ -58,7 +58,7 @@ public class SmartLogCleanerTest {
         // wait for completion of SmartLogFetcher async tasks during the bundle generation
         for (int i = 0; i < 10; i++) {
             int cacheDirsCount = cacheDir.list().length;
-            if (cacheDir.list() != null && cacheDirsCount == 1) {
+            if (cacheDirsCount == 1) {
                 break;
             } else {
                 Thread.sleep(1000 * 10);

@@ -29,7 +29,7 @@ public class SupportAbstractItemActionTest {
     public JenkinsRule j = new JenkinsRule();
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundle of a Folder.
+     * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
      */
     @Test
     public void generateFolderBundleDefaultsAndCheckContent() throws Exception {
@@ -50,7 +50,7 @@ public class SupportAbstractItemActionTest {
     }
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundle of a Freestyle job.
+     * Integration test that simulates the user action of clicking the button to generate the bundle from a Freestyle job.
      */
     @Test
     public void generateFreestyleBundleDefaultsAndCheckContent() throws Exception {
@@ -75,7 +75,7 @@ public class SupportAbstractItemActionTest {
     }
 
     /*
-     * Integration test that simulates the user action of clicking the button to generate the bundle of a Pipeline job.
+     * Integration test that simulates the user action of clicking the button to generate the bundle from a Pipeline job.
      */
     @Test
     public void generatePipelineBundleDefaultsAndCheckContent() throws Exception {
