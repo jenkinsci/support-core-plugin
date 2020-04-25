@@ -59,12 +59,16 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
 
     @Override
     public String getUrlName() {
-        return "support";
+        return shouldDisplay() ? "support" : null;
     }
 
     @Override
     public String getIconFileName() {
-        return "/plugin/support-core/images/24x24/support.png";
+        return shouldDisplay() ? "/plugin/support-core/images/24x24/support.png" : null;
+    }
+
+    boolean shouldDisplay() {
+        return Jenkins.get().hasPermission(Jenkins.ADMINISTER);
     }
 
     @DataBoundSetter

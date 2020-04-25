@@ -23,7 +23,7 @@ public class SupportComputerAction extends SupportObjectAction<Computer> {
 
     @Override
     public String getDisplayName() {
-        return Messages.SupportComputerAction_DisplayName();
+        return shouldDisplay() ? Messages.SupportComputerAction_DisplayName() : null;
     }
 
     @Extension

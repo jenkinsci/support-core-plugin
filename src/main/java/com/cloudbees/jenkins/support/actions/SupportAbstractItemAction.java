@@ -22,7 +22,7 @@ public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem>
 
     @Override
     public String getDisplayName() {
-        return Messages.SupportItemAction_DisplayName();
+        return shouldDisplay() ? Messages.SupportItemAction_DisplayName() : null;
     }
     
     @Extension

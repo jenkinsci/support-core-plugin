@@ -22,7 +22,7 @@ public class SupportRunAction extends SupportObjectAction<Run> {
 
     @Override
     public String getDisplayName() {
-        return Messages.SupportRunAction_DisplayName();
+        return shouldDisplay() ? Messages.SupportRunAction_DisplayName() : null;
     }
 
     @Extension
