@@ -45,7 +45,7 @@ public class UsersContent extends UnfilteredFileListCapComponent {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
-        return Collections.emptySet();
+        return Collections.singleton(Jenkins.ADMINISTER);
     }
 
     @NonNull
