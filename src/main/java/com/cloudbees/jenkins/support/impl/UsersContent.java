@@ -51,7 +51,7 @@ public class UsersContent extends UnfilteredFileListCapComponent {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Users Count";
+        return "User Count";
     }
 
     @Override
