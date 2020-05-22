@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2019, CloudBees, Inc.
+ * Copyright (c) 2020, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Extension
-public class UsersContent extends UnfilteredFileListCapComponent {
+public class UserCount extends UnfilteredFileListCapComponent {
 
     @NonNull
     @Override
@@ -72,7 +72,7 @@ public class UsersContent extends UnfilteredFileListCapComponent {
                         .forEach((lastGrantedAuthoritiesProperty, aLong) ->
                             out.println(" * "
                                     + (lastGrantedAuthoritiesProperty ? "Authenticated" : "Non Authenticated")
-                                    + " Users count: " + aLong)
+                                    + " User Count: " + aLong)
                         );
             }
 
