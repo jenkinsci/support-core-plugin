@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.support.util;
 
 import org.junit.Test;
@@ -49,5 +48,4 @@ public class IgnoreCloseWriterTest {
         then(out).should().flush();
         then(out).shouldHaveNoMoreInteractions();
     }
-
 }

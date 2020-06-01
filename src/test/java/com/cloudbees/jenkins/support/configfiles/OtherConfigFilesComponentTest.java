@@ -124,5 +124,4 @@ public class OtherConfigFilesComponentTest {
             emptyIterable());
         assertThat(baos.toString(), allOf(containsString("FileNotFoundException"), containsString(file.getAbsolutePath())));
     }
-
 }

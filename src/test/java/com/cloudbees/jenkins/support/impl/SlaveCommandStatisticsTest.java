@@ -69,7 +69,7 @@ public class SlaveCommandStatisticsTest {
         j.buildAndAssertSuccess(p);
 
         String dump = SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveCommandStatistics.class));
-        System.out.println(dump);
+
         assertThat(dump, containsString(SampleCallable.class.getName()));
     }
 

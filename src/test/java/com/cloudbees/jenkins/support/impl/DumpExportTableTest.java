@@ -20,41 +20,41 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 public class DumpExportTableTest {
-  @Rule public JenkinsRule j = new JenkinsRule();
-  
-  @Test
-  public void testAddContents() throws Exception {
-    // Given
-    DumbSlave onlineSlave = j.createOnlineSlave();
 
-    // When
-    String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-    // Then
-    assertFalse("Should have dumped the export table.",
-            dumpTableString.isEmpty());
+    @Test
+    public void testAddContents() throws Exception {
+        // Given
+        DumbSlave onlineSlave = j.createOnlineSlave();
 
-    List<String> output = new ArrayList<String>(Arrays.asList(dumpTableString.split("\n")));
-    assertThat(output, hasItems(containsString("hudson.remoting.ExportTable")));
-  }
+        // When
+        String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
 
-  @Test
-  public void testLargeExportTableTruncated() throws Exception {
-    // Given
-    DumbSlave onlineSlave = j.createOnlineSlave();
-    VirtualChannel channel = onlineSlave.getChannel();
-    // This will generate an export table with 2MB of content.
-    for (int i = 0; i < 35000; i++) {
-      channel.export(MockSerializable.class, new MockSerializable() {
-      });
+        // Then
+        assertFalse("Should have dumped the export table.", dumpTableString.isEmpty());
+
+        List<String> output = new ArrayList<>(Arrays.asList(dumpTableString.split("\n")));
+        assertThat(output, hasItems(containsString("hudson.remoting.ExportTable")));
     }
 
-    // When
-    String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
+    @Test
+    public void testLargeExportTableTruncated() throws Exception {
+        // Given
+        DumbSlave onlineSlave = j.createOnlineSlave();
+        VirtualChannel channel = onlineSlave.getChannel();
+        // This will generate an export table with 2MB of content.
+        for (int i = 0; i < 35000; i++) {
+            channel.export(MockSerializable.class, new MockSerializable() {});
+        }
 
-    // Then
-    assertThat(dumpTableString.length(), lessThanOrEqualTo(FileListCapComponent.MAX_FILE_SIZE));
-  }
+        // When
+        String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
 
-  public interface MockSerializable extends Serializable {}
+        // Then
+        assertThat(dumpTableString.length(), lessThanOrEqualTo(FileListCapComponent.MAX_FILE_SIZE));
+    }
+
+    public interface MockSerializable extends Serializable {}
 }

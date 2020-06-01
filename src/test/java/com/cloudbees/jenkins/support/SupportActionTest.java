@@ -75,7 +75,7 @@ public class SupportActionTest {
 
     @Rule
     public LoggerRule logger = new LoggerRule();
-    
+
     @Inject
     SupportAction root;
 
@@ -126,7 +126,7 @@ public class SupportActionTest {
         assertThat(response.getContentAsString(), containsString(String.format("user is missing the %s/%s permission", SupportAction.CREATE_BUNDLE.group.title, SupportAction.CREATE_BUNDLE.name)));
         assertThat(response.getStatusCode(), equalTo(403));
     }
-    
+
     private Path createFakeSupportBundle() throws IOException {
         return Files.createTempFile(SupportPlugin.getRootDirectory().toPath(), "fake-bundle-", ".zip");
     }
@@ -154,7 +154,7 @@ public class SupportActionTest {
         WebRequest request = new WebRequest(new URL(j.getURL() + root.getUrlName() + "/deleteBundles?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}"), HttpMethod.POST);
         return wc.getPage(request).getWebResponse();
     }
-    
+
     private ZipFile downloadBundle(String s) throws IOException, SAXException {
         JenkinsRule.JSONWebResponse jsonWebResponse = j.postJSON(root.getUrlName() + s, "");
         File zipFile = File.createTempFile("test", "zip");
@@ -295,16 +295,15 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
-        final String OBJECT_NAME = "slave";
-        Slave node = j.createSlave(OBJECT_NAME, "/", null);
+        String objectName = "slave";
+        j.createSlave(objectName, "/", null);
 
-        // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
+        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
     }
 
     /*
@@ -313,15 +312,15 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
-        final String OBJECT_NAME = "slave";
-        Slave node = j.createSlave(OBJECT_NAME, ".", null);
-        // Set the components to generate
+        String objectName = "slave";
+        j.createSlave(objectName, ".", null);
+
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip,  OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
+        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
     }
 
     /*
@@ -330,22 +329,21 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {
-        final String OBJECT_NAME = "slave";
+        String objectName = "slave";
         // Create a slave with very bad words
-        j.createSlave(OBJECT_NAME, "active plugins checksums md5 items about nodes manifest errors", null);
+        j.createSlave(objectName, "active plugins checksums md5 items about nodes manifest errors", null);
 
         /* This words are in the stopWords, so they won't never be replaced
         "jenkins", "node", "master", "computer", "item", "label", "view", "all", "unknown", "user", "anonymous",
         "authenticated", "everyone", "system", "admin", Jenkins.VERSION
         */
 
-        // Set the components to generate
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip, OBJECT_NAME, ContentMappings.get().getMappings().get(OBJECT_NAME));
+        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
     }
 
     /**
@@ -379,17 +377,15 @@ public class SupportActionTest {
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(enabledAnonymization);
             SupportPlugin.writeBundle(os, componentsToCreate);
-            ZipFile zip = new ZipFile(bundleFile);
-            return zip;
+            return new ZipFile(bundleFile);
         }
     }
 
     @Nonnull
     private List<String> getFileNamesFromBundle(ZipFile zip) {
-        List<String> entries = new ArrayList<>(zip.size());
+        List<String> entries = new ArrayList<>();
         zip.stream().forEach(entry -> entries.add(entry.getName()));
         return entries;
     }
-
 }
 

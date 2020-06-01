@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.cloudbees.jenkins.support.timer;
 
 import org.junit.Rule;
@@ -32,14 +31,15 @@ import static org.junit.Assert.assertEquals;
 
 public class FileListCapTest {
 
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
-    
-    @Test public void add() throws Exception {
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Test
+    public void add() throws Exception {
         FileListCap flc = new FileListCap(tmp.getRoot(), 3);
         for (int i = 0; i < 10; i++) {
             flc.add(tmp.newFile());
         }
         assertEquals(3, flc.getFolder().list().length);
     }
-
 }

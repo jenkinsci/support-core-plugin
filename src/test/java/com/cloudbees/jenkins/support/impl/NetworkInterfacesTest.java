@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class NetworkInterfacesTest {
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -30,7 +31,7 @@ public class NetworkInterfacesTest {
         String expectedName = networkInterface.getDisplayName();
 
         NetworkInterfaces ni = new NetworkInterfaces();
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ni.addContents(new Container() {
             @Override
             public void add(@CheckForNull Content content) {
@@ -41,7 +42,6 @@ public class NetworkInterfacesTest {
                 }
             }
         });
-
         String masterNetworkInterfaces = baos.toString();
 
         assertThat("Should at least contain one network interface.",

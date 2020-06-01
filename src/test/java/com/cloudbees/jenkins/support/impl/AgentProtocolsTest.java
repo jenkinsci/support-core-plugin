@@ -21,7 +21,7 @@ public class AgentProtocolsTest {
         String itemsContentToString = SupportTestUtils.invokeComponentToString(
                 ExtensionList.lookup(Component.class).get(AgentProtocols.class));
         AgentProtocol.all().forEach(s -> {
-            MatcherAssert.assertThat(itemsContentToString, 
+            MatcherAssert.assertThat(itemsContentToString,
                     containsString(" * `" + s.getName() + "`: " + s.getDisplayName()));
         });
     }

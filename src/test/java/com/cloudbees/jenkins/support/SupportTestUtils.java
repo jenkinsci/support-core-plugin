@@ -50,7 +50,7 @@ public class SupportTestUtils {
                     @Override
                     public void add(@CheckForNull Content content) {
                         try {
-                            content.writeTo(baos);
+                            Objects.requireNonNull(content).writeTo(baos);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -81,7 +81,7 @@ public class SupportTestUtils {
     }
 
     /**
-     * Invoke an aobject component, and return the component contents as a String.
+     * Invoke an object component, and return the component contents as a String.
      */
     public static <T extends AbstractModelObject> Map<String, String> invokeComponentToMap(
             final ObjectComponent<T> component, T object) {
@@ -93,13 +93,13 @@ public class SupportTestUtils {
                     @Override
                     public void add(@CheckForNull Content content) {
                         try {
-                            content.writeTo(baos);
+                            Objects.requireNonNull(content).writeTo(baos);
                             contents.put(
                                     SupportPlugin.getNameFiltered(
-                                            SupportPlugin.getContentFilter(), 
-                                            content.getName(), 
+                                            SupportPlugin.getContentFilter(),
+                                            content.getName(),
                                             content.getFilterableParameters()
-                                    ), 
+                                    ),
                                     baos.toString());
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -156,8 +156,7 @@ public class SupportTestUtils {
         logger.addHandler(checker);
 
         try {
-            return SupportTestUtils.generateBundleFromAction(baseUrl, action, webClient
-            );
+            return SupportTestUtils.generateBundleFromAction(baseUrl, action, webClient);
         } finally {
             logger.removeHandler(checker);
             for (LogRecord r : checker.getView()) {

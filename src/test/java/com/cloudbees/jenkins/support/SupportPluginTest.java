@@ -19,6 +19,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +34,7 @@ public class SupportPluginTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
-    
+
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
@@ -58,7 +59,7 @@ public class SupportPluginTest {
                 container.add(new Content("test/testGenerateBundleExceptionHandler.md") {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        os.write("test".getBytes("UTF-8"));
+                        os.write("test".getBytes(StandardCharsets.UTF_8));
                     }
 
                     @Override
@@ -74,11 +75,11 @@ public class SupportPluginTest {
         );
 
         File bundleFile = temp.newFile();
-        
+
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             SupportPlugin.writeBundle(os, componentsToCreate);
         }
-        
+
         ZipFile zip = new ZipFile(bundleFile);
         assertNull(zip.getEntry("test/testGenerateBundleExceptionHandler.md"));
         assertNotNull(zip.getEntry("manifest.md"));

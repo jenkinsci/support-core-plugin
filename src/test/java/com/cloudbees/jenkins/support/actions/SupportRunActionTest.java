@@ -28,7 +28,6 @@ public class SupportRunActionTest {
      */
     @Test
     public void generateBundleDefaultsAndCheckContent() throws Exception {
-
         MockFolder folder = j.createFolder("testFolder");
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, "testFreestyle");
         QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
@@ -39,11 +38,11 @@ public class SupportRunActionTest {
         ZipFile z = SupportTestUtils.generateBundleWithoutWarnings(
                 fBuild.getUrl(),
                 new SupportRunAction(j.jenkins.getItemByFullName("testFolder/testFreestyle", Job.class)
-                        .getBuildByNumber(fBuild.number)),
+                        .getBuildByNumber(fBuild.getNumber())),
                 SupportPlugin.class,
                 j.createWebClient());
-        
-        String buildsEntryPrefix = "items/testFolder/jobs/testFreestyle/builds/" + fBuild.number;
+
+        String buildsEntryPrefix = "items/testFolder/jobs/testFreestyle/builds/" + fBuild.getNumber();
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(buildsEntryPrefix + "/build.xml"));
     }

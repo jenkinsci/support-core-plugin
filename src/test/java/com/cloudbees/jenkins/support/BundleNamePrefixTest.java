@@ -43,7 +43,6 @@ public class BundleNamePrefixTest {
 
     @TestExtension("checkWithOneProvider")
     public static class TestProvider extends BundleNameInstanceTypeProvider {
-
         @Nonnull
         @Override
         public String getInstanceType() {

@@ -23,40 +23,14 @@ public class SecretHandlerTest {
 
     private String xml;
 
-    private final String expectedXml = "<com.cloudbees.plugins.credentials.SystemCredentialsProvider plugin=\"credentials@1.18\">\n" +
-            "    <domainCredentialsMap class=\"hudson.util.CopyOnWriteMap$Hash\">\n" +
-            "        <entry>\n" +
-            "            <com.cloudbees.plugins.credentials.domains.Domain>\n" +
-            "                <specifications/>\n" +
-            "            </com.cloudbees.plugins.credentials.domains.Domain>\n" +
-            "            <java.util.concurrent.CopyOnWriteArrayList>\n" +
-            "                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
-            "                    <scope>GLOBAL</scope>\n" +
-            "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781181</id>\n" +
-            "                    <description>Alice</description>\n" +
-            "                    <username/>\n" +
-            "                    <password>" + SecretHandler.SECRET_MARKER + "</password>\n" +
-            "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
-            "                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
-            "                    <scope>GLOBAL</scope>\n" +
-            "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781182</id>\n" +
-            "                    <description>Bobby&#0x;</description>\n" +
-            "                    <username/>\n" +
-            "                    <password>" + SecretHandler.SECRET_MARKER + "</password>\n" +
-            "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
-            "            </java.util.concurrent.CopyOnWriteArrayList>\n" +
-            "        </entry>\n" +
-            "    </domainCredentialsMap>\n" +
-            "</com.cloudbees.plugins.credentials.SystemCredentialsProvider>";
-
     @Before
     public void setup() {
-        Secret secret = Secret.fromString("this-is-a-secret");
+        Secret secret1 = Secret.fromString("this-is-a-secret");
         SecretBytes secret2 = SecretBytes.fromBytes("this-is-another-type-of-secret".getBytes());
-        assertEquals("this-is-a-secret", secret.getPlainText());
+        assertEquals("this-is-a-secret", secret1.getPlainText());
         assertEquals("this-is-another-type-of-secret", new String(secret2.getPlainData()));
-        String encrypted_secret = secret.getEncryptedValue();
-        String encrypted_secret2 = secret2.toString();
+        String encryptedSecret1 = secret1.getEncryptedValue();
+        String encryptedSecret2 = secret2.toString();
         xml = "<com.cloudbees.plugins.credentials.SystemCredentialsProvider plugin=\"credentials@1.18\">\n" +
                 "    <domainCredentialsMap class=\"hudson.util.CopyOnWriteMap$Hash\">\n" +
                 "        <entry>\n" +
@@ -69,14 +43,14 @@ public class SecretHandlerTest {
                 "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781181</id>\n" +
                 "                    <description>Alice</description>\n" +
                 "                    <username/>\n" +
-                "                    <password>" + encrypted_secret + "</password>\n" +
+                "                    <password>" + encryptedSecret1 + "</password>\n" +
                 "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
                 "                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
                 "                    <scope>GLOBAL</scope>\n" +
                 "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781182</id>\n" +
                 "                    <description>Bobby&#0x;</description>\n" +
                 "                    <username/>\n" +
-                "                    <password>" + encrypted_secret2 + "</password>\n" +
+                "                    <password>" + encryptedSecret2 + "</password>\n" +
                 "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
                 "            </java.util.concurrent.CopyOnWriteArrayList>\n" +
                 "        </entry>\n" +
@@ -90,13 +64,38 @@ public class SecretHandlerTest {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml);
         String patchedXml = SecretHandler.findSecrets(file);
+        String expectedXml = "<com.cloudbees.plugins.credentials.SystemCredentialsProvider plugin=\"credentials@1.18\">\n" +
+                "    <domainCredentialsMap class=\"hudson.util.CopyOnWriteMap$Hash\">\n" +
+                "        <entry>\n" +
+                "            <com.cloudbees.plugins.credentials.domains.Domain>\n" +
+                "                <specifications/>\n" +
+                "            </com.cloudbees.plugins.credentials.domains.Domain>\n" +
+                "            <java.util.concurrent.CopyOnWriteArrayList>\n" +
+                "                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
+                "                    <scope>GLOBAL</scope>\n" +
+                "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781181</id>\n" +
+                "                    <description>Alice</description>\n" +
+                "                    <username/>\n" +
+                "                    <password>" + SecretHandler.SECRET_MARKER + "</password>\n" +
+                "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
+                "                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
+                "                    <scope>GLOBAL</scope>\n" +
+                "                    <id>f9ebaa5c-a7fc-46e4-93ab-453699781182</id>\n" +
+                "                    <description>Bobby&#0x;</description>\n" +
+                "                    <username/>\n" +
+                "                    <password>" + SecretHandler.SECRET_MARKER + "</password>\n" +
+                "                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>\n" +
+                "            </java.util.concurrent.CopyOnWriteArrayList>\n" +
+                "        </entry>\n" +
+                "    </domainCredentialsMap>\n" +
+                "</com.cloudbees.plugins.credentials.SystemCredentialsProvider>";
         assertEquals(expectedXml, patchedXml);
     }
 
     @Test
     @Issue("JENKINS-50765")
     public void shouldNotResolveExternalEntities() throws Exception {
-        final String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+        String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<!DOCTYPE test [ \n" +
                 "    <!ENTITY xxeattack SYSTEM \"file:///\"> \n" +
                 "]>\n" +
