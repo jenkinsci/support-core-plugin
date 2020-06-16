@@ -29,14 +29,14 @@ public class TaskLogsTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void testOtherLogsContentEmpty() {
+    public void testTaskLogsContentEmpty() {
         String otherLogs = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
         assertTrue("Should not write anything", otherLogs.isEmpty());
     }
 
     @Test
-    public void testOtherLogsRootSafeTimer() throws IOException {
+    public void testTaskRootSafeTimerLogs() throws IOException {
         File safeTimerTasksDir = SafeTimerTask.getLogsRoot();
         safeTimerTasksDir.mkdir();
         File testFile = new File(safeTimerTasksDir, "test.log");
@@ -45,13 +45,13 @@ public class TaskLogsTest {
                 Charset.defaultCharset());
         
         String otherLogs = SupportTestUtils.invokeComponentToString(
-                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(OtherLogs.class)));
+                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
         assertFalse("Should collect *.log under the SafeTimerTask dir", otherLogs.isEmpty());
         assertThat(otherLogs , Matchers.containsString("This is a test from SafeTimerTask dir"));
     }
 
     @Test
-    public void testOtherLogsTasks() throws IOException {
+    public void testTaskLogs() throws IOException {
         File tasksDir = new File(SafeTimerTask.getLogsRoot(), "tasks");
         SafeTimerTask.getLogsRoot().mkdir();
         tasksDir.mkdir();
@@ -61,7 +61,7 @@ public class TaskLogsTest {
                 Charset.defaultCharset());
         
         String otherLogs = SupportTestUtils.invokeComponentToString(
-                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(OtherLogs.class)));
+                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
         assertFalse("Should collect *.log under the tasks dir", otherLogs.isEmpty());
         assertThat(otherLogs , Matchers.containsString("This is a test from tasks dir"));
     }
