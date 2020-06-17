@@ -38,9 +38,10 @@ import java.util.logging.StreamHandler;
 @Extension(ordinal = 100.0)
 public class CustomLogs extends Component {
 
+    private static final Logger LOGGER = Logger.getLogger(CustomLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(CustomLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
+    private static final File customLogs = new File(TaskLogs.getLogsRoot(), "custom");
     private final Map<String,LogRecorder> logRecorders = Jenkins.get().getLog().logRecorders;
-    private final File customLogs = new File(getLogsRoot(), "custom");
 
     @NonNull
     @Override
@@ -88,24 +89,7 @@ public class CustomLogs extends Component {
         }
     }
 
-    /**
-     * Returns the root directory for logs (historically always found under <code>$JENKINS_HOME/logs</code>.
-     * Configurable since Jenkins 2.114.
-     *
-     * @see hudson.triggers.SafeTimerTask#LOGS_ROOT_PATH_PROPERTY
-     * @return the root directory for logs.
-     */
-    private File getLogsRoot() {
-        final String overriddenLogsRoot = System.getProperty("hudson.triggers.SafeTimerTask.logsTargetDir");
-        if (overriddenLogsRoot == null) {
-            return new File(Jenkins.get().getRootDir(), "logs");
-        } else {
-            return new File(overriddenLogsRoot);
-        }
-    }
-
-    @SuppressFBWarnings(value="SIC_INNER_SHOULD_BE_STATIC_NEEDS_THIS", justification="customLogs is not static, so this is a bug in FB")
-    private final class LogFile {
+    private static final class LogFile {
         private final RewindableRotatingFileOutputStream stream;
         private final Handler handler;
         private int count;
@@ -161,8 +145,8 @@ public class CustomLogs extends Component {
             for (Map.Entry<String,LogRecorder> entry : logRecorders.entrySet()) {
                 for (LogRecorder.Target target : entry.getValue().targets) {
                     if (target.includes(record)) {
+                        String name = entry.getKey();
                         try {
-                            String name = entry.getKey();
                             LogFile logFile;
                             synchronized (logFiles) {
                                 logFile = logFiles.get(name);
@@ -173,7 +157,7 @@ public class CustomLogs extends Component {
                             }
                             logFile.publish(record);
                         } catch (IOException x) {
-                            x.printStackTrace(); // TODO probably unsafe to log this
+                            LOGGER.warning("Error while publishing log records for '" + name);
                         }
                     }
                 }

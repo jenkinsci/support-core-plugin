@@ -76,7 +76,7 @@ public class TaskLogs extends Component {
      * @see hudson.triggers.SafeTimerTask#LOGS_ROOT_PATH_PROPERTY
      * @return the root directory for logs.
      */
-    private File getLogsRoot() {
+    protected static File getLogsRoot() {
         final String overriddenLogsRoot = System.getProperty("hudson.triggers.SafeTimerTask.logsTargetDir");
         if (overriddenLogsRoot == null) {
             return new File(Jenkins.get().getRootDir(), "logs");
