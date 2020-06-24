@@ -208,7 +208,7 @@ public class GCLogs extends Component {
     /**
      * Isolated code to make it testable
      */
-    static class VmArgumentFinder {
+    protected static class VmArgumentFinder {
         @CheckForNull
         public String findVmArgument(String argName) {
             for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
