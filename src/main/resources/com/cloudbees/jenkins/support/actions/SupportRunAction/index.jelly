@@ -43,13 +43,13 @@
                 <p>
                     Support bundle anonymization is enabled. View
                     <a href="${rootURL}/anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
-                    <a href="${rootURL}/configure">global configuration</a> under <i>Support Bundle Anonymization</i>.
+                    <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
                 </p>
             </j:if>
             <j:if test="${!com.cloudbees.jenkins.support.filter.ContentFilters.get().isEnabled()}">
                 <p class="warning">
                     Support bundle anonymization is disabled. This can be enabled in the
-                    <a href="${rootURL}/configure">global configuration</a> under <i>Support Bundle Anonymization</i>.
+                    <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
                 </p>
             </j:if>
             <f:form name="bundle-contents" method="POST" action="generateAndDownload">
