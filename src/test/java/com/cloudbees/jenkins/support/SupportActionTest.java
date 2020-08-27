@@ -101,10 +101,10 @@ public class SupportActionTest {
     }
 
     @Test
-    @Issue("JENKINS-63722")
+    @Issue({"JENKINS-63722","JENKINS-62925"})
     public void generateAllBundlesBackwardCompatibility() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
-        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+//        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
 
         List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
             "proc/meminfo.txt",
@@ -171,6 +171,26 @@ public class SupportActionTest {
         // AgentsSystemConfiguration and AgentsJVMProcessSystemMetricsContents should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
             + String.join(",", "AgentsSystemConfiguration", "AgentsJVMProcessSystemMetricsContents"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+
+        // AgentCommandStatistics should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "SlaveCommandStatistics"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+
+        // AgentLogs should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "SlaveLogs"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        
+        // SlaveCommandStatistics should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "SlaveCommandStatistics"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        
+        // SlaveLogs should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "SlaveLogs"));
         assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
     }
 
@@ -321,8 +341,8 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("slave1","test",null).getComputer().connect(false).get();
-        j.createSlave("slave2","test",null).getComputer().connect(false).get();
+        j.createSlave("agent1","test",null).getComputer().connect(false).get();
+        j.createSlave("agent2","test",null).getComputer().connect(false).get();
 
         RingBufferLogHandler checker = new RingBufferLogHandler();
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
@@ -416,7 +436,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
-        String objectName = "slave";
+        String objectName = "agent";
         j.createSlave(objectName, "/", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -433,7 +453,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
-        String objectName = "slave";
+        String objectName = "agent";
         j.createSlave(objectName, ".", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -450,8 +470,8 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {
-        String objectName = "slave";
-        // Create a slave with very bad words
+        String objectName = "agent";
+        // Create an agent with very bad words
         j.createSlave(objectName, "active plugins checksums md5 items about nodes manifest errors", null);
 
         /* This words are in the stopWords, so they won't never be replaced

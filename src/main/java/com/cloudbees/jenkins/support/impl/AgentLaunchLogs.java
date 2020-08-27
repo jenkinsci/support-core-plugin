@@ -47,7 +47,7 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  * Adds agent launch logs, which captures the current and past running connections to the agent.
  *
  */
-public class SlaveLaunchLogs extends Component{
+public class AgentLaunchLogs extends Component{
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -62,7 +62,7 @@ public class SlaveLaunchLogs extends Component{
 
     @Override
     public void addContents(@NonNull Container container) {
-        addSlaveLaunchLog(container);
+        addAgentLaunchLog(container);
     }
 
     /**
@@ -77,15 +77,15 @@ public class SlaveLaunchLogs extends Component{
      * will be full of old files that are not very interesting. Use some heuristics to cut off logs
      * that are old.
      */
-    private void addSlaveLaunchLog(Container result) {
-        class Slave implements Comparable<Slave> {
+    private void addAgentLaunchLog(Container result) {
+        class Agent implements Comparable<Agent> {
             /**
              * Launch log directory of the agent: logs/slaves/NAME
              */
             File dir;
             long time;
 
-            Slave(File dir, File lastLog) {
+            Agent(File dir, File lastLog) {
                 this.dir = dir;
                 this.time = lastLog.lastModified();
             }
@@ -98,7 +98,7 @@ public class SlaveLaunchLogs extends Component{
              *
              * sort in descending order; newer ones first.
              */
-            public int compareTo(Slave that) {
+            public int compareTo(Agent that) {
                 long lhs = this.time;
                 long rhs = that.time;
                 if (lhs<rhs)    return 1;
@@ -111,9 +111,9 @@ public class SlaveLaunchLogs extends Component{
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
 
-                Slave slave = (Slave) o;
+                Agent agent = (Agent) o;
 
-                if (time != slave.time) return false;
+                if (time != agent.time) return false;
 
                 return true;
             }
@@ -131,17 +131,17 @@ public class SlaveLaunchLogs extends Component{
             }
         }
 
-        List<Slave> all = new ArrayList<Slave>();
+        List<Agent> all = new ArrayList<Agent>();
 
         {// find all the agent launch log files and sort them newer ones first
 
-            File slaveLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
-            File[] logs = slaveLogsDir.listFiles();
+            File agentLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            File[] logs = agentLogsDir.listFiles();
             if (logs!=null) {
                 for (File dir : logs) {
                     File lastLog = new File(dir, "slave.log");
                     if (lastLog.exists()) {
-                        Slave s = new Slave(dir, lastLog);
+                        Agent s = new Agent(dir, lastLog);
                         if (s.isTooOld()) continue;   // we don't care
                         all.add(s);
                     }
@@ -158,7 +158,7 @@ public class SlaveLaunchLogs extends Component{
         }
 
         // now add them all
-        for (Slave s : all) {
+        for (Agent s : all) {
             File[] files = s.dir.listFiles(ROTATED_LOGFILE_FILTER);
             if (files!=null)
                 for (File f : files) {

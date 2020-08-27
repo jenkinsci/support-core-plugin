@@ -64,8 +64,8 @@ import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME
  * Adds the agent logs from all of the machines
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete.
-public class SlaveLogs extends Component {
-    private static final Logger LOGGER = Logger.getLogger(SlaveLogs.class.getCanonicalName());
+public class AgentLogs extends Component {
+    private static final Logger LOGGER = Logger.getLogger(AgentLogs.class.getCanonicalName());
 
     @NonNull
     @Override
@@ -115,7 +115,7 @@ public class SlaveLogs extends Component {
                 );
             }
 
-            addSlaveJulLogRecords(container, tasks, node, logFetcher);
+            addAgentJulLogRecords(container, tasks, node, logFetcher);
             addWinsStdoutStderrLog(tasks, node, winswLogFetcher);
         }
 
@@ -156,7 +156,7 @@ public class SlaveLogs extends Component {
      *
      * @see JenkinsLogs#addMasterJulLogRecords(Container)
      */
-    private void addSlaveJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+    private void addAgentJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk

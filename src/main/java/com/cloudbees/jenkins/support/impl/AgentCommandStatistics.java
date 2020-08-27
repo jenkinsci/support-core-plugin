@@ -63,7 +63,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 @Extension
-public final class SlaveCommandStatistics extends Component {
+public final class AgentCommandStatistics extends Component {
 
     /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
 
@@ -197,7 +197,7 @@ public final class SlaveCommandStatistics extends Component {
 
         @Override
         public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
-            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
+            AgentCommandStatistics scs = ExtensionList.lookupSingleton(AgentCommandStatistics.class);
             synchronized (scs.statLock) {
                 channel.addListener(scs.statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
             }
@@ -209,7 +209,7 @@ public final class SlaveCommandStatistics extends Component {
     @Extension @Restricted(NoExternalUse.class)
     public static final class NodeListenerImpl extends NodeListener {
         @Override protected void onDeleted(@Nonnull Node node) {
-            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
+            AgentCommandStatistics scs = ExtensionList.lookupSingleton(AgentCommandStatistics.class);
             synchronized (scs.statLock) {
                 Statistics listener = scs.statistics.remove(node.getNodeName());
                 if (MAX_STATS_SIZE > 0 && listener != null) {

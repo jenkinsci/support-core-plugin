@@ -27,7 +27,7 @@ public class DumpExportTableTest {
     @Test
     public void testAddContents() throws Exception {
         // Given
-        DumbSlave onlineSlave = j.createOnlineSlave();
+        DumbSlave onlineAgent = j.createOnlineSlave();
 
         // When
         String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
@@ -42,8 +42,8 @@ public class DumpExportTableTest {
     @Test
     public void testLargeExportTableTruncated() throws Exception {
         // Given
-        DumbSlave onlineSlave = j.createOnlineSlave();
-        VirtualChannel channel = onlineSlave.getChannel();
+        DumbSlave onlineAgent = j.createOnlineSlave();
+        VirtualChannel channel = onlineAgent.getChannel();
         // This will generate an export table with 2MB of content.
         for (int i = 0; i < 35000; i++) {
             channel.export(MockSerializable.class, new MockSerializable() {});

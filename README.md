@@ -84,7 +84,7 @@ If a stacktrace like the one below appears
 and the Jenkins logs are populated with 
 
 ```
-2018-01-04 04:52:17.633+0000 [id=123769] WARNING c.c.j.support.SupportPlugin#writeBundle: Could not attach 'nodes/slave/Slave1/checksums.md5' to support bundle
+2018-01-04 04:52:17.633+0000 [id=123769] WARNING c.c.j.support.SupportPlugin#writeBundle: Could not attach 'nodes/slave/agent1/checksums.md5' to support bundle
 org.eclipse.jetty.io.EofException: Closed
     at org.eclipse.jetty.server.HttpOutput.write(HttpOutput.java:476)
     at net.bull.javamelody.FilterServletOutputStream.write(FilterServletOutputStream.java:88)

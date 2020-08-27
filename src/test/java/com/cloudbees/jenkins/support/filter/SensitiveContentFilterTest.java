@@ -42,7 +42,7 @@ public class SensitiveContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void anonymizeSlavesAndLabels() throws Exception {
+    public void anonymizeAgentsAndLabels() throws Exception {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         // using foo, bar, jar and war could raise flaky test failures. It happened to me when
         // bar was changed by label_barrier :-O So we use stranger words to avoid this test to be flaky
