@@ -90,7 +90,7 @@ public class SlaveLogs extends Component {
     public void addContents(@NonNull Container container) {
         // expensive remote computation are pooled together and executed later concurrently across all the agents
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
-        SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameFilter()); // id is awkward because of backward compatibility
+        SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameAgentFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
 
         for (final Node node : Jenkins.get().getNodes()) {
