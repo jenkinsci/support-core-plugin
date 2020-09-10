@@ -27,7 +27,7 @@
          xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
     <l:layout title="${it.actionTitle}" norefresh="true" permission="${Jenkins.ADMINISTER}">
-        <st:include page="sidepanel.jelly" it="${app}"/>
+        <st:include page="sidepanel.jelly" it="${it.object}"/>
         <l:main-panel>
             <h1>
                 <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
