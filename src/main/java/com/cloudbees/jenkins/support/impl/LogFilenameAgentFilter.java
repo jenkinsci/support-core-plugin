@@ -41,8 +41,8 @@ class LogFilenameAgentFilter implements FilenameFilter, Serializable {
         // We should avoid taking agent files which are very old
         // as they are not usually very helpful to troubleshoot
         // 1 week should be enough in most of the cases
-        if (new Date().getTime() -  dir.lastModified() < MAX_TIME_AGENT_LOG_RETRIEVAL) {
-            return name.endsWith(".log");
+        if (name.endsWith(".log") && new Date().getTime() -  dir.lastModified() < MAX_TIME_AGENT_LOG_RETRIEVAL) {
+            return true;
         }
         return false;
     }
