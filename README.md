@@ -25,6 +25,27 @@ There are three ways of generating bundles:
 
 ![](docs/images/support_page.png)
 
+## Global Configuration
+
+Features and functionalities of the Support Core plugin can be configured globally 
+under **Manage Jenkins > Support Core**. 
+
+### Automated Support Bundle Generation
+
+Configure the automated generation of the Support Bundle. By default, Support Core 
+configures a periodic task that generate a support bundle every hour. This can tremendously
+help troubleshoot issues in Jenkins, in cases where data could not be collected at the time
+an issue happened or started to happen.
+
+The following option apply:
+
+* **Enable**: Whether to enable the automatic generation of the support bundle or not
+(default to true)
+* **Period**: The recurrence period (in hours) to generate support bundle 
+(default to 1h) 
+* **Components**: The list of components to include in the automatic bundle 
+(default to the list of components selected by default)
+
 ## Docker File
 
 As part of the support bundle if the About Jenkins option is checked

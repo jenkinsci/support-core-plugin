@@ -1,0 +1,26 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" 
+         xmlns:f="/lib/form">
+    <j:forEach var="component" items="${instance.applicableComponents}">
+        <f:entry field="component">
+            <div name="components">
+                <j:if test="${component.enabled}">
+                    <f:checkbox name="selected"
+                                checked="${instance.isComponentSelected(component)}"
+                                title="${component.displayName}"/>
+                </j:if>
+                <j:if test="${!component.enabled}">
+                    <input type="checkbox"
+                           name="selected"
+                           value="false"
+                           disabled="disabled"/>
+                    <label class="attach-previous" style="text-decoration: line-through;"
+                           title="${%permissionPreReqs(component.displayPermissions)}">
+                        ${component.displayName}
+                    </label>
+                </j:if>
+                <input style="display:none" name="name" value="${component.id}"/>
+            </div>
+        </f:entry>
+    </j:forEach>
+</j:jelly>
