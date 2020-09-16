@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.actions;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleBuild;
@@ -33,8 +34,8 @@ public class SupportAbstractItemActionTest {
      */
     @Test
     public void generateFolderBundleDefaultsAndCheckContent() throws Exception {
-        MockFolder folder = j.createFolder("testFolder");
-        MockFolder subFolder = folder.createProject(MockFolder.class, "subFolder");
+        Folder folder = j.createProject(Folder.class, "testFolder");
+        Folder subFolder = folder.createProject(Folder.class, "subFolder");
         subFolder.createProject(FreeStyleProject.class, "testFreestyle");
 
         // Check that the generation does not show any warnings
