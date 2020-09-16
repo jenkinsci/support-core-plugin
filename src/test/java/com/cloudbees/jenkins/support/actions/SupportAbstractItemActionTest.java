@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.actions;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleBuild;
@@ -12,7 +13,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.MockFolder;
 
 import java.util.Optional;
 import java.util.zip.ZipFile;
@@ -33,13 +33,13 @@ public class SupportAbstractItemActionTest {
      */
     @Test
     public void generateFolderBundleDefaultsAndCheckContent() throws Exception {
-        MockFolder folder = j.createFolder("testFolder");
-        MockFolder subFolder = folder.createProject(MockFolder.class, "subFolder");
+        Folder folder = j.createProject(Folder.class, "testFolder");
+        Folder subFolder = folder.createProject(Folder.class, "subFolder");
         subFolder.createProject(FreeStyleProject.class, "testFreestyle");
 
         // Check that the generation does not show any warnings
         ZipFile z = SupportTestUtils.generateBundleWithoutWarnings(folder.getUrl(),
-                new SupportAbstractItemAction(j.jenkins.getItemByFullName("testFolder", MockFolder.class)),
+                new SupportAbstractItemAction(j.jenkins.getItemByFullName("testFolder", Folder.class)),
                 SupportPlugin.class,
                 j.createWebClient());
 
@@ -54,7 +54,7 @@ public class SupportAbstractItemActionTest {
      */
     @Test
     public void generateFreestyleBundleDefaultsAndCheckContent() throws Exception {
-        MockFolder folder = j.createFolder("testFolder");
+        Folder folder = j.createProject(Folder.class, "testFolder");
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, "testFreestyle");
         QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
         FreeStyleBuild fBuild = freeStyleBuildQueueTaskFuture.waitForStart();
@@ -62,7 +62,7 @@ public class SupportAbstractItemActionTest {
 
         // Check that the generation does not show any warnings
         ZipFile z = SupportTestUtils.generateBundleWithoutWarnings(p.getUrl(),
-                new SupportAbstractItemAction(j.jenkins.getItemByFullName("testFolder/testFreestyle", MockFolder.class)),
+                new SupportAbstractItemAction(j.jenkins.getItemByFullName("testFolder/testFreestyle", FreeStyleProject.class)),
                 SupportPlugin.class,
                 j.createWebClient());
 

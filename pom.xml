@@ -198,6 +198,12 @@
       <version>${configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- MockFolder that was used for SupportAbstractItem test does not have UI, hence need full Folder implementation.-->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>cloudbees-folder</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>
