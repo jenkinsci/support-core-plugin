@@ -41,6 +41,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.WARNING;
 
 /**
  * PeriodicWork to check when there is a high load in the instance.
@@ -59,7 +62,8 @@ public class HighLoadChecker extends PeriodicWork {
             Integer.getInteger(HighLoadChecker.class.getName()+ ".RECURRENCE_PERIOD_SEC", 900);
 
     /**
-     * This is the CPU usage threshold
+     * This is the CPU usage threshold. Determinate de percentage of the total CPU used across all the
+     * cores available
      */
     public static final Double CPU_USAGE_THRESHOLD =
             new Double(System.getProperty(HighLoadChecker.class.getName() + ".CPU_USAGE_THRESHOLD", "0.95"));
@@ -73,7 +77,7 @@ public class HighLoadChecker extends PeriodicWork {
     /**
      * Thread dumps generated on high CPU load are stored in $JENKINS_HOME/high-load/cpu
      **/
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstanceOrNull().getRootDir(),"high-load/cpu"), HIGH_CPU_THEAD_DUMPS_TO_RETAIN);
+    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THEAD_DUMPS_TO_RETAIN);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
@@ -87,17 +91,26 @@ public class HighLoadChecker extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
-        VMMetricProviderImpl vmMetricProvider = ExtensionList.lookup(MetricProvider.class).get(VMMetricProviderImpl.class);
-        MetricSet vmProviderMetricSet = vmMetricProvider.getMetricSet();
-        Gauge cpu = (Gauge) vmProviderMetricSet.getMetrics().get("vm.cpu.load");
-        Double cpuLoad = new Double(cpu.getValue().toString());
+        Double cpuLoad = null;
+        try {
+            VMMetricProviderImpl vmMetricProvider = ExtensionList.lookup(MetricProvider.class).get(VMMetricProviderImpl.class);
+            MetricSet vmProviderMetricSet = vmMetricProvider.getMetricSet();
+            Gauge cpu = (Gauge) vmProviderMetricSet.getMetrics().get("vm.cpu.load");
+            cpuLoad = new Double(cpu.getValue().toString());
+        } catch (NullPointerException nullPointerException) {
+            LOGGER.log(WARNING, "Metrics plugin does not seem to be available", nullPointerException);
+            return;
+        }
 
-        if (Double.compare(CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
+        if (Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
             File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
-            logs.add(threadDumpFile);
             FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile);
-            ThreadDumps.threadDump(fileOutputStream);
             fileOutputStream.close();
+            ThreadDumps.threadDump(fileOutputStream);
+            logs.add(threadDumpFile);
         }
     }
+
+    private static final Logger LOGGER = Logger
+            .getLogger(HighLoadChecker.class.getName());
 }
