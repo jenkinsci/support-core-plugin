@@ -217,6 +217,13 @@ public class SupportAction implements RootAction, StaplerProxy {
             if (!s.isSelected()) {
                 logger.log(Level.FINER, "Excluding ''{0}'' from list of components to include", s.getName());
                 remove.add(s.getName());
+                // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the new names for 
+                // those components to the list of unselected components for backward compatibility
+                if("Master".equals(s.getName()) || "Agents".equals(s.getName())) {
+                    logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids(s.getName()).toString());
+                    remove.add(s.getName()+ "JVMProcessSystemMetricsContents");
+                    remove.add(s.getName()+ "SystemConfiguration");
+                }
             }
         }
         logger.fine("Selecting components...");
@@ -241,7 +248,23 @@ public class SupportAction implements RootAction, StaplerProxy {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
             return;
         }
-        List<String> componentNames = Arrays.asList(components.split(","));
+        Set<String> componentNames = Arrays
+            .stream(components.split(","))
+            .collect(Collectors.toSet());
+        
+        // JENKINS-63722: If "Master" or "Agents" are used, show a warning and add the new names for those components
+        // to the selection for backward compatibility
+        if(componentNames.contains("Master")) {
+            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids("Master").toString());
+            componentNames.add("MasterJVMProcessSystemMetricsContents");
+            componentNames.add("MasterSystemConfiguration");
+        }
+        if(componentNames.contains("Agents")) {
+            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids("Agents").toString());
+            componentNames.add("AgentsJVMProcessSystemMetricsContents");
+            componentNames.add("AgentsSystemConfiguration");
+        }
+        
         logger.fine("Selecting components...");
         List<Component> selectedComponents = getComponents().stream().filter(c -> componentNames.contains(c.getId())).collect(Collectors.toList());
         if (selectedComponents.isEmpty()) {
