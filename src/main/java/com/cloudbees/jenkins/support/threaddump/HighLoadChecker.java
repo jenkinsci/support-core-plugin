@@ -98,16 +98,16 @@ public class HighLoadChecker extends PeriodicWork {
             Gauge cpu = (Gauge) vmProviderMetricSet.getMetrics().get("vm.cpu.load");
             cpuLoad = new Double(cpu.getValue().toString());
         } catch (NullPointerException nullPointerException) {
-            LOGGER.log(WARNING, "Metrics plugin does not seem to be available", nullPointerException);
+            LOGGER.log(WARNING, "Support Core plugin can't generate thread dumps. Metrics plugin does not seem to be available", nullPointerException);
             return;
         }
 
         if (Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
             File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
-            FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile);
-            fileOutputStream.close();
-            ThreadDumps.threadDump(fileOutputStream);
-            logs.add(threadDumpFile);
+            try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)){
+                ThreadDumps.threadDump(fileOutputStream);
+                logs.add(threadDumpFile);
+            }
         }
     }
 
