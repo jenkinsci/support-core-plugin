@@ -42,9 +42,13 @@ The following option apply:
 * **Enable**: Whether to enable the automatic generation of the support bundle or not
 (default to true)
 * **Period**: The recurrence period (in hours) to generate support bundle 
-(default to 1h) 
+(default to 1h). Values between 1 and 24 are accepted.
 * **Components**: The list of components to include in the automatic bundle 
 (default to the list of components selected by default)
+
+The system property `com.cloudbees.jenkins.support.SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS` can
+be used to enforce the value of the period. Values between 0 and 24 are accepted. A value of `0`
+enforce the disablement of the automated support bundle generation. 
 
 ## Docker File
 
