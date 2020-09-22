@@ -127,13 +127,13 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     }
 
     /**
-     * Return if the {@link SupportAutomatedBundleConfiguration#enabled} is enforced by the System Property
-     * {@link SupportPlugin#AUTO_BUNDLE_PERIOD_HOURS}. That is if the system property value is lower or equal to 0.
+     * Return if the {@link SupportAutomatedBundleConfiguration#enabled} is enforced to false by the System Property
+     * {@link SupportPlugin#AUTO_BUNDLE_PERIOD_HOURS}. That is if the system property value is 0.
      *
      * @return a list of {@link String}
      */
     public boolean isEnforcedDisabled() {
-        return SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS <= 0;
+        return SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS == 0;
     }
 
     @DataBoundSetter
