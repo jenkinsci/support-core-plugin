@@ -32,7 +32,7 @@ public class SupportAutomatedBundleConfigurationTest {
         assertThat("by default, period should be 1",
             SupportAutomatedBundleConfiguration.get().getPeriod(),
             is(1));
-        assertThat("by default, components that are selected by default should be added",
+        assertThat("by default, default components should be added",
             SupportAutomatedBundleConfiguration.get().getComponentIds(),
             containsInAnyOrder(SupportAutomatedBundleConfiguration.getDefaultComponentIds().toArray())
         );

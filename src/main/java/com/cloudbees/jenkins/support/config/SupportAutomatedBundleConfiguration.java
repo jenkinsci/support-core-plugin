@@ -89,7 +89,6 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
         return getApplicableComponents()
             .stream()
             .filter(Component::isEnabled)
-            .filter(Component::isSelectedByDefault)
             .map(Component::getId)
             .collect(Collectors.toList());
     }
@@ -168,9 +167,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
 
     @SuppressWarnings("unused") // used by Jelly
     public boolean isComponentSelected(Component component) {
-        return componentIds == null
-            ? component.isSelectedByDefault()
-            : componentIds.stream().anyMatch(c -> c.equals(component.getId()));
+        return componentIds == null || componentIds.stream().anyMatch(c -> c.equals(component.getId()));
     }
 
     /**

@@ -44,7 +44,7 @@ The following option apply:
 * **Period**: The recurrence period (in hours) to generate support bundle 
 (default to 1h). Values between 1 and 24 are accepted.
 * **Components**: The list of components to include in the automatic bundle 
-(default to the list of components selected by default)
+(default to all components)
 
 The system property `com.cloudbees.jenkins.support.SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS` can
 be used to enforce the value of the period. Values between 0 and 24 are accepted. A value of `0`
