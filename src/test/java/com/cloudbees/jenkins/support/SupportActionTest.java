@@ -15,16 +15,19 @@ import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.ExtensionList;
+import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
 import hudson.util.RingBufferLogHandler;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.LoggerRule;
@@ -42,12 +45,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
 import static org.hamcrest.Matchers.containsString;
@@ -56,6 +61,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -92,6 +98,80 @@ public class SupportActionTest {
     @Test
     public void generateAllBundles() throws IOException, SAXException {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
+    }
+
+    @Test
+    @Issue("JENKINS-63722")
+    public void generateAllBundlesBackwardCompatibility() throws Exception {
+        Assume.assumeTrue(!Functions.isWindows());
+        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+
+        List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
+            "proc/meminfo.txt",
+            "proc/self/status.txt",
+            "proc/self/cmdline",
+            "proc/self/environ",
+            "proc/self/limits.txt",
+            "proc/self/mountstats.txt");
+        List<String> systemConfigurationFiles = Arrays.asList(
+            "proc/swaps.txt",
+            "proc/cpuinfo.txt",
+            "proc/mounts.txt",
+            "proc/system-uptime.txt",
+            "proc/net/rpc/nfs.txt",
+            "proc/net/rpc/nfsd.txt",
+            "sysctl.txt",
+            "dmesg.txt",
+            "userid.txt",
+            "dmi.txt");
+        List<String> allFiles = Stream.of(jvmSystemProcessMetricsFiles, systemConfigurationFiles)
+            .flatMap(Collection::stream).collect(Collectors.toList());
+
+        // Master should retrieve all files (backward compatibility)
+        ZipFile zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "Master"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+
+        // MasterSystemConfiguration should retrieve only master system configuration files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "MasterSystemConfiguration"));
+        assertBundleContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+        assertBundleNotContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+
+        // MasterJVMProcessSystemMetricsContents should retrieve only master JVM process files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "MasterJVMProcessSystemMetricsContents"));
+        assertBundleContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+        assertBundleNotContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+
+        // MasterSystemConfiguration and MasterJVMProcessSystemMetricsContents should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "MasterSystemConfiguration", "MasterJVMProcessSystemMetricsContents"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+
+        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
+
+        // Agents should retrieve all agents files (backward compatibility)
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "Agents"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+
+        // AgentsSystemConfiguration should retrieve only agents system configuration files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "AgentsSystemConfiguration"));
+        assertBundleContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        assertBundleNotContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+
+        // AgentsJVMProcessSystemMetricsContents should retrieve only agents JVM process files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "AgentsJVMProcessSystemMetricsContents"));
+        assertBundleContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        assertBundleNotContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        
+        // AgentsSystemConfiguration and AgentsJVMProcessSystemMetricsContents should retrieve all agents files
+        zip = downloadBundle("/generateBundle?components="
+            + String.join(",", "AgentsSystemConfiguration", "AgentsJVMProcessSystemMetricsContents"));
+        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
     }
 
     /*
@@ -386,6 +466,30 @@ public class SupportActionTest {
         List<String> entries = new ArrayList<>();
         zip.stream().forEach(entry -> entries.add(entry.getName()));
         return entries;
+    }
+
+    /**
+     * Check that the list of files passed in exist in the bundle.
+     * 
+     * @param zip the bundle {@link ZipFile}
+     * @param fileNames the list of files names
+     */
+    private void assertBundleContains(ZipFile zip, Collection<String> fileNames) {
+        for (String file : fileNames) {
+            assertNotNull(file + " was not found in the bundle", zip.getEntry(file));
+        }
+    }
+
+    /**
+     * Check that the list of files passed in do not exist in the bundle.
+     *
+     * @param zip the bundle {@link ZipFile}
+     * @param fileNames the list of files names
+     */
+    private void assertBundleNotContains(ZipFile zip, Collection<String> fileNames) {
+        for (String file : fileNames) {
+            assertNull(file + " was found in the bundle", zip.getEntry(file));
+        }
     }
 }
 
