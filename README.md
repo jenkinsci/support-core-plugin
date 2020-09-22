@@ -33,7 +33,7 @@ under **Manage Jenkins > Support Core**.
 ### Automated Support Bundle Generation
 
 Configure the automated generation of the Support Bundle. By default, Support Core 
-configures a periodic task that generate a support bundle every hour. This can tremendously
+configures a periodic task that generates a support bundle every hour. This can tremendously
 help troubleshoot issues in Jenkins, in cases where data could not be collected at the time
 an issue happened or started to happen.
 

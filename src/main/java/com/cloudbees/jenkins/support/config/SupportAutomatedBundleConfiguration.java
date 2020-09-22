@@ -153,7 +153,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     /**
      * Get the list of {@link Component} currnetly configured for automated bundle generation.
      *
-     * @return
+     * @return The list of {@link Component} currently configured
      */
     public List<Component> getComponents() {
         return componentIds == null

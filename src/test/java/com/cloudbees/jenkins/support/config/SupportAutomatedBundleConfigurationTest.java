@@ -74,7 +74,7 @@ public class SupportAutomatedBundleConfigurationTest {
     }
 
     @Test
-    public void testSetPeriod() throws RestartNotSupportedException {
+    public void testSetPeriod() {
         // Test that setting the period to a value lower than -1 set it to minimum 1
         SupportAutomatedBundleConfiguration.get().setPeriod(-1);
         assertThat(SupportAutomatedBundleConfiguration.get().getPeriod(), is(1));
