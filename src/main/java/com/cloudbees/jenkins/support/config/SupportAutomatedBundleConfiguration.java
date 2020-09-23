@@ -118,11 +118,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
 
     @DataBoundSetter
     public void setEnabled(boolean enabled) {
-        if (isEnforcedDisabled()) {
-            this.enabled = SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS >= 1;
-        } else {
-            this.enabled = enabled;
-        }
+        this.enabled = !isEnforcedDisabled() && enabled;
     }
 
     /**
