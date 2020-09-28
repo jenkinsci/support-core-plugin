@@ -45,6 +45,8 @@ public class ThreadDumpHighCPU extends UnfilteredFileListCapComponent {
 
     @Override
     public void addContents(@NonNull Container container) {
-        super.addContents(container, checker.logs);
+        if (checker.logs.getSize() > 0) {
+            super.addContents(container, checker.logs);
+        }
     }
 }

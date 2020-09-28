@@ -56,6 +56,10 @@ public class FileListCap {
         return folder;
     }
 
+    public int getSize() {
+        return size;
+    }
+
     public synchronized void add(File f) {
         // If the number of files included are the same of the allowed size, remove the oldest ones until the number of
         // files is under the size allowed.
