@@ -119,6 +119,8 @@ public class HighLoadCpuChecker extends PeriodicWork {
                         logs.add(threadDumpFile);
                     }
             }
+        } else {
+            countConsequtivePositives = 0;
         }
     }
 
