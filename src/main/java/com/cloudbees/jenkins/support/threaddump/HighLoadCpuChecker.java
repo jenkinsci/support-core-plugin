@@ -52,37 +52,45 @@ import static java.util.logging.Level.WARNING;
  * to generate thread dumps in high heap memory consumption.
  */
 @Extension
-public class HighLoadChecker extends PeriodicWork {
+public class HighLoadCpuChecker extends PeriodicWork {
 
     /**
-     * Recurrence period to check high load consumption and take the corresponded actions
-     * like generating a thread dump
+     * Recurrence period to check high cpu load consumption. Thread dumps after there are CONSECUTIVE_HIGH_CPU
+     * in the RECURRENCE_PERIOD_SEC
      */
     public static final int RECURRENCE_PERIOD_SEC =
-            Integer.getInteger(HighLoadChecker.class.getName()+ ".RECURRENCE_PERIOD_SEC", 900);
+            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".RECURRENCE_PERIOD_SEC", 600);
+
+    /**
+     * Consecutive high CPUs to take a thread dump
+     */
+    public static final int HIGH_CPU_CONSECUTIVE_TIMES =
+            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_CONSECUTIVE_TIMES", 3);;
 
     /**
      * This is the CPU usage threshold. Determinate de percentage of the total CPU used across all the
      * cores available
      */
     public static final Double CPU_USAGE_THRESHOLD =
-            new Double(System.getProperty(HighLoadChecker.class.getName() + ".CPU_USAGE_THRESHOLD", "0.95"));
+            new Double(System.getProperty(HighLoadCpuChecker.class.getName() + ".CPU_USAGE_THRESHOLD", "0.80"));
 
     /**
      * Limit the number of thread dumps to retain on high cpu
      */
     public static final int HIGH_CPU_THEAD_DUMPS_TO_RETAIN =
-            Integer.getInteger(HighLoadChecker.class.getName()+ ".HIGH_CPU_THEAD_DUMPS_TO_RETAIN", 10);
+            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_THEAD_DUMPS_TO_RETAIN", 5);
 
     /**
      * Thread dumps generated on high CPU load are stored in $JENKINS_HOME/high-load/cpu
      **/
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THEAD_DUMPS_TO_RETAIN);
+    protected final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THEAD_DUMPS_TO_RETAIN);
 
-    final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
+    private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
+
+    private int countConsequtivePositives = 0;
 
     @Override
     public long getRecurrencePeriod() {
@@ -91,7 +99,7 @@ public class HighLoadChecker extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
-        Double cpuLoad = null;
+        Double cpuLoad;
         try {
             VMMetricProviderImpl vmMetricProvider = ExtensionList.lookup(MetricProvider.class).get(VMMetricProviderImpl.class);
             MetricSet vmProviderMetricSet = vmMetricProvider.getMetricSet();
@@ -101,16 +109,18 @@ public class HighLoadChecker extends PeriodicWork {
             LOGGER.log(WARNING, "Support Core plugin can't generate thread dumps. Metrics plugin does not seem to be available", nullPointerException);
             return;
         }
-
         if (Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
-            File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)){
-                ThreadDumps.threadDump(fileOutputStream);
-                logs.add(threadDumpFile);
+            countConsequtivePositives++;
+            if (countConsequtivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
+                    countConsequtivePositives = 0;
+                    File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
+                    try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
+                        ThreadDumps.threadDump(fileOutputStream);
+                        logs.add(threadDumpFile);
+                    }
             }
         }
     }
 
-    private static final Logger LOGGER = Logger
-            .getLogger(HighLoadChecker.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HighLoadCpuChecker.class.getName());
 }

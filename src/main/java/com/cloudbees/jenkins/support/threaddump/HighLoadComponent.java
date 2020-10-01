@@ -34,10 +34,10 @@ import hudson.Extension;
  * ThreadDumpHighCPU component
  */
 @Extension
-public class ThreadDumpHighCPU extends UnfilteredFileListCapComponent {
+public class HighLoadComponent extends UnfilteredFileListCapComponent {
 
     @Inject
-    HighLoadChecker checker;
+    HighLoadCpuChecker checker;
 
     public String getDisplayName() {
         return Messages.ThreadDumpHighCPU_DisplayName();
