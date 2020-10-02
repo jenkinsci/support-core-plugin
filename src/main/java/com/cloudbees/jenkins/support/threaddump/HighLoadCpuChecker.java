@@ -109,7 +109,7 @@ public class HighLoadCpuChecker extends PeriodicWork {
             LOGGER.log(WARNING, "Support Core plugin can't generate thread dumps. Metrics plugin does not seem to be available", nullPointerException);
             return;
         }
-        if (Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
+        if (cpuLoad != null && Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
             countConsequtivePositives++;
             if (countConsequtivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
                     countConsequtivePositives = 0;
