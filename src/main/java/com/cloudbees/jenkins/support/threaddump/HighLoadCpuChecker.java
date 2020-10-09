@@ -53,7 +53,6 @@ import static java.util.logging.Level.WARNING;
  */
 @Extension
 public class HighLoadCpuChecker extends PeriodicWork {
-
     /**
      * Recurrence period to check high cpu load consumption. Thread dumps after there are CONSECUTIVE_HIGH_CPU
      * in the RECURRENCE_PERIOD_SEC
@@ -65,7 +64,7 @@ public class HighLoadCpuChecker extends PeriodicWork {
      * Consecutive high CPUs to take a thread dump
      */
     public static final int HIGH_CPU_CONSECUTIVE_TIMES =
-            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_CONSECUTIVE_TIMES", 3);;
+            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_CONSECUTIVE_TIMES", 3);
 
     /**
      * This is the CPU usage threshold. Determinate de percentage of the total CPU used across all the
@@ -77,20 +76,20 @@ public class HighLoadCpuChecker extends PeriodicWork {
     /**
      * Limit the number of thread dumps to retain on high cpu
      */
-    public static final int HIGH_CPU_THEAD_DUMPS_TO_RETAIN =
-            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_THEAD_DUMPS_TO_RETAIN", 5);
+    public static final int HIGH_CPU_THREAD_DUMPS_TO_RETAIN =
+            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_THREAD_DUMPS_TO_RETAIN", 5);
 
     /**
      * Thread dumps generated on high CPU load are stored in $JENKINS_HOME/high-load/cpu
      **/
-    protected final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THEAD_DUMPS_TO_RETAIN);
+    protected final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THREAD_DUMPS_TO_RETAIN);
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    private int countConsequtivePositives = 0;
+    private int countConsecutivePositives = 0;
 
     @Override
     public long getRecurrencePeriod() {
@@ -106,13 +105,13 @@ public class HighLoadCpuChecker extends PeriodicWork {
             Gauge cpu = (Gauge) vmProviderMetricSet.getMetrics().get("vm.cpu.load");
             cpuLoad = new Double(cpu.getValue().toString());
         } catch (NullPointerException nullPointerException) {
-            LOGGER.log(WARNING, "Support Core plugin can't generate thread dumps. Metrics plugin does not seem to be available", nullPointerException);
+            LOGGER.log(WARNING, "Support Core plugin can't generate automatically thread dumps on high cpu load. Metrics plugin does not seem to be available", nullPointerException);
             return;
         }
         if (cpuLoad != null && Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
-            countConsequtivePositives++;
-            if (countConsequtivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
-                    countConsequtivePositives = 0;
+            countConsecutivePositives++;
+            if (countConsecutivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
+                countConsecutivePositives = 0;
                     File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
                     try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
                         ThreadDumps.threadDump(fileOutputStream);
@@ -120,7 +119,7 @@ public class HighLoadCpuChecker extends PeriodicWork {
                     }
             }
         } else {
-            countConsequtivePositives = 0;
+            countConsecutivePositives = 0;
         }
     }
 

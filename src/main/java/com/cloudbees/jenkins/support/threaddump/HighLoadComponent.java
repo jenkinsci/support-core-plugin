@@ -26,18 +26,15 @@ package com.cloudbees.jenkins.support.threaddump;
 
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
-import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 
 /**
- * ThreadDumpHighCPU component
+ * HighLoadComponent component
  */
 @Extension
 public class HighLoadComponent extends UnfilteredFileListCapComponent {
-
-    @Inject
-    HighLoadCpuChecker checker;
 
     public String getDisplayName() {
         return Messages.ThreadDumpHighCPU_DisplayName();
@@ -45,7 +42,8 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
 
     @Override
     public void addContents(@NonNull Container container) {
-        if (checker.logs.getSize() > 0) {
+        HighLoadCpuChecker checker = ExtensionList.lookup(HighLoadCpuChecker.class).get(HighLoadCpuChecker.class);
+        if (checker!= null && checker.logs.getSize() > 0) {
             super.addContents(container, checker.logs);
         }
     }
