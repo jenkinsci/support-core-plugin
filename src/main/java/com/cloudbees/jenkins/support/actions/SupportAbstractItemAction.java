@@ -22,7 +22,7 @@ public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem>
 
     @Override
     public String getDisplayName() {
-        return Messages.SupportItemAction_DisplayName();
+        return Messages.SupportItemAction_DisplayName(getObject().getPronoun());
     }
     
     @Extension
