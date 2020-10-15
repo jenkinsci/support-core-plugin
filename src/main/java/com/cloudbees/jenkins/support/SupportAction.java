@@ -35,6 +35,8 @@ import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
+import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -52,6 +54,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +65,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Main root action for generating support.
@@ -157,17 +163,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        Set<String> bundlesToDelete = new HashSet<>();
-        List<String> existingBundles = getBundles();
-        for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
-            if (s.isSelected()) {
-                if (existingBundles.contains(s.getName())) {
-                    bundlesToDelete.add(s.getName());
-                } else {
-                    logger.log(Level.FINE, "The bundle to delete {0} does not exist, so it will not be deleted", s.getName());
-                }
-            }
-        }
+        Set<String> bundlesToDelete = getSelectedBundles(req, json);
         File rootDirectory = SupportPlugin.getRootDirectory();
         for(String bundleToDelete : bundlesToDelete) {
             File fileToDelete = new File(rootDirectory, bundleToDelete);
@@ -183,6 +179,81 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
         }
         rsp.sendRedirect("");
+    }
+
+    @RequirePOST
+    public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        JSONObject json = req.getSubmittedForm();
+        if (!json.has("bundles")) {
+            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        Set<String> bundlesToDownload = getSelectedBundles(req, json);
+        File fileToDownload = null;
+        if (bundlesToDownload.size() > 1) {
+            // more than one bundles were selected, create a zip file
+            fileToDownload = createZipFile(bundlesToDownload);
+        } else {
+            fileToDownload = new File(SupportPlugin.getRootDirectory(), bundlesToDownload.iterator().next());
+        }
+        logger.fine("Trying to download file "+ fileToDownload.getAbsolutePath());
+        try {
+            rsp.setContentType("application/zip");
+            rsp.addHeader("Content-Disposition", "inline; filename=" + fileToDownload.getName() + ";");
+            FileUtils.copyFile(fileToDownload, rsp.getOutputStream());
+        } catch (RuntimeException e) {
+            logger.log(Level.SEVERE, "Unable to download file " + fileToDownload.getAbsolutePath(), e);
+        } finally {
+            if (bundlesToDownload.size() > 1) {
+                fileToDownload.delete();
+            }
+        }
+    }
+
+
+    private Set<String> getSelectedBundles(StaplerRequest req, JSONObject json) throws ServletException, IOException {
+        Set<String> bundles = new HashSet<>();
+        List<String> existingBundles = getBundles();
+        for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
+            if (s.isSelected()) {
+                if (existingBundles.contains(s.getName())) {
+                  bundles.add(s.getName());
+                } else {
+                    logger.log(Level.FINE, "The bundle selected {0} does not exist, so it will not be processed", s.getName());
+                }
+            }
+        }
+        return bundles;
+    }
+
+    private File createZipFile(Set<String> bundles) {
+        File rootDirectory = SupportPlugin.getRootDirectory();
+        File zipFile = null;
+
+        try {
+            zipFile = File.createTempFile(
+                String.format("multiBundle(%s)-", bundles.size()), ".zip");
+
+            byte[] buffer = new byte[1024]; 
+            FileOutputStream fos = new FileOutputStream(zipFile);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+            for (String bundle: bundles) {
+                File file = new File(rootDirectory, bundle);
+                FileInputStream fis = new FileInputStream(file);
+                zos.putNextEntry(new ZipEntry(file.getName()));
+                int length;
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            }
+            zos.close();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error creating zip file: " + zipFile.getAbsolutePath(), e);
+        }
+        return zipFile;
     }
 
     /**
