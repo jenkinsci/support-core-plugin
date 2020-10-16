@@ -205,8 +205,10 @@ public class SupportAction implements RootAction, StaplerProxy {
         } catch (RuntimeException e) {
             logger.log(Level.SEVERE, "Unable to download file " + fileToDownload.getAbsolutePath(), e);
         } finally {
-            if (bundlesToDownload.size() > 1) {
-                fileToDownload.delete();
+            if (bundlesToDownload.size() > 1 && fileToDownload.delete()) {
+                logger.log(Level.FINE, "Temporary multiBundle file deleted: " + fileToDownload.getAbsolutePath());
+            } else {
+                logger.log(Level.SEVERE, "Unable to delete temporary multiBundle file: " + fileToDownload.getAbsolutePath());
             }
         }
     }
@@ -218,7 +220,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
             if (s.isSelected()) {
                 if (existingBundles.contains(s.getName())) {
-                  bundles.add(s.getName());
+                    bundles.add(s.getName());
                 } else {
                     logger.log(Level.FINE, "The bundle selected {0} does not exist, so it will not be processed", s.getName());
                 }
@@ -227,29 +229,24 @@ public class SupportAction implements RootAction, StaplerProxy {
         return bundles;
     }
 
-    private File createZipFile(Set<String> bundles) {
+    private File createZipFile(Set<String> bundles) throws IOException {
         File rootDirectory = SupportPlugin.getRootDirectory();
-        File zipFile = null;
+        File zipFile = File.createTempFile(
+            String.format("multiBundle(%s)-", bundles.size()), ".zip");;
 
-        try {
-            zipFile = File.createTempFile(
-                String.format("multiBundle(%s)-", bundles.size()), ".zip");
-
+        try(FileOutputStream fos = new FileOutputStream(zipFile);
+            ZipOutputStream zos = new ZipOutputStream(fos)) {
             byte[] buffer = new byte[1024]; 
-            FileOutputStream fos = new FileOutputStream(zipFile);
-            ZipOutputStream zos = new ZipOutputStream(fos);
             for (String bundle: bundles) {
                 File file = new File(rootDirectory, bundle);
-                FileInputStream fis = new FileInputStream(file);
-                zos.putNextEntry(new ZipEntry(file.getName()));
-                int length;
-                while ((length = fis.read(buffer)) > 0) {
-                    zos.write(buffer, 0, length);
+                try(FileInputStream fis = new FileInputStream(file)) {
+                    zos.putNextEntry(new ZipEntry(file.getName()));
+                    int length;
+                    while ((length = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, length);
+                    }
                 }
-                zos.closeEntry();
-                fis.close();
             }
-            zos.close();
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error creating zip file: " + zipFile.getAbsolutePath(), e);
         }
