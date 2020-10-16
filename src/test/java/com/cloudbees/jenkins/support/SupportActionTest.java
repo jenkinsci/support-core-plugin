@@ -102,7 +102,7 @@ public class SupportActionTest {
         String bundle = "../config.xml";
         logger.record(SupportAction.class, Level.FINE).capture(1);
         deleteBundle(bundle, "admin");
-        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("The bundle to delete %s does not exist", bundle))));
+        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
     }
 
     /*
