@@ -127,8 +127,39 @@ public class SupportActionTest {
         assertThat(response.getStatusCode(), equalTo(403));
     }
 
+    @Test
+    public void downloadOneBundleWillSucced() throws IOException {
+        // Create a zip file as if it is a support bundle
+        Path bundle = createFakeSupportBundle();
+        assertTrue(Files.exists(bundle));
+        logger.record(SupportAction.class, Level.FINE).capture(1);
+        downloadBundle(bundle.getFileName().toString(), "admin", null);
+        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("Bundle %s successfully downloaded", bundle))));
+    }
+
+    @Test
+    public void downloadMultiBundleWillSucced() throws IOException {
+        Path bundle = createFakeSupportBundle();
+        Path bundle2 = createFakeSupportBundle();
+        logger.record(SupportAction.class, Level.FINE).capture(2);
+        downloadBundle(bundle.getFileName().toString(), "admin", bundle2.getFileName().toString());
+        assertTrue(logger.getMessages().stream().anyMatch(m -> m.endsWith(String.format("successfully downloaded"))));
+        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("Temporary multiBundle file deleted"))));
+    }
+
     private Path createFakeSupportBundle() throws IOException {
         return Files.createTempFile(SupportPlugin.getRootDirectory().toPath(), "fake-bundle-", ".zip");
+    }
+
+    /**
+     * Download the bundle by requesting the <i>downloadBundle</i> page being logged in as user
+     * @param bundle the bundle file to download
+     * @param user the user logged in
+     * @return the page
+     * @throws IOException when any exception creating the url to call
+     */
+    private WebResponse downloadBundle(String bundle, String user, String extraBundle) throws IOException {
+      return doBundle("downloadBundles", bundle, user, extraBundle);
     }
 
     /**
@@ -139,6 +170,10 @@ public class SupportActionTest {
      * @throws IOException when any exception creating the url to call
      */
     private WebResponse deleteBundle(String bundle, String user) throws IOException {
+        return doBundle("deleteBundles", bundle, user, null);
+    }
+
+    private WebResponse doBundle(String action, String bundle, String user, String extraBundle) throws IOException {
         j.jenkins.setCrumbIssuer(null);
 
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
@@ -151,7 +186,13 @@ public class SupportActionTest {
                 .withBasicCredentials(user)
                 .withThrowExceptionOnFailingStatusCode(false);
 
-        WebRequest request = new WebRequest(new URL(j.getURL() + root.getUrlName() + "/deleteBundles?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}"), HttpMethod.POST);
+        String json = "?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}";
+
+        if (extraBundle != null) {
+            json = "?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22},{%22selected%22:+true,%22name%22:+%22" + extraBundle + "%22}]}"; 
+        }
+
+        WebRequest request = new WebRequest(new URL(j.getURL() + root.getUrlName() + "/" +action + json), HttpMethod.POST);
         return wc.getPage(request).getWebResponse();
     }
 
