@@ -202,17 +202,19 @@ public class SupportAction implements RootAction, StaplerProxy {
             rsp.setContentType("application/zip");
             rsp.addHeader("Content-Disposition", "inline; filename=" + fileToDownload.getName() + ";");
             FileUtils.copyFile(fileToDownload, rsp.getOutputStream());
+            logger.info("Bundle " + fileToDownload.getAbsolutePath() + " successfully downloaded");
         } catch (RuntimeException e) {
             logger.log(Level.SEVERE, "Unable to download file " + fileToDownload.getAbsolutePath(), e);
         } finally {
-            if (bundlesToDownload.size() > 1 && fileToDownload.delete()) {
-                logger.log(Level.FINE, "Temporary multiBundle file deleted: " + fileToDownload.getAbsolutePath());
-            } else {
-                logger.log(Level.SEVERE, "Unable to delete temporary multiBundle file: " + fileToDownload.getAbsolutePath());
+            if (bundlesToDownload.size() > 1) {
+                if (fileToDownload.delete()) {
+                    logger.log(Level.FINE, "Temporary multiBundle file deleted: " + fileToDownload.getAbsolutePath());
+                } else {
+                    logger.log(Level.SEVERE, "Unable to delete temporary multiBundle file: " + fileToDownload.getAbsolutePath());
+                }
             }
         }
     }
-
 
     private Set<String> getSelectedBundles(StaplerRequest req, JSONObject json) throws ServletException, IOException {
         Set<String> bundles = new HashSet<>();
@@ -232,7 +234,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     private File createZipFile(Set<String> bundles) throws IOException {
         File rootDirectory = SupportPlugin.getRootDirectory();
         File zipFile = File.createTempFile(
-            String.format("multiBundle(%s)-", bundles.size()), ".zip");;
+            String.format("multiBundle(%s)-", bundles.size()), ".zip");
 
         try(FileOutputStream fos = new FileOutputStream(zipFile);
             ZipOutputStream zos = new ZipOutputStream(fos)) {
@@ -250,6 +252,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error creating zip file: " + zipFile.getAbsolutePath(), e);
         }
+        zipFile.deleteOnExit();
         return zipFile;
     }
 
