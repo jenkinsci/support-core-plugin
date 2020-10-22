@@ -26,11 +26,11 @@ package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.google.common.annotations.VisibleForTesting;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 
+import javax.annotation.Nonnull;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +57,7 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
 
     private static final Logger LOGGER = Logger.getLogger(BundleNameInstanceTypeProvider.class.getName());
 
-    @NonNull
+    @Nonnull
     static BundleNameInstanceTypeProvider getInstance() {
         final ExtensionList<BundleNameInstanceTypeProvider> all = ExtensionList.lookup(BundleNameInstanceTypeProvider.class);
         final int extensionCount = all.size();
@@ -93,7 +93,7 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
      *
      * @return the instance type specification to be used for generated support bundles.
      */
-    @NonNull
+    @Nonnull
     public abstract String getInstanceType();
 
     // We want this to be always picked up last in case others are found Double.MIN_VALUE does NOT work
@@ -101,6 +101,7 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
     public static final class DEFAULT_STRATEGY extends BundleNameInstanceTypeProvider {
 
         @Override
+        @Nonnull
         public String getInstanceType() {
             return System.getProperty(BundleNameInstanceTypeProvider.SUPPORT_BUNDLE_NAMING_INSTANCE_SPEC_PROPERTY, "");
         }

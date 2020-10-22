@@ -24,7 +24,12 @@ public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem>
     public String getDisplayName() {
         return Messages.SupportItemAction_DisplayName(getObject().getPronoun());
     }
-    
+
+    @Override
+    protected String getBundleNameQualifier() {
+        return "item";
+    }
+
     @Extension
     public static class Factory extends TransientActionFactory<AbstractItem> {
 

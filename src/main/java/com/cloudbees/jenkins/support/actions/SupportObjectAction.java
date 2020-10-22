@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.actions;
 
+import com.cloudbees.jenkins.support.BundleFileName;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.ComponentVisitor;
@@ -66,6 +67,8 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
     public String getIconFileName() {
         return "/plugin/support-core/images/24x24/support.png";
     }
+
+    protected abstract String getBundleNameQualifier();
 
     @DataBoundSetter
     public void setComponents(List<? extends ObjectComponent<T>> components) {
@@ -134,7 +137,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
         LOGGER.fine("Parsing request...");
         List<ObjectComponent<T>> components = new ArrayList<>(parseRequest(req));
 
-        rsp.addHeader("Content-Disposition", "inline; filename=" + SupportPlugin.getBundleFileName() + ";");
+        rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate(getBundleNameQualifier()) + ";");
         
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());

@@ -82,7 +82,7 @@ public class SupportCommand extends CLICommand {
             try (ACLContext old = ACL.as(ACL.SYSTEM)) {
                 OutputStream os;
                 if (channel != null) { // Remoting mode
-                    os = channel.call(new SaveBundle(SupportPlugin.getBundleFileName()));
+                    os = channel.call(new SaveBundle(BundleFileName.generate()));
                 } else { // redirect output to a ZIP file yourself
                     os = new CloseProofOutputStream(stdout);
                 }

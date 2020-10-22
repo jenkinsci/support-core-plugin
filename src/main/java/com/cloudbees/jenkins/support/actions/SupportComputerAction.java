@@ -26,6 +26,11 @@ public class SupportComputerAction extends SupportObjectAction<Computer> {
         return Messages.SupportComputerAction_DisplayName();
     }
 
+    @Override
+    protected String getBundleNameQualifier() {
+        return "agent";
+    }
+
     @Extension
     public static class Factory extends TransientActionFactory<Computer> {
 

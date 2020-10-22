@@ -25,6 +25,11 @@ public class SupportRunAction extends SupportObjectAction<Run> {
         return Messages.SupportRunAction_DisplayName(getObject().getParent().getTaskNoun());
     }
 
+    @Override
+    protected String getBundleNameQualifier() {
+        return "build";
+    }
+
     @Extension
     public static class Factory extends TransientActionFactory<Run> {
 

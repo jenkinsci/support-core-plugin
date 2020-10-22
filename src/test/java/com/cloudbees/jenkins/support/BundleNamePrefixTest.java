@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BundleNamePrefixTest {
 
@@ -20,24 +20,24 @@ public class BundleNamePrefixTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void checkOriginalBehaviour() throws Exception {
-        assertThat(SupportPlugin.getBundleFileName(), startsWith("support_" + CURRENT_YEAR));
+    public void checkOriginalBehaviour() {
+        assertThat(BundleFileName.generate(), startsWith("support_" + CURRENT_YEAR));
     }
 
     @Test
-    public void checkWithOneProvider() throws Exception {
-        assertThat(SupportPlugin.getBundleFileName(), startsWith("support_pouet_" + CURRENT_YEAR));
+    public void checkWithOneProvider() {
+        assertThat(BundleFileName.generate(), startsWith("support_pouet_" + CURRENT_YEAR));
     }
 
     @Test
-    public void tooManyProviders() throws Exception {
-        assertThat(SupportPlugin.getBundleFileName(), startsWith("support_Zis_" + CURRENT_YEAR));
+    public void tooManyProviders() {
+        assertThat(BundleFileName.generate(), startsWith("support_Zis_" + CURRENT_YEAR));
     }
 
     @Test
-    public void withSysProp() throws Exception {
+    public void withSysProp() {
         System.setProperty(BundleNameInstanceTypeProvider.SUPPORT_BUNDLE_NAMING_INSTANCE_SPEC_PROPERTY, "paf");
-        assertThat(SupportPlugin.getBundleFileName(), startsWith("support_paf_" + CURRENT_YEAR));
+        assertThat(BundleFileName.generate(), startsWith("support_paf_" + CURRENT_YEAR));
         System.getProperties().remove(BundleNameInstanceTypeProvider.SUPPORT_BUNDLE_NAMING_INSTANCE_SPEC_PROPERTY);
     }
 
