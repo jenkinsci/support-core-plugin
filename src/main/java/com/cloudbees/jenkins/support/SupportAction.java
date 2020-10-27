@@ -235,7 +235,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         File rootDirectory = SupportPlugin.getRootDirectory();
         File zipFile = File.createTempFile(
             String.format("multiBundle(%s)-", bundles.size()), ".zip");
-
+        zipFile.deleteOnExit();
         try(FileOutputStream fos = new FileOutputStream(zipFile);
             ZipOutputStream zos = new ZipOutputStream(fos)) {
             byte[] buffer = new byte[1024]; 
@@ -252,7 +252,6 @@ public class SupportAction implements RootAction, StaplerProxy {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error creating zip file: " + zipFile.getAbsolutePath(), e);
         }
-        zipFile.deleteOnExit();
         return zipFile;
     }
 
