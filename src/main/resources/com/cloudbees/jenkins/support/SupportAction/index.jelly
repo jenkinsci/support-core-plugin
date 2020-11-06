@@ -77,7 +77,7 @@
       </f:form>
       <f:section title="${%Existing support bundles}">
 
-      <f:form name="bundle-contents" method="POST" action="deleteBundles">
+      <f:form name="bundle-contents" method="POST">
         <j:forEach var="bundle" items="${it.bundles}">
           <f:entry field="bundle">
           <div name="bundles">
@@ -88,9 +88,14 @@
           </f:entry>
         </j:forEach>
         <f:entry>
+          <span class="yui-button yui-submit-button submit-button primary">
+            <span class="first-child">
+              <button type="submit" formaction="downloadBundles">${%Download Bundle}</button>
+            </span>
+          </span>
           <span class="yui-button yui-submit-button submit-button danger">
             <span class="first-child">
-              <button type="submit">${%Delete Bundle}</button>
+              <button type="submit" formaction="deleteBundles">${%Delete Bundle}</button>
             </span>
           </span>
         </f:entry>
