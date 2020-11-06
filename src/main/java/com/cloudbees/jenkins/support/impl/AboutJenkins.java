@@ -36,6 +36,7 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.model.identity.IdentityRootAction;
 import jenkins.security.MasterToSlaveCallable;
+import jenkins.slaves.RemotingVersionInfo;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
 
@@ -412,6 +413,11 @@ public class AboutJenkins extends Component {
             } catch (NullPointerException e) {
                 // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
+            out.println("Remoting details");
+            out.println("---------------");
+            out.println();
+            out.println("  * Embedded Version: `" + Markdown.escapeBacktick(RemotingVersionInfo.getEmbeddedVersion().toString()) + "`");
+            out.println("  * Minimum Supported Version: `" + Markdown.escapeBacktick(RemotingVersionInfo.getMinimumSupportedVersion().toString()) + "`");
             out.print(new GetJavaInfo("  *", "      -").getInfo(filter));
             out.println();
             out.println("Important configuration");

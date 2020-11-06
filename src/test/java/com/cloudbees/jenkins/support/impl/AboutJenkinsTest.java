@@ -7,13 +7,13 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
 import jenkins.model.identity.IdentityRootAction;
+import jenkins.slaves.RemotingVersionInfo;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -33,5 +33,7 @@ public class AboutJenkinsTest {
         IdentityRootAction idRootaction = j.getInstance().getExtensionList(IdentityRootAction.class).get(0);
         assertThat(aboutMdToString, containsString(idRootaction.getPublicKey()));
         assertThat(aboutMdToString, containsString(idRootaction.getFingerprint()));
+        assertThat(aboutMdToString, containsString("  * Embedded Version: `" + RemotingVersionInfo.getEmbeddedVersion().toString()));
+        assertThat(aboutMdToString, containsString("  * Minimum Supported Version: `" + RemotingVersionInfo.getMinimumSupportedVersion().toString()));
     }
 }
