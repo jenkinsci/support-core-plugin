@@ -25,8 +25,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -37,6 +39,16 @@ public class SupportPluginTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
+    
+    @Test
+    @Issue("JENKINS-63722")
+    public void testComponentIdsAreUnique() {
+        // If component IDs have duplicate, the Set size should be different because it only add an item if it is unique
+        assertEquals("Components ids should be unique", 
+            SupportPlugin.getComponents().stream().map(Component::getId).collect(Collectors.toSet()).size(),
+            SupportPlugin.getComponents().stream().map(Component::getId).count()
+            );
+    }
 
     @Test
     @Issue("JENKINS-58393")

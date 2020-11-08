@@ -91,6 +91,12 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
         }
 
+        @NonNull
+        @Override
+        public String getId() {
+            return "MasterSystemConfiguration";
+        }
+
         @Extension
         @Symbol("masterSystemConfigurationComponent")
         public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
@@ -144,6 +150,12 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         @Override
         public DescriptorImpl getDescriptor() {
             return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "AgentsSystemConfiguration";
         }
 
         @Extension

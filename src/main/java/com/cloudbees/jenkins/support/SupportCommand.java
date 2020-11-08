@@ -25,6 +25,8 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.impl.JVMProcessSystemMetricsContents;
+import com.cloudbees.jenkins.support.impl.SystemConfiguration;
 import hudson.CloseProofOutputStream;
 import hudson.Extension;
 import hudson.cli.CLICommand;
@@ -43,7 +45,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
 
 @Extension
 public class SupportCommand extends CLICommand {
@@ -71,7 +76,20 @@ public class SupportCommand extends CLICommand {
     @Override
     protected int run() throws Exception {
         Jenkins.get().checkPermission(SupportPlugin.CREATE_BUNDLE);
-        List<Component> selected = new ArrayList<>();
+        Set<Component> selected = new HashSet<>();
+        
+        // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the components to the list 
+        // for backward compatibility
+        if(components.contains("Master")) {
+            stderr.println("WARNING:" + Messages._SupportCommand_jenkins_63722_deprecated_ids("Master"));
+            selected.addAll(Jenkins.get().getExtensionList(JVMProcessSystemMetricsContents.Master.class));
+            selected.addAll(Jenkins.get().getExtensionList(SystemConfiguration.Master.class));
+        } else if (components.contains("Agents")) {
+            stderr.println("WARNING:" + Messages._SupportCommand_jenkins_63722_deprecated_ids("Agents"));
+            selected.addAll(Jenkins.get().getExtensionList(JVMProcessSystemMetricsContents.Agents.class));
+            selected.addAll(Jenkins.get().getExtensionList(SystemConfiguration.Agents.class));
+        }
+        
         for (Component c : SupportPlugin.getComponents()) {
             if (c.isEnabled() && (components.isEmpty() || components.contains(c.getId()))) {
                 selected.add(c);
@@ -86,7 +104,7 @@ public class SupportCommand extends CLICommand {
                 } else { // redirect output to a ZIP file yourself
                     os = new CloseProofOutputStream(stdout);
                 }
-                SupportPlugin.writeBundle(os, selected);
+                SupportPlugin.writeBundle(os, new ArrayList<>(selected));
             }
         } finally {
             SupportPlugin.clearRequesterAuthentication();

@@ -55,6 +55,12 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
             return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
         }
 
+        @NonNull
+        @Override
+        public String getId() {
+            return "MasterJVMProcessSystemMetricsContents";
+        }
+
         @Extension
         @Symbol("masterJVMProcessSystemMetricsComponent")
         public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
@@ -108,6 +114,12 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         @Override
         public DescriptorImpl getDescriptor() {
             return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return "AgentsJVMProcessSystemMetricsContents";
         }
 
         @Extension
