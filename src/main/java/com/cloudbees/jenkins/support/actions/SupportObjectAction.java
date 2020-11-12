@@ -68,7 +68,9 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
         return "/plugin/support-core/images/24x24/support.png";
     }
 
-    protected abstract String getBundleNameQualifier();
+    protected String getBundleNameQualifier() {
+        return "object";
+    }
 
     @DataBoundSetter
     public void setComponents(List<? extends ObjectComponent<T>> components) {
