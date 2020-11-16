@@ -347,7 +347,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
-        rsp.addHeader("Content-Disposition", "inline; filename=" + SupportPlugin.getBundleFileName() + ";");
+        rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());

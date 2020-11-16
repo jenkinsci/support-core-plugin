@@ -711,40 +711,12 @@ public class SupportPlugin extends Plugin {
      * Returns the full bundle name.
      *
      * @return the full bundle name.
+     * @deprecated use {@link BundleFileName#generate()} instead
      */
+    @Deprecated
     @NonNull
     public static String getBundleFileName() {
-        StringBuilder filename = new StringBuilder();
-        filename.append(getBundlePrefix());
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        filename.append("_").append(dateFormat.format(new Date()));
-
-        filename.append(".zip");
-        return filename.toString();
-    }
-
-    /**
-     * Returns the prefix of the bundle name.
-     *
-     * @return the prefix of the bundle name.
-     */
-    private static String getBundlePrefix() {
-        String filename = "support"; // default bundle filename
-        final SupportPlugin instance = getInstance();
-        if (instance != null) {
-            SupportProvider supportProvider = instance.getSupportProvider();
-            if (supportProvider != null) {
-                // let the provider name it
-                filename = supportProvider.getName();
-            }
-        }
-        final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
-        if (StringUtils.isNotBlank(instanceType)) {
-            filename = filename + "_" + instanceType;
-        }
-        return filename;
+        return BundleFileName.generate();
     }
 
     public static class LogHolder {
@@ -879,7 +851,7 @@ public class SupportPlugin extends Plugin {
                                 }
                             }
 
-                            File file = new File(bundleDir, SupportPlugin.getBundleFileName());
+                            File file = new File(bundleDir, BundleFileName.generate());
                             thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
                                     SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                             try (FileOutputStream fos = new FileOutputStream(file)) {

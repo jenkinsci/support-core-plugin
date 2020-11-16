@@ -22,7 +22,12 @@ public class SupportRunAction extends SupportObjectAction<Run> {
 
     @Override
     public String getDisplayName() {
-        return Messages.SupportRunAction_DisplayName();
+        return Messages.SupportRunAction_DisplayName(getObject().getParent().getTaskNoun());
+    }
+
+    @Override
+    protected String getBundleNameQualifier() {
+        return "build";
     }
 
     @Extension
