@@ -37,6 +37,7 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
+import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.OutputStreamSelector;
 import com.codahale.metrics.Histogram;
@@ -649,7 +650,7 @@ public class SupportPlugin extends Plugin {
         if (node != null) {
             VirtualChannel channel = node.getChannel();
             if (channel != null) {
-                final Future<List<LogRecord>> future = channel.callAsync(new LogFetcher());
+                final Future<List<LogRecord>> future = CallAsyncWrapper.callAsync(channel, new LogFetcher());
                 try {
                     return future.get(REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (ExecutionException e) {
@@ -823,7 +824,7 @@ public class SupportPlugin extends Plugin {
                 if (channel != null) {
                     final FilePath rootPath = node.getRootPath();
                     if (rootPath != null) {
-                        channel.callAsync(new LogInitializer(rootPath, getLogLevel()));
+                        CallAsyncWrapper.callAsync(channel, new LogInitializer(rootPath, getLogLevel()));
                     }
                 }
             } catch (IOException e) {

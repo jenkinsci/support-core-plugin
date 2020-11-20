@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support;
 
+import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
@@ -43,7 +44,7 @@ public class AsyncResultCache<T> implements Runnable {
                 return cache.get(node);
             }
         }
-        Future<V> future = channel.callAsync(operation);
+        Future<V> future = CallAsyncWrapper.callAsync(channel, operation);
         try {
             final V result = future.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             synchronized (cache) {
