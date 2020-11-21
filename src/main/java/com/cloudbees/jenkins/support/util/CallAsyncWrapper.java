@@ -14,10 +14,9 @@ import java.util.concurrent.TimeoutException;
 public final class CallAsyncWrapper {
 
     public static <V,T extends Throwable> hudson.remoting.Future<V> callAsync(final VirtualChannel channel, final Callable<V,T> callable) throws IOException {
-
         Future<hudson.remoting.Future<V>> future = Computer.threadPoolForRemoting.submit(new java.util.concurrent.Callable<hudson.remoting.Future<V>>() {
             @Override
-            public hudson.remoting.Future<V> call() throws Exception {
+            public hudson.remoting.Future<V> call() throws IOException {
                 return channel.callAsync(callable);
             }
         });
