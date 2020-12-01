@@ -35,7 +35,7 @@ public class LoggerManager extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "All loggers currently enabled.";
+        return "All loggers currently enabled";
     }
 
     @Override
