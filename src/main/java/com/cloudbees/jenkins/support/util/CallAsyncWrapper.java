@@ -22,9 +22,11 @@ public final class CallAsyncWrapper {
         });
         try {
             return future.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new IOException(e);
+        } catch (TimeoutException te) {
+            future.cancel(true);
+            throw new IOException(te);
         }
-
     }
 }
