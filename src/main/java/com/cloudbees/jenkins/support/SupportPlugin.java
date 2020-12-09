@@ -81,6 +81,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -329,7 +330,7 @@ public class SupportPlugin extends Plugin {
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
-                IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
+                IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(new FilterOutputStream(selector));
                 boolean entryCreated = false;
                 for (Content content : contents) {
                     if (content == null) {

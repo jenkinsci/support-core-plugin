@@ -28,6 +28,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,9 +39,19 @@ import java.io.OutputStream;
  * @since TODO
  */
 @Restricted(NoExternalUse.class)
-public final class IgnoreCloseOutputStream extends FilterOutputStream implements WrapperOutputStream {
-    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
+public final class IgnoreCloseOutputStream extends BufferedOutputStream implements WrapperOutputStream {
+    /**
+     * The underlying output stream to be filtered.
+     */
+    public IgnoreCloseOutputStream(OutputStream out) {
         super(out);
+    }
+
+    /**
+     * The underlying output stream to be filtered.
+     */
+    public IgnoreCloseOutputStream(OutputStream out, int size) {
+        super(out, size);
     }
 
     @Override
