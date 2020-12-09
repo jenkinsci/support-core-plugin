@@ -41,6 +41,8 @@ import java.io.OutputStream;
 public final class IgnoreCloseOutputStream extends BufferedOutputStream implements WrapperOutputStream {
     /**
      * The underlying output stream to be filtered.
+     *
+     * @param out the underlying output stream.
      */
     public IgnoreCloseOutputStream(OutputStream out) {
         super(out);
@@ -48,6 +50,9 @@ public final class IgnoreCloseOutputStream extends BufferedOutputStream implemen
 
     /**
      * The underlying output stream to be filtered.
+     *
+     * @param   out    the underlying output stream.
+     * @param   size   the buffer size.
      */
     public IgnoreCloseOutputStream(OutputStream out, int size) {
         super(out, size);
