@@ -29,12 +29,11 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedOutputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Provides a {@link FilterOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
+ * Provides a {@link BufferedOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
  *
  * @since TODO
  */
