@@ -330,7 +330,7 @@ public class SupportPlugin extends Plugin {
                 OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
-                IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(new FilterOutputStream(selector));
+                IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
                 boolean entryCreated = false;
                 for (Content content : contents) {
                     if (content == null) {
