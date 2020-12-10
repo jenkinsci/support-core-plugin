@@ -6,16 +6,21 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
+import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractModelObject;
 import hudson.model.Action;
+import hudson.security.Permission;
 import hudson.util.RingBufferLogHandler;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayOutputStream;
@@ -24,12 +29,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.zip.ZipFile;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -167,6 +177,110 @@ public class SupportTestUtils {
                     fail(r.getMessage());
                 }
             }
+        }
+    }
+
+    /**
+     * Set up a {@link hudson.security.SecurityRealm} and {@link hudson.security.AuthorizationStrategy} with two users:
+     * * one "privileged" user with required permissions
+     * * one "unprivileged" user Overall/Read and optionally a set of "test" permissions
+     * 
+     * @param j the {@link JenkinsRule}
+     * @param userUnprivileged the id of the unprivileged user
+     * @param userPrivileged the id of the privileged user
+     * @param requiredPermissions the set of required permissions given to the unprivileged user
+     * @param testPermissions the set of test permissions given to the privileged user
+     */
+    private static void setupAuth(JenkinsRule j,
+                                  String userUnprivileged,
+                                  String userPrivileged,
+                                  Set<Permission> requiredPermissions,
+                                  Set<Permission> testPermissions) {
+
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
+            .grant(Jenkins.READ).everywhere().to(userUnprivileged)
+            .grant(Jenkins.READ).everywhere().to(userPrivileged);
+        requiredPermissions.forEach(permission -> auth.grant(permission).everywhere().to(userPrivileged));
+        testPermissions.forEach(permission -> auth.grant(permission).everywhere().to(userUnprivileged));
+        j.jenkins.setAuthorizationStrategy(auth);
+
+    }
+
+    /**
+     * Check that only a privileged user (with the required permissions) can see an Action link. 
+     * 
+     * @param j the {@link JenkinsRule}
+     * @param baseUrl the base URL of the action
+     * @param action the {@link Action}
+     * @param requiredPermissions the set of required permissions to see this action
+     * @param testPermissions a set of test permissions (to test that those permissions are not enough to see the action link)
+     * @throws Exception webclient failures
+     */
+    public static void testPermissionToSeeAction(JenkinsRule j,
+                                                  String baseUrl,
+                                                  Action action,
+                                                  Set<Permission> requiredPermissions,
+                                                  Set<Permission> testPermissions) throws Exception {
+
+        String userUnprivileged = "underprivileged";
+        String userPrivileged = "privileged";
+
+        setupAuth(j, userUnprivileged, userPrivileged, requiredPermissions, testPermissions);
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        {
+            wc.login(userUnprivileged);
+            HtmlPage page = wc.goTo(baseUrl);
+            HtmlDivision sidePanel = (HtmlDivision) page.getElementById("side-panel");
+            assertTrue(userUnprivileged + " should not be able to see the Support action",
+                sidePanel.getElementsByAttribute("a", "title", action.getDisplayName()).isEmpty());
+        }
+
+        {
+            wc.login(userPrivileged);
+            HtmlPage page = wc.goTo(baseUrl);
+            HtmlDivision sidePanel = (HtmlDivision) page.getElementById("side-panel");
+            assertEquals(userPrivileged + " should be able to see the Support action", 1,
+                sidePanel.getElementsByAttribute("a", "title", action.getDisplayName()).size());
+        }
+    }
+    
+    /**
+     * Check that only a privileged user (with the required permissions) can display an Action page. 
+     *
+     * @param j the {@link JenkinsRule}
+     * @param baseUrl the base URL of the action
+     * @param action the {@link Action}
+     * @param requiredPermissions the set of required permissions to see this action
+     * @param testPermissions a set of test permissions (to test that those permissions are not enough to see the action link)
+     * @throws Exception webclient failures
+     */
+    public static void testPermissionToDisplayAction(JenkinsRule j,
+                                                      String baseUrl,
+                                                      Action action,
+                                                      Set<Permission> requiredPermissions,
+                                                      Set<Permission> testPermissions) throws Exception {
+
+        String userUnprivileged = "underprivileged";
+        String userPrivileged = "privileged";
+
+        setupAuth(j, userUnprivileged, userPrivileged, requiredPermissions, testPermissions);
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        {
+            wc.login(userUnprivileged);
+            assertThrows(userUnprivileged + " should not be able to display the Support action page",
+                FailingHttpStatusCodeException.class, () ->
+                    wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()));
+        }
+
+        {
+            wc.login(userPrivileged);
+            assertNotNull(userPrivileged + " should be able to display the Support action page",
+                wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()));
         }
     }
 
