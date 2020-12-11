@@ -44,18 +44,8 @@ public final class IgnoreCloseOutputStream extends BufferedOutputStream implemen
      *
      * @param out the underlying output stream.
      */
-    public IgnoreCloseOutputStream(OutputStream out) {
+    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
         super(out);
-    }
-
-    /**
-     * The underlying output stream to be filtered.
-     *
-     * @param   out    the underlying output stream.
-     * @param   size   the buffer size.
-     */
-    public IgnoreCloseOutputStream(OutputStream out, int size) {
-        super(out, size);
     }
 
     @Override
