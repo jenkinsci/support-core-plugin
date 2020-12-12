@@ -28,17 +28,22 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
-import java.io.FilterOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Provides a {@link FilterOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
+ * Provides a {@link BufferedOutputStream} that ignores calls to close its underlying stream and instead simply flushes it.
  *
  * @since TODO
  */
 @Restricted(NoExternalUse.class)
-public final class IgnoreCloseOutputStream extends FilterOutputStream implements WrapperOutputStream {
+public final class IgnoreCloseOutputStream extends BufferedOutputStream implements WrapperOutputStream {
+    /**
+     * The underlying output stream to be filtered.
+     *
+     * @param out the underlying output stream.
+     */
     public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
         super(out);
     }
