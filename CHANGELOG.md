@@ -1,5 +1,25 @@
 ## Changelog
 
+Version 2.71 and newer
+------
+
+No longer tracked in this file. See [GitHub releases](https://github.com/jenkinsci/support-core-plugin/releases) instead.
+
+### Version 2.70 (2020 Aug 13)
+
+-   [JENKINS-62844](https://issues.jenkins-ci.org/browse/JENKINS-62844) - Update the link to the bundle anonymization setting
+-   [JENKINS-62526](https://issues.jenkins-ci.org/browse/JENKINS-62526) - Split JenkinsLogs
+
+### Version 2.69 (2020 Jun 24)
+
+-   Upgrade parent pom to 4.2
+-   [JENKINS-62297](https://issues.jenkins-ci.org/browse/JENKINS-62297) - Collect User counts
+-   Test improvement - Cleanup formatting and other small things
+-   Test improvement - Consistent static imports for assertions
+-   Test improvement - Remove non-required Javadoc on test methods
+-   Test improvement - Consistent naming of JenkinsRule variable
+-   Update changelog
+
 ### Version 2.68 (2020 Apr 8)
 -   [JENKINS-36929](https://issues.jenkins-ci.org/browse/JENKINS-36929) - Collect agent protocols information
 -   [JENKINS-59498](https://issues.jenkins-ci.org/browse/JENKINS-59498) - Improve computation performance
