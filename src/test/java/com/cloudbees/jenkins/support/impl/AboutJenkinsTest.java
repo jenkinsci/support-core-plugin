@@ -13,6 +13,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.Objects;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -27,7 +29,7 @@ public class AboutJenkinsTest {
     @Test
     @Issue("JENKINS-56245")
     public void testAboutJenkinsContent() {
-        String aboutMdToString = SupportTestUtils.invokeComponentToString(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+        String aboutMdToString = SupportTestUtils.invokeComponentToString(Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
 
         assertThat(aboutMdToString, containsString("  * Instance ID: `" + j.getInstance().getLegacyInstanceId()));
         IdentityRootAction idRootaction = j.getInstance().getExtensionList(IdentityRootAction.class).get(0);
