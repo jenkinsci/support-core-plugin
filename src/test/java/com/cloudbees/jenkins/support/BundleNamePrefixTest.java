@@ -14,7 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BundleNamePrefixTest {
 
-    private static final String CURRENT_YEAR = new SimpleDateFormat("YYYY").format(new Date());
+    private static final String CURRENT_YEAR = new SimpleDateFormat("yyyy").format(new Date());
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
