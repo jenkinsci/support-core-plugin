@@ -40,9 +40,9 @@ import org.apache.commons.lang.StringUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Warns if any administrative monitors are currently active.
@@ -58,29 +58,23 @@ import java.util.TreeMap;
     }
 
     @Override public void addContents(Container result) {
-        final Map<String,AdministrativeMonitor> activated = new TreeMap<String,AdministrativeMonitor>();
-        for (AdministrativeMonitor monitor : AdministrativeMonitor.all()) {
-            if (monitor instanceof ReverseProxySetupMonitor) {
-                // This one is pretty special: always activated, but may or may not show anything in message.jelly.
-                continue;
-            }
-            if (monitor.isActivated() && monitor.isEnabled()) {
-                activated.put(monitor.id, monitor);
-            }
-            // disabled monitors could include RekeySecretAdminMonitor; no reason to show it
-        }
-        if (!activated.isEmpty()) {
-            result.add(new PrintedContent("admin-monitors.md") {
-                @Override protected void printTo(PrintWriter out) throws IOException {
-                    out.println("Monitors");
-                    out.println("========");
-                    for (AdministrativeMonitor monitor : activated.values()) {
+        result.add(new PrintedContent("admin-monitors.md") {
+            @Override protected void printTo(PrintWriter out) throws IOException {
+                out.println("Monitors");
+                out.println("========");
+                AdministrativeMonitor.all().stream()
+                    .filter(monitor -> 
+                        !(monitor instanceof ReverseProxySetupMonitor)
+                        && monitor.isEnabled()
+                        && monitor.isActivated())
+                    .sorted(Comparator.comparing(o -> o.id))
+                    .forEach(monitor -> {
                         out.println();
                         out.println("`" + monitor.id + "`");
                         out.println("--------------");
                         if (monitor instanceof OldDataMonitor && !suffersFromJENKINS24358()) {
                             OldDataMonitor odm = (OldDataMonitor) monitor;
-                            for (Map.Entry<Saveable,OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
+                            for (Map.Entry<Saveable, OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
                                 out.println("  * Problematic object: `" + entry.getKey() + "`");
                                 OldDataMonitor.VersionRange value = entry.getValue();
                                 String range = value.toString();
@@ -96,16 +90,15 @@ import java.util.TreeMap;
                             // No specific content we can show; message.jelly is for HTML only.
                             out.println("(active and enabled)");
                         }
-                    }
-                }
+                    });
+            }
 
-                @Override
-                public boolean shouldBeFiltered() {
-                    // The information of this content is not sensible, so it doesn't need to be filtered.
-                    return false;
-                }
-            });
-        }
+            @Override
+            public boolean shouldBeFiltered() {
+                // The information of this content is not sensible, so it doesn't need to be filtered.
+                return false;
+            }
+        });
     }
 
     private static boolean suffersFromJENKINS24358() {
