@@ -856,8 +856,9 @@ public class SupportPlugin extends Plugin {
                                     SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                             try (FileOutputStream fos = new FileOutputStream(file)) {
                                 writeBundle(fos);
+                            } finally {
+                                cleanupOldBundles(bundleDir, file);   
                             }
-                            cleanupOldBundles(bundleDir, file);
                         } catch (Throwable t) {
                             logger.log(Level.WARNING, "Could not save support bundle", t);
                         }
