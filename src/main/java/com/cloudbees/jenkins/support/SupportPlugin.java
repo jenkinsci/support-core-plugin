@@ -895,6 +895,7 @@ public class SupportPlugin extends Plugin {
                     if (l <= age && age < l * 2) {
                         if (seen) {
                             f.delete();
+                            logger.log(Level.INFO, "Deleted old bundle {0}", f.getName());
                         } else {
                             seen = true;
                         }
