@@ -17,7 +17,7 @@ import java.io.OutputStream;
 
 import static com.cloudbees.jenkins.support.impl.ReverseProxy.X_FORWARDED_FOR_HEADER;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
