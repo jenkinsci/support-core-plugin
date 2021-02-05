@@ -15,7 +15,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 
-import static com.cloudbees.jenkins.support.impl.ReverseProxy.X_FORWARDED_FOR_HEADER;
+import static com.cloudbees.jenkins.support.impl.ReverseProxy.FORWARDED_HEADERS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
@@ -23,10 +23,10 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ReverseProxyTest {
 
-    private static final String X_FORWARDED_FOR_HEADER_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: TRUE";
-    private static final String X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE = "Detected `X-Forwarded-For` header: FALSE";
-    private static final String X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE = "Detected `X-Forwarded-For` header: UNKNOWN";
     private static final String HEADER_VALUE = "value";
+    private static String expectedMessage(String header, ReverseProxy.Trilean value) {
+        return String.format("Detected `%s` header: %s", header, value);
+    }
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -50,22 +50,30 @@ public class ReverseProxyTest {
     public void addContents() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Container container = createContainer(baos);
-        when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(HEADER_VALUE);
+        for (String header : FORWARDED_HEADERS) {
+            when(staplerRequest.getHeader(header)).thenReturn(HEADER_VALUE);
+        }
 
         subject.addContents(container);
 
-        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_FOUND_MESSAGE));
+        for (String header : FORWARDED_HEADERS) {
+            assertThat(baos.toString(), containsString(expectedMessage(header, ReverseProxy.Trilean.TRUE)));
+        }
     }
 
     @Test
     public void addContents_NoHeader() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Container container = createContainer(baos);
-        when(staplerRequest.getHeader(X_FORWARDED_FOR_HEADER)).thenReturn(null);
+        for (String header : FORWARDED_HEADERS) {
+            when(staplerRequest.getHeader(header)).thenReturn(null);
+        }
 
         subject.addContents(container);
 
-        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_NOT_FOUND_MESSAGE));
+        for (String header : FORWARDED_HEADERS) {
+            assertThat(baos.toString(), containsString(expectedMessage(header, ReverseProxy.Trilean.FALSE)));
+        }
     }
 
     @Test
@@ -81,7 +89,9 @@ public class ReverseProxyTest {
 
         subject.addContents(container);
 
-        assertThat(baos.toString(), containsString(X_FORWARDED_FOR_HEADER_UNKNOWN_MESSAGE));
+        for (String header : FORWARDED_HEADERS) {
+            assertThat(baos.toString(), containsString(expectedMessage(header, ReverseProxy.Trilean.UNKNOWN)));
+        }
     }
 
     private static Container createContainer(OutputStream os) {

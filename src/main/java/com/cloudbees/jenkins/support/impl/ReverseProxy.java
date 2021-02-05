@@ -27,14 +27,14 @@ public class ReverseProxy extends Component {
   }
 
   // [RFC 7239, section 4: Forwarded](https://tools.ietf.org/html/rfc7239#section-4) standard header.
-  static final String FORWARDED_HEADER = "Forwarded";
+  private static final String FORWARDED_HEADER = "Forwarded";
   // Non-standard headers.
-  static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
-  static final String X_FORWARDED_PROTO_HEADER = "X-Forwarded-Proto";
-  static final String X_FORWARDED_HOST_HEADER = "X-Forwarded-Host";
-  static final String X_FORWARDED_PORT_HEADER = "X-Forwarded-Port";
+  private static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
+  private static final String X_FORWARDED_PROTO_HEADER = "X-Forwarded-Proto";
+  private static final String X_FORWARDED_HOST_HEADER = "X-Forwarded-Host";
+  private static final String X_FORWARDED_PORT_HEADER = "X-Forwarded-Port";
 
-  private static final Collection<String> FORWARDED_HEADERS = ImmutableList.of(FORWARDED_HEADER, X_FORWARDED_FOR_HEADER,
+  static final Collection<String> FORWARDED_HEADERS = ImmutableList.of(FORWARDED_HEADER, X_FORWARDED_FOR_HEADER,
           X_FORWARDED_PROTO_HEADER, X_FORWARDED_HOST_HEADER, X_FORWARDED_PORT_HEADER);
 
   @NonNull
@@ -55,8 +55,9 @@ public class ReverseProxy extends Component {
       @Override protected void printTo(PrintWriter out) {
         out.println("Reverse Proxy");
         out.println("=============");
-        for (String xForwardedHeader : FORWARDED_HEADERS) {
-          out.println(String.format(" * Detected `%s` header: %s", xForwardedHeader, isXForwardedHeaderDetected(xForwardedHeader)));
+        StaplerRequest currentRequest = getCurrentRequest();
+        for (String forwardedHeader : FORWARDED_HEADERS) {
+          out.println(String.format(" * Detected `%s` header: %s", forwardedHeader, isForwardedHeaderDetected(currentRequest, forwardedHeader)));
         }
       }
 
@@ -68,12 +69,11 @@ public class ReverseProxy extends Component {
     });
   }
 
-  private Trilean isXForwardedHeaderDetected(String xForwardedHeader) {
-    StaplerRequest req = getCurrentRequest();
+  private Trilean isForwardedHeaderDetected(StaplerRequest req, String header) {
     if (req == null) {
       return Trilean.UNKNOWN;
     }
-    return req.getHeader(xForwardedHeader) != null ? Trilean.TRUE : Trilean.FALSE;
+    return req.getHeader(header) != null ? Trilean.TRUE : Trilean.FALSE;
   }
 
   protected StaplerRequest getCurrentRequest() {
