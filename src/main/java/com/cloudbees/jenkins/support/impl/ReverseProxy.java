@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -11,6 +12,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -24,7 +26,16 @@ public class ReverseProxy extends Component {
     TRUE, FALSE, UNKNOWN
   }
 
-  static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
+  // [RFC 7239, section 4: Forwarded](https://tools.ietf.org/html/rfc7239#section-4) standard header.
+  private static final String FORWARDED_HEADER = "Forwarded";
+  // Non-standard headers.
+  private static final String X_FORWARDED_FOR_HEADER = "X-Forwarded-For";
+  private static final String X_FORWARDED_PROTO_HEADER = "X-Forwarded-Proto";
+  private static final String X_FORWARDED_HOST_HEADER = "X-Forwarded-Host";
+  private static final String X_FORWARDED_PORT_HEADER = "X-Forwarded-Port";
+
+  static final Collection<String> FORWARDED_HEADERS = ImmutableList.of(FORWARDED_HEADER, X_FORWARDED_FOR_HEADER,
+          X_FORWARDED_PROTO_HEADER, X_FORWARDED_HOST_HEADER, X_FORWARDED_PORT_HEADER);
 
   @NonNull
   @Override
@@ -44,7 +55,10 @@ public class ReverseProxy extends Component {
       @Override protected void printTo(PrintWriter out) {
         out.println("Reverse Proxy");
         out.println("=============");
-        out.println(String.format(" * Detected `%s` header: %s", X_FORWARDED_FOR_HEADER, isXForwardForHeaderDetected()));
+        StaplerRequest currentRequest = getCurrentRequest();
+        for (String forwardedHeader : FORWARDED_HEADERS) {
+          out.println(String.format(" * Detected `%s` header: %s", forwardedHeader, isForwardedHeaderDetected(currentRequest, forwardedHeader)));
+        }
       }
 
       @Override
@@ -55,12 +69,11 @@ public class ReverseProxy extends Component {
     });
   }
 
-  private Trilean isXForwardForHeaderDetected() {
-    StaplerRequest req = getCurrentRequest();
+  private Trilean isForwardedHeaderDetected(StaplerRequest req, String header) {
     if (req == null) {
       return Trilean.UNKNOWN;
     }
-    return req.getHeader(X_FORWARDED_FOR_HEADER) != null ? Trilean.TRUE : Trilean.FALSE;
+    return req.getHeader(header) != null ? Trilean.TRUE : Trilean.FALSE;
   }
 
   protected StaplerRequest getCurrentRequest() {
