@@ -31,8 +31,8 @@ public class AdministrativeMonitorsTest {
             .filter(monitor -> monitor.isEnabled() && monitor.isActivated())
             .forEach(monitor -> 
                 assertThat(monitorsMdToString, containsString(
-                    "`" + monitor.id + "`\n" +
-                        "--------------\n" +
+                    "`" + monitor.id + "`" + System.getProperty("line.separator") +
+                        "--------------" + System.getProperty("line.separator") +
                         "(active and enabled)"))
             );
 
@@ -46,8 +46,8 @@ public class AdministrativeMonitorsTest {
             .filter(AdministrativeMonitor::isActivated)
             .forEach(monitor ->
                 assertThat(monitorsDisabledMdToString, not(containsString(
-                    "`" + monitor.id + "`\n" +
-                        "--------------\n" +
+                    "`" + monitor.id + "`" + System.getProperty("line.separator") +
+                        "--------------" + System.getProperty("line.separator") +
                         "(active and enabled)")))
             );
     }
