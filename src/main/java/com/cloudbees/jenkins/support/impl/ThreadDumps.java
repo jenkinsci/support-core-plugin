@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -191,7 +192,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
         if (channel == null) {
             return null;
         }
-        return channel.callAsync(new GetThreadDump());
+        return CallAsyncWrapper.callAsync(channel, new GetThreadDump());
     }
 
     @Deprecated
