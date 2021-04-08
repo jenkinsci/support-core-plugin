@@ -31,6 +31,7 @@ import hudson.model.Slave;
 import hudson.remoting.Launcher;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
+import hudson.slaves.JNLPLauncher;
 import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -659,6 +660,9 @@ public class AboutJenkins extends Component {
                 if (node instanceof Slave) {
                     Slave slave = (Slave) node;
                     out.println("      - Launch method:  " + getDescriptorName(slave.getLauncher()));
+                    if (slave.getLauncher() instanceof JNLPLauncher) {
+                        out.println("      - WebSocket:      " + ((JNLPLauncher) slave.getLauncher()).isWebSocket());
+                    }
                     out.println("      - Availability:   " + getDescriptorName(slave.getRetentionStrategy()));
                 }
                 VirtualChannel channel = node.getChannel();
