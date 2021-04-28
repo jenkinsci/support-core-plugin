@@ -46,7 +46,7 @@ import org.jvnet.hudson.test.TestBuilder;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
-public class AgentCommandStatisticsTest {
+public class SlaveCommandStatisticsTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -68,7 +68,7 @@ public class AgentCommandStatisticsTest {
         });
         j.buildAndAssertSuccess(p);
 
-        String dump = SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(AgentCommandStatistics.class));
+        String dump = SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveCommandStatistics.class));
 
         assertThat(dump, containsString(SampleCallable.class.getName()));
     }
@@ -82,16 +82,16 @@ public class AgentCommandStatisticsTest {
 
     @Test @Issue("JENKINS-58528")
     public void statisticsAreRotatedWithComputers() throws Exception {
-        AgentCommandStatistics scs = ExtensionList.lookupSingleton(AgentCommandStatistics.class);
+        SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
 
-        AgentCommandStatistics.MAX_STATS_SIZE = 0;
+        SlaveCommandStatistics.MAX_STATS_SIZE = 0;
         assertThat(scs.getStatistics().size(), equalTo(0));
         DumbSlave s0 = j.createOnlineSlave();
         assertThat(scs.getStatistics().size(), equalTo(1));
         j.jenkins.removeNode(s0);
         assertThat(scs.getStatistics().size(), equalTo(0));
 
-        AgentCommandStatistics.MAX_STATS_SIZE = 1;
+        SlaveCommandStatistics.MAX_STATS_SIZE = 1;
         DumbSlave s1 = j.createOnlineSlave();
         DumbSlave s2 = j.createOnlineSlave();
         DumbSlave s3 = j.createOnlineSlave();
@@ -104,7 +104,7 @@ public class AgentCommandStatisticsTest {
         assertThat(scs.getStatistics().size(), equalTo(1));
         assertThat("Latest preserved", scs.getStatistics().keySet(), contains(s3.getNodeName()));
 
-        AgentCommandStatistics.MAX_STATS_SIZE = 3;
+        SlaveCommandStatistics.MAX_STATS_SIZE = 3;
         s0 = j.createOnlineSlave();
         s1 = j.createOnlineSlave();
         s2 = j.createOnlineSlave();

@@ -64,8 +64,8 @@ import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME
  * Adds the agent logs from all of the machines
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete.
-public class AgentLogs extends Component {
-    private static final Logger LOGGER = Logger.getLogger(AgentLogs.class.getCanonicalName());
+public class SlaveLogs extends Component {
+    private static final Logger LOGGER = Logger.getLogger(SlaveLogs.class.getCanonicalName());
 
     @NonNull
     @Override
@@ -77,6 +77,12 @@ public class AgentLogs extends Component {
     @Override
     public String getDisplayName() {
         return "Agent Log Recorders";
+    }
+
+    @NonNull
+    @Override
+    public String getId() {
+        return "AgentLogs";
     }
 
     @Override

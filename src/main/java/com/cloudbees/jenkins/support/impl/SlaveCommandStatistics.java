@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.google.common.annotations.VisibleForTesting;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -63,7 +64,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 @Extension
-public final class AgentCommandStatistics extends Component {
+public final class SlaveCommandStatistics extends Component {
 
     /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
 
@@ -77,6 +78,12 @@ public final class AgentCommandStatistics extends Component {
     @Override
     public String getDisplayName() {
         return "Agent Command Statistics";
+    }
+
+    @NonNull
+    @Override
+    public String getId() {
+        return "AgentCommandStatistics";
     }
 
     @Override
@@ -197,7 +204,7 @@ public final class AgentCommandStatistics extends Component {
 
         @Override
         public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException, InterruptedException {
-            AgentCommandStatistics scs = ExtensionList.lookupSingleton(AgentCommandStatistics.class);
+            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
             synchronized (scs.statLock) {
                 channel.addListener(scs.statistics.computeIfAbsent(c.getName(), k -> new Statistics()));
             }
@@ -209,7 +216,7 @@ public final class AgentCommandStatistics extends Component {
     @Extension @Restricted(NoExternalUse.class)
     public static final class NodeListenerImpl extends NodeListener {
         @Override protected void onDeleted(@Nonnull Node node) {
-            AgentCommandStatistics scs = ExtensionList.lookupSingleton(AgentCommandStatistics.class);
+            SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
             synchronized (scs.statLock) {
                 Statistics listener = scs.statistics.remove(node.getNodeName());
                 if (MAX_STATS_SIZE > 0 && listener != null) {

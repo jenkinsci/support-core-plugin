@@ -70,7 +70,7 @@ public class SmartLogCleanerTest {
     }
 
     private ZipFile generateBundle() throws IOException {
-        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AgentLogs.class));
+        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(SlaveLogs.class));
         File bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(false);

@@ -47,7 +47,7 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  * Adds agent launch logs, which captures the current and past running connections to the agent.
  *
  */
-public class AgentLaunchLogs extends Component{
+public class SlaveLaunchLogs extends Component{
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -58,6 +58,12 @@ public class AgentLaunchLogs extends Component{
     @Override
     public String getDisplayName() {
         return "Agent Launch Logs";
+    }
+
+    @NonNull
+    @Override
+    public String getId() {
+        return "AgentLaunchLogs";
     }
 
     @Override
