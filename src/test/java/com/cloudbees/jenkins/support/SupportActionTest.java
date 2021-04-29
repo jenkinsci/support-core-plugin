@@ -175,23 +175,23 @@ public class SupportActionTest {
 
         // AgentCommandStatistics should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "SlaveCommandStatistics"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+            + String.join(",", "AgentCommandStatistics"));
+        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/command-stats.md"));
 
         // AgentLogs should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "SlaveLogs"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+            + String.join(",", "AgentLogs"));
+        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/jenkins.log"));
         
         // SlaveCommandStatistics should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
             + String.join(",", "SlaveCommandStatistics"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/command-stats.md"));
         
         // SlaveLogs should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
             + String.join(",", "SlaveLogs"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/jenkins.log"));
     }
 
     /*
