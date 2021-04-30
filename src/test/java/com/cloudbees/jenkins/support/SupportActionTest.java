@@ -172,26 +172,6 @@ public class SupportActionTest {
         zip = downloadBundle("/generateBundle?components="
             + String.join(",", "AgentsSystemConfiguration", "AgentsJVMProcessSystemMetricsContents"));
         assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
-
-        // AgentCommandStatistics should retrieve all agents files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "AgentCommandStatistics"));
-        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/command-stats.md"));
-
-        // AgentLogs should retrieve all agents files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "AgentLogs"));
-        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/jenkins.log"));
-        
-        // SlaveCommandStatistics should retrieve all agents files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "SlaveCommandStatistics"));
-        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/command-stats.md"));
-        
-        // SlaveLogs should retrieve all agents files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "SlaveLogs"));
-        assertBundleContains(zip, Collections.singletonList("nodes/slave/agent1/jenkins.log"));
     }
 
     /*
