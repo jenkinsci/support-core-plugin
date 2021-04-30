@@ -101,10 +101,10 @@ public class SupportActionTest {
     }
 
     @Test
-    @Issue({"JENKINS-63722","JENKINS-62925"})
+    @Issue("JENKINS-63722")
     public void generateAllBundlesBackwardCompatibility() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
-//        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
 
         List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
             "proc/meminfo.txt",
