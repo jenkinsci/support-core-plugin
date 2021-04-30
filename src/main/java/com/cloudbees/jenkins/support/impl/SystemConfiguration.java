@@ -68,7 +68,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         @Override
         @NonNull
         public String getDisplayName() {
-            return "Master system configuration (Linux only)";
+            return "Controller system configuration (Linux only)";
         }
 
         @Override
@@ -107,7 +107,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             @NonNull
             @Override
             public String getDisplayName() {
-                return "Master system configuration (Linux only)";
+                return "Controller system configuration (Linux only)";
             }
 
         }

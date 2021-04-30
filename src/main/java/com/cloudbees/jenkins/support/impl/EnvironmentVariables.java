@@ -59,7 +59,7 @@ public class EnvironmentVariables extends Component {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not record environment of master", e);
+                            logger.log(Level.WARNING, "Could not record environment of controller", e);
                         }
                     }
                 }

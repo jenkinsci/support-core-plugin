@@ -81,7 +81,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
 -   [
     JENKINS-58528](https://issues.jenkins-ci.org/browse/JENKINS-58528) -
     Report available processes for
-    master
+    controller
 
 ### Version 2.60 (2019 Aug 6)
 
@@ -226,7 +226,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     to restore heap histogram generation, pending a better fix.
 -   Sort thread dumps by name rather than ID.
 
--   Reduce pressure on master file descriptors.
+-   Reduce pressure on controller file descriptors.
 
 -   [
     JENKINS-46132](https://issues.jenkins-ci.org/browse/JENKINS-46132) -
@@ -365,7 +365,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     Pick up and logs that have been refactored into JENKINS\_HOME/logs.
 -   [PR
     62](https://github.com/jenkinsci/support-core-plugin/pull/62)
-    Separate agent logs, and master logs.
+    Separate agent logs, and controller logs.
 -   [JENKINS-26409](https://issues.jenkins-ci.org/browse/JENKINS-26409)
     [PR
     60](https://github.com/jenkinsci/support-core-plugin/pull/60)

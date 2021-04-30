@@ -32,7 +32,7 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         @Override
         @NonNull
         public String getDisplayName() {
-            return "Master JVM process system metrics (Linux only)";
+            return "Controller JVM process system metrics (Linux only)";
         }
 
         @Override
@@ -71,7 +71,7 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
             @NonNull
             @Override
             public String getDisplayName() {
-                return "Master JVM process system metrics (Linux only)";
+                return "Controller JVM process system metrics (Linux only)";
             }
 
         }

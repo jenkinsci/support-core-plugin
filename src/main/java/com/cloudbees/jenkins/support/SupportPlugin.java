@@ -742,7 +742,7 @@ public class SupportPlugin extends Plugin {
         }
 
         public Void call() {
-            // avoid double installation of the handler. JNLP agents can reconnect to the master multiple times
+            // avoid double installation of the handler. JNLP agents can reconnect to the controller multiple times
             // and each connection gets a different RemoteClassLoader, so we need to evict them by class name,
             // not by their identity.
             for (Handler h : ROOT_LOGGER.getHandlers()) {

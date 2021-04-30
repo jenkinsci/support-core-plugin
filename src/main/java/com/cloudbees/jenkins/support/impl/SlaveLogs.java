@@ -154,7 +154,7 @@ public class SlaveLogs extends Component {
     /**
      * Captures a "recent" (but still fairly large number of) j.u.l entries written on this agent.
      *
-     * @see JenkinsLogs#addMasterJulLogRecords(Container)
+     * @see JenkinsLogs#addControllerJulLogRecords(Container)
      */
     private void addAgentJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
         final FilePath rootPath = node.getRootPath();

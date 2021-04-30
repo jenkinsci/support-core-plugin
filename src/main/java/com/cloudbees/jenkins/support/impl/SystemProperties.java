@@ -62,10 +62,8 @@ public class SystemProperties extends Component {
                                properties.putAll(RemotingDiagnostics
                                        .getSystemProperties(Jenkins.getInstance().getChannel()));
                                properties.store(os, null);
-                           } catch (IOException e) {
-                               logger.log(Level.WARNING, "Could not record system properties for master", e);
-                           } catch (InterruptedException e) {
-                               logger.log(Level.WARNING, "Could not record system properties for master", e);
+                           } catch (IOException | InterruptedException e) {
+                               logger.log(Level.WARNING, "Could not record system properties for controller", e);
                            }
                        }
                    }

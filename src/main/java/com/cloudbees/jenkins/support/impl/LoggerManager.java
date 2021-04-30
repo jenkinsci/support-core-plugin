@@ -18,7 +18,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
- * Output the current list of loggers for the master and display the
+ * Output the current list of loggers for the controller and display the
  * logging level. This is to diagnose if a specific logger is causing
  * some performance issues by logging too much data.
  *

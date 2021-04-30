@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Log files from the master node only.
+ * Log files from the controller node only.
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class JenkinsLogs extends Component {
@@ -38,13 +38,13 @@ public class JenkinsLogs extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Master Log Recorders";
+        return "Controller Log Recorders";
     }
 
     @Override
     public void addContents(@NonNull Container result) {
-        addMasterJulRingBuffer(result);
-        addMasterJulLogRecords(result);
+        addControllerJulRingBuffer(result);
+        addControllerJulLogRecords(result);
     }
 
     /**
@@ -55,7 +55,7 @@ public class JenkinsLogs extends Component {
      *
      * @see WebAppMain#installLogger()
      */
-    private void addMasterJulRingBuffer(Container result) {
+    private void addControllerJulRingBuffer(Container result) {
         result.add(new LogRecordContent("nodes/master/logs/jenkins.log") {
             @Override
             public Iterable<LogRecord> getLogRecords() {
@@ -68,10 +68,10 @@ public class JenkinsLogs extends Component {
      * Adds j.u.l logging output that the support-core plugin captures.
      *
      * <p>
-     * Compared to {@link #addMasterJulRingBuffer(Container)}, this one uses disk files,
+     * Compared to {@link #addControllerJulRingBuffer(Container)}, this one uses disk files,
      * so it remembers larger number of entries.
      */
-    private void addMasterJulLogRecords(Container result) {
+    private void addControllerJulLogRecords(Container result) {
         // this file captures the most recent of those that are still kept around in memory.
         // this overlaps with Jenkins.logRecords, and also overlaps with what's written in files,
         // but added nonetheless just in case.
@@ -86,7 +86,7 @@ public class JenkinsLogs extends Component {
 
         final File[] julLogFiles = SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter());
         if (julLogFiles == null) {
-            LOGGER.log(Level.WARNING, "Cannot add master java.util.logging logs to the bundle. Cannot access log files");
+            LOGGER.log(Level.WARNING, "Cannot add controller java.util.logging logs to the bundle. Cannot access log files");
             return;
         }
 

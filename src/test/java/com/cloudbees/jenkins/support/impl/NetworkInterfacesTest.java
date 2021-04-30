@@ -42,10 +42,10 @@ public class NetworkInterfacesTest {
                 }
             }
         });
-        String masterNetworkInterfaces = baos.toString();
+        String controllerNetworkInterfaces = baos.toString();
 
         assertThat("Should at least contain one network interface.",
-                masterNetworkInterfaces,
+                controllerNetworkInterfaces,
                 containsString(expectedName));
     }
 }

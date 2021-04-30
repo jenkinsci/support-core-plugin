@@ -213,14 +213,14 @@ class SmartLogFetcher {
     }
 
     /**
-     * Takes what we already cached on the master, then figure out what needs to be transferred back.
+     * Takes what we already cached on the controller, then figure out what needs to be transferred back.
      *
      * <p>
      * Returns the information as a tuple of (relative file name from the directory, offset that needs to be read)
      */
     public static final class LogFileHashSlurper extends MasterToSlaveFileCallable<Map<String,Long>> {
         /**
-         * What we already cached on the master side.
+         * What we already cached on the controller side.
          */
         private final Map<String,FileHash> cached;
 

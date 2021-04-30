@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
 /**
- * Custom Log recorders files from the master.
+ * Custom Log recorders files from the controller.
  */
 @Extension(ordinal = 100.0)
 public class CustomLogs extends Component {
@@ -52,7 +52,7 @@ public class CustomLogs extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Master Custom Log Recorders";
+        return "Controller Custom Log Recorders";
     }
 
     @Override

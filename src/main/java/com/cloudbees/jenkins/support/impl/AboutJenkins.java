@@ -121,7 +121,7 @@ public class AboutJenkins extends Component {
 
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
-        container.add(new MasterChecksumsContent());
+        container.add(new ControllerChecksumsContent());
         for (final Node node : Jenkins.getInstance().getNodes()) {
             container.add(new NodeChecksumsContent(node));
         }
@@ -347,7 +347,7 @@ public class AboutJenkins extends Component {
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
-                // The master endpoint may be in the args
+                // The controller endpoint may be in the args
                 result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
@@ -701,8 +701,8 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class MasterChecksumsContent extends PrintedContent {
-        MasterChecksumsContent() {
+    private static class ControllerChecksumsContent extends PrintedContent {
+        ControllerChecksumsContent() {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {

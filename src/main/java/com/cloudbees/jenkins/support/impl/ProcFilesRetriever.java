@@ -109,7 +109,7 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
      *
      * @param container the support {@link Container}.
      * @param node the node for which the method is called.
-     * @param name the node name, <em>"master"</em> if Master, and <em>slave/${nodeName}</em> if an agent.
+     * @param name the node name, <em>"master"</em> if Controller, and <em>slave/${nodeName}</em> if an agent.
      */
     protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
     }
