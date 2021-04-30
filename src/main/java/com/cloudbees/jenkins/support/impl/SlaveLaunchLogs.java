@@ -60,12 +60,6 @@ public class SlaveLaunchLogs extends Component{
         return "Agent Launch Logs";
     }
 
-    @NonNull
-    @Override
-    public String getId() {
-        return "AgentLaunchLogs";
-    }
-
     @Override
     public void addContents(@NonNull Container container) {
         addAgentLaunchLog(container);

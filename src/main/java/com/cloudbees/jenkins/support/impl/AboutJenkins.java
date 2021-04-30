@@ -639,7 +639,7 @@ public class AboutJenkins extends Component {
                     Markdown.escapeBacktick(ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
             out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
-            out.println("      - Agent Version:  " + Launcher.VERSION);
+            out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").getInfo(filter));
             out.println();
             for (Node node : jenkins.getNodes()) {

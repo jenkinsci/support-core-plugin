@@ -28,7 +28,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.google.common.annotations.VisibleForTesting;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -78,12 +77,6 @@ public final class SlaveCommandStatistics extends Component {
     @Override
     public String getDisplayName() {
         return "Agent Command Statistics";
-    }
-
-    @NonNull
-    @Override
-    public String getId() {
-        return "AgentCommandStatistics";
     }
 
     @Override

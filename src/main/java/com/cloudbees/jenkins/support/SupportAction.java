@@ -294,16 +294,6 @@ public class SupportAction implements RootAction, StaplerProxy {
                     remove.add(s.getName()+ "JVMProcessSystemMetricsContents");
                     remove.add(s.getName()+ "SystemConfiguration");
                 }
-                // JENKINS-62925: backward compatibility for "SlaveCommandStatistics"
-                if("SlaveCommandStatistics".equals(s.getName())) {
-                    logger.log(Level.WARNING, Messages._SupportCommand_jenkins_62925_deprecated_ids("SlaveCommandStatistics", "AgentCommandStatistics").toString());
-                    remove.add("AgentCommandStatistics");
-                }
-                // JENKINS-62925: backward compatibility for "SlaveLogs"
-                if("SlaveLogs".equals(s.getName())) {
-                    logger.log(Level.WARNING, Messages._SupportCommand_jenkins_62925_deprecated_ids("SlaveLogs", "AgentLogs").toString());
-                    remove.add("AgentCommandStatistics");
-                }
             }
         }
         logger.fine("Selecting components...");
@@ -343,20 +333,6 @@ public class SupportAction implements RootAction, StaplerProxy {
             logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids("Agents").toString());
             componentNames.add("AgentsJVMProcessSystemMetricsContents");
             componentNames.add("AgentsSystemConfiguration");
-        }
-
-        // JENKINS-62925: If "SlaveCommandStatistics" is used, show a warning and add the new name 
-        // "AgentsCommandStatistics" to the selection for backward compatibility
-        if(componentNames.contains("SlaveCommandStatistics")) {
-            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_62925_deprecated_ids("SlaveCommandStatistics", "AgentCommandStatistics").toString());
-            componentNames.add("AgentCommandStatistics");
-        }
-
-        // JENKINS-62925: If "SlaveLogs" is used, show a warning and add the new name "AgentLogs" to the selection 
-        // for backward compatibility
-        if(componentNames.contains("SlaveLogs")) {
-            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_62925_deprecated_ids("SlaveLogs","AgentLogs").toString());
-            componentNames.add("AgentLogs");
         }
         
         logger.fine("Selecting components...");

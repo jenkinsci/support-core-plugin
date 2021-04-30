@@ -79,12 +79,6 @@ public class SlaveLogs extends Component {
         return "Agent Log Recorders";
     }
 
-    @NonNull
-    @Override
-    public String getId() {
-        return "AgentLogs";
-    }
-
     @Override
     public boolean isSelectedByDefault() {
         return false;
