@@ -49,18 +49,18 @@ public class SupportComputerActionTest {
      */
     @Test
     public void generateBundleDefaultsAndCheckContent() throws Exception {
-        j.createSlave("slave1", "test", null).getComputer().connect(false).get();
+        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
 
         // Check that the generation does not show any warnings
-        Computer computer = j.jenkins.getComputer("slave1");
+        Computer computer = j.jenkins.getComputer("agent1");
         ZipFile z = SupportTestUtils.generateBundleWithoutWarnings(
                 computer.getUrl(),
-                new SupportComputerAction(j.jenkins.getComputer("slave1")),
+                new SupportComputerAction(j.jenkins.getComputer("agent1")),
                 SupportPlugin.class,
                 j.createWebClient());
 
         assertNotNull(z.getEntry("manifest.md"));
-        assertNotNull(z.getEntry("nodes/slave/slave1/config.xml"));
+        assertNotNull(z.getEntry("nodes/slave/agent1/config.xml"));
 
         if (SystemPlatform.LINUX == SystemPlatform.current()) {
             List<String> files = Arrays.asList(
@@ -83,7 +83,7 @@ public class SupportComputerActionTest {
 
             for (String file : files) {
                 assertNotNull(file + " was not found in the bundle",
-                        z.getEntry("nodes/slave/slave1/" + file));
+                        z.getEntry("nodes/slave/agent1/" + file));
             }
         }
     }

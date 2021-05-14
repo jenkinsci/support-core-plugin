@@ -321,8 +321,8 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("slave1","test",null).getComputer().connect(false).get();
-        j.createSlave("slave2","test",null).getComputer().connect(false).get();
+        j.createSlave("agent1","test",null).getComputer().connect(false).get();
+        j.createSlave("agent2","test",null).getComputer().connect(false).get();
 
         RingBufferLogHandler checker = new RingBufferLogHandler();
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
@@ -416,7 +416,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
-        String objectName = "slave";
+        String objectName = "agent";
         j.createSlave(objectName, "/", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -433,7 +433,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
-        String objectName = "slave";
+        String objectName = "agent";
         j.createSlave(objectName, ".", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -450,8 +450,8 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {
-        String objectName = "slave";
-        // Create a slave with very bad words
+        String objectName = "agent";
+        // Create an agent with very bad words
         j.createSlave(objectName, "active plugins checksums md5 items about nodes manifest errors", null);
 
         /* This words are in the stopWords, so they won't never be replaced

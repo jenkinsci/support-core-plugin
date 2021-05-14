@@ -30,7 +30,7 @@ There are three ways of generating bundles:
 As part of the support bundle if the About Jenkins option is checked
 then you will receive a docker file in the bundle also. The docker file
 contains the current version of Jenkins, along with a wget operation to
-download all of the plugins on the Jenkins master. This creates a
+download all of the plugins on the Jenkins controller. This creates a
 similar environment for testing or reproducing bugs.
 
 First build the image:
@@ -41,7 +41,7 @@ then run the docker image
 
     docker run -d -p 8080:80
 
-This should create a new Jenkins master with the same version, and the
+This should create a new Jenkins controller with the same version, and the
 same plugins and versions all bundled.
 
 ## Third party support providers
@@ -84,7 +84,7 @@ If a stacktrace like the one below appears
 and the Jenkins logs are populated with 
 
 ```
-2018-01-04 04:52:17.633+0000 [id=123769] WARNING c.c.j.support.SupportPlugin#writeBundle: Could not attach 'nodes/slave/Slave1/checksums.md5' to support bundle
+2018-01-04 04:52:17.633+0000 [id=123769] WARNING c.c.j.support.SupportPlugin#writeBundle: Could not attach 'nodes/slave/agent1/checksums.md5' to support bundle
 org.eclipse.jetty.io.EofException: Closed
     at org.eclipse.jetty.server.HttpOutput.write(HttpOutput.java:476)
     at net.bull.javamelody.FilterServletOutputStream.write(FilterServletOutputStream.java:88)
@@ -114,7 +114,7 @@ enable anonymizing of various data. By enabling this feature, the
 default set of filters will anonymize agent names, agent computer names,
 agent labels, view names (aka folders), job names, usernames, and IP
 addresses (both IPv4 and IPv6). These data are mapped to randomly
-generated fake names which are saved to Jenkins master. A Jenkins
+generated fake names which are saved to Jenkins controller. A Jenkins
 administrator can view these mappings by going to **Manage Jenkins** **›>
 Support Bundle Anonymization**. All files written to the support bundle
 by this and all extensions of this plugin will replace all instances of

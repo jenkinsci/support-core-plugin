@@ -84,11 +84,11 @@ public class AboutJenkins extends Component {
 
     private static final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
 
-    private final WeakHashMap<Node,String> slaveVersionCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node,String> agentVersionCache = new WeakHashMap<Node, String>();
 
     private final WeakHashMap<Node,String> javaInfoCache = new WeakHashMap<Node, String>();
 
-    private final WeakHashMap<Node,String> slaveDigestCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node,String> agentDigestCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -121,7 +121,7 @@ public class AboutJenkins extends Component {
 
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
-        container.add(new MasterChecksumsContent());
+        container.add(new ControllerChecksumsContent());
         for (final Node node : Jenkins.getInstance().getNodes()) {
             container.add(new NodeChecksumsContent(node));
         }
@@ -146,11 +146,11 @@ public class AboutJenkins extends Component {
         out.println("      - 99th percentile:    " + snapshot.get99thPercentile());
     }
 
-    private static final class GetSlaveDigest extends MasterToSlaveCallable<String, RuntimeException> {
+    private static final class GetAgentDigest extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
         private final String rootPathName;
 
-        public GetSlaveDigest(FilePath rootPath) {
+        public GetAgentDigest(FilePath rootPath) {
             this.rootPathName = rootPath.getRemote();
         }
 
@@ -172,7 +172,7 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class GetSlaveVersion extends MasterToSlaveCallable<String, RuntimeException> {
+    private static class GetAgentVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
         @SuppressFBWarnings(
@@ -347,7 +347,7 @@ public class AboutJenkins extends Component {
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
-                // The master endpoint may be in the args
+                // The controller endpoint may be in the args
                 result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
@@ -658,12 +658,12 @@ public class AboutJenkins extends Component {
                 out.println("      - Labels:         " + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
-                    Slave slave = (Slave) node;
-                    out.println("      - Launch method:  " + getDescriptorName(slave.getLauncher()));
-                    if (slave.getLauncher() instanceof JNLPLauncher) {
-                        out.println("      - WebSocket:      " + ((JNLPLauncher) slave.getLauncher()).isWebSocket());
+                    Slave agent = (Slave) node;
+                    out.println("      - Launch method:  " + getDescriptorName(agent.getLauncher()));
+                    if (agent.getLauncher() instanceof JNLPLauncher) {
+                        out.println("      - WebSocket:      " + ((JNLPLauncher) agent.getLauncher()).isWebSocket());
                     }
-                    out.println("      - Availability:   " + getDescriptorName(slave.getRetentionStrategy()));
+                    out.println("      - Availability:   " + getDescriptorName(agent.getRetentionStrategy()));
                 }
                 VirtualChannel channel = node.getChannel();
                 if (channel == null) {
@@ -672,11 +672,11 @@ public class AboutJenkins extends Component {
                     out.println("      - Status:         on-line");
                     try {
                         out.println("      - Version:        " +
-                                AsyncResultCache.get(node, slaveVersionCache, new GetSlaveVersion(),
-                                        "slave.jar version", "(timeout with no cache available)"));
+                                AsyncResultCache.get(node, agentVersionCache, new GetAgentVersion(),
+                                        "agent.jar version", "(timeout with no cache available)"));
                     } catch (IOException e) {
                         logger.log(Level.WARNING,
-                                "Could not get slave.jar version for " + node.getNodeName(), e);
+                                "Could not get agent.jar version for " + node.getNodeName(), e);
                     }
                     try {
                         final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
@@ -701,8 +701,8 @@ public class AboutJenkins extends Component {
         }
     }
 
-    private static class MasterChecksumsContent extends PrintedContent {
-        MasterChecksumsContent() {
+    private static class ControllerChecksumsContent extends PrintedContent {
+        ControllerChecksumsContent() {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
@@ -739,8 +739,6 @@ public class AboutJenkins extends Component {
                     }
                 }
                 for (String resourcePath : Arrays.asList(
-                        "/WEB-INF/slave.jar", // note that as of 2.33 this will not be present (anyway it is the same as war/WEB-INF/lib/remoting-*.jar, printed above)
-                        "/WEB-INF/remoting.jar", // ditto
                         "/WEB-INF/jenkins-cli.jar",
                         "/WEB-INF/web.xml")) {
                     try {
@@ -796,13 +794,13 @@ public class AboutJenkins extends Component {
         @Override protected void printTo(PrintWriter out) throws IOException {
             try {
                 final FilePath rootPath = node.getRootPath();
-                String slaveDigest = rootPath == null ? "N/A" :
-                        AsyncResultCache.get(node, slaveDigestCache, new GetSlaveDigest(rootPath),
+                String agentDigest = rootPath == null ? "N/A" :
+                        AsyncResultCache.get(node, agentDigestCache, new GetAgentDigest(rootPath),
                                 "checksums", "N/A");
-                out.println(slaveDigest);
+                out.println(agentDigest);
             } catch (IOException e) {
                 logger.log(Level.WARNING,
-                        "Could not compute checksums on slave " + node.getNodeName(), e);
+                        "Could not compute checksums on agent " + node.getNodeName(), e);
             }
         }
 

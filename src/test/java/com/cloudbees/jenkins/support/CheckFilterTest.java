@@ -17,6 +17,7 @@ import com.cloudbees.jenkins.support.impl.SystemConfiguration;
 import com.cloudbees.jenkins.support.impl.SystemProperties;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.impl.UpdateCenter;
+import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -69,7 +70,7 @@ public class CheckFilterTest {
     private final static Logger LOGGER = Logger.getLogger(CheckFilterTest.class.getName());
 
     private final static String JOB_NAME = "thejob";
-    private final static String SLAVE_NAME = "slave0"; //it's the name used by createOnlineSlave
+    private final static String AGENT_NAME = "agent0"; //it's the name used by createOnlineSlave
     private final static String VIEW_ALL_NEW_NAME = "all-view";
     private final static String ENV_VAR = getFirstEnvVar();
 
@@ -136,8 +137,8 @@ public class CheckFilterTest {
         j.jenkins.getView("all").rename(VIEW_ALL_NEW_NAME);
         j.jenkins.save();
 
-        // Create the slave slave0 for some components and wait until it's online
-        j.waitOnline(j.createOnlineSlave());
+        // Create the agent agent0 for some components and wait until it's online
+        j.waitOnline(j.createSlave(AGENT_NAME, AGENT_NAME, new EnvVars()));
 
         // Create a job to have something pending in the queue for the BuilQueue component
         FreeStyleProject project = j.createFreeStyleProject(JOB_NAME);
@@ -224,18 +225,18 @@ public class CheckFilterTest {
             //checksum.md5 is not generated in tests
 
             //AboutJenkins -> nodes.md
-            //The slave node name should be filtered
-            fileSet.add(of("nodes.md", SLAVE_NAME, true));
+            //The agent node name should be filtered
+            fileSet.add(of("nodes.md", AGENT_NAME, true));
             //AboutUser
             fileSet.add(of("user.md", "anonymous", true));
 
-            fileSet.add(of("node-monitors.md", SLAVE_NAME, true));
+            fileSet.add(of("node-monitors.md", AGENT_NAME, true));
 
             fileSet.add(of("admin-monitors.md", "diagnostics", false));
             fileSet.add(of("admin-monitors.md", "Family", false));
 
 
-            fileSet.add(of("nodes/slave/*/config.xml", SLAVE_NAME, true));
+            fileSet.add(of("nodes/slave/*/config.xml", AGENT_NAME, true));
 
             //BuildQueue -> Name of item: ...
             fileSet.add(of("buildqueue.md", JOB_NAME, true));
@@ -244,7 +245,7 @@ public class CheckFilterTest {
             fileSet.add(of("jenkins-root-configuration-files/config.xml", "all-view", true));
 
             // DumpExportTable --> nodes/slave/*/exportTable.txt
-            fileSet.add(of("nodes/slave/*/exportTable.txt", SLAVE_NAME, true));
+            fileSet.add(of("nodes/slave/*/exportTable.txt", AGENT_NAME, true));
 
             // EnvironmentVariables --> nodes/master/environment.txt and nodes/slave/*/environment.txt. A well known
             // and also existing in all OS environment variable
@@ -317,7 +318,7 @@ public class CheckFilterTest {
             }
 
             //NodeMonitors --> node-monitors.md
-            fileSet.add(of("node-monitors.md", SLAVE_NAME, true));
+            fileSet.add(of("node-monitors.md", AGENT_NAME, true));
 
             //UpdateCenter --> update-center.md
             if (getUpdateCenterURL(jenkins) != null) {

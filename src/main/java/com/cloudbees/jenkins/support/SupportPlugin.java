@@ -727,7 +727,7 @@ public class SupportPlugin extends Plugin {
     }
 
     public static class LogHolder {
-        private static final SupportLogHandler SLAVE_LOG_HANDLER = new SupportLogHandler(256, 2048, 8);
+        private static final SupportLogHandler AGENT_LOG_HANDLER = new SupportLogHandler(256, 2048, 8);
     }
 
     private static class LogInitializer extends MasterToSlaveCallable<Void, RuntimeException> {
@@ -742,11 +742,11 @@ public class SupportPlugin extends Plugin {
         }
 
         public Void call() {
-            // avoid double installation of the handler. JNLP agents can reconnect to the master multiple times
+            // avoid double installation of the handler. JNLP agents can reconnect to the controller multiple times
             // and each connection gets a different RemoteClassLoader, so we need to evict them by class name,
             // not by their identity.
             for (Handler h : ROOT_LOGGER.getHandlers()) {
-                if (h.getClass().getName().equals(LogHolder.SLAVE_LOG_HANDLER.getClass().getName())) {
+                if (h.getClass().getName().equals(LogHolder.AGENT_LOG_HANDLER.getClass().getName())) {
                     ROOT_LOGGER.removeHandler(h);
                     try {
                         h.close();
@@ -755,9 +755,9 @@ public class SupportPlugin extends Plugin {
                     }
                 }
             }
-            LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
-            LogHolder.SLAVE_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
-            ROOT_LOGGER.addHandler(LogHolder.SLAVE_LOG_HANDLER);
+            LogHolder.AGENT_LOG_HANDLER.setLevel(level);
+            LogHolder.AGENT_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
+            ROOT_LOGGER.addHandler(LogHolder.AGENT_LOG_HANDLER);
             return null;
         }
 
@@ -767,7 +767,7 @@ public class SupportPlugin extends Plugin {
         private static final long serialVersionUID = 1L;
 
         public List<LogRecord> call() throws RuntimeException {
-            return new ArrayList<>(LogHolder.SLAVE_LOG_HANDLER.getRecent());
+            return new ArrayList<>(LogHolder.AGENT_LOG_HANDLER.getRecent());
         }
 
     }
@@ -783,7 +783,7 @@ public class SupportPlugin extends Plugin {
         }
 
         public Void call() throws RuntimeException {
-            LogHolder.SLAVE_LOG_HANDLER.setLevel(level);
+            LogHolder.AGENT_LOG_HANDLER.setLevel(level);
             return null;
         }
 

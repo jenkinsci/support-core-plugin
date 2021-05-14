@@ -15,7 +15,7 @@ import java.util.Set;
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
 
 /**
- * Task Log files from the master node.
+ * Task Log files from the controller node.
  */
 @Extension(ordinal = 100.0) // put this first as largest content and can let the slower ones complete
 public class TaskLogs extends Component {
@@ -29,7 +29,7 @@ public class TaskLogs extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Master Task Log Recorders";
+        return "Controller Task Log Recorders";
     }
 
     @Override
@@ -39,7 +39,7 @@ public class TaskLogs extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        addOtherMasterLogs(result);
+        addControllerTasksLogs(result);
     }
     
     /**
@@ -48,7 +48,7 @@ public class TaskLogs extends Component {
      * Does not add anything if Jenkins instance is unavailable.
      * Some plugins write log files here.
      */
-    private void addOtherMasterLogs(Container result) {
+    private void addControllerTasksLogs(Container result) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File logs = getLogsRoot();

@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Heap histogram from master node.
+ * Heap histogram from cntroller node.
  */
 @Extension
 @Restricted(NoExternalUse.class)
@@ -48,7 +48,7 @@ public class HeapUsageHistogram extends Component {
     @NonNull
     @Override
     public String getDisplayName() {
-        return "Master Heap Histogram";
+        return "Controller Heap Histogram";
     }
 
     @Override

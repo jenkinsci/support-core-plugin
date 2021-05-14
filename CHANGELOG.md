@@ -81,7 +81,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
 -   [
     JENKINS-58528](https://issues.jenkins-ci.org/browse/JENKINS-58528) -
     Report available processes for
-    master
+    controller
 
 ### Version 2.60 (2019 Aug 6)
 
@@ -226,7 +226,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     to restore heap histogram generation, pending a better fix.
 -   Sort thread dumps by name rather than ID.
 
--   Reduce pressure on master file descriptors.
+-   Reduce pressure on controller file descriptors.
 
 -   [
     JENKINS-46132](https://issues.jenkins-ci.org/browse/JENKINS-46132) -
@@ -365,7 +365,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     Pick up and logs that have been refactored into JENKINS\_HOME/logs.
 -   [PR
     62](https://github.com/jenkinsci/support-core-plugin/pull/62)
-    Separate slave logs, and master logs.
+    Separate agent logs, and controller logs.
 -   [JENKINS-26409](https://issues.jenkins-ci.org/browse/JENKINS-26409)
     [PR
     60](https://github.com/jenkinsci/support-core-plugin/pull/60)
@@ -411,7 +411,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     Add update center information.
 -   [PR
     54](https://github.com/jenkinsci/support-core-plugin/pull/54)
-    Add slave version information for master node.
+    Add agent version information for master node.
 -   [PR
     55](https://github.com/jenkinsci/support-core-plugin/pull/55)
     Switch to a ThreadLocal DateFormatter
@@ -429,7 +429,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
 -   [JENKINS-30117](https://issues.jenkins-ci.org/browse/JENKINS-30117)
     Support bundle blocks with lots of data
 -   [JENKINS-28216](https://issues.jenkins-ci.org/browse/JENKINS-28216)
-    Obtain slave logs using async callable.
+    Obtain agent logs using async callable.
 
 ### Version 2.28
 
@@ -438,7 +438,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     Deadlock detector now records the full stack traces
 -   [PR
     18](https://github.com/jenkinsci/support-core-plugin/pull/18)
-    Option to capture the export table of slaves added
+    Option to capture the export table of agents added
 
 ### Version 2.27
 
@@ -514,7 +514,7 @@ No changelog recorded, blame [Unknown User
 
 ### Version 2.17 (Oct 10 2014)
 
--   Capture past slave launch logs, not just the current session
+-   Capture past agent launch logs, not just the current session
     ([JENKINS-25108](https://issues.jenkins-ci.org/browse/JENKINS-25108))
 
 ### Version 2.16 (Oct 8 2014)
@@ -524,7 +524,7 @@ No changelog recorded, blame [Unknown User
 ### Version 2.15 (Sept 25 2014)
 
 -   Added some NPE safety against cloud implementations that return
-    malformed slave descriptions
+    malformed agent descriptions
 -   Slow request content was not properly displaying stack trace
     elements
 -   Resolve file descriptor symlinks
@@ -562,7 +562,7 @@ No changelog recorded, blame [Unknown User
 
 -   The remote node logs were not being transferred once the log file
     grew above a certain undetermined critical size due to GC pressure
-    removing an exported remoting reference from the slave's JVM.
+    removing an exported remoting reference from the agent's JVM.
 
 ### Version 2.9 (Jul 8 2014)
 
@@ -572,9 +572,9 @@ No changelog recorded, blame [Unknown User
 
 ### Version 2.8 (Jul 8 2014)
 
--   Add caching of slave log files with append-based fetch for when the
+-   Add caching of agent log files with append-based fetch for when the
     cache contains partial content. Should significantly reduce the
-    support bundle generation load unless slave logs are generating a
+    support bundle generation load unless agent logs are generating a
     *lot* of content rapidly.
 
 ### Version 2.7 (Jul 4 2014)
@@ -589,7 +589,7 @@ No changelog recorded, blame [Unknown User
 
 -   Fix file list cap to actually do something, and not throw exceptions
     when hitting the cap.
--   Ignore offline slaves when checking file descriptors (workaround for
+-   Ignore offline agents when checking file descriptors (workaround for
     [JENKINS-21999](https://issues.jenkins-ci.org/browse/JENKINS-21999)).
 
 ### Version 2.5 (May 12 2014)
@@ -609,7 +609,7 @@ No changelog recorded, blame [Unknown User
 
 ### Version 2.1 (Mar 24 2014)
 
--   Robustness for plugins missing descriptors, such as on special slave
+-   Robustness for plugins missing descriptors, such as on special agent
     launchers.
 -   [JENKINS-22326](https://issues.jenkins-ci.org/browse/JENKINS-22326)
     Deadlock in logging.
@@ -621,7 +621,7 @@ No changelog recorded, blame [Unknown User
     Plugin](https://wiki.jenkins.io/display/JENKINS/Metrics+Plugin) (as
     a result, minimum required version of Jenkins has been increased to
     1.520).
--   Fixed bug where large slave launch logs could cause an OOM in
+-   Fixed bug where large agent launch logs could cause an OOM in
     Jenkins.
 -   Reports on LSB modules when defined / available 
 

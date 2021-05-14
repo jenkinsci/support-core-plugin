@@ -38,7 +38,7 @@ public class NodeRemoteDirectoryComponentTest {
      */
     @Test
     public void addContentsWithExcludes() throws Exception {
-        DumbSlave agent = j.createSlave("slave1", "test", null);
+        DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);
 
@@ -54,7 +54,7 @@ public class NodeRemoteDirectoryComponentTest {
      */
     @Test
     public void addContentsWithIncludes() throws Exception {
-        DumbSlave agent = j.createSlave("slave1", "test", null);
+        DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);
 
@@ -70,7 +70,7 @@ public class NodeRemoteDirectoryComponentTest {
      */
     @Test
     public void addContentsWithMaxDepth() throws Exception {
-        DumbSlave agent = j.createSlave("slave1", "test", null);
+        DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);
 

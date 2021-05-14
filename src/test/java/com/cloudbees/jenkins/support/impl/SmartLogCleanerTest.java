@@ -34,8 +34,8 @@ public class SmartLogCleanerTest {
         File supportDir = new File(j.getInstance().getRootDir(), "support");
         File cacheDir = new File(supportDir, "winsw");
 
-        DumbSlave slave1 = j.createOnlineSlave();
-        DumbSlave slave2 = j.createOnlineSlave();
+        DumbSlave agent1 = j.createOnlineSlave();
+        DumbSlave agent2 = j.createOnlineSlave();
         generateBundle();
 
         assertNotNull("The cache directory is empty", cacheDir.list());
@@ -51,7 +51,7 @@ public class SmartLogCleanerTest {
         }
 
         assertEquals(cacheDir.list().length, 2);
-        j.getInstance().removeNode(slave2);
+        j.getInstance().removeNode(agent2);
 
         generateBundle();
 
