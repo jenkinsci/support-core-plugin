@@ -1,9 +1,11 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.sun.management.UnixOperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -21,19 +23,16 @@ import jenkins.security.MasterToSlaveCallable;
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -84,34 +83,24 @@ public class FileDescriptorLimit extends Component {
                 name = "slave/" + node.getNodeName();
             }
             container.add(
-                    new Content("nodes/{0}/file-descriptors.txt", name) {
+                    new PrefilteredPrintedContent("nodes/{0}/file-descriptors.txt", name) {
+
                         @Override
-                        public void writeTo(OutputStream os) throws IOException {
-                            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                        protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
                             out.println(node.getDisplayName());
                             out.println("======");
                             out.println();
                             try {
-                                out.println(getUlimit(node));
+                                out.println(AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(filter), 
+                                    "file descriptor info", "N/A: Either no connection to node or no cached result"));
                             } catch (IOException e) {
                                 Functions.printStackTrace(e, out);
                             } finally {
                                 out.flush();
                             }
                         }
-
-                        @Override
-                        public boolean shouldBeFiltered() {
-                            // The information of this content is not sensible, so it doesn't need to be filtered.
-                            return false;
-                        }
                     }
             );
-    }
-
-    public String getUlimit(Node node) throws IOException {
-        return AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(), "file descriptor info",
-                "N/A: Either no connection to node or no cached result");
     }
 
     @Deprecated
@@ -119,13 +108,20 @@ public class FileDescriptorLimit extends Component {
         if (channel == null) {
             return "N/A: No connection to node.";
         }
-        return channel.call(new GetUlimit());
+        return channel.call(new GetUlimit(SupportPlugin.getContentFilter().orElse(null)));
     }
 
     /**
      * * For agent machines.
      */
     private static final class GetUlimit extends MasterToSlaveCallable<String, RuntimeException> {
+        
+        private final ContentFilter filter;
+
+        public GetUlimit(ContentFilter filter) {
+            this.filter = filter;
+        }
+
         public String call() {
             StringWriter bos = new StringWriter();
             PrintWriter pw = new PrintWriter(bos);
@@ -140,7 +136,7 @@ public class FileDescriptorLimit extends Component {
                 Functions.printStackTrace(e, pw);
             }
             try {
-                listAllOpenFileDescriptors(pw);
+                listAllOpenFileDescriptors(pw, filter);
             } catch (Exception e) {
                 Functions.printStackTrace(e, pw);
             }
@@ -153,7 +149,7 @@ public class FileDescriptorLimit extends Component {
      * * Using OperatingSystemMXBean, we can obtain the total number of open file descriptors.
      */
     @IgnoreJRERequirement // UnixOperatingSystemMXBean
-    private static void getOpenFileDescriptorCount(PrintWriter writer) throws UnsupportedEncodingException {
+    private static void getOpenFileDescriptorCount(PrintWriter writer) {
         try {
             OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
             if (operatingSystemMXBean instanceof UnixOperatingSystemMXBean) {
@@ -172,7 +168,7 @@ public class FileDescriptorLimit extends Component {
      * * going to /proc/self/fd. This will translate self to the correct PID of the current java
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
-    private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException, InterruptedException {
+    private static void listAllOpenFileDescriptors(PrintWriter writer, ContentFilter filter) throws IOException {
         writer.println();
         writer.println("All open files");
         writer.println("==============");
@@ -180,10 +176,10 @@ public class FileDescriptorLimit extends Component {
         if (files != null) {
             for (File file : files) {
                 try {
-                    writer.println(Util.resolveSymlink(file));
-                } catch (IOException e) {
+                    writer.println(ContentFilter.filter(filter, Objects.requireNonNull(Util.resolveSymlink(file))));
+                } catch (NullPointerException | IOException e) {
                     // If we fail to resolve the symlink, just print the file.
-                    writer.println(file.getCanonicalPath());
+                    writer.println(ContentFilter.filter(filter, file.getCanonicalPath()));
                 }
             }
         }
