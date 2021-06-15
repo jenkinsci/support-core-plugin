@@ -58,7 +58,7 @@ public class FileDescriptorLimit extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins j = Jenkins.getInstance();
+        Jenkins j = Jenkins.get();
         addContents(container, j);
         for (Node node : j.getNodes()) {
             addContents(container, node);
@@ -70,37 +70,37 @@ public class FileDescriptorLimit extends Component {
         if (c == null) {
             return;
         }
-        if (c instanceof SlaveComputer && !Boolean.TRUE.equals(((SlaveComputer) c).isUnix())) {
+        if (c instanceof SlaveComputer && !Boolean.TRUE.equals(c.isUnix())) {
             return;
         }
-            if (!node.createLauncher(TaskListener.NULL).isUnix()) {
-                return;
-            }
-            String name;
-            if (node instanceof Jenkins) {
-                name = "master";
-            } else {
-                name = "slave/" + node.getNodeName();
-            }
-            container.add(
-                    new PrefilteredPrintedContent("nodes/{0}/file-descriptors.txt", name) {
+        if (!node.createLauncher(TaskListener.NULL).isUnix()) {
+            return;
+        }
+        String name;
+        if (node instanceof Jenkins) {
+            name = "master";
+        } else {
+            name = "slave/" + node.getNodeName();
+        }
+        container.add(
+            new PrefilteredPrintedContent("nodes/{0}/file-descriptors.txt", name) {
 
-                        @Override
-                        protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
-                            out.println(node.getDisplayName());
-                            out.println("======");
-                            out.println();
-                            try {
-                                out.println(AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(filter), 
-                                    "file descriptor info", "N/A: Either no connection to node or no cached result"));
-                            } catch (IOException e) {
-                                Functions.printStackTrace(e, out);
-                            } finally {
-                                out.flush();
-                            }
-                        }
+                @Override
+                protected void printTo(PrintWriter out, ContentFilter filter) {
+                    out.println(node.getDisplayName());
+                    out.println("======");
+                    out.println();
+                    try {
+                        out.println(AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(filter),
+                            "file descriptor info", "N/A: Either no connection to node or no cached result"));
+                    } catch (IOException e) {
+                        Functions.printStackTrace(e, out);
+                    } finally {
+                        out.flush();
                     }
-            );
+                }
+            }
+        );
     }
 
     @Deprecated
@@ -191,16 +191,13 @@ public class FileDescriptorLimit extends Component {
     @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
     private static void getUlimit(PrintWriter writer) throws IOException {
         // TODO should first check whether /bin/bash even exists
-        InputStream is = new ProcessBuilder("bash", "-c", "ulimit -a").start().getInputStream();
-        try {
+        try (InputStream is = new ProcessBuilder("bash", "-c", "ulimit -a").start().getInputStream()) {
             // this is reading from the process so platform encoding is correct
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 writer.println(line);
             }
-        } finally {
-            is.close();
         }
     }
 }
