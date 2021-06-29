@@ -49,7 +49,7 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  *
  */
 @Extension
-public class SlaveLaunchLogs extends Component{
+public class SlaveLaunchLogs extends Component {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -84,8 +84,8 @@ public class SlaveLaunchLogs extends Component{
             /**
              * Launch log directory of the agent: logs/slaves/NAME
              */
-            File dir;
-            long time;
+            final File dir;
+            final long time;
 
             Agent(File dir, File lastLog) {
                 this.dir = dir;
@@ -101,11 +101,7 @@ public class SlaveLaunchLogs extends Component{
              * sort in descending order; newer ones first.
              */
             public int compareTo(Agent that) {
-                long lhs = this.time;
-                long rhs = that.time;
-                if (lhs<rhs)    return 1;
-                if (lhs>rhs)    return -1;
-                return 0;
+                return Long.compare(that.time, this.time);
             }
 
             @Override
@@ -115,9 +111,7 @@ public class SlaveLaunchLogs extends Component{
 
                 Agent agent = (Agent) o;
 
-                if (time != agent.time) return false;
-
-                return true;
+                return time == agent.time;
             }
 
             @Override
@@ -137,7 +131,7 @@ public class SlaveLaunchLogs extends Component{
 
         {// find all the agent launch log files and sort them newer ones first
 
-            File agentLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            File agentLogsDir = new File(Jenkins.get().getRootDir(), "logs/slaves");
             File[] logs = agentLogsDir.listFiles();
             if (logs!=null) {
                 for (File dir : logs) {
@@ -153,7 +147,7 @@ public class SlaveLaunchLogs extends Component{
             Collections.sort(all);
         }
         {// this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Jenkins.getInstance().getNodes().size() * 5);
+            int acceptableSize = Math.max(256, Jenkins.get().getNodes().size() * 5);
 
             if (all.size() > acceptableSize)
                 all = all.subList(0, acceptableSize);
