@@ -120,10 +120,10 @@ public class SlaveLaunchLogs extends Component {
             }
 
             /**
-             * If the file is more than a year old, can't imagine how that'd be of any interest.
+             * If the file is more than 7 days old, it is considered too old.
              */
             public boolean isTooOld() {
-                return time < System.currentTimeMillis()- TimeUnit.DAYS.toMillis(365);
+                return time < System.currentTimeMillis()- TimeUnit.DAYS.toMillis(7);
             }
         }
 
