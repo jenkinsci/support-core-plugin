@@ -91,7 +91,40 @@ public class SupportTestUtils {
     }
 
     /**
-     * Invoke an object component, and return the component contents as a String.
+     * Invoke a component, and return the component contents as a Map<String,String> where the key is the 
+     * zip key and the value is the string content.
+     */
+    public static Map<String, String> invokeComponentToMap(final Component component) {
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final Map<String, String> contents = new TreeMap<>();
+        component.addContents(
+            new Container() {
+                @Override
+                public void add(@CheckForNull Content content) {
+                    try {
+                        Objects.requireNonNull(content).writeTo(baos);
+                        contents.put(
+                            SupportPlugin.getNameFiltered(
+                                SupportPlugin.getContentFilter(),
+                                content.getName(),
+                                content.getFilterableParameters()
+                            ),
+                            baos.toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        baos.reset();
+                    }
+                }
+            });
+
+        return contents;
+    }
+
+    /**
+     * Invoke an object component, and return the component contents as a Map<String,String> where the key is the 
+     * zip key and the value is the string content.
      */
     public static <T extends AbstractModelObject> Map<String, String> invokeComponentToMap(
             final ObjectComponent<T> component, T object) {

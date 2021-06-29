@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.model.Node;
 import hudson.security.Permission;
 import hudson.slaves.Cloud;
@@ -47,6 +48,7 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  * Adds agent launch logs, which captures the current and past running connections to the agent.
  *
  */
+@Extension
 public class SlaveLaunchLogs extends Component{
     @NonNull
     @Override
