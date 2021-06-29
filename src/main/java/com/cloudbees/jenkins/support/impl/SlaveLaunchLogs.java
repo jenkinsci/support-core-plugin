@@ -162,4 +162,9 @@ public class SlaveLaunchLogs extends Component {
                 }
         }
     }
+
+    @Override
+    public boolean isSelectedByDefault() {
+        return false;
+    }
 }
