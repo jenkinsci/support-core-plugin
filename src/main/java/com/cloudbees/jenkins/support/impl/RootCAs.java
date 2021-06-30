@@ -129,8 +129,8 @@ public class RootCAs extends Component {
       // Inspired by:
       // https://github.com/jenkinsci/jenkins-scripts/pull/82/files
       // https://stackoverflow.com/questions/8884831/listing-certificates-in-jvm-trust-store
-      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init((KeyStore) null);
+      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); //FIPS OK: Reading certificates.
+      trustManagerFactory.init((KeyStore) null); //FIPS OK: Not Used.
       TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
       for (int i = 0; i < trustManagers.length; i++) {
         writer.append("===== Trust Manager ").append(String.valueOf(i)).append(" =====\n");

@@ -68,7 +68,7 @@ class SmartLogFetcher {
         ForNode(Node node) throws IOException {
             this.node = node;
 
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath());
+            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath()); //FIPS OK: Not security related.
             this.cacheDir = new File(rootCacheDir, StringUtils.right(cacheKey, 8));
 
             if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {
@@ -179,7 +179,7 @@ class SmartLogFetcher {
         /**
          * Computes the checksum of a stream upto the specified length.
          */
-        public static String getDigestOf(InputStream stream, long length) throws IOException {
+        public static String getDigestOf(InputStream stream, long length) throws IOException { //FIPS OK: Not security related.
             try {
                 if (length == 0 || stream == null) return ZERO_LENGTH_MD5;
                 int bufferSize;
@@ -189,7 +189,7 @@ class SmartLogFetcher {
                 byte[] buffer = new byte[bufferSize];
                 MessageDigest digest = null;
                 try {
-                    digest = MessageDigest.getInstance("md5");
+                    digest = MessageDigest.getInstance("md5"); //FIPS OK: Not security related.
                 } catch (NoSuchAlgorithmException e) {
                     throw new IllegalStateException("Java Language Specification mandates MD5 as a supported digest",
                             e);
