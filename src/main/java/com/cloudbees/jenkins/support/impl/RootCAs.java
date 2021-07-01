@@ -129,8 +129,13 @@ public class RootCAs extends Component {
       // Inspired by:
       // https://github.com/jenkinsci/jenkins-scripts/pull/82/files
       // https://stackoverflow.com/questions/8884831/listing-certificates-in-jvm-trust-store
-      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init((KeyStore) null);
+      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); //FIPS OK: Reading certificates.
+      trustManagerFactory.init((KeyStore) null); //FIPS OK: Not Used.
+/*
+FIPS OK: https://downloads.bouncycastle.org/fips-java/BC-FJA-UserGuide-1.0.2.pdf Section 7 Key Stores says:
+The FIPS keystore type will read both BCFKS files and JKS files with one caveat, it will not accept a JKS file containing a secret/private key. This can be useful where JKS files are being used solely for the storage of certificates, such as with the cacerts file found in the typical JVM.
+Meaning, reading certificates from a JKS file is fine.
+*/
       TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
       for (int i = 0; i < trustManagers.length; i++) {
         writer.append("===== Trust Manager ").append(String.valueOf(i)).append(" =====\n");

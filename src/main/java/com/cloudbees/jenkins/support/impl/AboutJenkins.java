@@ -160,7 +160,7 @@ public class AboutJenkins extends Component {
             for (File file : FileUtils.listFiles(rootPath, null, false)) {
                 if (file.isFile()) {
                     try {
-                        result.append(Util.getDigestOf(new FileInputStream(file)))
+                        result.append(Util.getDigestOf(new FileInputStream(file))) //FIPS OK: Not security related.
                                 .append("  ")
                                 .append(file.getName()).append('\n');
                     } catch (IOException e) {
@@ -394,7 +394,7 @@ public class AboutJenkins extends Component {
             out.println("---------------");
             out.println();
             out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
-            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId()) + "`");
+            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId()) + "`"); //FIPS OK: Not security related.
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -472,7 +472,7 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("Fingerprint");
             out.println("---------------");
-            out.println(idRootAction.getFingerprint());
+            out.println(idRootAction.getFingerprint()); //FIPS OK: Reading ID.
         }
     }
 
@@ -715,7 +715,7 @@ public class AboutJenkins extends Component {
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar != null) {
                 try {
-                    out.println(Util.getDigestOf(new FileInputStream(jenkinsWar)) + "  jenkins.war");
+                    out.println(Util.getDigestOf(new FileInputStream(jenkinsWar)) + "  jenkins.war"); //FIPS OK: Not security related.
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Could not compute MD5 of jenkins.war", e);
                 }
@@ -732,7 +732,7 @@ public class AboutJenkins extends Component {
                 for (String resourcePath : new TreeSet<String>(resourcePaths)) {
                     try {
                         out.println(
-                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
+                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war" //FIPS OK: Not security related.
                                         + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
@@ -747,7 +747,7 @@ public class AboutJenkins extends Component {
                             continue;
                         }
                         out.println(
-                                Util.getDigestOf(resourceAsStream) + "  war"
+                                Util.getDigestOf(resourceAsStream) + "  war" //FIPS OK: Not security related.
                                         + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
@@ -757,7 +757,7 @@ public class AboutJenkins extends Component {
                 for (String resourcePath : new TreeSet<String>(resourcePaths)) {
                     try {
                         out.println(
-                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war"
+                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war" //FIPS OK: Not security related.
                                         + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
@@ -769,7 +769,7 @@ public class AboutJenkins extends Component {
             for (File file : pluginFiles) {
                 if (file.isFile()) {
                     try {
-                        out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file
+                        out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file //FIPS OK: Not security related.
                                 .getName());
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war/" + file, e);

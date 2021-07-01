@@ -225,7 +225,7 @@ public class SlaveLogs extends Component {
         Set<String> cacheKeys = new HashSet<>(nodes.size());
         for (Node node : nodes) {
             // can't use node.getRootPath() cause won't work with disconnected agents.
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + ((hudson.model.Slave)node).getRemoteFS());
+            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + ((hudson.model.Slave)node).getRemoteFS()); //FIPS OK: Not security related.
             LOGGER.log(Level.FINEST, "cacheKey {0} is active", cacheKey);
             cacheKeys.add(StringUtils.right(cacheKey, 8));
         }
