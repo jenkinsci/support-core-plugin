@@ -23,41 +23,53 @@
  */
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.Content;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.SupportTestUtils;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.filter.ContentMapping;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.EnvVars;
+import junit.framework.AssertionFailedError;
+import org.hamcrest.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.util.Map;
 
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class AgentsConfigFileTest {
 
+    private static final String SENSITIVE_AGENT_NAME = "sensitive";
+    private static final String FILTERED_AGENT_NAME = "filtered";
+    
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
     @Test
     public void agentsConfigFile() throws Exception {
         j.createSlave("node1", "node1", new EnvVars());
-        AgentsConfigFile comp = new AgentsConfigFile();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        comp.addContents(new Container() {
-            @Override
-            public void add(@CheckForNull Content content) {
-                try {
-                    content.writeTo(baos);
-                } catch (IOException e) {
-                    fail(e.getMessage());
-                }
-            }
-        });
-        String fileContent = baos.toString();
+        String fileContent = SupportTestUtils.invokeComponentToString(new AgentsConfigFile());
         assertTrue(fileContent.contains("<name>node1</name>"));
+    }
+
+    @Issue("JENKINS-66064")
+    @Test
+    public void agentsConfigFileFiltered() throws Exception {
+        ContentFilters.get().setEnabled(true);
+        ContentMapping mapping = ContentMapping.of(SENSITIVE_AGENT_NAME, FILTERED_AGENT_NAME);
+        ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
+        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        j.createSlave(SENSITIVE_AGENT_NAME, "node1", new EnvVars());
+        Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AgentsConfigFile());
+        String sensitiveKey = "nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml";
+        String filteredKey = "nodes/slave/" + FILTERED_AGENT_NAME + "/config.xml";
+        MatcherAssert.assertThat(output, hasKey(filteredKey));
+        MatcherAssert.assertThat(output, not(hasKey(sensitiveKey)));
     }
 }
