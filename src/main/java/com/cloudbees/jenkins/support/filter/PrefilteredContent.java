@@ -46,7 +46,7 @@ public abstract class PrefilteredContent extends Content {
      * Write the component in the bundle filtering the content
      * @param os OutputStream where write the content
      * @param filter ContentFilter to apply
-     * @throws IOException
+     * @throws IOException If an input or output exception occurs
      */
     public abstract void writeTo(OutputStream os, ContentFilter filter) throws IOException;
 
