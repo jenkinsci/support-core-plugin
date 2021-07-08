@@ -259,7 +259,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * Generates a support bundle with selected components from the UI.
      * @param req The stapler request
      * @param rsp The stapler response
-     * @throws ServletException
+     * @throws ServletException If an error occurred during form submission
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
@@ -271,7 +271,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * Generates a support bundle with selected components from the UI.
      * @param req The stapler request
      * @param rsp The stapler response
-     * @throws ServletException
+     * @throws ServletException If an error occurred during form submission
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
