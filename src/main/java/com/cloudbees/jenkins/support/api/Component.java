@@ -113,7 +113,7 @@ public abstract class Component implements ExtensionPoint {
      *
      * @param clazz the class
      * @param <C> Object that extends {@link AbstractModelObject}
-     * @return {@code true} if the applicable to this class
+     * @return {@code true} if applicable to this class
      */
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
         return Jenkins.class.isAssignableFrom(clazz); 
