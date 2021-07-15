@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.model.Node;
 import hudson.security.Permission;
 import hudson.slaves.Cloud;
@@ -47,7 +48,8 @@ import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FIL
  * Adds agent launch logs, which captures the current and past running connections to the agent.
  *
  */
-public class SlaveLaunchLogs extends Component{
+@Extension
+public class SlaveLaunchLogs extends Component {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -82,8 +84,8 @@ public class SlaveLaunchLogs extends Component{
             /**
              * Launch log directory of the agent: logs/slaves/NAME
              */
-            File dir;
-            long time;
+            final File dir;
+            final long time;
 
             Agent(File dir, File lastLog) {
                 this.dir = dir;
@@ -99,11 +101,7 @@ public class SlaveLaunchLogs extends Component{
              * sort in descending order; newer ones first.
              */
             public int compareTo(Agent that) {
-                long lhs = this.time;
-                long rhs = that.time;
-                if (lhs<rhs)    return 1;
-                if (lhs>rhs)    return -1;
-                return 0;
+                return Long.compare(that.time, this.time);
             }
 
             @Override
@@ -113,9 +111,7 @@ public class SlaveLaunchLogs extends Component{
 
                 Agent agent = (Agent) o;
 
-                if (time != agent.time) return false;
-
-                return true;
+                return time == agent.time;
             }
 
             @Override
@@ -124,10 +120,10 @@ public class SlaveLaunchLogs extends Component{
             }
 
             /**
-             * If the file is more than a year old, can't imagine how that'd be of any interest.
+             * If the file is more than 7 days old, it is considered too old.
              */
             public boolean isTooOld() {
-                return time < System.currentTimeMillis()- TimeUnit.DAYS.toMillis(365);
+                return time < System.currentTimeMillis()- TimeUnit.DAYS.toMillis(7);
             }
         }
 
@@ -135,7 +131,7 @@ public class SlaveLaunchLogs extends Component{
 
         {// find all the agent launch log files and sort them newer ones first
 
-            File agentLogsDir = new File(Jenkins.getInstance().getRootDir(), "logs/slaves");
+            File agentLogsDir = new File(Jenkins.get().getRootDir(), "logs/slaves");
             File[] logs = agentLogsDir.listFiles();
             if (logs!=null) {
                 for (File dir : logs) {
@@ -151,7 +147,7 @@ public class SlaveLaunchLogs extends Component{
             Collections.sort(all);
         }
         {// this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Jenkins.getInstance().getNodes().size() * 5);
+            int acceptableSize = Math.max(256, Jenkins.get().getNodes().size() * 5);
 
             if (all.size() > acceptableSize)
                 all = all.subList(0, acceptableSize);
@@ -165,5 +161,10 @@ public class SlaveLaunchLogs extends Component{
                     result.add(new FileContent("nodes/slave/{0}/launchLogs/{1}", new String[]{s.getName(), f.getName()} , f, FileListCapComponent.MAX_FILE_SIZE));
                 }
         }
+    }
+
+    @Override
+    public boolean isSelectedByDefault() {
+        return false;
     }
 }
