@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.model.FreeStyleProject;
 import jenkins.model.Jenkins;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -187,6 +188,25 @@ public class ContentMappingsTest {
 
             // Previous mappings with the operating system are ignored
             assertTrue(mappings.getMappings().isEmpty());
+        });
+    }
+
+    @Issue("JENKINS-66023")
+    @Test
+    @LocalData
+    public void additionalStopWordsIncludedAsStopWord() {
+        String[] expectedStopWords = {
+            "abc", 
+            "https://core.example.com", 
+            "john doe", 
+            "192.168.0.1", 
+            "<h1>",
+            "  leadingspaces", 
+            "trailingspaces  "
+        };
+        rr.then(r -> {
+            ContentMappings mappings = ContentMappings.get();
+            MatcherAssert.assertThat(mappings.getStopWords(), hasItems(expectedStopWords));
         });
     }
 
