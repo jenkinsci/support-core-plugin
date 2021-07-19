@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
+import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -292,10 +293,24 @@ public class SupportPlugin extends Plugin {
 
     private static abstract class NonExistentComponent extends Component {}
 
+    /**
+     * Generate a bundle for all components that are selected in the Global Configuration.
+     * 
+     * @param outputStream an {@link OutputStream}
+     * @throws IOException if an error occurs while generating the bundle.
+     */
+    @Deprecated
     public static void writeBundle(OutputStream outputStream) throws IOException {
-        writeBundle(outputStream, getComponents());
+        writeBundle(outputStream, SupportAutomatedBundleConfiguration.get().getComponents());
     }
-    
+
+    /**
+     * Generate a bundle for all components that are selected in the Global Configuration.
+     *
+     * @param outputStream an {@link OutputStream}
+     * @param components a list of {@link Component} to include in the bundle
+     * @throws IOException if an error occurs while generating the bundle.
+     */
     public static void writeBundle(OutputStream outputStream, final List<? extends Component> components) throws IOException {
         writeBundle(outputStream, components, new ComponentVisitor() {
             @Override
@@ -304,7 +319,15 @@ public class SupportPlugin extends Plugin {
             }
         });
     }
-
+    
+    /**
+     * Generate a bundle for all components that are selected in the Global Configuration.
+     *
+     * @param outputStream an {@link OutputStream}
+     * @param components a list of {@link Component} to include in the bundle
+     * @param componentConsumer a {@link ComponentVisitor}
+     * @throws IOException if an error occurs while generating the bundle.
+     */
     public static void writeBundle(OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer) throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
@@ -862,7 +885,7 @@ public class SupportPlugin extends Plugin {
                             thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
                                     SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                             try (FileOutputStream fos = new FileOutputStream(file)) {
-                                writeBundle(fos);
+                                writeBundle(fos, SupportAutomatedBundleConfiguration.get().getComponents());
                             } finally {
                                 cleanupOldBundles(bundleDir, file);   
                             }
