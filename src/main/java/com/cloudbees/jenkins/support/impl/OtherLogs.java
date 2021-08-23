@@ -78,7 +78,7 @@ public class OtherLogs extends Component {
                         fileFilter = ROTATED_LOGFILE_FILTER;
                     }
                 } catch (IOException e) {
-                    LOGGER.fine("[Support Bundle] Could check if GC Logs file location '" + gcLogsFileLocation 
+                    LOGGER.fine("[Support Bundle] Could not check if GC Logs file location '" + gcLogsFileLocation 
                         + "' is in Jenkins root directory");
                     fileFilter = ROTATED_LOGFILE_FILTER;
                 }
