@@ -146,7 +146,7 @@ public class GCLogs extends Component {
     }
 
     @CheckForNull
-    private String getGcLogFileLocation() {
+    public String getGcLogFileLocation() {
 
         String fileLocation;
         
@@ -191,7 +191,7 @@ public class GCLogs extends Component {
                 gcLog.lastModified() > (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(GCLOGS_RETENTION_DAYS));
     }
 
-    private boolean isGcLogRotationConfigured() {
+    public boolean isGcLogRotationConfigured() {
         return isJava8OrBelow() && vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
     }
 
