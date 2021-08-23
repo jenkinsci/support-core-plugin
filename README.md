@@ -122,6 +122,22 @@ the original values with their anonymized counterpart. Note that the
 Stop Words list on that page shows which terms are ignored when
 filtering names (case-insensitive full match).
 
+### Additional Stop Words
+
+Additional Stop Words can be provided in a text file located at 
+`$JENKINS_HOME/support/additional-stop-words.txt`. Each non-blank line of
+the file is treated as a stop word. The following contains 3 stop words `abc`,
+`john doe` and `https://test.example.com`
+
+```
+abc
+john doe
+https://test.example.com
+```
+
+The system property `com.cloudbees.jenkins.support.filter.ContentMappings.additionalStopWordsFile`
+can be used to override the file location.
+
 ### Limitations
 
 Anonymization filters only apply to text files. It cannot handle

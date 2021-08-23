@@ -24,17 +24,24 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.util.Persistence;
 import hudson.Extension;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnull;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,6 +68,17 @@ import static java.util.stream.Collectors.toMap;
 @Restricted(NoExternalUse.class)
 public class ContentMappings extends ManagementLink implements Saveable, Iterable<ContentMapping> {
 
+    /**
+     * Name of the file containing additional user-provided stop words.
+     */
+    private static final String ADDITIONAL_STOP_WORDS_FILENAME = "additional-stop-words.txt";
+
+    /**
+     * Property to set to add <b>additional</b> stop words.
+     * The location should point to a line separated file containing words. Each line is treated as a word. 
+     */
+    static final String ADDITIONAL_STOP_WORDS_PROPERTY = ContentMappings.class.getName()+".additionalStopWordsFile";
+    
     /**
      * @return the singleton instance
      */
@@ -101,6 +119,9 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         // Add single character words
         stopWords.addAll(getAllAsciiCharacters());
 
+        // Add additional stop words
+        stopWords.addAll(getAdditionalStopWords());
+
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
                 : proxy.mappings.stream()
@@ -137,6 +158,33 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         }
 
         return singleChars;
+    }
+
+    private static Set<String> getAdditionalStopWords() {
+        Set<String> words = new HashSet<>();
+        String fileLocation = System.getProperty(ADDITIONAL_STOP_WORDS_PROPERTY, SupportPlugin.getRootDirectory()
+            + "/" + ADDITIONAL_STOP_WORDS_FILENAME);
+        if (fileLocation != null) {
+            LOGGER.log(Level.FINE, "Attempting to load user provided stop words from ''{0}''.", fileLocation);
+            File f = new File(fileLocation);
+            if (!f.exists() || !f.canRead()) {
+                LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation 
+                    + " does not exist or is not readable.");
+            } else {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
+                    for (String line = br.readLine(); line != null; line = br.readLine()) {
+                        if (StringUtils.isNotEmpty(line)) {
+                            words.add(line);
+                        }
+                    }
+                    return words;
+                } catch (IOException ex) {
+                    LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation 
+                        + " does not exist or is not readable.", ex);
+                }
+            }
+        }
+        return words;
     }
 
     private static Set<String> getAllowedOSName() {
