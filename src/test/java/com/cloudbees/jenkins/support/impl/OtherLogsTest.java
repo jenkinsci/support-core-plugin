@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -35,6 +36,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({OtherLogs.class, GCLogs.class, Jenkins.class})
+// Need to ignore some packages due to Powermockito issue with JDK 11 https://github.com/powermock/powermock/issues/864
+@PowerMockIgnore({ "javax.xml.*" })
 public class OtherLogsTest {
 
     @Rule
@@ -140,7 +143,7 @@ public class OtherLogsTest {
 
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
                 + rootDir.getAbsolutePath() + File.separator + "gc.%t.%p.log\"");
-            assertContentContainsFiles(Collections.singletonList("otrher-logs/test.log"));
+            assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
         }
     }
     
