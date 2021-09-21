@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInRelativeOrder;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
@@ -97,7 +97,7 @@ public class ContentMappingsTest {
             List<String> originals = StreamSupport.stream(mappings.spliterator(), false)
                     .map(ContentMapping::getOriginal)
                     .collect(toList());
-            assertThat(originals, contains("LongestNameHere", "LongerName", "ShortName"));
+            assertThat(originals, containsInRelativeOrder("LongestNameHere", "LongerName", "ShortName"));
         });
     }
 
