@@ -1,3 +1,39 @@
 security:
   anonymizeSupportBundle:
     enabled: true
+support:
+  automatedBundleConfiguration:
+    componentIds:
+      - "AboutBrowser"
+      - "AboutJenkins"
+      - "AboutUser"
+      - "AdministrativeMonitors"
+      - "AgentProtocols"
+      - "BuildQueue"
+      - "CustomLogs"
+      - "DumpExportTable"
+      - "EnvironmentVariables"
+      - "FileDescriptorLimit"
+      - "ItemsContent"
+      - "ControllerJVMProcessSystemMetricsContents"
+      - "JenkinsLogs"
+      - "LoadStats"
+      - "LoggerManager"
+      - "Metrics"
+      - "NetworkInterfaces"
+      - "NodeMonitors"
+      - "ReverseProxy"
+      - "RunningBuilds"
+      - "AgentCommandStatistics"
+      - "ControllerSystemConfiguration"
+      - "SystemProperties"
+      - "TaskLogs"
+      - "ThreadDumps"
+      - "UpdateCenter"
+      - "UserCount"
+      - "SlowRequestComponent"
+      - "DeadlockRequestComponent"
+      - "PipelineTimings"
+      - "PipelineThreadDump"
+    enabled: true
+    period: 2
