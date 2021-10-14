@@ -180,8 +180,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                     }
                     return words;
                 } catch (IOException ex) {
-                    LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation
-                        + " does not exist or is not readable.", ex);
+                    LOGGER.log(Level.WARNING, "Could not load user provided stop words. there was an error reading " + fileLocation, ex);
                 }
             }
         } else if (fileLocationFromProperty != null) {
