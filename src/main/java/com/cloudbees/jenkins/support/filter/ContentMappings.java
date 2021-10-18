@@ -162,14 +162,15 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     private static Set<String> getAdditionalStopWords() {
         Set<String> words = new HashSet<>();
-        String fileLocation = System.getProperty(ADDITIONAL_STOP_WORDS_PROPERTY, SupportPlugin.getRootDirectory()
-            + "/" + ADDITIONAL_STOP_WORDS_FILENAME);
-        if (fileLocation != null) {
-            LOGGER.log(Level.FINE, "Attempting to load user provided stop words from ''{0}''.", fileLocation);
-            File f = new File(fileLocation);
-            if (!f.exists() || !f.canRead()) {
-                LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation 
-                    + " does not exist or is not readable.");
+        String fileLocationFromProperty = System.getProperty(ADDITIONAL_STOP_WORDS_PROPERTY);
+        String fileLocation = fileLocationFromProperty == null
+            ? SupportPlugin.getRootDirectory() + "/" + ADDITIONAL_STOP_WORDS_FILENAME
+            : fileLocationFromProperty;
+        LOGGER.log(Level.FINE, "Attempting to load user provided stop words from ''{0}''.", fileLocation);
+        File f = new File(fileLocation);
+        if (f.exists()) {
+            if (!f.canRead()) {
+                LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation + " is not readable.");
             } else {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
                     for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -179,10 +180,11 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                     }
                     return words;
                 } catch (IOException ex) {
-                    LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation 
-                        + " does not exist or is not readable.", ex);
+                    LOGGER.log(Level.WARNING, "Could not load user provided stop words. there was an error reading " + fileLocation, ex);
                 }
             }
+        } else if (fileLocationFromProperty != null) {
+            LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocationFromProperty + " does not exists.");
         }
         return words;
     }
