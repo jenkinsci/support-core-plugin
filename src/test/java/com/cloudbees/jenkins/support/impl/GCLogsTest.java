@@ -7,10 +7,8 @@ import com.google.common.io.Files;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.Issue;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,11 +18,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(GCLogs.class)
 public class GCLogsTest {
 
     @Test
@@ -32,19 +28,17 @@ public class GCLogsTest {
         File tmpFile = File.createTempFile("gclogs", "");
         Files.touch(tmpFile);
 
-        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class, Mockito.CALLS_REAL_METHODS);
         if (SupportTestUtils.isJava8OrBelow()) {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tmpFile.getAbsolutePath());
-            assertContentWithFinderContainsFiles(finder, 1);
         } else {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + tmpFile.getAbsolutePath());
             assertContentWithFinderContainsFiles(finder, 1);
 
             // The file locations may be wrapped with quotes
-            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + tmpFile.getAbsolutePath()+ "\"");
-            assertContentWithFinderContainsFiles(finder, 1);
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + tmpFile.getAbsolutePath() + "\"");
         }
+        assertContentWithFinderContainsFiles(finder, 1);
     }
 
     @Test
@@ -53,13 +47,13 @@ public class GCLogsTest {
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc.log." + count));
         }
-        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
         
-        if(SupportTestUtils.isJava8OrBelow()) {
+        GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class, Mockito.CALLS_REAL_METHODS);
+
+        if (SupportTestUtils.isJava8OrBelow()) {
             when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH
                 + tempDir.getAbsolutePath() + File.separator + "gc.log");
-            assertContentWithFinderContainsFiles(finder, 5);
         } else {
 
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
@@ -69,8 +63,8 @@ public class GCLogsTest {
             // The file locations may be wrapped with quotes
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
                 + tempDir.getAbsolutePath() + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
-            assertContentWithFinderContainsFiles(finder, 5);
         }
+        assertContentWithFinderContainsFiles(finder, 5);
     }
 
     @Test
@@ -83,11 +77,10 @@ public class GCLogsTest {
             Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".2534.log." + count));
         }
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        
-        if(SupportTestUtils.isJava8OrBelow()) {
+
+        if (SupportTestUtils.isJava8OrBelow()) {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH
                 + new File(tempDir, "gc.%t.%p.log").getAbsolutePath());
-            assertContentWithFinderContainsFiles(finder, 8);
         } else {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
                 + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log");
@@ -95,8 +88,8 @@ public class GCLogsTest {
 
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
                 + tempDir.getAbsolutePath() + File.separator + "gc.%t.%p.log\"");
-            assertContentWithFinderContainsFiles(finder, 8);
         }
+        assertContentWithFinderContainsFiles(finder, 8);
     }
 
     @Test
@@ -109,11 +102,10 @@ public class GCLogsTest {
             Files.touch(new File(tempDir, "gc3421.log." + count));
         }
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        
-        if(SupportTestUtils.isJava8OrBelow()) {
+
+        if (SupportTestUtils.isJava8OrBelow()) {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc%p.log").getAbsolutePath());
             when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-            assertContentWithFinderContainsFiles(finder, 15);
         } else {
             
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
@@ -123,8 +115,8 @@ public class GCLogsTest {
             // The file locations may be wrapped with quotes
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
                 + tempDir.getAbsolutePath() + File.separator + "gc%t.log.%p\"" + ":filecount=10,filesize=50m");
-            assertContentWithFinderContainsFiles(finder, 15);
         }
+        assertContentWithFinderContainsFiles(finder, 15);
     }
 
     @Test
@@ -140,13 +132,11 @@ public class GCLogsTest {
             Files.touch(new File(tempDir, "gc3421.log" + count));
         }
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
-        
-        if(SupportTestUtils.isJava8OrBelow()) {
+
+        if (SupportTestUtils.isJava8OrBelow()) {
 
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(tempDir, "gc%p.log").getAbsolutePath());
             when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-            assertContentWithFinderContainsFiles(finder,
-                Arrays.asList("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4"));
 
         } else {
 
@@ -158,9 +148,9 @@ public class GCLogsTest {
             // The file locations may be wrapped with quotes
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
                 + tempDir.getAbsolutePath() + File.separator + "gc%t.log%p\"" + ":filecount=10,filesize=50m");
-            assertContentWithFinderContainsFiles(finder, 
-                Arrays.asList("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4"));
         }
+        assertContentWithFinderContainsFiles(finder,
+            Arrays.asList("gc3421.log0", "gc3421.log1", "gc3421.log2", "gc3421.log3", "gc3421.log4"));
     }
 
     /**
