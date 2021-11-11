@@ -103,8 +103,6 @@ public class NetworkInterfaces extends Component {
     private static final class GetNetworkInterfaces extends MasterToSlaveCallable<String, RuntimeException> {
 
         public String call() {
-            long nanos = System.nanoTime();
-
             try {
                 // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take about 10ms and on windows we can easily have 60)
                 List<NetworkInterface> nics = new ArrayList<>();
@@ -114,9 +112,8 @@ public class NetworkInterfaces extends Component {
                         nics.add(networkInterfaces.nextElement());
                     }
                 }
-                String details =  nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
-                System.err.println("***** Callable took : " + ((System.nanoTime() - nanos)) + " ns");
-                return details;
+                
+                return nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
             } catch (SocketException e) {
                 return e.getMessage();
             }

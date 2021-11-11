@@ -47,6 +47,5 @@ public class NetworkInterfacesTest {
         assertThat("Should at least contain one network interface.",
                 controllerNetworkInterfaces,
                 containsString(expectedName));
-        System.err.println(controllerNetworkInterfaces);
     }
 }
