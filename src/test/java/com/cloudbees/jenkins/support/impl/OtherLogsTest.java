@@ -4,14 +4,11 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
-import jenkins.model.Jenkins;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +23,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 public class OtherLogsTest {
@@ -205,15 +201,11 @@ public class OtherLogsTest {
         Assertions.assertThat(SupportTestUtils.invokeComponentToMap(new OtherLogs()))
                 .containsOnlyKeys(fileNames);
     }
-    
+
     private GCLogs.VmArgumentFinder mockFinderAndGcLogs(Consumer<GCLogs.VmArgumentFinder> consumer) {
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
         GCLogs gcLogs = new GCLogs(finder);
-        try(MockedStatic<Jenkins> jenkinsMock = mockStatic(Jenkins.class, Mockito.CALLS_REAL_METHODS)) {
-            jenkinsMock.when(() -> Jenkins.lookup(GCLogs.class)).thenReturn(gcLogs);
-            jenkinsMock.when(() -> Jenkins.lookup(OtherLogs.class)).thenReturn(new OtherLogs());
-            consumer.accept(finder);
-        }
+        j.jenkins.lookup.set(GCLogs.class, gcLogs);
         return finder;
     }
 }

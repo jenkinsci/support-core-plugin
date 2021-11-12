@@ -39,10 +39,14 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 import jenkins.security.MasterToSlaveCallable;
 
 /**
@@ -70,7 +74,7 @@ public class NetworkInterfaces extends Component {
                 new Content("nodes/master/networkInterface.md") {
                     @Override
                     public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.getInstance()).getBytes("UTF-8"));
+                        os.write(getNetworkInterface(Jenkins.get()).getBytes(StandardCharsets.UTF_8));
                     }
                 }
         );
@@ -80,7 +84,7 @@ public class NetworkInterfaces extends Component {
                     new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
                         @Override
                         public void writeTo(OutputStream os) throws IOException {
-                            os.write(getNetworkInterface(node).getBytes("UTF-8"));
+                            os.write(getNetworkInterface(node).getBytes(StandardCharsets.UTF_8));
                         }
                     }
             );
@@ -96,45 +100,57 @@ public class NetworkInterfaces extends Component {
     }
 
     private static final class GetNetworkInterfaces extends MasterToSlaveCallable<String, RuntimeException> {
+
         public String call() {
-            StringBuilder bos = new StringBuilder();
-
             try {
-                Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
-                while (networkInterfaces.hasMoreElements()) {
-                    bos.append("-----------\n");
-
-                    NetworkInterface ni = networkInterfaces.nextElement();
-                    bos.append(" * Name ").append(ni.getDisplayName()).append("\n");
-
-                    byte[] hardwareAddress = ni.getHardwareAddress();
-
-                    // Do not have permissions or address does not exist
-                    if (hardwareAddress != null && hardwareAddress.length != 0)
-                        bos.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
-
-                    bos.append(" ** Index - ").append(ni.getIndex()).append("\n");
-                    Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
-                    while (inetAddresses.hasMoreElements()) {
-                        InetAddress inetAddress =  inetAddresses.nextElement();
-                        bos.append(" ** InetAddress - ").append(inetAddress).append("\n");
-                    }
-                    bos.append(" ** MTU - ").append(ni.getMTU()).append("\n");
-                    bos.append(" ** Is Up - ").append(ni.isUp()).append("\n");
-                    bos.append(" ** Is Virtual - ").append(ni.isVirtual()).append("\n");
-                    bos.append(" ** Is Loopback - ").append(ni.isLoopback()).append("\n");
-                    bos.append(" ** Is Point to Point - ").append(ni.isPointToPoint()).append("\n");
-                    bos.append(" ** Supports multicast - ").append(ni.supportsMulticast()).append("\n");
-
-                    if (ni.getParent() != null) {
-                        bos.append(" ** Child of - ").append(ni.getParent().getDisplayName()).append("\n");
+                // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take about 10ms and on windows we can easily have 60)
+                List<NetworkInterface> nics = new ArrayList<>();
+                {
+                    Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+                    while (networkInterfaces.hasMoreElements()) {
+                        nics.add(networkInterfaces.nextElement());
                     }
                 }
+                
+                return nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
             } catch (SocketException e) {
-                bos.append(e.getMessage());
+                return e.getMessage();
             }
-
-            return bos.toString();
         }
+
+        public static String nicDetails(NetworkInterface ni) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(" * Name ").append(ni.getDisplayName()).append('\n');
+
+            try {
+                byte[] hardwareAddress = ni.getHardwareAddress();
+
+                // Do not have permissions or address does not exist
+                if (hardwareAddress != null && hardwareAddress.length != 0) {
+                    sb.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
+                }
+                sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
+                Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
+                while (inetAddresses.hasMoreElements()) {
+                    InetAddress inetAddress =  inetAddresses.nextElement();
+                    sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
+                }
+                sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
+                sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
+                sb.append(" ** Is Virtual - ").append(ni.isVirtual()).append('\n');
+                sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
+                sb.append(" ** Is Point to Point - ").append(ni.isPointToPoint()).append('\n');
+                sb.append(" ** Supports multicast - ").append(ni.supportsMulticast()).append('\n');
+
+                if (ni.getParent() != null) {
+                    sb.append(" ** Child of - ").append(ni.getParent().getDisplayName()).append('\n');
+                }
+            } catch (SocketException e) {
+                sb.append(e.getMessage()).append('\n');
+            }
+            return sb.toString();
+        }
+
     }
+
 }
