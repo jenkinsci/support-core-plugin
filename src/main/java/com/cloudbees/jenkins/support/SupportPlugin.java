@@ -59,6 +59,7 @@ import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.PeriodicWork;
 import hudson.model.TaskListener;
+import hudson.remoting.ChannelClosedException;
 import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import hudson.security.ACL;
@@ -378,7 +379,7 @@ public class SupportPlugin extends Plugin {
                         out.flush();
                     } catch (Throwable e) {
                         String msg = "Could not attach ''" + name + "'' to support bundle";
-                        logger.log(Level.WARNING, msg, e);
+                        logger.log(e instanceof ChannelClosedException ? Level.FINE : Level.WARNING, msg, e);
                         errorWriter.println(msg);
                         errorWriter.println("-----------------------------------------------------------------------");
                         errorWriter.println();
