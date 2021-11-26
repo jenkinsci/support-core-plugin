@@ -56,7 +56,7 @@ public class UserCount extends UnfilteredFileListCapComponent {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(new PrintedContent("/users/count.md") {
+        result.add(new PrintedContent("users/count.md") {
             @Override
             protected void printTo(PrintWriter out) {
                 final Jenkins jenkins = Jenkins.getInstanceOrNull();
