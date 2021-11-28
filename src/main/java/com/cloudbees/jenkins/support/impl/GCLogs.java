@@ -45,7 +45,7 @@ public class GCLogs extends Component {
      */
     private static final Integer GCLOGS_RETENTION_DAYS = Integer.getInteger(GCLOGS_RETENTION_PROPERTY, 5);
 
-    private static final String GCLOGS_BUNDLE_ROOT = "/nodes/master/logs/gc/";
+    private static final String GCLOGS_BUNDLE_ROOT = "nodes/master/logs/gc/";
 
     private static final Logger LOGGER = Logger.getLogger(GCLogs.class.getName());
 
