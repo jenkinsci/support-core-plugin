@@ -10,6 +10,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import java.nio.charset.Charset;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
@@ -62,7 +63,7 @@ public class SecretHandlerTest {
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
-        FileUtils.writeStringToFile(file, xml);
+        FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
         String expectedXml = "<com.cloudbees.plugins.credentials.SystemCredentialsProvider plugin=\"credentials@1.18\">\n" +
                 "    <domainCredentialsMap class=\"hudson.util.CopyOnWriteMap$Hash\">\n" +
@@ -101,7 +102,7 @@ public class SecretHandlerTest {
                 "]>\n" +
                 "<xxx>&xxeattack;</xxx>";
         File file = File.createTempFile("test", ".xml");
-        FileUtils.writeStringToFile(file, xxeXml);
+        FileUtils.writeStringToFile(file, xxeXml, Charset.defaultCharset());
         String redactedXxeXml = SecretHandler.findSecrets(file);
         // Either the XML library understands the XXE disabling features, and removes XXEs completely,
         // or our custom EntityResolver is used which replaces them with a placeholder.

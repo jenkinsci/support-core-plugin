@@ -30,6 +30,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,7 +40,7 @@ public class FileContentTest {
 
     @Test public void truncation() throws Exception {
         File f = tmp.newFile();
-        FileUtils.writeStringToFile(f, "hello world\n");
+        FileUtils.writeStringToFile(f, "hello world\n", Charset.defaultCharset());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent("-", f).writeTo(baos);

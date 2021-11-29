@@ -13,6 +13,7 @@ import org.jvnet.hudson.test.LoggerRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -102,7 +103,7 @@ public class OtherConfigFilesComponentTest {
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
-        FileUtils.writeStringToFile(file, xml);
+        FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
         assertThat(patchedXml, equalToCompressingWhiteSpace(expectedXml));
     }
@@ -110,7 +111,7 @@ public class OtherConfigFilesComponentTest {
     @Test
     public void missingFile() throws Exception {
         File file = new File(j.jenkins.root, "x.xml");
-        FileUtils.writeStringToFile(file, xml);
+        FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         Map<String, Content> contents = new HashMap<>();
         new OtherConfigFilesComponent().addContents(new Container() {
             @Override
