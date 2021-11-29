@@ -188,9 +188,7 @@ public class AboutJenkins extends Component {
                 justification = "Findbugs mis-diagnosing closeQuietly's built-in null check"
         )
         public String call() throws RuntimeException {
-            InputStream is = null;
-            try {
-                is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties");
+            try (InputStream is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
                 if (is == null) {
                     return "N/A";
                 }
@@ -201,8 +199,9 @@ public class AboutJenkins extends Component {
                 } catch (IOException e) {
                     return "N/A";
                 }
-            } finally {
-                IOUtils.closeQuietly(is);
+            } catch (IOException e) {
+                logger.fine(String.format("Could not find remoting version in agent {}", e.getMessage()));
+                return "N/A";
             }
         }
     }

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,7 +183,10 @@ public class SupportLogHandler extends Handler {
         outputLock.lock();
         try {
             if (writer != null) {
-                IOUtils.closeQuietly(writer);
+                try {
+                    writer.close();
+                } catch (IOException ignored) {
+                }
                 writer = null;
             }
         } finally {
@@ -204,22 +208,20 @@ public class SupportLogHandler extends Handler {
     }
 
     private void setWriter(Writer writer) {
-        Writer oldWriter = null;
-        boolean success = false;
         outputLock.lock();
-        try {
-            oldWriter = this.writer;
+        try (Writer oldWriter = this.writer) {
             if (oldWriter != null) {
                 try {
-                    this.writer.flush();
+                    oldWriter.flush();
                 } catch (IOException e) {
                     // ignore
                 }
             }
             this.writer = writer;
+        } catch (IOException e) {
+            // ignore
         } finally {
             outputLock.unlock();
-            IOUtils.closeQuietly(oldWriter);
         }
     }
 
@@ -238,27 +240,13 @@ public class SupportLogHandler extends Handler {
             if (parentFile != null) {
                 parentFile.mkdirs();
             }
-            boolean success = false;
-            FileOutputStream fos = null;
-            BufferedOutputStream bos = null;
-            OutputStreamWriter writer = null;
-            try {
-                fos = new FileOutputStream(file);
-                bos = new BufferedOutputStream(fos);
-                try {
-                    writer = new OutputStreamWriter(bos, "utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    writer = new OutputStreamWriter(bos); // fall back to something sensible
-                }
+
+            try (FileOutputStream fos = new FileOutputStream(file);
+                 BufferedOutputStream bos = new BufferedOutputStream(fos);
+                 OutputStreamWriter writer = new OutputStreamWriter(bos, StandardCharsets.UTF_8)) {
                 setWriter(writer);
-                fileCount = 0;
-                success = true;
-            } finally {
-                if (!success) {
-                    IOUtils.closeQuietly(writer);
-                    IOUtils.closeQuietly(bos);
-                    IOUtils.closeQuietly(fos);
-                }
+            } catch (IOException ignored) {
+                //ignore
             }
         } finally {
             outputLock.unlock();

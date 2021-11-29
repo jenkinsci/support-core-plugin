@@ -7,7 +7,6 @@ import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
-import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -127,7 +126,9 @@ public class SlowRequestChecker extends PeriodicWork {
                         }
                     }
                 } finally {
-                    IOUtils.closeQuietly(w);
+                    if (w != null) {
+                        w.close();
+                    }
                 }
             }
         }
