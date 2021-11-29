@@ -121,6 +121,8 @@ import java.util.stream.Collectors;
  */
 public class SupportPlugin extends Plugin {
 
+    private static final Logger LOGGER = Logger.getLogger(SupportPlugin.class.getName()); 
+
     /**
      * How long remote operations can block support bundle generation for.
      */
@@ -865,7 +867,7 @@ public class SupportPlugin extends Plugin {
             }
             if (nextBundleWrite.get() < System.currentTimeMillis() && AUTO_BUNDLE_PERIOD_HOURS > 0) {
                 if (thread != null && thread.isAlive()) {
-                    logger.log(Level.INFO, "Periodic bundle generating thread is still running. Execution aborted.");
+                    LOGGER.log(Level.INFO, "Periodic bundle generating thread is still running. Execution aborted.");
                     return;
                 }
                 try {
@@ -891,12 +893,12 @@ public class SupportPlugin extends Plugin {
                                 cleanupOldBundles(bundleDir, file);   
                             }
                         } catch (Throwable t) {
-                            logger.log(Level.WARNING, "Could not save support bundle", t);
+                            LOGGER.log(Level.WARNING, "Could not save support bundle", t);
                         }
                     }, SupportPlugin.class.getSimpleName() + " periodic bundle generator");
                     thread.start();
                 } catch (Throwable t) {
-                    logger.log(Level.SEVERE, "Periodic bundle generating thread failed with error", t);
+                    LOGGER.log(Level.SEVERE, "Periodic bundle generating thread failed with error", t);
                 }
             }
         }
@@ -911,7 +913,7 @@ public class SupportPlugin extends Plugin {
                     SupportPlugin.class.getSimpleName(), new Date()));
             File[] files = bundleDir.listFiles((dir, name) -> name.endsWith(".zip"));
             if (files == null) {
-                logger.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
+                LOGGER.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
                         bundleDir.getAbsolutePath());
                 return;
             }
@@ -926,7 +928,7 @@ public class SupportPlugin extends Plugin {
                     if (l <= age && age < l * 2) {
                         if (seen) {
                             f.delete();
-                            logger.log(Level.INFO, "Deleted old bundle {0}", f.getName());
+                            LOGGER.log(Level.INFO, "Deleted old bundle {0}", f.getName());
                         } else {
                             seen = true;
                         }
