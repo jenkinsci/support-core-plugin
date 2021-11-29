@@ -321,7 +321,7 @@ public class SupportActionTest {
         j.createSlave("agent1","test",null).getComputer().connect(false).get();
         j.createSlave("agent2","test",null).getComputer().connect(false).get();
 
-        RingBufferLogHandler checker = new RingBufferLogHandler();
+        RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
 
         logger.addHandler(checker);
