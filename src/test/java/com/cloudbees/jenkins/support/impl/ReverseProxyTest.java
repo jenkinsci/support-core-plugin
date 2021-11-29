@@ -6,11 +6,11 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -20,7 +20,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ReverseProxyTest {
 
     private static final String HEADER_VALUE = "value";
@@ -31,6 +30,9 @@ public class ReverseProxyTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
+    @Rule
+    public MockitoRule rule = MockitoJUnit.rule();
+    
     @Mock
     private StaplerRequest staplerRequest;
 
