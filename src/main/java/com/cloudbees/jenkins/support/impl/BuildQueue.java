@@ -70,7 +70,7 @@ public class BuildQueue extends Component {
         @Override
         public void printTo(PrintWriter out, ContentFilter filter) {
           try {
-            Queue.Item[] items = Jenkins.getInstance().getQueue().getItems();
+            Queue.Item[] items = Jenkins.get().getQueue().getItems();
             out.println("Current build queue has " +  items.length + " item(s).");
             out.println("---------------");
 
@@ -96,7 +96,7 @@ public class BuildQueue extends Component {
               out.println("----");
               out.println();
             }
-            out.println("Is quieting down: " + Jenkins.getInstance().isQuietingDown());
+            out.println("Is quieting down: " + Jenkins.get().isQuietingDown());
           } finally {
             out.flush();
           }

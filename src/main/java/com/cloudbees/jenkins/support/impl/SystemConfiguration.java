@@ -44,6 +44,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -237,7 +238,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
                         sb.append(file.getName());
                         sb.append(": ");
                         try {
-                            sb.append(Util.loadFile(file).trim());
+                            sb.append(Util.loadFile(file, Charset.defaultCharset()).trim());
                         } catch (IOException e) {
                             sb.append("failed, " + e.getMessage());
                         }

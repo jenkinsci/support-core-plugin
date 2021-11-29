@@ -50,7 +50,7 @@ public class SlowRequestFilter implements Filter {
 
     @Initializer
     public static void init() throws ServletException {
-        Injector inj = Jenkins.getInstance().getInjector();
+        Injector inj = Jenkins.get().getInjector();
         if (inj == null) {
             return;
         }

@@ -79,7 +79,7 @@ public class NetworkInterfaces extends Component {
                 }
         );
 
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             result.add(
                     new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
                         @Override

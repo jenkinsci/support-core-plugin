@@ -62,7 +62,7 @@ public class SystemProperties extends Component {
                        public void writeTo(OutputStream os) {
                            try {
                                Properties properties = new SortedProperties();
-                               Map<Object, Object> systemProperties = RemotingDiagnostics.getSystemProperties(Jenkins.getInstance().getChannel());
+                               Map<Object, Object> systemProperties = RemotingDiagnostics.getSystemProperties(Jenkins.get().getChannel());
                                Map<String, String> redactedProperties = PasswordRedactor.get().redact(systemProperties.entrySet().stream()
                                        .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue())));
                                properties.putAll(redactedProperties);
@@ -73,7 +73,7 @@ public class SystemProperties extends Component {
                        }
                    }
         );
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             result.add(
                     new Content("nodes/slave/{0}/system.properties", node.getNodeName()) {
                         @Override

@@ -82,7 +82,7 @@ public class HighLoadCpuChecker extends PeriodicWork {
     /**
      * Thread dumps generated on high CPU load are stored in $JENKINS_HOME/high-load/cpu
      **/
-    protected final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"high-load/cpu"), HIGH_CPU_THREAD_DUMPS_TO_RETAIN);
+    protected final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"high-load/cpu"), HIGH_CPU_THREAD_DUMPS_TO_RETAIN);
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {

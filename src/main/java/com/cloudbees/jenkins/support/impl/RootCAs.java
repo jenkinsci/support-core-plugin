@@ -74,7 +74,7 @@ public class RootCAs extends Component {
 
   @Override
   public void addContents(@NonNull Container container) {
-    Jenkins j = Jenkins.getInstance();
+    Jenkins j = Jenkins.get();
     addContents(container, j);
     for (Node node : j.getNodes()) {
       addContents(container, node);

@@ -13,6 +13,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -39,7 +40,7 @@ class BaseCommandOutputContent {
             PrintWriter pw = new PrintWriter(bos);
             try {
                 Process proc = new ProcessBuilder().command(command).redirectErrorStream(true).start();
-                IOUtils.copy(proc.getInputStream(), pw);
+                IOUtils.copy(proc.getInputStream(), pw, Charset.defaultCharset());
             } catch (Exception e) {
                 Functions.printStackTrace(e, pw);
             }

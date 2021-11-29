@@ -28,7 +28,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"deadlocks"), 50);
+    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"deadlocks"), 50);
 
     @Override
     public long getRecurrencePeriod() {

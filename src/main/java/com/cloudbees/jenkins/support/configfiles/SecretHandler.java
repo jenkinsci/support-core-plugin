@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,7 +111,7 @@ class SecretHandler {
                 super.characters(ch, start, length);
             }
         };
-        String str = FileUtils.readFileToString(xmlFile);
+        String str = FileUtils.readFileToString(xmlFile, Charset.defaultCharset());
         Source src = createSafeSource(xr, new InputSource(new StringReader(str)));
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
         Result res = new StreamResult(result);

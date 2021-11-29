@@ -16,6 +16,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
@@ -58,7 +59,7 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     Jenkins jenkins;
 
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"), 50);
+    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"slow-requests"), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
@@ -103,7 +104,7 @@ public class SlowRequestChecker extends PeriodicWork {
                         w = new PrintWriter(req.record,"UTF-8");
                         req.writeHeader(w, contentFilter);
                     } else {
-                        w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true),"UTF-8"));
+                        w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true), StandardCharsets.UTF_8));
                         logs.touch(req.record);
                     }
 
