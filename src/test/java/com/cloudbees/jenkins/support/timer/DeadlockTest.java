@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
+import java.nio.charset.Charset;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -104,7 +105,7 @@ public class DeadlockTest {
                 files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
                 assertNotNull("There should be at least one deadlock file", files);
                 assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
-                String text = FileUtils.readFileToString(files[initialCount]);
+                String text = FileUtils.readFileToString(files[initialCount], Charset.defaultCharset());
                 assertThat(text, containsString("secondMethod"));
                 assertThat(text, containsString("firstMethod"));
             } finally {
