@@ -109,10 +109,10 @@ public class DeadlockTest {
                 assertThat(text, containsString("secondMethod"));
                 assertThat(text, containsString("firstMethod"));
             } finally {
-                t2.stop();
+                t2.interrupt();
             }
         } finally {
-            t1.stop();
+            t1.interrupt();
         }
     }
 }
