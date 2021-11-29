@@ -155,7 +155,6 @@ public class SupportPluginManagement extends ManagementLink implements Describab
     }
 
     /**
-     * @return
      * @see Describable#getDescriptor()
      */
     @Override
