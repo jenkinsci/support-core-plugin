@@ -25,9 +25,9 @@ import org.jvnet.hudson.test.TestBuilder;
 
 import java.util.Optional;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 public class RunningBuildsTest {
 
