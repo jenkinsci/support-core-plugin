@@ -24,8 +24,8 @@
 
 package com.cloudbees.jenkins.support;
 
+import com.cloudbees.jenkins.support.util.StreamUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.util.IOUtils;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import net.jcip.annotations.GuardedBy;
 
@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -183,10 +182,7 @@ public class SupportLogHandler extends Handler {
         outputLock.lock();
         try {
             if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException ignored) {
-                }
+                StreamUtils.closeQuietly(writer);
                 writer = null;
             }
         } finally {
@@ -240,13 +236,28 @@ public class SupportLogHandler extends Handler {
             if (parentFile != null) {
                 parentFile.mkdirs();
             }
-
-            try (FileOutputStream fos = new FileOutputStream(file);
-                 BufferedOutputStream bos = new BufferedOutputStream(fos);
-                 OutputStreamWriter writer = new OutputStreamWriter(bos, StandardCharsets.UTF_8)) {
+            
+            boolean success = false;
+            FileOutputStream fos = null;
+            BufferedOutputStream bos = null;
+            OutputStreamWriter writer = null;
+            try {
+                fos = new FileOutputStream(file);
+                bos = new BufferedOutputStream(fos);
+                try {
+                    writer = new OutputStreamWriter(bos, "utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    writer = new OutputStreamWriter(bos); // fall back to something sensible
+                }
                 setWriter(writer);
-            } catch (IOException ignored) {
-                //ignore
+                fileCount = 0;
+                success = true;
+            } finally {
+                if (!success) {
+                    StreamUtils.closeQuietly(writer);
+                    StreamUtils.closeQuietly(bos);
+                    StreamUtils.closeQuietly(fos);
+                }
             }
         } finally {
             outputLock.unlock();
