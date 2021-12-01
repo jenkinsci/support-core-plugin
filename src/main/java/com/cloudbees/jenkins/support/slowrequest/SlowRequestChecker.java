@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
+import com.cloudbees.jenkins.support.util.StreamUtils;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
@@ -126,9 +127,7 @@ public class SlowRequestChecker extends PeriodicWork {
                         }
                     }
                 } finally {
-                    if (w != null) {
-                        w.close();
-                    }
+                    StreamUtils.closeQuietly(w);
                 }
             }
         }
