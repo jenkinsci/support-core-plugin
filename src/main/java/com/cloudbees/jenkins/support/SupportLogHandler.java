@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +59,16 @@ import java.util.logging.LogRecord;
  */
 public class SupportLogHandler extends Handler {
 
+    private static final class LogRecordRef extends SoftReference<LogRecord> {
+        LogRecordRef(LogRecord referent) {
+            super(referent);
+        }
+    }
+
     private final Lock outputLock = new ReentrantLock();
     private final int fileSize;
     @GuardedBy("outputLock")
-    private final LogRecord[] records;
+    private final LogRecordRef[] records;
     @GuardedBy("outputLock")
     private int position, count, fileCount;
     @GuardedBy("outputLock")
@@ -73,7 +81,7 @@ public class SupportLogHandler extends Handler {
 
     public SupportLogHandler(int size, int fileSize, int maxFiles) {
         this.maxFiles = maxFiles;
-        records = new LogRecord[size];
+        records = new LogRecordRef[size];
         position = 0;
         count = 0;
         fileCount = 0;
@@ -105,7 +113,7 @@ public class SupportLogHandler extends Handler {
         outputLock.lock();
         try {
             int maxCount = records.length;
-            records[(position + count) % maxCount] = record;
+            records[(position + count) % maxCount] = new LogRecordRef(record);
             if (count == maxCount) {
                 position = (position + 1) % maxCount;
             } else {
@@ -201,7 +209,10 @@ public class SupportLogHandler extends Handler {
         try {
             List<LogRecord> result = new ArrayList<LogRecord>(count);
             for (int i = 0; i < count; i++) {
-                result.add(i, records[(position + i) % records.length]);
+                LogRecord lr = records[(position + i) % records.length].get();
+                if (lr != null) {
+                    result.add(i, lr);
+                }
             }
             return result;
         } finally {
