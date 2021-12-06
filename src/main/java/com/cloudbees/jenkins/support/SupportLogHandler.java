@@ -211,7 +211,7 @@ public class SupportLogHandler extends Handler {
             for (int i = 0; i < count; i++) {
                 LogRecord lr = records[(position + i) % records.length].get();
                 if (lr != null) {
-                    result.add(i, lr);
+                    result.add(lr);
                 }
             }
             return result;
