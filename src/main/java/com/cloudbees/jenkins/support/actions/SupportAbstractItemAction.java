@@ -1,9 +1,12 @@
 package com.cloudbees.jenkins.support.actions;
 
+import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.Extension;
 import hudson.model.AbstractItem;
 import hudson.model.Action;
 import jenkins.model.TransientActionFactory;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -28,6 +31,12 @@ public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem>
     @Override
     protected String getBundleNameQualifier() {
         return "item";
+    }
+    
+    @Restricted(NoExternalUse.class) // stapler
+    @SuppressWarnings("unused") // used by Stapler
+    public boolean isAnonymized() {
+        return ContentFilters.get().isEnabled();
     }
 
     @Extension
