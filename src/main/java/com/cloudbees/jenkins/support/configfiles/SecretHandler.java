@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import org.apache.commons.io.FileUtils;
@@ -63,6 +64,7 @@ class SecretHandler {
 
         XMLReader xr = new XMLFilterImpl(XMLReaderFactory.createXMLReader()) {
             private String tagName = "";
+            private String previousStringTagValue;
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes atts)
@@ -87,6 +89,21 @@ class SecretHandler {
                             ch = SECRET_MARKER.toCharArray();
                             start = 0;
                             length = ch.length;
+                        } else if (isJvmArgsWithSecrets(tagName, value)) {
+                            ch = PasswordRedactor.get().redact(value).toCharArray();
+                            start = 0;
+                            length = ch.length;
+                        } else if ("string".equals(tagName)) {
+                            if (previousStringTagValue != null) {
+                                if (PasswordRedactor.get().match(previousStringTagValue)) {
+                                    ch = PasswordRedactor.REDACTED.toCharArray();
+                                    start = 0;
+                                    length = ch.length;
+                                }
+                                previousStringTagValue = null;
+                            } else {
+                                previousStringTagValue = value;
+                            }
                         }
                     }
                 }
@@ -151,6 +168,10 @@ class SecretHandler {
             return new InputSource(new ByteArrayInputStream(XXE_MARKER.getBytes(StandardCharsets.US_ASCII)));
         });
         return new SAXSource(reader, source);
+    }
+
+    private static boolean isJvmArgsWithSecrets(String tagName, String value) {
+        return ("jvmOptions".equals(tagName) || "vmargs".equals(tagName) || "cmd".equals(tagName)) && PasswordRedactor.get().match(value);
     }
 
 }

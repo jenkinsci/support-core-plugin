@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -55,7 +56,8 @@ public class EnvironmentVariables extends Component {
                     @Override
                     protected void printTo(PrintWriter out) throws IOException {
                         try {
-                            for (Map.Entry<String, String> entry : getEnvironmentVariables(Jenkins.getInstance()).entrySet()) {
+                            Map<String, String> environmentVariables = getEnvironmentVariables(Jenkins.getInstance());
+                            for (Map.Entry<String, String> entry : PasswordRedactor.get().redact(environmentVariables).entrySet()) {
                                 out.println(entry.getKey() + "=" + entry.getValue());
                             }
                         } catch (IOException e) {
@@ -70,7 +72,8 @@ public class EnvironmentVariables extends Component {
                         @Override
                         protected void printTo(PrintWriter out) throws IOException {
                             try {
-                                for (Map.Entry<String, String> entry : getEnvironmentVariables(node)
+                                Map<String, String> environmentVariables = getEnvironmentVariables(node);
+                                for (Map.Entry<String, String> entry : PasswordRedactor.get().redact(environmentVariables)
                                         .entrySet()) {
                                     out.println(entry.getKey() + "=" + entry.getValue());
                                 }
