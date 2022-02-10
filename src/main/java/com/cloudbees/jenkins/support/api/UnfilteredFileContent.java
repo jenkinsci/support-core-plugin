@@ -94,7 +94,7 @@ public class UnfilteredFileContent extends Content {
                 return null;
             }
         };
-        return new BaseFileContent(file, supplier, maxSize);
+        return new BaseFileContent(file, supplier, maxSize, s -> s);
     }
 
     @Override

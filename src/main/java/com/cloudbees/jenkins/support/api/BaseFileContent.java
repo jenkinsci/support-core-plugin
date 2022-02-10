@@ -45,7 +45,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Utility class with the common logic to FileContent and UnfilteredFileContent.
@@ -56,18 +58,37 @@ import java.util.function.Supplier;
 class BaseFileContent {
     private final File file;
     private final Supplier<InputStream> inputStreamSupplier;
+
+    /**
+     * the function to filter secret text if comes from {@link com.cloudbees.jenkins.support.configfiles.XmlRedactedSecretFileContent} or {@link com.cloudbees.jenkins.support.api.LaunchLogsFileContent}
+     */
+    private final Function<String, String> secretsFilterFunction;
     private final long maxSize;
     private final boolean isBinary;
 
     private final static String ENCODING = "UTF-8";
 
+    /**
+     *  @deprecated (as it is placed in the api package we keep backward compatibility, no relevant usage was found)
+     */
+    @Deprecated
     protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier) {
-        this(file, inputStreamSupplier, -1);
+        this(file, inputStreamSupplier, -1, s -> s);
     }
 
+    protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier, UnaryOperator<String> secretsFilterFunction) {
+        this(file, inputStreamSupplier, -1, secretsFilterFunction);
+    }
+
+    @Deprecated
     protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier, long maxSize) {
+        this(file, inputStreamSupplier, maxSize, s -> s);
+    }
+
+    protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier, long maxSize, UnaryOperator<String>secretsFilterFunction) {
         this.file = file;
         this.inputStreamSupplier = inputStreamSupplier;
+        this.secretsFilterFunction = secretsFilterFunction;
         this.maxSize = maxSize;
         this.isBinary = isBinary();
     }
@@ -106,7 +127,7 @@ class BaseFileContent {
         try {
             if (maxSize == -1) {
                 for (String s : Files.readAllLines(file.toPath())) {
-                    String filtered = ContentFilter.filter(filter, s);
+                    String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s));
                     IOUtils.write(filtered, os, ENCODING);
                     // The new line
                     IOUtils.write("\n", os, ENCODING);
@@ -115,7 +136,7 @@ class BaseFileContent {
                 try (TruncatedFileReader reader = new TruncatedFileReader(file, maxSize)) {
                     String s;
                     while ((s = reader.readLine()) != null) {
-                        String filtered = ContentFilter.filter(filter, s);
+                        String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s));
                         IOUtils.write(filtered, os, ENCODING);
                         // The new line
                         IOUtils.write("\n", os, ENCODING);

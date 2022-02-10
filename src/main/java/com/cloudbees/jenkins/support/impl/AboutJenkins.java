@@ -11,6 +11,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.util.Markdown;
@@ -203,10 +204,12 @@ public class AboutJenkins extends Component {
         private static final long serialVersionUID = 1L;
         private final String maj;
         private final String min;
+        private final PasswordRedactor passwordRedactor;
 
         private GetJavaInfo(String majorBullet, String minorBullet) {
             this.maj = majorBullet;
             this.min = minorBullet;
+            this.passwordRedactor = PasswordRedactor.get();
         }
 
         public String call() throws RuntimeException {
@@ -348,6 +351,7 @@ public class AboutJenkins extends Component {
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
                 // The controller endpoint may be in the args
+                arg = passwordRedactor.redact(arg);
                 result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
