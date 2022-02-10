@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Node;
@@ -26,6 +27,8 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import jenkins.security.MasterToSlaveCallable;
 
 /**
@@ -59,8 +62,10 @@ public class SystemProperties extends Component {
                        public void writeTo(OutputStream os) {
                            try {
                                Properties properties = new SortedProperties();
-                               properties.putAll(RemotingDiagnostics
-                                       .getSystemProperties(Jenkins.getInstance().getChannel()));
+                               Map<Object, Object> systemProperties = RemotingDiagnostics.getSystemProperties(Jenkins.getInstance().getChannel());
+                               Map<String, String> redactedProperties = PasswordRedactor.get().redact(systemProperties.entrySet().stream()
+                                       .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue())));
+                               properties.putAll(redactedProperties);
                                properties.store(os, null);
                            } catch (IOException | InterruptedException e) {
                                logger.log(Level.WARNING, "Could not record system properties for controller", e);
@@ -75,7 +80,10 @@ public class SystemProperties extends Component {
                         public void writeTo(OutputStream os) {
                             try {
                                 Properties properties = new SortedProperties();
-                                properties.putAll(getSystemProperties(node));
+                                Map<Object, Object> systemProperties = getSystemProperties(node);
+                                Map<String, String> redactedProperties = PasswordRedactor.get().redact(systemProperties.entrySet().stream()
+                                        .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue())));
+                                properties.putAll(redactedProperties);
                                 properties.store(os, null);
                             } catch (IOException e) {
                                 logger.log(Level.WARNING, "Could not record system properties for " + node.getNodeName(), e);

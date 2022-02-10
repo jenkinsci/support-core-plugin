@@ -24,14 +24,22 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import hudson.FilePath;
 import hudson.Functions;
+import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 
 /**
@@ -60,7 +68,11 @@ public class FilePathContent extends Content {
     @Override
     public void writeTo(OutputStream os) throws IOException {
         try {
-            file.copyTo(os);
+            if (PasswordRedactor.FILES_WITH_SECRETS.contains(file.getName())) {
+                copyRedacted(os);
+            } else {
+                file.copyTo(os);
+            }
         } catch (InterruptedException e) {
             throw new IOException(e);
         } catch (IOException e) {
@@ -90,6 +102,20 @@ public class FilePathContent extends Content {
             return file.lastModified();
         } catch (InterruptedException e) {
             throw new IOException(e);
+        }
+    }
+
+    private void copyRedacted(OutputStream os) throws IOException, InterruptedException {
+        CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE)
+                .replaceWith(FilteredOutputStream.UNKNOWN_INPUT);
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.read(), charsetDecoder))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                IOUtils.write(PasswordRedactor.get().redact(line), os, charsetDecoder.charset());
+            }
         }
     }
 }

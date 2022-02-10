@@ -25,7 +25,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.api.LaunchLogsFileContent;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
@@ -138,7 +138,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         File[] files = agent.dir.listFiles(ROTATED_LOGFILE_FILTER);
         if (files!=null) {
             for (File f : files) {
-                container.add(new FileContent("nodes/slave/{0}/launchLogs/{1}",
+                container.add(new LaunchLogsFileContent("nodes/slave/{0}/launchLogs/{1}",
                     new String[]{agent.getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
             }
         }

@@ -216,6 +216,12 @@
             <systemPropertyVariables>
               <hudson.remoting.ExportTable.exportTraces>true</hudson.remoting.ExportTable.exportTraces>
             </systemPropertyVariables>
+            <!--            Security2186Test-->
+            <environmentVariables>
+              <test2186.trustStorePassword>agsdfaksdgFASKD</test2186.trustStorePassword>
+            </environmentVariables>
+            <argLine>-Dtest2186.trustStorePassword=ASJDHFGASLDFG</argLine>
+
           </configuration>
         </plugin>
       </plugins>
