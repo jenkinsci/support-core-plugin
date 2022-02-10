@@ -54,7 +54,7 @@ import java.util.regex.Matcher;
 @Restricted(NoExternalUse.class)
 public class FilteredOutputStream extends FilterOutputStream {
 
-    private static final String UNKNOWN_INPUT = "\uFFFD";
+    public static final String UNKNOWN_INPUT = "\uFFFD";
 
     @GuardedBy("this")
     private final ByteBuffer encodedBuf = ByteBuffer.allocate(256);

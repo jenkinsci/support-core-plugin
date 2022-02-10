@@ -91,6 +91,10 @@ public class FileContent extends PrefilteredContent {
         return new FileInputStream(file);
     }
 
+    protected String getSimpleValueOrRedactedPassword(String value) {
+        return value;
+    }
+
     private BaseFileContent createBaseFileContent(File file, long maxSize) {
         Supplier<InputStream> supplier = () -> {
             try {
@@ -99,6 +103,6 @@ public class FileContent extends PrefilteredContent {
                 return new ByteArrayInputStream(Functions.printThrowable(e).getBytes(StandardCharsets.UTF_8));
             }
         };
-        return  new BaseFileContent(file, supplier, maxSize);
+        return  new BaseFileContent(file, supplier, maxSize, this::getSimpleValueOrRedactedPassword);
     }
 }
