@@ -9,9 +9,11 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Component} that attaches files inside {@link FileListCap} into a support bundle without filtering the
@@ -35,10 +37,14 @@ public abstract class UnfilteredFileListCapComponent extends Component {
             // while we read and put the reports into the support bundle, we don't want
             // the FileListCap to delete files. So we lock it.
 
-            final Collection<File> files = FileUtils.listFiles(
-                    fileListCap.getFolder(), new String[] {"txt"}, false);
+            final List<File> files = new ArrayList<>(FileUtils.listFiles(
+                    fileListCap.getFolder(), new String[] {"txt"}, false));
+            Collections.sort(files);
+            long recently = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(90);
             for (File f : files) {
-                container.add(new UnfilteredFileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
+                if (f.lastModified() > recently) {
+                    container.add(new UnfilteredFileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
+                }
             }
         }
     }
