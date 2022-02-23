@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.31</version>
+    <version>4.36</version>
     <relativePath />
   </parent>
 
@@ -71,7 +71,7 @@
   <properties>
     <revision>2.81</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.222.4</jenkins.version>
+    <jenkins.version>2.332</jenkins.version>
     <java.level>8</java.level>
   </properties>
 
@@ -92,8 +92,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.222.x</artifactId>
-        <version>887.vae9c8ac09ff7</version>
+        <artifactId>bom-2.332.x</artifactId>
+        <version>1155.v77b_fd92a_26fc</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -203,6 +203,17 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>cloudbees-folder</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>javax-mail-api</artifactId>
+      <version>1.6.2-5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>javax-activation-api</artifactId>
+      <version>1.2.0-2</version>
     </dependency>
   </dependencies>
 
