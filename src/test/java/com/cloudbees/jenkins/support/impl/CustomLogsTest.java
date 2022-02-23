@@ -66,7 +66,8 @@ public class CustomLogsTest {
                 Logger.getLogger(CustomLogsTest.class.getName()).fine("Testing custom log recorders");
             }
         });
-        String customLogs = SupportTestUtils.invokeComponentToString(Objects.requireNonNull(ExtensionList.lookup(Component.class).get(CustomLogs.class)));
+        String customLogs = SupportTestUtils.invokeComponentToString(
+                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(CustomLogs.class)));
         assertFalse("Should write CustomLogsTest FINE logs", customLogs.isEmpty());
         assertThat(customLogs , Matchers.containsString("Testing custom log recorders"));
     }
