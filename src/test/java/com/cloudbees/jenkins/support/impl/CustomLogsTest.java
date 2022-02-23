@@ -40,7 +40,7 @@ public class CustomLogsTest {
     }
 
     @Test
-    public void testCustomLogsContent() throws InterruptedException, IOException {
+    public void testCustomLogsContent() throws IOException {
         LogRecorder testLogRecorder = new LogRecorder("test");
         LogRecorder.Target testTarget = new LogRecorder.Target(CustomLogsTest.class.getName(), Level.FINER);
         testLogRecorder.getLoggers().add(testTarget);
