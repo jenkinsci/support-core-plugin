@@ -10,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.logging.LogRecorder;
 import hudson.security.Permission;
+import java.io.IOException;
 import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -39,12 +40,13 @@ public class CustomLogsTest {
     }
 
     @Test
-    public void testCustomLogsContent() {
+    public void testCustomLogsContent() throws IOException {
         LogRecorder testLogRecorder = new LogRecorder("test");
         LogRecorder.Target testTarget = new LogRecorder.Target(CustomLogsTest.class.getName(), Level.FINER);
-        testLogRecorder.targets.add(testTarget);
-        j.getInstance().getLog().logRecorders.put("test", testLogRecorder);
+        testLogRecorder.getLoggers().add(testTarget);
+        j.getInstance().getLog().getRecorders().add(testLogRecorder);
         testTarget.enable();
+        testLogRecorder.save();
         SupportTestUtils.invokeComponentToString(new Component() {
 
             @NonNull

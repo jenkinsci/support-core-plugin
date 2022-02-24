@@ -15,6 +15,7 @@ import hudson.util.CopyOnWriteList;
 import hudson.util.io.RewindableFileOutputStream;
 import hudson.util.io.RewindableRotatingFileOutputStream;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
+import java.util.List;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -41,7 +42,7 @@ public class CustomLogs extends Component {
     private static final Logger LOGGER = Logger.getLogger(CustomLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(CustomLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
     private static final File customLogs = new File(TaskLogs.getLogsRoot(), "custom");
-    private final Map<String,LogRecorder> logRecorders = Jenkins.get().getLog().logRecorders;
+    private final List<LogRecorder> logRecorders = Jenkins.get().getLog().getRecorders();
 
     @NonNull
     @Override
@@ -70,15 +71,14 @@ public class CustomLogs extends Component {
      * by the user. The contents are also ring buffer and only remembers recent 256 or so entries.
      */
     private void addLogRecorders(Container result) {
-        for (Map.Entry<String, LogRecorder> entry : logRecorders.entrySet()) {
-            String name = entry.getKey();
+        for (final LogRecorder recorder : logRecorders) {
+            String name = recorder.getName();
             String entryName = "nodes/master/logs/custom/{0}.log"; // name to be filtered in the bundle
             File storedFile = new File(customLogs, name + ".log");
             if (storedFile.isFile()) {
                 result.add(new FileContent(entryName, new String[]{name}, storedFile));
             } else {
                 // Was not stored for some reason; fine, just load the memory buffer.
-                final LogRecorder recorder = entry.getValue();
                 result.add(new LogRecordContent(entryName, new String[]{name}) {
                     @Override
                     public Iterable<LogRecord> getLogRecords() {
@@ -142,10 +142,10 @@ public class CustomLogs extends Component {
         }
 
         @Override public void publish(LogRecord record) {
-            for (Map.Entry<String,LogRecorder> entry : logRecorders.entrySet()) {
-                for (LogRecorder.Target target : entry.getValue().targets) {
+            for (final LogRecorder recorder : logRecorders) {
+                for (LogRecorder.Target target : recorder.getLoggers()) {
                     if (target.includes(record)) {
-                        String name = entry.getKey();
+                        String name = recorder.getName();
                         try {
                             LogFile logFile;
                             synchronized (logFiles) {
