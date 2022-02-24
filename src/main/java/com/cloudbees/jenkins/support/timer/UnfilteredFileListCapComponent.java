@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Component} that attaches files inside {@link FileListCap} into a support bundle without filtering the
@@ -22,9 +21,6 @@ import java.util.concurrent.TimeUnit;
  * @author stevenchristou
  */
 public abstract class UnfilteredFileListCapComponent extends Component {
-
-    /** Maximum file size to pack is 2Mb. */
-    public static final int MAX_FILE_SIZE = 2 * 1000000;
 
     @NonNull
     @Override
@@ -40,10 +36,10 @@ public abstract class UnfilteredFileListCapComponent extends Component {
             final List<File> files = new ArrayList<>(FileUtils.listFiles(
                     fileListCap.getFolder(), new String[] {"txt"}, false));
             Collections.sort(files);
-            long recently = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(90);
+            long recently = System.currentTimeMillis() - FileListCapComponent.MAX_LOG_FILE_AGE_MS;
             for (File f : files) {
                 if (f.lastModified() > recently) {
-                    container.add(new UnfilteredFileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
+                    container.add(new UnfilteredFileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
                 }
             }
         }

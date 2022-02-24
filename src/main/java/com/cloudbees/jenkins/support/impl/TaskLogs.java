@@ -3,6 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
@@ -12,7 +13,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
 
@@ -58,7 +58,7 @@ public class TaskLogs extends Component {
                 File[] files = logs.listFiles(ROTATED_LOGFILE_FILTER);
                 if (files != null) {
                     Arrays.sort(files);
-                    long recently = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(90);
+                    long recently = System.currentTimeMillis() - FileListCapComponent.MAX_LOG_FILE_AGE_MS;
                     for (File f : files) {
                         if (f.lastModified() > recently) {
                             result.add(new FileContent("task-logs/{0}", new String[] {f.getName()}, f));
