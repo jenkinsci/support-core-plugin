@@ -198,3 +198,26 @@ unclassified:
 ```
 This version changes the configuration fields to be more intuitive. Please update your yaml file if
 you update support-core to version 2.68 or later.
+
+
+## Support Bundle sensitive data auto redaction
+Starting from version 2.72.2, Support Core plugin could automatically redact any passwords stored in the following files:
+* `nodes.md`
+* `about.md`
+* `nodes/master/system.properties` for controllers and agents
+* `nodes/master/environment.txt`
+* `nodes/slave/name/proc/self/environ` and `nodes/slave/name/proc/self/cmdline` for Linux based instances
+* `nodes/slave/name/config.xml` for each agent
+* launch log files per each agent located in `nodes/slave/name/launchLogs`
+
+To support this feature, a text file named `security-stop-words.txt` has been added to the `$JENKINS_HOME/support` folder. It contains security stop words that are used to detect passwords or secrets. When the bundle is generated, the word "REDACTED" replaces any values associated with these stop words.
+
+For example, if one of the security stop words is "passwd", the following string:
+````
+-username.net.passwd=mySecret
+````
+will be changed to:
+````
+-username.net.passwd=REDACTED
+````
+To disable this feature, delete all of the security stop words from the security-stop-words.txt file (but not the file itself, because it will be automatically regenerated with a default values). Any changes made to the security-stop-words.txt file are applied after a Jenkins instance restart.
