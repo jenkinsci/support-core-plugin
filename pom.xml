@@ -34,7 +34,7 @@
   </parent>
 
   <artifactId>support-core</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Support Core Plugin</name>
@@ -69,8 +69,7 @@
   </scm>
 
   <properties>
-    <revision>2.82</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <!-- TODO use the 2.332.1 LTS once released -->
     <jenkins.version>2.332</jenkins.version>
     <java.level>8</java.level>

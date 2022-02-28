@@ -1,3 +1,2 @@
-# https://github.com/jenkinsci/.github/blob/master/.github/release-drafter.adoc
+# https://www.jenkins.io/doc/developer/publishing/releasing-cd/
 _extends: .github
-tag-template: support-core-$NEXT_MINOR_VERSION
