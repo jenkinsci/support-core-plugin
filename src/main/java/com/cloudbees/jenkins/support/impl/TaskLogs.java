@@ -3,12 +3,14 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
+import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -51,19 +53,17 @@ public class TaskLogs extends Component {
     private void addControllerTasksLogs(Container result) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
-            File logs = getLogsRoot();
-            File[] files = logs.listFiles(ROTATED_LOGFILE_FILTER);
-            if (files != null) {
-                for (File f : files) {
-                    result.add(new FileContent("task-logs/{0}", new String[]{f.getName()}, f));
-                }
-            }
-
-            File taskLogs = new File(logs, "tasks");
-            files = taskLogs.listFiles(ROTATED_LOGFILE_FILTER);
-            if (files != null) {
-                for (File f : files) {
-                    result.add(new FileContent("task-logs/{0}", new String[]{f.getName()}, f));
+            File logsRoot = getLogsRoot();
+            for (File logs : new File[] {logsRoot, new File(logsRoot, "tasks")}) {
+                File[] files = logs.listFiles(ROTATED_LOGFILE_FILTER);
+                if (files != null) {
+                    Arrays.sort(files);
+                    long recently = System.currentTimeMillis() - FileListCapComponent.MAX_LOG_FILE_AGE_MS;
+                    for (File f : files) {
+                        if (f.lastModified() > recently) {
+                            result.add(new FileContent("task-logs/{0}", new String[] {f.getName()}, f));
+                        }
+                    }
                 }
             }
         }
