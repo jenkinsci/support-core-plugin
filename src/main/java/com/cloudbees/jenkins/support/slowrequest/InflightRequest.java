@@ -2,7 +2,6 @@ package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import jenkins.model.Jenkins;
-import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
 import javax.servlet.http.HttpServletRequest;
@@ -55,7 +54,7 @@ final class InflightRequest {
     /**
      * User Agent that invoked the slow request.
      */
-    final ReadableUserAgent userAgent;
+    private final String userAgent;
 
     /**
      * Locale of slow request
@@ -68,8 +67,7 @@ final class InflightRequest {
         startTime = System.currentTimeMillis();
         userName = Jenkins.getAuthentication().getName();
         referer = req.getHeader("Referer");
-        String agentHeader = req.getHeader("User-Agent");
-        userAgent = agentHeader != null ? UADetectorServiceFactory.getResourceModuleParser().parse(agentHeader) : null;
+        userAgent = req.getHeader("User-Agent");
         locale = req.getLocale().toString();
     }
 
@@ -80,7 +78,7 @@ final class InflightRequest {
     void writeHeader(PrintWriter w, Optional<ContentFilter> filter) {
         w.println("Username: " + filter.map(contentFilter -> contentFilter.filter(userName)).orElse(userName));
         w.println("Referer: " + filter.map(contentFilter -> contentFilter.filter(referer)).orElse(referer));
-        w.println("User Agent: " + userAgent);
+        w.println("User Agent: " + (userAgent != null ? UADetectorServiceFactory.getResourceModuleParser().parse(userAgent) : null));
         w.println("Date: " + new Date());
         w.println("URL: " + filter.map(contentFilter -> contentFilter.filter(url)).orElse(url));
         w.println("Locale: " + locale);
