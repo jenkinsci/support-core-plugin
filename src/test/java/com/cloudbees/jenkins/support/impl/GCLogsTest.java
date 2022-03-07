@@ -57,12 +57,12 @@ public class GCLogsTest {
         } else {
 
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file="
-                + tempDir.getAbsolutePath() + File.separator + "gc.log.%p" + ":filecount=10,filesize=50m");
+                + tempDir.getAbsolutePath() + File.separator + "gc.log" + ":filecount=10,filesize=50m");
             assertContentWithFinderContainsFiles(finder, 5);
             
             // The file locations may be wrapped with quotes
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH)).thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\""
-                + tempDir.getAbsolutePath() + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
+                + tempDir.getAbsolutePath() + File.separator + "gc.log\":filecount=10,filesize=50m");
         }
         assertContentWithFinderContainsFiles(finder, 5);
     }
@@ -71,10 +71,10 @@ public class GCLogsTest {
     public void parameterizedFiles() throws Exception {
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 5; count++) {
-            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".1423.log." + count));
+            Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".1423.log"));
         }
         for (int count = 0; count < 3; count++) {
-            Files.touch(new File(tempDir, "gc." + System.currentTimeMillis() + ".2534.log." + count));
+            Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".2534.log"));
         }
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
 
@@ -96,10 +96,10 @@ public class GCLogsTest {
     public void parameterizedAndRotatedFiles() throws Exception {
         File tempDir = Files.createTempDir();
         for (int count = 0; count < 10; count++) {
-            Files.touch(new File(tempDir, "gc5625.log." + count));
+            Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".5625.log." + count));
         }
         for (int count = 0; count < 5; count++) {
-            Files.touch(new File(tempDir, "gc3421.log." + count));
+            Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".3421.log." + count));
         }
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
 

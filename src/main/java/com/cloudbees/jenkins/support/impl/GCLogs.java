@@ -31,11 +31,13 @@ import java.util.regex.Pattern;
 @Extension(ordinal = 90.0) // probably big too, see JenkinsLogs
 public class GCLogs extends Component {
 
+    //TODO: Remove the JDK 8 part after the June 2022 LTS that drop support for JDK 8
     static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
     static final String GCLOGS_JRE9_SWITCH = "-Xlog:gc";
     // We need (?:[a-zA-Z]\:\\)? to handle Windows disk drive 
     static final String GCLOGS_JRE9_LOCATION = ".*:file=[\"]?(?<location>(?:[a-zA-Z]:\\\\)?[^\":]*).*";
     static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
+    static final String GCLOGS_JRE9_ROTATION_SWITCH = ".*filecount=0.*";
 
     private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
 
@@ -112,7 +114,7 @@ public class GCLogs extends Component {
      * <li>or that feature is not used, then we simply match by "starts with"</li>
      * </ul>
      *
-     * @param gcLogFileLocation the specified value after <code>-Xloggc:</code>
+     * @param gcLogFileLocation the specified value within <code>-Xlog:gc.*:file=[filename]:.*</code> for JDK 9+ or after <code>-Xloggc:[filename]</code> for JDK 8 
      * @param result            the container where to add the found logs, if any.
      * @see https://bugs.openjdk.java.net/browse/JDK-7164841
      */
@@ -184,7 +186,7 @@ public class GCLogs extends Component {
      * Returns if the file passed in should be considered following the retention  @{link GCLOGS_RETENTION_DAYS}
      * configured.
      * @param gcLog the file
-     * @return true if the the file should be considered
+     * @return true if the file should be considered
      */
     private boolean shouldConsiderFile(File gcLog) {
         return GCLOGS_RETENTION_DAYS <= 0 || 
@@ -192,7 +194,13 @@ public class GCLogs extends Component {
     }
 
     public boolean isGcLogRotationConfigured() {
-        return isJava8OrBelow() && vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
+        if (isJava8OrBelow()) {
+            return vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
+        } else {
+            // JDK 9 and -Xlog:gc rotation is defaulted to 5 files and only disabled if filecount=0 is set
+            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
+            return gcLogSwitch != null && !Pattern.compile(GCLOGS_JRE9_ROTATION_SWITCH).matcher(gcLogSwitch).find();
+        }
     }
 
     /**
@@ -211,12 +219,8 @@ public class GCLogs extends Component {
     protected static class VmArgumentFinder {
         @CheckForNull
         public String findVmArgument(String argName) {
-            for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-                if (argument.startsWith(argName)) {
-                    return argument;
-                }
-            }
-            return null;
+            return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(arg -> arg.startsWith(argName)).findFirst().orElse(null);
         }
     }
 }
