@@ -29,13 +29,6 @@ public class TaskLogsTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void testTaskLogsContentEmpty() {
-        String otherLogs = SupportTestUtils.invokeComponentToString(
-                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
-        assertTrue("Should not write anything", otherLogs.isEmpty());
-    }
-
-    @Test
     public void testTaskRootSafeTimerLogs() throws IOException {
         File safeTimerTasksDir = SafeTimerTask.getLogsRoot();
         safeTimerTasksDir.mkdir();
