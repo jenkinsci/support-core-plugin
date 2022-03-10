@@ -27,7 +27,7 @@ package com.cloudbees.jenkins.support.filter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Composite ContentFilter of all registered ContentFilter extensions.
@@ -37,7 +37,7 @@ import javax.annotation.Nonnull;
 @Restricted(NoExternalUse.class)
 class AllContentFilters implements ContentFilter {
     @Override
-    public @Nonnull String filter(@Nonnull String input) {
+    public @NonNull String filter(@NonNull String input) {
         String filtered = input;
         for (ContentFilter filter : ContentFilter.all()) {
             filtered = filter.filter(filtered);

@@ -11,7 +11,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -85,13 +85,13 @@ public abstract class AdvancedProcFilesRetriever extends ProcFilesRetriever {
         private String name;
         private boolean filtered;
 
-        private ProcFile(@Nonnull String file, @Nonnull String name, boolean filtered) {
+        private ProcFile(@NonNull String file, @NonNull String name, boolean filtered) {
             this.file = file;
             this.name = name;
             this.filtered = filtered;
         }
 
-        public static ProcFile of(@Nonnull String file, @Nonnull String name, boolean filtered) {
+        public static ProcFile of(@NonNull String file, @NonNull String name, boolean filtered) {
             return new ProcFile(file, name, filtered);
         }
 

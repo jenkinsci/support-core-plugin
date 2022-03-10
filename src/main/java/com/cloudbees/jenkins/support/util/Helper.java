@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.util;
 
 import jenkins.model.Jenkins;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Simple helper so we don't have to check {@code Jenkins.getInstance() != null} everywhere.
@@ -16,7 +16,7 @@ public final class Helper {
         throw new AssertionError("Not instantiable");
     }
 
-    @Nonnull
+    @NonNull
     public static Jenkins getActiveInstance() {
         Jenkins instance = Jenkins.getInstance();
         if (instance == null) {

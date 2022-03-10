@@ -34,7 +34,7 @@ import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.xml.sax.SAXException;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
@@ -502,7 +502,7 @@ public class SupportActionTest {
         }
     }
 
-    @Nonnull
+    @NonNull
     private List<String> getFileNamesFromBundle(ZipFile zip) {
         List<String> entries = new ArrayList<>();
         zip.stream().forEach(entry -> entries.add(entry.getName()));

@@ -27,8 +27,8 @@ package com.cloudbees.jenkins.support.filter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.jcip.annotations.GuardedBy;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -49,7 +49,7 @@ public class FilteredWriter extends FilterWriter {
     @GuardedBy("this")
     private CharBuffer buf;
 
-    FilteredWriter(@Nonnull Writer writer, @Nonnull ContentFilter contentFilter) {
+    FilteredWriter(@NonNull Writer writer, @NonNull ContentFilter contentFilter) {
         super(writer);
         this.contentFilter = contentFilter;
     }
@@ -69,7 +69,7 @@ public class FilteredWriter extends FilterWriter {
     }
 
     @Override
-    public synchronized void write(@Nonnull char[] cbuf, int off, int len) throws IOException {
+    public synchronized void write(@NonNull char[] cbuf, int off, int len) throws IOException {
         ensureOpen();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();
@@ -87,7 +87,7 @@ public class FilteredWriter extends FilterWriter {
     }
 
     @Override
-    public synchronized void write(@Nonnull String str, int off, int len) throws IOException {
+    public synchronized void write(@NonNull String str, int off, int len) throws IOException {
         ensureOpen();
         while (len > 0) {
             if (!buf.hasRemaining()) filterFlushLines();

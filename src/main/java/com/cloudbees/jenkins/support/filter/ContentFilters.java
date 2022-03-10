@@ -32,7 +32,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Configures content filters for anonymization.
@@ -67,7 +67,7 @@ public class ContentFilters extends GlobalConfiguration {
     }
 
     @Override
-    public @Nonnull String getDisplayName() {
+    public @NonNull String getDisplayName() {
         return Messages.ContentFilters_DisplayName();
     }
 
@@ -76,7 +76,7 @@ public class ContentFilters extends GlobalConfiguration {
      * @return the global configuration category for CasC where this config lands
      */
     @Override
-    public @Nonnull GlobalConfigurationCategory getCategory() {
+    public @NonNull GlobalConfigurationCategory getCategory() {
         return GlobalConfigurationCategory.get(GlobalConfigurationCategory.Security.class);
     }
 }

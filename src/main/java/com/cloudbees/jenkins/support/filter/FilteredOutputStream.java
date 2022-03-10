@@ -27,8 +27,8 @@ package com.cloudbees.jenkins.support.filter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.jcip.annotations.GuardedBy;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -71,7 +71,7 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @param out           output stream to write filtered content to
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public FilteredOutputStream(@Nonnull OutputStream out, @Nonnull ContentFilter contentFilter) {
+    public FilteredOutputStream(@NonNull OutputStream out, @NonNull ContentFilter contentFilter) {
         this(out, StandardCharsets.UTF_8, contentFilter);
     }
 
@@ -82,7 +82,7 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @param charset       character set to use for decoding and encoding bytes written to this stream
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public FilteredOutputStream(@Nonnull OutputStream out, @Nonnull Charset charset, @Nonnull ContentFilter contentFilter) {
+    public FilteredOutputStream(@NonNull OutputStream out, @NonNull Charset charset, @NonNull ContentFilter contentFilter) {
         super(out);
         this.charset = charset;
         this.decoder = charset.newDecoder()
@@ -107,12 +107,12 @@ public class FilteredOutputStream extends FilterOutputStream {
     }
 
     @Override
-    public synchronized void write(@Nonnull byte[] b) throws IOException {
+    public synchronized void write(@NonNull byte[] b) throws IOException {
         write(b, 0, b.length);
     }
 
     @Override
-    public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
+    public synchronized void write(@NonNull byte[] b, int off, int len) throws IOException {
         ensureOpen();
         while (len > 0) {
             int toCopy = Math.min(encodedBuf.remaining(), len);

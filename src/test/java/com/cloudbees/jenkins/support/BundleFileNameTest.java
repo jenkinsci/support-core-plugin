@@ -8,7 +8,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.localizer.Localizable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.PrintWriter;
 import java.time.Clock;
 import java.time.Instant;
@@ -74,7 +74,7 @@ public class BundleFileNameTest {
     @TestExtension("testGenerate_WithQualifierAndInstanceType")
     public static class TestBundleNameInstanceTypeProvider extends BundleNameInstanceTypeProvider {
         @Override
-        @Nonnull
+        @NonNull
         public String getInstanceType() {
             return "instance_type";
         }

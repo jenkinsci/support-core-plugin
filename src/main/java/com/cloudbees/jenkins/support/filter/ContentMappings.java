@@ -35,7 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,7 +105,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private final Set<String> stopWords;
     private final Map<String, ContentMapping> mappings;
 
-    private ContentMappings(@Nonnull XmlProxy proxy) {
+    private ContentMappings(@NonNull XmlProxy proxy) {
         if (proxy.stopWords == null) {
             stopWords = getDefaultStopWords();
         } else {
@@ -200,21 +200,21 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     /**
      * @return the set of stop words to ignore when filtering
      */
-    public @Nonnull Set<String> getStopWords() {
+    public @NonNull Set<String> getStopWords() {
         return Collections.unmodifiableSet(stopWords);
     }
 
     /**
      * @return the map of original to replacement values known to this instance
      */
-    public @Nonnull Map<String, String> getMappings() {
+    public @NonNull Map<String, String> getMappings() {
         return mappings.values().stream().collect(toMap(ContentMapping::getOriginal, ContentMapping::getReplacement));
     }
 
     /**
      * Looks up or creates a new ContentMapping for the given original string and a ContentMapping generator.
      */
-    public @Nonnull ContentMapping getMappingOrCreate(@Nonnull String original, @Nonnull Function<String, ContentMapping> generator) {
+    public @NonNull ContentMapping getMappingOrCreate(@NonNull String original, @NonNull Function<String, ContentMapping> generator) {
         boolean isNew = !mappings.containsKey(original);
         ContentMapping mapping = mappings.computeIfAbsent(original, generator);
         try {
@@ -278,12 +278,12 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     }
 
     @Override
-    public @Nonnull String getIconFileName() {
+    public @NonNull String getIconFileName() {
         return "/plugin/support-core/images/48x48/support.png";
     }
 
     @Override
-    public @Nonnull String getDisplayName() {
+    public @NonNull String getDisplayName() {
         return Messages.ContentMappings_DisplayName();
     }
 
@@ -293,7 +293,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     }
 
     @Override
-    public @Nonnull String getUrlName() {
+    public @NonNull String getUrlName() {
         return "anonymizedMappings";
     }
     
@@ -301,7 +301,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * Name of the category for this management link.
      * TBD: Use getCategory when core requirement is greater or equal to 2.226 
      */
-    public @Nonnull String getCategoryName() {
+    public @NonNull String getCategoryName() {
         return "SECURITY";
     }    
 }

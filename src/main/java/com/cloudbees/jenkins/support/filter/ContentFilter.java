@@ -28,8 +28,8 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
@@ -57,7 +57,7 @@ public interface ContentFilter extends ExtensionPoint {
      * @param input input data to filter
      * @return the filtered input data
      */
-    @Nonnull String filter(@Nonnull String input);
+    @NonNull String filter(@NonNull String input);
 
     /**
      * Reloads the state of this filter. This may be implemented to rescan for more items to filter.

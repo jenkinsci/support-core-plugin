@@ -3,7 +3,7 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +35,7 @@ public final class BundleFileName {
     /**
      * @return the bundle name without qualifier.
      */
-    @Nonnull
+    @NonNull
     public static String generate() {
         return generate(DEFAULT_CLOCK, null);
     }
@@ -43,7 +43,7 @@ public final class BundleFileName {
     /**
      * @return the bundle name with qualifier.
      */
-    @Nonnull
+    @NonNull
     public static String generate(String qualifier) {
         return generate(DEFAULT_CLOCK, qualifier);
     }

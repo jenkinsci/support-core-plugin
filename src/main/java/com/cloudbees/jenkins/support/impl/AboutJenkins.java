@@ -42,7 +42,7 @@ import jenkins.slaves.RemotingVersionInfo;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.Stapler;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileInputStream;

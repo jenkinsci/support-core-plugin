@@ -23,7 +23,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -46,14 +46,14 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
 
     private List<? extends ObjectComponent<T>> components = new ArrayList<>();
 
-    @Nonnull
+    @NonNull
     private final T object;
 
-    public SupportObjectAction(@Nonnull T object) {
+    public SupportObjectAction(@NonNull T object) {
         this.object = object;
     }
 
-    @Nonnull
+    @NonNull
     public final T getObject() {
         return object;
     }

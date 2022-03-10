@@ -30,7 +30,7 @@ import hudson.ExtensionPoint;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -58,7 +58,7 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
      * Applies the provided function to a random name and normalizes the result.
      */
     @Override
-    public Supplier<String> apply(@Nonnull Function<String, String> nameTransformer) {
+    public Supplier<String> apply(@NonNull Function<String, String> nameTransformer) {
         return () -> nameTransformer.apply(generator.next()).toLowerCase(Locale.ENGLISH).replace(' ', '_');
     }
 

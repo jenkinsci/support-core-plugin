@@ -48,8 +48,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.jcip.annotations.GuardedBy;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -208,7 +208,7 @@ public final class SlaveCommandStatistics extends Component {
     // can put a capacity constraint on the latter.
     @Extension @Restricted(NoExternalUse.class)
     public static final class NodeListenerImpl extends NodeListener {
-        @Override protected void onDeleted(@Nonnull Node node) {
+        @Override protected void onDeleted(@NonNull Node node) {
             SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
             synchronized (scs.statLock) {
                 Statistics listener = scs.statistics.remove(node.getNodeName());

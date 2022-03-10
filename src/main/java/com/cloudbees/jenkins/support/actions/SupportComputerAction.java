@@ -10,7 +10,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -48,9 +48,9 @@ public class SupportComputerAction extends SupportObjectAction<Computer> {
             return Computer.class;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        public Collection<? extends Action> createFor(@Nonnull Computer computer) {
+        public Collection<? extends Action> createFor(@NonNull Computer computer) {
             if (computer == Jenkins.get().toComputer()) {
                 return Collections.emptyList();
             }
