@@ -8,8 +8,8 @@ import hudson.Extension;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
@@ -118,7 +118,7 @@ public class GCLogs extends Component {
      * @param result            the container where to add the found logs, if any.
      * @see https://bugs.openjdk.java.net/browse/JDK-7164841
      */
-    private void handleRotatedLogs(@Nonnull final String gcLogFileLocation, Container result) {
+    private void handleRotatedLogs(@NonNull final String gcLogFileLocation, Container result) {
         File gcLogFile = new File(gcLogFileLocation);
 
         // always add .* in the end because this is where the numbering is going to happen

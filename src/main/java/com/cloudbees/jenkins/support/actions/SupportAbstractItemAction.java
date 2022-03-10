@@ -9,7 +9,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -47,9 +47,9 @@ public class SupportAbstractItemAction extends SupportObjectAction<AbstractItem>
             return AbstractItem.class;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        public Collection<? extends Action> createFor(@Nonnull AbstractItem item) {
+        public Collection<? extends Action> createFor(@NonNull AbstractItem item) {
             return Collections.singleton(new SupportAbstractItemAction(item));
         }
     }

@@ -33,7 +33,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -51,7 +51,7 @@ public class NameProvider implements ExtensionPoint {
     private final Supplier<Stream<String>> names;
     private final Supplier<String> fakes;
 
-    private NameProvider(@Nonnull Supplier<Stream<String>> names, @Nonnull Supplier<String> fakes) {
+    private NameProvider(@NonNull Supplier<Stream<String>> names, @NonNull Supplier<String> fakes) {
         this.names = names;
         this.fakes = fakes;
     }
@@ -59,21 +59,21 @@ public class NameProvider implements ExtensionPoint {
     /**
      * @return a stream of names to anonymize
      */
-    public @Nonnull Stream<String> names() {
+    public @NonNull Stream<String> names() {
         return names.get();
     }
 
     /**
      * @return a new fake name to use for anonymization
      */
-    public @Nonnull String generateFake() {
+    public @NonNull String generateFake() {
         return fakes.get();
     }
 
     /**
      * @return all registered NameProviders
      */
-    public static @Nonnull ExtensionList<NameProvider> all() {
+    public static @NonNull ExtensionList<NameProvider> all() {
         return ExtensionList.lookup(NameProvider.class);
     }
 

@@ -29,8 +29,8 @@ import hudson.Functions;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.Immutable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.jcip.annotations.Immutable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class ContentMapping implements ContentFilter {
     private final String[] originals;
     private final String[] replacements;
 
-    private ContentMapping(@Nonnull String original, @Nonnull String replacement) {
+    private ContentMapping(@NonNull String original, @NonNull String replacement) {
         this.original = original;
         this.replacement = replacement;
 
@@ -79,26 +79,26 @@ public class ContentMapping implements ContentFilter {
     /**
      * Constructs a ContentMapping using an original and replacement value.
      */
-    public static ContentMapping of(@Nonnull String original, @Nonnull String replacement) {
+    public static ContentMapping of(@NonNull String original, @NonNull String replacement) {
         return new ContentMapping(original, replacement);
     }
 
     /**
      * @return the original string to replace
      */
-    public @Nonnull String getOriginal() {
+    public @NonNull String getOriginal() {
         return original;
     }
 
     /**
      * @return the replacement string that the originals are replaced with
      */
-    public @Nonnull String getReplacement() {
+    public @NonNull String getReplacement() {
         return replacement;
     }
 
     @Override
-    public @Nonnull String filter(@Nonnull String input) {
+    public @NonNull String filter(@NonNull String input) {
         return WordReplacer.replaceWordsIgnoreCase(input, originals, replacements);
     }
 

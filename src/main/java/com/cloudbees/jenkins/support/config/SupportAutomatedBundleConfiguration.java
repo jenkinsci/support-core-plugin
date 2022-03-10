@@ -22,7 +22,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -140,7 +140,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
         }
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public String getDisplayName() {
         return Messages.SupportAutomatedBundleConfiguration_displayName();

@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -43,7 +43,7 @@ public class BundleNamePrefixTest {
 
     @TestExtension("checkWithOneProvider")
     public static class TestProvider extends BundleNameInstanceTypeProvider {
-        @Nonnull
+        @NonNull
         @Override
         public String getInstanceType() {
             return "pouet";
@@ -52,7 +52,7 @@ public class BundleNamePrefixTest {
 
     @TestExtension("tooManyProviders")
     public static class SpuriousProvider1 extends BundleNameInstanceTypeProvider {
-        @Nonnull
+        @NonNull
         @Override
         public String getInstanceType() {
             return "Zis";
@@ -61,7 +61,7 @@ public class BundleNamePrefixTest {
 
     @TestExtension("tooManyProviders")
     public static class SpuriousProvider2 extends BundleNameInstanceTypeProvider {
-        @Nonnull
+        @NonNull
         @Override
         public String getInstanceType() {
             return "Zat";

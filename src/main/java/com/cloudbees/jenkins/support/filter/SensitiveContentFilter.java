@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -52,7 +52,7 @@ public class SensitiveContentFilter implements ContentFilter {
     }
 
     @Override
-    public @Nonnull String filter(@Nonnull String input) {
+    public @NonNull String filter(@NonNull String input) {
         ContentMappings mappings = ContentMappings.get();
         String filtered = input;
         List<String> searchList = new ArrayList<>();

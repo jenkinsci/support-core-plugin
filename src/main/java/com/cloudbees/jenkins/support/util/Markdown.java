@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.util;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public final class Markdown {
     public static final String NONE_STRING = "(none)";

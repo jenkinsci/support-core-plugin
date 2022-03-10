@@ -32,8 +32,8 @@ import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 
@@ -49,14 +49,14 @@ public final class Persistence {
     /**
      * @return the default config file for the given class
      */
-    public static @Nonnull <T extends Saveable> XmlFile getConfigFile(@Nonnull Class<T> clazz) {
+    public static @NonNull <T extends Saveable> XmlFile getConfigFile(@NonNull Class<T> clazz) {
         return new XmlFile(new File(Jenkins.get().getRootDir(), clazz.getCanonicalName() + ".xml"));
     }
 
     /**
      * Saves a Saveable object to its default location. This collaborates with {@link BulkChange}.
      */
-    public static <T extends Saveable> void save(@Nonnull T object) throws IOException {
+    public static <T extends Saveable> void save(@NonNull T object) throws IOException {
         if (!BulkChange.contains(object)) {
             XmlFile file = getConfigFile(object.getClass());
             file.write(object);
@@ -67,7 +67,7 @@ public final class Persistence {
     /**
      * Loads a Saveable object from its default location or returns {@code null} when the file doesn't exist.
      */
-    public static @CheckForNull <T extends Saveable> T load(@Nonnull Class<T> clazz) throws IOException {
+    public static @CheckForNull <T extends Saveable> T load(@NonNull Class<T> clazz) throws IOException {
         XmlFile file = getConfigFile(clazz);
         return file.exists() ? clazz.cast(file.read()) : null;
     }

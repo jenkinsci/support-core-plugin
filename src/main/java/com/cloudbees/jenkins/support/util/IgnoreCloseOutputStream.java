@@ -27,7 +27,7 @@ package com.cloudbees.jenkins.support.util;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,7 +44,7 @@ public final class IgnoreCloseOutputStream extends BufferedOutputStream implemen
      *
      * @param out the underlying output stream.
      */
-    public IgnoreCloseOutputStream(@Nonnull OutputStream out) {
+    public IgnoreCloseOutputStream(@NonNull OutputStream out) {
         super(out);
     }
 
@@ -54,7 +54,7 @@ public final class IgnoreCloseOutputStream extends BufferedOutputStream implemen
     }
 
     @Override
-    public @Nonnull OutputStream unwrap() {
+    public @NonNull OutputStream unwrap() {
         return out;
     }
 }

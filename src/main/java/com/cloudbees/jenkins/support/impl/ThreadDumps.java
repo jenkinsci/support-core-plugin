@@ -24,7 +24,7 @@ import jenkins.util.Timer;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.*;
 import java.lang.management.*;
 import java.util.Arrays;

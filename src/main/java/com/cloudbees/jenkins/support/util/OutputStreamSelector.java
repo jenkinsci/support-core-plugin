@@ -27,8 +27,8 @@ package com.cloudbees.jenkins.support.util;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import net.jcip.annotations.GuardedBy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -59,7 +59,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
      * @param binaryOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be binary
      * @param textOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be textual
      */
-    public OutputStreamSelector(@Nonnull Supplier<OutputStream> binaryOutputStreamProvider, @Nonnull Supplier<OutputStream> textOutputStreamProvider) {
+    public OutputStreamSelector(@NonNull Supplier<OutputStream> binaryOutputStreamProvider, @NonNull Supplier<OutputStream> textOutputStreamProvider) {
         this.binaryOutputStreamProvider = binaryOutputStreamProvider;
         this.textOutputStreamProvider = textOutputStreamProvider;
     }
@@ -75,7 +75,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public synchronized void write(@Nonnull byte[] b, int off, int len) throws IOException {
+    public synchronized void write(@NonNull byte[] b, int off, int len) throws IOException {
         ensureOpen();
         if (len < 0) throw new IllegalArgumentException("Length cannot be negative. Got: " + len);
         if (len == 0) return;
@@ -150,7 +150,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     }
 
     @Override
-    public synchronized @Nonnull OutputStream unwrap() throws IOException {
+    public synchronized @NonNull OutputStream unwrap() throws IOException {
         ensureOpen();
         chooseStream();
         return out;

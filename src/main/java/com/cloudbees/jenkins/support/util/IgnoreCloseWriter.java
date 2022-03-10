@@ -27,7 +27,7 @@ package com.cloudbees.jenkins.support.util;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -39,7 +39,7 @@ import java.io.Writer;
  */
 @Restricted(NoExternalUse.class)
 public final class IgnoreCloseWriter extends FilterWriter {
-    public IgnoreCloseWriter(@Nonnull Writer out) {
+    public IgnoreCloseWriter(@NonNull Writer out) {
         super(out);
     }
 

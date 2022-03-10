@@ -6,7 +6,7 @@ import hudson.model.Run;
 import jenkins.model.TransientActionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -38,9 +38,9 @@ public class SupportRunAction extends SupportObjectAction<Run> {
             return Run.class;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        public Collection<? extends Action> createFor(@Nonnull Run run) {
+        public Collection<? extends Action> createFor(@NonNull Run run) {
             return Collections.singleton(new SupportRunAction(run));
         }
     }

@@ -30,7 +30,7 @@ import hudson.ExtensionList;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -62,7 +62,7 @@ public class InetAddressContentFilter implements ContentFilter {
     private static final Pattern IP_ADDRESS = Pattern.compile("\\b(" + IPv4 + '|' + IPv6 + ")\\b");
 
     @Override
-    public @Nonnull String filter(@Nonnull String input) {
+    public @NonNull String filter(@NonNull String input) {
         ContentMappings mappings = ContentMappings.get();
         Matcher m = IP_ADDRESS.matcher(input);
         // Use the map keys to filter every IP found without repeating the filtering if the same is found twice.
