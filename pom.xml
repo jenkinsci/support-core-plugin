@@ -119,12 +119,6 @@
       <version>4.1.6.1</version>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>async-http-client</artifactId>
-      <version>1.7.24.3</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.kohsuke</groupId>
       <artifactId>wordnet-random-name</artifactId>
       <version>1.5</version>
