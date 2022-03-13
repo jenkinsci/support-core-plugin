@@ -4,15 +4,15 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-import com.ning.http.client.ProxyServer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ProxyConfiguration;
 import hudson.model.UpdateSite;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import jenkins.plugins.asynchttpclient.AHCUtils;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -55,12 +55,7 @@ public class UpdateCenter extends Component {
 
                             out.println("Last updated: " + updateCenter.getLastUpdatedString());
 
-                            // Only do this part of the async-http-client plugin is installed.
-                            if (Jenkins.get().getPlugin("async-http-client") != null) {
-                                addProxyInformation(out, filter);
-                            } else {
-                                out.println("Proxy: 'async-http-client' not installed, so no proxy info available.");
-                            }
+                            addProxyInformation(out, filter);
                         } finally {
                             out.flush();
                         }
@@ -71,14 +66,15 @@ public class UpdateCenter extends Component {
 
     private void addProxyInformation(PrintWriter out, ContentFilter filter) {
         out.println("=== Proxy ===");
-        ProxyServer proxyServer = AHCUtils.getProxyServer();
-        if (proxyServer != null) {
-            out.println(" - Host: " + ContentFilter.filter(filter, proxyServer.getHost()));
-            out.println(" - Port: " + proxyServer.getPort());
-
+        ProxyConfiguration proxy = Jenkins.get().getProxy();
+        if (proxy != null) {
+            out.println(" - Host: " + ContentFilter.filter(filter, proxy.getName()));
+            out.println(" - Port: " + proxy.getPort());
             out.println(" - No Proxy Hosts: ");
-            for (String noHost : proxyServer.getNonProxyHosts()) {
-                out.println(" * " + ContentFilter.filter(filter, noHost));
+            String noProxyHostsString = proxy.getNoProxyHost();
+            if(noProxyHostsString != null) {
+                Arrays.stream(noProxyHostsString.split("[ \t\n,|]+"))
+                    .forEach(noProxyHost -> out.println(" * " + ContentFilter.filter(filter, noProxyHost)));
             }
         }
     }
