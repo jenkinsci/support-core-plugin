@@ -207,15 +207,14 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
+            <!-- Security2186Test -->
             <systemPropertyVariables>
               <hudson.remoting.ExportTable.exportTraces>true</hudson.remoting.ExportTable.exportTraces>
+              <test2186.trustStorePassword>ASJDHFGASLDFG</test2186.trustStorePassword>
             </systemPropertyVariables>
-            <!--            Security2186Test-->
             <environmentVariables>
               <test2186.trustStorePassword>agsdfaksdgFASKD</test2186.trustStorePassword>
             </environmentVariables>
-            <argLine>${argLine} -Dtest2186.trustStorePassword=ASJDHFGASLDFG</argLine>
-
           </configuration>
         </plugin>
       </plugins>
