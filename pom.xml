@@ -41,7 +41,7 @@
   <description>
     This plugin provides a common set of classes to assist in generating support bundles.
   </description>
-  <url>https://github.com/jenkinsci/support-core-plugin</url>
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
   <licenses>
     <license>
       <name>The MIT license</name>
@@ -62,17 +62,17 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/support-core-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/support-core-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/support-core-plugin</url>
+    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <tag>${scmTag}</tag>
+    <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <!-- TODO use the 2.332.1 LTS once released -->
-    <jenkins.version>2.332</jenkins.version>
+    <jenkins.version>2.332.1</jenkins.version>
     <java.level>8</java.level>
+    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
   </properties>
 
   <repositories>
@@ -93,7 +93,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>
-        <version>1155.v77b_fd92a_26fc</version>
+        <version>1198.v387c834fca_1a_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -214,7 +214,7 @@
             <environmentVariables>
               <test2186.trustStorePassword>agsdfaksdgFASKD</test2186.trustStorePassword>
             </environmentVariables>
-            <argLine>-Dtest2186.trustStorePassword=ASJDHFGASLDFG</argLine>
+            <argLine>${argLine} -Dtest2186.trustStorePassword=ASJDHFGASLDFG</argLine>
 
           </configuration>
         </plugin>
