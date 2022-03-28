@@ -17,6 +17,7 @@ import hudson.model.AbstractModelObject;
 import hudson.model.Action;
 import hudson.security.Permission;
 import hudson.util.RingBufferLogHandler;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -276,7 +277,11 @@ public class SupportTestUtils {
             HtmlPage page = wc.goTo(baseUrl);
             HtmlDivision sidePanel = (HtmlDivision) page.getElementById("side-panel");
             assertEquals(userPrivileged + " should be able to see the Support action", 1,
-                sidePanel.getElementsByAttribute("a", "title", action.getDisplayName()).size());
+                    sidePanel.getElementsByTagName("a")
+                            .stream()
+                            .filter(htmlElement -> htmlElement.getTextContent().equals(action.getDisplayName()))
+                            .count()
+            );
         }
     }
     
