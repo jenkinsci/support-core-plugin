@@ -12,6 +12,7 @@ import hudson.model.FreeStyleProject;
 import junit.framework.AssertionFailedError;
 import org.hamcrest.MatcherAssert;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -49,6 +50,7 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, containsString(SENSITIVE_JOB_NAME));
     }
 
+    @Ignore("TODO flaky test")
     @Test
     public void addContentsFiltered() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
