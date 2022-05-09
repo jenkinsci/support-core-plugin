@@ -40,8 +40,7 @@ public class AsyncResultCache<T> implements Runnable {
         
         if (node == null) return null;
         Future<V> future;
-        // If running in on the built-in node, no need to use the CallAsyncWrapper or be subjected 
-        // to the REMOTE_OPERATION_TIMEOUT_MS
+        // If launching execution on the built-in node, no need to use the CallAsyncWrapper
         if (node instanceof Jenkins) {
             future = Computer.threadPoolForRemoting.submit(() -> {
                 try {
