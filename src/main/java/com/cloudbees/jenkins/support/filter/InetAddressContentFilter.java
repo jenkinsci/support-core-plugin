@@ -53,13 +53,13 @@ public class InetAddressContentFilter implements ContentFilter {
         return ExtensionList.lookupSingleton(InetAddressContentFilter.class);
     }
 
-    // https://blogs.msdn.microsoft.com/oldnewthing/20060522-08/?p=31113
-    private static final String IPv4 =
-            "([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])\\.([1-9]?\\d|1\\d\\d|2[0-4]\\d|25[0-5])";
-    // https://stackoverflow.com/a/17871737
-    private static final String IPv6 =
-            "(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))";
-    private static final Pattern IP_ADDRESS = Pattern.compile("\\b(" + IPv4 + '|' + IPv6 + ")\\b");
+    // http://www.java2s.com/example/java/java.util.regex/is-ipv4-address-by-regex.html
+    private static final String IPv4 = "(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}";
+    // Following is based http://www.java2s.com/example/java/java.util.regex/is-ipv6-address-by-regex.html to which 
+    // we add the mix notation (last 2 octet is IPv4)
+    private static final String IPv6_STANDARD_AND_MIX = "(?i)(?:[0-9a-f]{1,4}:){6}(?:([0-9a-f]{1,4}):[0-9a-f]{1,4}|" + IPv4 + ")";
+    private static final String IPv6_COMPRESSED_AND_MIX = "(?i)((?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)?)::(((?:[0-9a-f]{1,4}:){1,5})?(" + IPv4 + ")|((?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)?))";
+    private static final Pattern IP_ADDRESS = Pattern.compile("(?<![:.\\w])(" + IPv4 + '|' + IPv6_STANDARD_AND_MIX + '|' + IPv6_COMPRESSED_AND_MIX + ")(?![:.\\w])");
 
     @Override
     public @NonNull String filter(@NonNull String input) {
