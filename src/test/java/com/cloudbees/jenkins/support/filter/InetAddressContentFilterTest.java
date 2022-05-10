@@ -25,7 +25,11 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.BulkChange;
 import jenkins.model.Jenkins;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.quicktheories.core.Gen;
@@ -66,9 +70,9 @@ public class InetAddressContentFilterTest {
         ContentMappings mappings = ContentMappings.get();
         try (BulkChange ignored = new BulkChange(mappings)) {
             qt().forAll(inetAddress()).checkAssert(address ->
-                    assertThat(ContentFilter.filter(filter, address))
-                            .contains("ip_")
-                            .doesNotContain(address)
+                assertThat(ContentFilter.filter(filter, address))
+                    .contains("ip_")
+                    .doesNotContain(address)
             );
         }
     }
@@ -80,7 +84,7 @@ public class InetAddressContentFilterTest {
         resetMappings();
         InetAddressContentFilter filter = InetAddressContentFilter.get();
         assertThat(ContentFilter.filter(filter, Jenkins.VERSION))
-                .isEqualTo(Jenkins.VERSION);
+            .isEqualTo(Jenkins.VERSION);
     }
 
     private Gen<String> inetAddress() {
@@ -93,10 +97,116 @@ public class InetAddressContentFilterTest {
     }
 
     private Gen<String> ipv6() {
+        return ipv6Standard().mix(ipv6Compressed()).mix(ipv6Mixed()).mix(ipv6MixedCompressed());
+    }
+
+    private Gen<String> ipv6Standard() {
         Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
         return IntStream.range(0, 8)
-                .mapToObj(i -> part)
-                .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                .orElseThrow(IllegalStateException::new);
+            .mapToObj(i -> part)
+            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+            .orElseThrow(IllegalStateException::new);
+    }
+
+    private Gen<String> ipv6Compressed() {
+        Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
+        Gen<String> result = null;
+        // First pick an index between 0 and 7 where the compression start
+        // Then pick an index between the start index and 8 where the compression stops
+        // Generate the left part from 0 to the start index
+        // Generate the right part from the stop index to 8
+        // If the start index is 0 everything is compressed until the stop index, the string starts with ::
+        // If the stop index is 7 everything is compressed before the stop index, the string ends with ::
+        for (int compStartIndex = 0; compStartIndex < 7; compStartIndex++) {
+            for (int compStopIndex = compStartIndex + 1; compStopIndex < 8; compStopIndex++) {
+                Gen<String> compResult;
+                if(compStartIndex == 0) {
+                    compResult = IntStream.range(compStopIndex, 8)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new)
+                        .map(s -> "::" + s);
+                } else if (compStopIndex == 7) {
+                    compResult = IntStream.range(0, compStartIndex)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new)
+                        .map(s -> s + "::");
+                } else {
+                    Gen<String> leftPart = IntStream.range(0, compStartIndex)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new);
+                    Gen<String> rightPart = IntStream.range(compStopIndex, 8)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new);
+                    compResult = leftPart.zip(rightPart, (s1, s2) -> s1 + "::" + s2);
+                }
+                if(result == null) {
+                    result = compResult;
+                } else {
+                    result.mix(compResult);
+                }
+            }
+        }
+        return result;
+    }
+
+    private Gen<String> ipv6Mixed() {
+        Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
+        Gen<String> ipv4 = ipv4();
+        return IntStream.range(0, 6)
+            .mapToObj(i -> part)
+            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+            .orElseThrow(IllegalStateException::new)
+            .zip(ipv4, (s1, s2) -> s1 + ':' + s2);
+    }
+
+    private Gen<String> ipv6MixedCompressed() {
+        Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
+        Gen<String> ipv4 = ipv4();
+        Gen<String> result = null;
+        // First pick an index between 0 and 7 where the compression start
+        // Then pick an index between the start index and 8 where the compression stops
+        // Generate the left part from 0 to the start index
+        // Generate the right part from the stop index to 8
+        // If the start index is 0 everything is compressed until the stop index, the string starts with ::
+        // If the stop index is 7 everything is compressed before the stop index, the string ends with ::
+        for (int compStartIndex = 0; compStartIndex < 6; compStartIndex++) {
+            for (int compStopIndex = compStartIndex + 1; compStopIndex < 6; compStopIndex++) {
+                Gen<String> compResult;
+                if(compStartIndex == 0) {
+                    compResult = IntStream.range(compStopIndex, 6)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new)
+                        .zip(ipv4, (s1, s2) -> s1 + ":" + s2)
+                        .map(s -> "::" + s);
+                } else if (compStopIndex == 5) {
+                    compResult = IntStream.range(0, compStartIndex)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new)
+                        .zip(ipv4, (s1, s2) -> s1 + "::" + s2);
+                } else {
+                    Gen<String> leftPart = IntStream.range(0, compStartIndex)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new);
+                    Gen<String> rightPart = IntStream.range(compStopIndex, 6)
+                        .mapToObj(i -> part)
+                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                        .orElseThrow(IllegalStateException::new);
+                    compResult = leftPart.zip(rightPart, (s1, s2) -> s1 + "::" + s2).zip(ipv4, (s1, s2) -> s1 + ':' + s2);
+                }
+                if(result == null) {
+                    result = compResult;
+                } else {
+                    result.mix(compResult);
+                }
+            }
+        }
+        return result;
     }
 }
