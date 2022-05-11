@@ -4,13 +4,13 @@ import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
-import hudson.remoting.Future;
 import hudson.remoting.VirtualChannel;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -37,29 +37,34 @@ public class AsyncResultCache<T> implements Runnable {
     public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name)
 
             throws IOException {
+        
         if (node == null) return null;
-        VirtualChannel channel = node.getChannel();
-        if (channel == null) {
-            synchronized (cache) {
-                return cache.get(node);
+        Future<V> future;
+        // If launching execution on the built-in node, no need to use the CallAsyncWrapper
+        if (node instanceof Jenkins) {
+            future = Computer.threadPoolForRemoting.submit(() -> {
+                try {
+                    return operation.call();
+                } catch (Throwable e) {
+                    throw new IOException(e);
+                }
+            });
+        } else {
+            VirtualChannel channel = node.getChannel();
+            if (channel == null) {
+                synchronized (cache) {
+                    return cache.get(node);
+                }
             }
+            future = CallAsyncWrapper.callAsync(channel, operation);
         }
-        Future<V> future = CallAsyncWrapper.callAsync(channel, operation);
         try {
             final V result = future.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             synchronized (cache) {
                 cache.put(node, result);
             }
             return result;
-        } catch (InterruptedException e) {
-            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
-            lr.setThrown(e);
-            LOGGER.log(lr);
-            synchronized (cache) {
-                return cache.get(node);
-            }
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
             lr.setParameters(new Object[]{name, getNodeName(node)});
             lr.setThrown(e);
@@ -72,7 +77,7 @@ public class AsyncResultCache<T> implements Runnable {
             lr.setParameters(new Object[]{name, getNodeName(node)});
             lr.setThrown(e);
             LOGGER.log(lr);
-            Computer.threadPoolForRemoting.submit(new AsyncResultCache<V>(node, cache, future, name));
+            Computer.threadPoolForRemoting.submit(new AsyncResultCache<>(node, cache, future, name));
             synchronized (cache) {
                 return cache.get(node);
             }
@@ -90,6 +95,7 @@ public class AsyncResultCache<T> implements Runnable {
         this.name = name;
     }
 
+    @Override
     public void run() {
         T result;
         try {
@@ -97,12 +103,7 @@ public class AsyncResultCache<T> implements Runnable {
             synchronized (cache) {
                 cache.put(node, result);
             }
-        } catch (InterruptedException e1) {
-            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
-            lr.setThrown(e1);
-            LOGGER.log(lr);
-        } catch (ExecutionException e1) {
+        } catch (InterruptedException | ExecutionException e1) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
             lr.setParameters(new Object[]{name, getNodeName(node)});
             lr.setThrown(e1);

@@ -50,7 +50,6 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, containsString(SENSITIVE_JOB_NAME));
     }
 
-    @Ignore("TODO flaky test")
     @Test
     public void addContentsFiltered() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
