@@ -30,7 +30,7 @@
         <st:include page="sidepanel.jelly" it="${it.object}"/>
         <l:main-panel>
             <h1>
-                <img src="${resURL}/plugin/support-core/images/32x32/support.png" alt=""/>
+                <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
                 ${it.actionTitle}
             </h1>
             <p>

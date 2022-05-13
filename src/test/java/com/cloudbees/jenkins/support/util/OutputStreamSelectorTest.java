@@ -169,8 +169,8 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldUseBinaryStreamForPNG() throws IOException {
-        Path pngFile = Paths.get("src/main/webapp/images/16x16/support.png");
+    public void shouldUseBinaryStreamForSVG() throws IOException {
+        Path pngFile = Paths.get("src/test/resources/images/support.png");
         ByteArrayOutputStream expectedStreamContents = new ByteArrayOutputStream();
         Files.copy(pngFile, expectedStreamContents);
         Files.copy(pngFile, selector);

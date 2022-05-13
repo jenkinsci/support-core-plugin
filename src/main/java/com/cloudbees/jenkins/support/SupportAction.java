@@ -89,7 +89,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
     
     public String getIconFileName() {
-        return "/plugin/support-core/images/24x24/support.png";
+        return "/plugin/support-core/images/support.svg";
     }
 
     public String getDisplayName() {

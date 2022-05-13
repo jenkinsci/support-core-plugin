@@ -63,7 +63,7 @@ public class SupportPluginManagement extends ManagementLink implements Describab
     @CheckForNull
     @Override
     public String getIconFileName() {
-        return "/plugin/support-core/images/48x48/support.png";
+        return "/plugin/support-core/images/support.svg";
     }
 
     @Override
