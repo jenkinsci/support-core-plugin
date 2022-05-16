@@ -36,12 +36,11 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -142,12 +141,10 @@ public class SupportLogHandler extends Handler {
                     }
                 });
                 if (files != null && files.length > maxFiles) {
-                    Arrays.sort(files, new Comparator<File>() {
-                        public int compare(File o1, File o2) {
-                            long lm1 = o1.lastModified();
-                            long lm2 = o2.lastModified();
-                            return lm1 < lm2 ? -1 : lm1 == lm2 ? 0 : +1;
-                        }
+                    Arrays.sort(files, (o1, o2) -> {
+                        long lm1 = o1.lastModified();
+                        long lm2 = o2.lastModified();
+                        return Long.compare(lm1, lm2);
                     });
                     for (int i = 0; i < files.length - maxFiles; i++) {
                         files[i].delete();
@@ -244,11 +241,7 @@ public class SupportLogHandler extends Handler {
             try {
                 fos = new FileOutputStream(file);
                 bos = new BufferedOutputStream(fos);
-                try {
-                    writer = new OutputStreamWriter(bos, "utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    writer = new OutputStreamWriter(bos); // fall back to something sensible
-                }
+                writer = new OutputStreamWriter(bos, StandardCharsets.UTF_8);
                 setWriter(writer);
                 fileCount = 0;
                 success = true;
