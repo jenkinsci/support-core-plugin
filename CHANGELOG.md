@@ -411,7 +411,7 @@ No longer tracked in this file. See [GitHub releases](https://github.com/jenkins
     Add update center information.
 -   [PR
     54](https://github.com/jenkinsci/support-core-plugin/pull/54)
-    Add agent version information for master node.
+    Add agent version information for controller node.
 -   [PR
     55](https://github.com/jenkinsci/support-core-plugin/pull/55)
     Switch to a ThreadLocal DateFormatter
