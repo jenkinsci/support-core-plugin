@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -616,7 +617,7 @@ public class AboutJenkins extends Component {
             return Markdown.prettyNone(n.getLabelString());
         }
         @Override protected void printTo(PrintWriter out,  ContentFilter filter) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
+            final Jenkins jenkins = Jenkins.get();
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
             if (supportPlugin != null) {
                 out.println("Node statistics");
@@ -643,6 +644,13 @@ public class AboutJenkins extends Component {
                     Markdown.escapeBacktick(ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
             out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
+            Optional.ofNullable(jenkins.toComputer()).ifPresent(computer ->
+                out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
+            if(jenkins.getChannel() == null) {
+                out.println("      - Status:         offline");
+            } else {
+                out.println("      - Status:         on-line");
+            }
             out.println("      - Slave Version:  " + Launcher.VERSION);
             out.print(new GetJavaInfo("      -", "          +").getInfo(filter));
             out.println();
@@ -669,6 +677,8 @@ public class AboutJenkins extends Component {
                     }
                     out.println("      - Availability:   " + getDescriptorName(agent.getRetentionStrategy()));
                 }
+                Optional.ofNullable(node.toComputer()).ifPresent(computer ->
+                    out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
                 VirtualChannel channel = node.getChannel();
                 if (channel == null) {
                     out.println("      - Status:         off-line");
