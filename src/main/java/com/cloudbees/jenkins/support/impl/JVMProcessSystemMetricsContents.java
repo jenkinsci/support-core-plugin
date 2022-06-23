@@ -94,7 +94,7 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         @NonNull
         @Override
         public ComponentCategory getCategory() {
-            return ComponentCategory.Agent;
+            return ComponentCategory.AGENT;
         }
 
         @Override

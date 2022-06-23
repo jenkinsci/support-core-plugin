@@ -101,6 +101,6 @@ import java.util.Set;
     }
 
     @NonNull @Override public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 }

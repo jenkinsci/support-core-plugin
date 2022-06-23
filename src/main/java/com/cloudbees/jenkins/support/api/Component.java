@@ -152,15 +152,34 @@ public abstract class Component implements ExtensionPoint {
     @Exported
     @NonNull
     public ComponentCategory getCategory() {
-        return ComponentCategory.Misc;
+        return ComponentCategory.UNCATEGORIZED;
     }
 
     public enum ComponentCategory {
-        Agent(Messages._SupportPlugin_Category_Agent()),
-        Controller(Messages._SupportPlugin_Category_Controller()),
-        Logs(Messages._SupportPlugin_Category_Logs()),
-        Misc(Messages._SupportPlugin_Category_Misc()),
-        Platform(Messages._SupportPlugin_Category_Platform());
+        /**
+         * For components related to the agents, their configuration and other bits.
+         */
+        AGENT(Messages._SupportPlugin_Category_Agent()),
+        /**
+         * For components related to the controller, its configuration and other bits.
+         */
+        CONTROLLER(Messages._SupportPlugin_Category_Controller()),
+        /**
+         * For components related to the logging system or the logs themself.
+         */
+        LOGS(Messages._SupportPlugin_Category_Logs()),
+        /**
+         * Anything that doesn't fit any other categories.
+         */
+        MISC(Messages._SupportPlugin_Category_Misc()),
+        /**
+         * For components related to how the controller is running, how it is running, where it is running.
+         */
+        PLATFORM(Messages._SupportPlugin_Category_Platform()),
+        /**
+         * The default category. This shouldn't be explicitly used.
+         */
+        UNCATEGORIZED(Messages._SupportPlugin_Category_Uncategorized());
 
         private final Localizable label;
 

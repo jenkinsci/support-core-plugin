@@ -107,7 +107,7 @@ public class AboutJenkins extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 
     @Override

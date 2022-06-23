@@ -30,6 +30,6 @@ public class SlowRequestComponent extends UnfilteredFileListCapComponent {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 }

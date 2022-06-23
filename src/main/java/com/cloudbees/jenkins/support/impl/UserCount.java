@@ -91,6 +91,6 @@ public class UserCount extends UnfilteredFileListCapComponent {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Misc;
+        return ComponentCategory.MISC;
     }
 }

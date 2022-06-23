@@ -105,7 +105,7 @@ public class LoadStats extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 
     private void add(@NonNull Container container, String name, LoadStatistics stats) {

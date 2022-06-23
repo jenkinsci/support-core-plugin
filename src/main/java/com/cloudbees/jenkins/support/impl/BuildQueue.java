@@ -40,7 +40,6 @@ import jenkins.model.Jenkins;
 
 import java.io.PrintWriter;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -109,6 +108,6 @@ public class BuildQueue extends Component {
   @NonNull
   @Override
   public ComponentCategory getCategory() {
-    return ComponentCategory.Controller;
+    return ComponentCategory.CONTROLLER;
   }
 }

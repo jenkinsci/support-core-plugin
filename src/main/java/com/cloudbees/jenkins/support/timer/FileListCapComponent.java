@@ -39,7 +39,7 @@ public abstract class FileListCapComponent extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     public void addContents(@NonNull Container container, FileListCap fileListCap) {

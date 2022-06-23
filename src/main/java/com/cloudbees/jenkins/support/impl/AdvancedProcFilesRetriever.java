@@ -11,7 +11,6 @@ import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +79,7 @@ public abstract class AdvancedProcFilesRetriever extends ProcFilesRetriever {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     /**

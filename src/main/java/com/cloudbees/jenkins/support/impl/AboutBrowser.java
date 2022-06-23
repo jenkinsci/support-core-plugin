@@ -84,6 +84,6 @@ public class AboutBrowser extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return super.getCategory();
+        return ComponentCategory.MISC;
     }
 }

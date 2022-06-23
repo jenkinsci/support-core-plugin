@@ -76,7 +76,7 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Agent;
+        return ComponentCategory.AGENT;
     }
 
     @NonNull

@@ -69,9 +69,10 @@ public class ReverseProxy extends Component {
     });
   }
 
+  @NonNull
   @Override
   public ComponentCategory getCategory() {
-    return ComponentCategory.Platform;
+    return ComponentCategory.PLATFORM;
   }
 
   private Trilean isForwardedHeaderDetected(StaplerRequest req, String header) {

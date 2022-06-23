@@ -135,7 +135,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         @NonNull
         @Override
         public ComponentCategory getCategory() {
-            return ComponentCategory.Agent;
+            return ComponentCategory.AGENT;
         }
 
         @Override

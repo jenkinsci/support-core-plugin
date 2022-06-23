@@ -53,7 +53,7 @@ public class ConfigFileComponent extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 
     private static final Logger LOGGER = Logger.getLogger(ConfigFileComponent.class.getName());

@@ -190,7 +190,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     public Future<String> getThreadDump(Node node) throws IOException {

@@ -50,7 +50,7 @@ public class JenkinsLogs extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Logs;
+        return ComponentCategory.LOGS;
     }
 
     /**

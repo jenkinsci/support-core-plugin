@@ -94,7 +94,7 @@ public class NetworkInterfaces extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     public String getNetworkInterface(Node node) throws IOException {

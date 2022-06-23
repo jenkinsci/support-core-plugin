@@ -67,7 +67,7 @@ public class UpdateCenter extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Controller;
+        return ComponentCategory.CONTROLLER;
     }
 
     private void addProxyInformation(PrintWriter out, ContentFilter filter) {

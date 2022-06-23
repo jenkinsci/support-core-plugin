@@ -79,7 +79,7 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     protected void addUnixContents(@NonNull Container container, final @NonNull Node node) {

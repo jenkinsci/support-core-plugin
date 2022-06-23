@@ -68,7 +68,7 @@ public class FileDescriptorLimit extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     private void addContents(@NonNull Container container, final @NonNull Node node) {

@@ -77,7 +77,7 @@ public class HeapUsageHistogram extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     private String getLiveHistogram() throws IOException {

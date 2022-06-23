@@ -29,6 +29,6 @@ public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 }

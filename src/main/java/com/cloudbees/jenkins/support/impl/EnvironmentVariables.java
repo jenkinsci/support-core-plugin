@@ -90,7 +90,7 @@ public class EnvironmentVariables extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     public Map<String,String> getEnvironmentVariables(Node node) throws IOException {

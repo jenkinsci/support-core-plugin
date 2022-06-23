@@ -80,7 +80,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Agent;
+        return ComponentCategory.AGENT;
     }
 
     @Override

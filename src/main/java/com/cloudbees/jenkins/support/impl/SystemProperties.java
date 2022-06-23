@@ -97,7 +97,7 @@ public class SystemProperties extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.Platform;
+        return ComponentCategory.PLATFORM;
     }
 
     public Map<Object, Object> getSystemProperties(Node node) throws IOException  {
