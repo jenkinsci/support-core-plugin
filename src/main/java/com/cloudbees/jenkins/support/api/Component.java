@@ -145,9 +145,10 @@ public abstract class Component implements ExtensionPoint {
     }
 
     /**
-     * Specify in which {@see ComponentCategory} the current component is related.
+     * Specify in which {@link ComponentCategory} the current component is related.
      *
-     * @return the component category. Cannot be null. By default, returns {@see ComponentCategory.Misc}.
+     * @return An enum value of {@link ComponentCategory}.
+     * @since TODO
      */
     @Exported
     @NonNull
@@ -155,6 +156,11 @@ public abstract class Component implements ExtensionPoint {
         return ComponentCategory.UNCATEGORIZED;
     }
 
+    /**
+     * Categories supported by this version of support-core
+     *
+     * @since TODO
+     */
     public enum ComponentCategory {
         /**
          * For components related to the agents, their configuration and other bits.
