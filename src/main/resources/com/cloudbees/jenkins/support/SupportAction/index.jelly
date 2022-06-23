@@ -57,8 +57,12 @@
             <div class="jenkins-section__items">
               <j:forEach var="component" items="${category.value}">
                 <div name="components" class="jenkins-section__item">
-                  <f:checkbox title="${component.displayName}" name="selected"
-                              checked="${it.selectedByDefault(component)}"/>
+                  <j:if test="${component.enabled}">
+                    <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}"/>
+                  </j:if>
+                  <j:if test="${!component.enabled}">
+                    <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" readOnlyMode="true"/>
+                  </j:if>
                   <input type="hidden" name="name" value="${component.id}"/>
                 </div>
               </j:forEach>
