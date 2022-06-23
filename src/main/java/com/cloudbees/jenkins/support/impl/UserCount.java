@@ -87,4 +87,10 @@ public class UserCount extends UnfilteredFileListCapComponent {
     public boolean isSelectedByDefault() {
         return true;
     }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Misc;
+    }
 }

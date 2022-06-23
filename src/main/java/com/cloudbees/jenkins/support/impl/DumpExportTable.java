@@ -92,6 +92,12 @@ public class DumpExportTable extends ObjectComponent<Computer> {
         );
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Agent;
+    }
+
     @Override
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
         return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);

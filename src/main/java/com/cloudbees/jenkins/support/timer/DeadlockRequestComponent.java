@@ -25,4 +25,10 @@ public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
     public void addContents(@NonNull Container container) {
         super.addContents(container, checker.logs);
     }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
 }

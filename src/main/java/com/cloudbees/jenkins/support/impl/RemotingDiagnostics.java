@@ -55,4 +55,9 @@ public class RemotingDiagnostics extends Component {
             }
         });
     }
+
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Agent;
+    }
 }

@@ -44,5 +44,4 @@ public abstract class UnfilteredFileListCapComponent extends Component {
             }
         }
     }
-
 }

@@ -87,6 +87,12 @@ public class EnvironmentVariables extends Component {
         }
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
+
     public Map<String,String> getEnvironmentVariables(Node node) throws IOException {
         return AsyncResultCache.get(node, environmentVariableCache, new GetEnvironmentVariables(), "environment",
                 UNAVAILABLE);

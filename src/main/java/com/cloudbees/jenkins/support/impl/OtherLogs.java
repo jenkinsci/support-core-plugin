@@ -49,6 +49,12 @@ public class OtherLogs extends Component {
         addOtherControllerLogs(result);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Logs;
+    }
+
     /**
      * Grabs any files that look like log files directly under {@code $JENKINS_HOME}, just in case
      * any of them are useful.

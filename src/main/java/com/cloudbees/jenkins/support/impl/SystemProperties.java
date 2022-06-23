@@ -94,6 +94,12 @@ public class SystemProperties extends Component {
         }
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
+
     public Map<Object, Object> getSystemProperties(Node node) throws IOException  {
         return AsyncResultCache.get(node, systemPropertyCache, new GetSystemProperties(), "system properties", UNAVAILABLE);
     }

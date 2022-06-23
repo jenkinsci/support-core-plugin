@@ -47,6 +47,12 @@ public class JenkinsLogs extends Component {
         addControllerJulLogRecords(result);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Logs;
+    }
+
     /**
      * Adds {@link Jenkins#logRecords} (from core) into the support bundle.
      *

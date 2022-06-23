@@ -180,6 +180,12 @@ public class ItemsContent extends Component {
         });
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Controller;
+    }
+
     private static class Stats {
         private int count = 0;
         private long sumOfValues = 0;

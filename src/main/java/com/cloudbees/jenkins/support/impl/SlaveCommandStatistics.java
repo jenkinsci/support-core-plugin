@@ -100,6 +100,12 @@ public final class SlaveCommandStatistics extends Component {
         }));
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Agent;
+    }
+
     @VisibleForTesting
     /*package*/ Map<String, Statistics> getStatistics() {
         synchronized (statLock) {

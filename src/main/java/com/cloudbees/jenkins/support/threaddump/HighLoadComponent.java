@@ -47,4 +47,10 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
             super.addContents(container, checker.logs);
         }
     }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
 }

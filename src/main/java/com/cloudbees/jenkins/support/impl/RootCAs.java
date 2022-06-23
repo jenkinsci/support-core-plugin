@@ -81,6 +81,12 @@ public class RootCAs extends Component {
     }
   }
 
+  @NonNull
+  @Override
+  public ComponentCategory getCategory() {
+    return ComponentCategory.Platform;
+  }
+
   private void addContents(@NonNull Container container, final @NonNull Node node) {
     Computer c = node.toComputer();
     if (c == null) {

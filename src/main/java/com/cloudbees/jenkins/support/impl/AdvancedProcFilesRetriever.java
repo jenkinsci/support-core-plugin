@@ -77,6 +77,12 @@ public abstract class AdvancedProcFilesRetriever extends ProcFilesRetriever {
         afterAddUnixContents(container, node, name);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
+
     /**
      * A class to define a file with a name in the bundle and also whether its content should be filtered.
      */

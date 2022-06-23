@@ -87,6 +87,12 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
 
     @NonNull
     @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
+
+    @NonNull
+    @Override
     public String getDisplayName() {
         return Messages.RunDirectoryComponent_DisplayName();
     }

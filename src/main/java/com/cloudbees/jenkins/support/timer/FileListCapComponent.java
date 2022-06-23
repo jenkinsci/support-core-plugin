@@ -36,6 +36,12 @@ public abstract class FileListCapComponent extends Component {
         return Collections.singleton(Jenkins.ADMINISTER);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
+    }
+
     public void addContents(@NonNull Container container, FileListCap fileListCap) {
         synchronized (fileListCap) {
             // while we read and put the reports into the support bundle, we don't want

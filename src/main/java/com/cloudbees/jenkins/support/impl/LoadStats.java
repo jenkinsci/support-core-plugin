@@ -102,6 +102,12 @@ public class LoadStats extends Component {
         }
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Controller;
+    }
+
     private void add(@NonNull Container container, String name, LoadStatistics stats) {
         // A headless environment may be missing the fonts required for these graphs, so even though
         // we should be able to generate graphs from a headless environment we will skip the graphs

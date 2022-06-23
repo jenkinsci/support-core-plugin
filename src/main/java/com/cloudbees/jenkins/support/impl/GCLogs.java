@@ -105,6 +105,12 @@ public class GCLogs extends Component {
         return false;
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Logs;
+    }
+
     /**
      * Two cases:
      * <ul>

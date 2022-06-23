@@ -77,6 +77,12 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         addAgentsLaunchLogs(container);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Agent;
+    }
+
     @Override
     public void addContents(@NonNull Container container, Computer item) {
         if (item.getNode() == null) {

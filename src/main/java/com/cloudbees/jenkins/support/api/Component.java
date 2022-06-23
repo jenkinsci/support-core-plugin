@@ -155,10 +155,12 @@ public abstract class Component implements ExtensionPoint {
         return ComponentCategory.Misc;
     }
 
-    public static enum ComponentCategory {
-        Controller(Messages._SupportPlugin_Category_Controller()),
+    public enum ComponentCategory {
         Agent(Messages._SupportPlugin_Category_Agent()),
-        Misc(Messages._SupportPlugin_Category_Misc());
+        Controller(Messages._SupportPlugin_Category_Controller()),
+        Logs(Messages._SupportPlugin_Category_Logs()),
+        Misc(Messages._SupportPlugin_Category_Misc()),
+        Platform(Messages._SupportPlugin_Category_Platform());
 
         private final Localizable label;
 

@@ -47,4 +47,10 @@ public class RunningBuilds extends Component {
                 }
             });
     }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Controller;
+    }
 }

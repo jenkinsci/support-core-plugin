@@ -56,7 +56,6 @@ public class HeapUsageHistogram extends Component {
         return false;
     }
 
-
     @Override
     public void addContents(@NonNull Container result) {
         result.add(
@@ -73,6 +72,12 @@ public class HeapUsageHistogram extends Component {
                 }
             }
         );
+    }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Platform;
     }
 
     private String getLiveHistogram() throws IOException {
