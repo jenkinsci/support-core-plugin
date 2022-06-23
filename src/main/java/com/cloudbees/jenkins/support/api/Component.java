@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.Messages;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
@@ -31,6 +32,7 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -140,6 +142,32 @@ public abstract class Component implements ExtensionPoint {
     }
 
     public void start(@NonNull SupportContext context) {
+    }
 
+    /**
+     * Specify in which {@see ComponentCategory} the current component is related.
+     *
+     * @return the component category. Cannot be null. By default, returns {@see ComponentCategory.Misc}.
+     */
+    @Exported
+    @NonNull
+    public ComponentCategory getCategory() {
+        return ComponentCategory.Misc;
+    }
+
+    public static enum ComponentCategory {
+        Controller(Messages._SupportPlugin_Category_Controller()),
+        Agent(Messages._SupportPlugin_Category_Agent()),
+        Misc(Messages._SupportPlugin_Category_Misc());
+
+        private final Localizable label;
+
+        ComponentCategory(Localizable label) {
+            this.label = label;
+        }
+
+        public @NonNull String getLabel() {
+            return label.toString();
+        }
     }
 }
