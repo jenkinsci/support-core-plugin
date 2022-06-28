@@ -25,7 +25,6 @@
 package com.cloudbees.jenkins.support;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.remoting.ProxyException;
 import hudson.util.IOUtils;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import net.jcip.annotations.GuardedBy;
@@ -48,10 +47,8 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import java.util.logging.SimpleFormatter;
 
 /**
  * A log handler that rotates files.
@@ -59,11 +56,6 @@ import java.util.logging.SimpleFormatter;
  * @author Stephen Connolly
  */
 public class SupportLogHandler extends Handler {
-
-    /**
-     * Just to access {@link Formatter#formatMessage} which is not {@code static} though it could have been.
-     */
-    private static final Formatter dummyFormatter = new SimpleFormatter();
 
     private final Lock outputLock = new ReentrantLock();
     private final int fileSize;
@@ -104,24 +96,6 @@ public class SupportLogHandler extends Handler {
 
     @Override
     public void publish(LogRecord record) {
-        if (record.getParameters() != null) {
-            try {
-                LogRecord clone = new LogRecord(record.getLevel(), dummyFormatter.formatMessage(record));
-                clone.setLoggerName(record.getLoggerName());
-                clone.setMillis(record.getMillis());
-                clone.setSequenceNumber(record.getSequenceNumber());
-                clone.setSourceClassName(record.getSourceClassName());
-                clone.setSourceMethodName(record.getSourceMethodName());
-                clone.setThreadID(record.getThreadID());
-                Throwable t = record.getThrown();
-                if (t != null) {
-                    clone.setThrown(new ProxyException(t));
-                }
-                record = clone;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
         outputLock.lock();
         try {
             int maxCount = records.length;
