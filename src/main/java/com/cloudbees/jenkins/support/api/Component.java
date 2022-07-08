@@ -179,7 +179,7 @@ public abstract class Component implements ExtensionPoint {
          */
         MISC(Messages._SupportPlugin_Category_Misc()),
         /**
-         * For components related to how the controller is running, how it is running, where it is running.
+         * For components related to how the controller is running and where it is running.
          */
         PLATFORM(Messages._SupportPlugin_Category_Platform()),
         /**
