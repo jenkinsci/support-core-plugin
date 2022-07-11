@@ -91,6 +91,12 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
             return "Agent JVM process system metrics (Linux only)";
         }
 
+        @NonNull
+        @Override
+        public ComponentCategory getCategory() {
+            return ComponentCategory.AGENT;
+        }
+
         @Override
         public boolean isSelectedByDefault() {
             return false;

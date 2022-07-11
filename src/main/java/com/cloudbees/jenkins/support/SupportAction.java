@@ -60,8 +60,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,6 +135,25 @@ public class SupportAction implements RootAction, StaplerProxy {
     @WebMethod(name = "components")
     public List<Component> getComponents() {
         return SupportPlugin.getComponents();
+    }
+
+    // for Jelly
+    @Restricted(NoExternalUse.class)
+    public Map<Component.ComponentCategory, List<Component>> getCategorizedComponents() {
+        return Jenkins.get().getExtensionList(Component.class)
+              .stream()
+              .filter(component -> component.isApplicable(Jenkins.class))
+              .collect(Collectors.groupingBy(Component::getCategory, Collectors.toList()))
+              .entrySet().stream()
+              .sorted(Map.Entry.comparingByKey(Comparator.comparing(Component.ComponentCategory::getLabel)))
+              .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> entry.getValue().stream()
+                          .sorted(Comparator.comparing(Component::getDisplayName))
+                          .collect(Collectors.toCollection(LinkedList::new)),
+                    (e1, e2) -> e2,
+                    LinkedHashMap::new
+              ));
     }
 
     public List<String> getBundles() {

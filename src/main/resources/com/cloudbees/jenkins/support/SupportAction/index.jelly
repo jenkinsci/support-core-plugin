@@ -51,25 +51,23 @@
         </p>
       </j:if>
       <f:form name="bundle-contents" method="POST" action="generateAllBundles">
-        <j:forEach var="component" items="${it.components}">
-          <f:entry field="component">
-            <div name="components">
-              <j:if test="${component.enabled}">
-                <f:checkbox name="selected" checked="${it.selectedByDefault(component)}"
-                            title="${component.displayName}"/>
-              </j:if>
-              <j:if test="${!component.enabled}">
-                <input type="checkbox"
-                       name="selected"
-                       value="false"
-                       disabled="disabled"/>
-                <label class="attach-previous" style="text-decoration: line-through;"
-                       title="${%permissionPreReqs(component.displayPermissions)}">${component.displayName}
-                </label>
-              </j:if>
-              <input style="display:none" name="name" value="${component.id}"/>
+        <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
+          <section class="jenkins-section jenkins-section__bottom-padding">
+            <h2 class="jenkins-section__title">${category.key.label}</h2>
+            <div class="jenkins-section__items">
+              <j:forEach var="component" items="${category.value}">
+                <div name="components" class="jenkins-section__item">
+                  <j:if test="${component.enabled}">
+                    <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}"/>
+                  </j:if>
+                  <j:if test="${!component.enabled}">
+                    <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" readOnlyMode="true"/>
+                  </j:if>
+                  <input type="hidden" name="name" value="${component.id}"/>
+                </div>
+              </j:forEach>
             </div>
-          </f:entry>
+          </section>
         </j:forEach>
         <f:entry>
           <f:submit value="${%Generate Bundle}"/>

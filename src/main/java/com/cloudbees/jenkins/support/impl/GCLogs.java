@@ -9,7 +9,7 @@ import hudson.security.Permission;
 import jenkins.model.Jenkins;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
@@ -103,6 +103,12 @@ public class GCLogs extends Component {
     @Override
     public boolean isSelectedByDefault() {
         return false;
+    }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.LOGS;
     }
 
     /**

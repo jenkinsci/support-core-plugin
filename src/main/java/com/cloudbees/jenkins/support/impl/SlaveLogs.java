@@ -84,8 +84,6 @@ public class SlaveLogs extends Component {
         return false;
     }
 
-
-
     @Override
     public void addContents(@NonNull Container container) {
         // expensive remote computation are pooled together and executed later concurrently across all the agents
@@ -150,6 +148,11 @@ public class SlaveLogs extends Component {
 
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.LOGS;
+    }
 
     /**
      * Captures a "recent" (but still fairly large number of) j.u.l entries written on this agent.

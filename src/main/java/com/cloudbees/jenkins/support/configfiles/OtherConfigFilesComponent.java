@@ -90,6 +90,12 @@ public class OtherConfigFilesComponent extends Component {
         return false;
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
+    }
+
     private static final Logger LOGGER = Logger.getLogger(OtherConfigFilesComponent.class.getName());
 
 }

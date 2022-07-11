@@ -132,6 +132,12 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             return false;
         }
 
+        @NonNull
+        @Override
+        public ComponentCategory getCategory() {
+            return ComponentCategory.AGENT;
+        }
+
         @Override
         protected List<Node> getNodes() {
             return Jenkins.get().getNodes();

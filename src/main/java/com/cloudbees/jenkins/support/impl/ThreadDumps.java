@@ -187,6 +187,12 @@ public class ThreadDumps extends ObjectComponent<Computer> {
         }
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.PLATFORM;
+    }
+
     public Future<String> getThreadDump(Node node) throws IOException {
         VirtualChannel channel = node.getChannel();
         if (channel == null) {

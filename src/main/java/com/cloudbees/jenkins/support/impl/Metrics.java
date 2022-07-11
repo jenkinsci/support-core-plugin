@@ -47,37 +47,9 @@ public class Metrics extends Component {
         */
     }
 
-    /*
-    private static class RemoteMetricsContent extends Content {
-
-        private final Node node;
-        private final WeakHashMap<Node, byte[]> metricsCache;
-
-        public RemoteMetricsContent(String name, Node node, WeakHashMap<Node, byte[]> metricsCache) {
-            super(name);
-            this.node = node;
-            this.metricsCache = metricsCache;
-        }
-
-        @Override
-        public void writeTo(OutputStream os) throws IOException {
-            os.write(AsyncResultCache.get(node, metricsCache, new GetMetricsResult(), "metrics data",
-                    UNAVAILABLE.getBytes("utf-8")));
-        }
-
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
     }
-
-    private static class GetMetricsResult extends MasterToSlaveCallable<byte[], RuntimeException> {
-        public byte[] call() throws RuntimeException {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            try {
-                new MetricsContent("", somethingHere).writeTo(bos);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return bos.toByteArray();
-        }
-    }
-    */
-
 }

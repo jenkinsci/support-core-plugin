@@ -43,7 +43,13 @@ public class TaskLogs extends Component {
     public void addContents(@NonNull Container result) {
         addControllerTasksLogs(result);
     }
-    
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.LOGS;
+    }
+
     /**
      * Grabs any files that look like log files directly under <code>$JENKINS_HOME/logs</code>, just in case
      * any of them are useful.

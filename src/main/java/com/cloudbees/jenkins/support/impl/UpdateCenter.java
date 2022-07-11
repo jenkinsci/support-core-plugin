@@ -64,6 +64,12 @@ public class UpdateCenter extends Component {
         );
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
+    }
+
     private void addProxyInformation(PrintWriter out, ContentFilter filter) {
         out.println("=== Proxy ===");
         ProxyConfiguration proxy = Jenkins.get().getProxy();

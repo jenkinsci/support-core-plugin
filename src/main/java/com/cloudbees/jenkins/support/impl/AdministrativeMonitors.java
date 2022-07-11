@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
@@ -97,5 +98,9 @@ import java.util.Set;
                 return false;
             }
         });
+    }
+
+    @NonNull @Override public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
     }
 }

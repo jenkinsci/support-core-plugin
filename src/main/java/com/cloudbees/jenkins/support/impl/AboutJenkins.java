@@ -104,6 +104,12 @@ public class AboutJenkins extends Component {
         return "About Jenkins";
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
+    }
+
     @Override
     public void addContents(@NonNull Container container) {
         List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();

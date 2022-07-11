@@ -76,6 +76,12 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
         Optional.ofNullable(item.getNode()).ifPresent(node -> addUnixContents(container, node));
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.PLATFORM;
+    }
+
     protected void addUnixContents(@NonNull Container container, final @NonNull Node node) {
         Computer c = node.toComputer();
         if (c == null || c.isOffline()) {

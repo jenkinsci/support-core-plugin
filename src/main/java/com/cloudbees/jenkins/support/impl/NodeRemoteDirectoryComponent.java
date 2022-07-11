@@ -75,6 +75,12 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
 
     @NonNull
     @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.AGENT;
+    }
+
+    @NonNull
+    @Override
     public String getDisplayName() {
         return Messages.NodeRemoteDirectoryComponent_DisplayName();
     }

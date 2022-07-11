@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.Messages;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
@@ -31,6 +32,7 @@ import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -140,6 +142,59 @@ public abstract class Component implements ExtensionPoint {
     }
 
     public void start(@NonNull SupportContext context) {
+    }
 
+    /**
+     * Specify in which {@link ComponentCategory} the current component is related.
+     *
+     * @return An enum value of {@link ComponentCategory}.
+     * @since TODO
+     */
+    @Exported
+    @NonNull
+    public ComponentCategory getCategory() {
+        return ComponentCategory.UNCATEGORIZED;
+    }
+
+    /**
+     * Categories supported by this version of support-core
+     *
+     * @since TODO
+     */
+    public enum ComponentCategory {
+        /**
+         * For components related to the agents, their configuration and other bits.
+         */
+        AGENT(Messages._SupportPlugin_Category_Agent()),
+        /**
+         * For components related to the controller, its configuration and other bits.
+         */
+        CONTROLLER(Messages._SupportPlugin_Category_Controller()),
+        /**
+         * For components related to the logging system or the logs themself.
+         */
+        LOGS(Messages._SupportPlugin_Category_Logs()),
+        /**
+         * Anything that doesn't fit any other categories.
+         */
+        MISC(Messages._SupportPlugin_Category_Misc()),
+        /**
+         * For components related to how the controller is running and where it is running.
+         */
+        PLATFORM(Messages._SupportPlugin_Category_Platform()),
+        /**
+         * The default category. This shouldn't be explicitly used.
+         */
+        UNCATEGORIZED(Messages._SupportPlugin_Category_Uncategorized());
+
+        private final Localizable label;
+
+        ComponentCategory(Localizable label) {
+            this.label = label;
+        }
+
+        public @NonNull String getLabel() {
+            return label.toString();
+        }
     }
 }

@@ -91,6 +91,12 @@ public class NetworkInterfaces extends Component {
         }
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.PLATFORM;
+    }
+
     public String getNetworkInterface(Node node) throws IOException {
         return AsyncResultCache.get(node,
                 networkInterfaceCache,

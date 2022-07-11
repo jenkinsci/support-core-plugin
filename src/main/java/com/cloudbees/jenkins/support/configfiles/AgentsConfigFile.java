@@ -73,6 +73,12 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
 
     @NonNull
     @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.AGENT;
+    }
+
+    @NonNull
+    @Override
     public String getDisplayName() {
         return "Agent Configuration File";
     }

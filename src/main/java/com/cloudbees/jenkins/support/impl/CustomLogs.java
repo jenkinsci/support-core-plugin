@@ -66,6 +66,12 @@ public class CustomLogs extends Component {
         addLogRecorders(result);
     }
 
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.LOGS;
+    }
+
     /**
      * Dumps the content of {@link LogRecorder}, which is the groups of loggers configured
      * by the user. The contents are also ring buffer and only remembers recent 256 or so entries.
