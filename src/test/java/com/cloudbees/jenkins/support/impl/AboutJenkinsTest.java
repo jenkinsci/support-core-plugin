@@ -6,8 +6,12 @@ package com.cloudbees.jenkins.support.impl;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
+import hudson.model.Node;
+import hudson.model.User;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
+import hudson.slaves.OfflineCause.UserCause;
+import jenkins.model.Jenkins;
 import jenkins.model.identity.IdentityRootAction;
 import jenkins.slaves.RemotingVersionInfo;
 import org.junit.Rule;
@@ -63,5 +67,23 @@ public class AboutJenkinsTest {
         assertThat(aboutMdToString, containsString("  * `" + tcp1.getNodeName() + "` (`hudson.slaves.DumbSlave`)"));
         assertThat(aboutMdToString, containsString("      - Launch method:  `hudson.slaves.JNLPLauncher`"));
         assertThat(aboutMdToString, containsString("      - WebSocket:      true"));
+    }
+
+    @Test
+    @Issue("JENKINS-68743")
+    public void testAboutNodesContent_OfflineBuiltIn() {
+
+        Node builtInNode = Jenkins.get(); 
+        String aboutMdToString = SupportTestUtils.invokeComponentToString(Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
+        assertThat(aboutMdToString, containsString("  * master (Jenkins)"));
+        assertThat(aboutMdToString, containsString("      - Status:         on-line"));
+        assertThat(aboutMdToString, containsString("      - Marked Offline: false"));
+
+        Objects.requireNonNull(builtInNode.toComputer()).setTemporarilyOffline(true, new UserCause(User.current(), "test"));
+        
+        aboutMdToString = SupportTestUtils.invokeComponentToString(Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
+        assertThat(aboutMdToString, containsString("  * master (Jenkins)"));
+        assertThat(aboutMdToString, containsString("      - Status:         on-line"));
+        assertThat(aboutMdToString, containsString("      - Marked Offline: true"));
     }
 }
