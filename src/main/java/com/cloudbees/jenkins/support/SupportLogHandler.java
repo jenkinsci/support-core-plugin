@@ -38,8 +38,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,16 +57,10 @@ import java.util.logging.LogRecord;
  */
 public class SupportLogHandler extends Handler {
 
-    private static final class LogRecordRef extends SoftReference<LogRecord> {
-        LogRecordRef(LogRecord referent) {
-            super(referent);
-        }
-    }
-
     private final Lock outputLock = new ReentrantLock();
     private final int fileSize;
     @GuardedBy("outputLock")
-    private final LogRecordRef[] records;
+    private final LogRecord[] records;
     @GuardedBy("outputLock")
     private int position, count, fileCount;
     @GuardedBy("outputLock")
@@ -81,7 +73,7 @@ public class SupportLogHandler extends Handler {
 
     public SupportLogHandler(int size, int fileSize, int maxFiles) {
         this.maxFiles = maxFiles;
-        records = new LogRecordRef[size];
+        records = new LogRecord[size];
         position = 0;
         count = 0;
         fileCount = 0;
@@ -104,22 +96,16 @@ public class SupportLogHandler extends Handler {
 
     @Override
     public void publish(LogRecord record) {
-        String formatted;
-        try {
-            formatted = isLoggable(record) ? getFormatter().format(record) : null;
-        } catch (Exception e) {
-            formatted = null;
-        }
         outputLock.lock();
         try {
             int maxCount = records.length;
-            records[(position + count) % maxCount] = new LogRecordRef(record);
+            records[(position + count) % maxCount] = record;
             if (count == maxCount) {
                 position = (position + 1) % maxCount;
             } else {
                 count++;
             }
-            if (formatted != null) {
+            if (isLoggable(record)) {
                 if (writer != null) {
                     if (fileCount > fileSize) {
                         rollOver();
@@ -127,7 +113,7 @@ public class SupportLogHandler extends Handler {
                     if (writer != null) {
                         try {
                             fileCount++;
-                            writer.write(formatted);
+                            writer.write(getFormatter().format(record));
                             flush();
                         } catch (IOException e) {
                             // ignore
@@ -209,10 +195,7 @@ public class SupportLogHandler extends Handler {
         try {
             List<LogRecord> result = new ArrayList<LogRecord>(count);
             for (int i = 0; i < count; i++) {
-                LogRecord lr = records[(position + i) % records.length].get();
-                if (lr != null) {
-                    result.add(lr);
-                }
+                result.add(i, records[(position + i) % records.length]);
             }
             return result;
         } finally {
