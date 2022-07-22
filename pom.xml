@@ -62,9 +62,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/support-core-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/support-core-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/support-core-plugin</url>
+    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <url>http://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>
   </scm>
 
@@ -72,6 +72,7 @@
     <revision>2.80.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.319.3</jenkins.version>
+    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
   </properties>
 
   <repositories>
