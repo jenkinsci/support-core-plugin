@@ -92,7 +92,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>
-        <version>1342.v729ca_3818e88</version>
+        <version>1500.ve4d05cd32975</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -189,6 +189,12 @@
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.main</groupId>
+          <artifactId>jenkins-test-harness</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- MockFolder that was used for SupportAbstractItem test does not have UI, hence need full Folder implementation.-->
     <dependency>
