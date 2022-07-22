@@ -71,7 +71,7 @@
   <properties>
     <revision>2.80.2</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.289.3</jenkins.version>
+    <jenkins.version>2.319.3</jenkins.version>
   </properties>
 
   <repositories>
@@ -91,7 +91,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.289.x</artifactId>
+        <artifactId>bom-2.319.x</artifactId>
         <version>1500.ve4d05cd32975</version>
         <scope>import</scope>
         <type>pom</type>
