@@ -163,7 +163,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
         assertTrue(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
-        assertThat(output.get(prefix + "/config.xml"), containsString("<flow-definition>"));
+        assertThat(output.get(prefix + "/config.xml"), containsString("<flow-definition"));
         assertThat(output.get(prefix + "/nextBuildNumber"), containsString("2"));
     }
 

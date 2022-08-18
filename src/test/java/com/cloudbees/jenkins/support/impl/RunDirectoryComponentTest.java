@@ -58,7 +58,7 @@ public class RunDirectoryComponentTest {
         assertTrue(output.containsKey(prefix + "/build.xml"));
         assertTrue(output.containsKey(prefix + "/log"));
         assertTrue(output.containsKey(prefix + "/workflow/2.xml"));
-        assertThat(output.get(prefix + "/build.xml"), Matchers.containsString("<flow-build>"));
+        assertThat(output.get(prefix + "/build.xml"), Matchers.containsString("<flow-build"));
         assertThat(output.get(prefix + "/log"), Matchers.containsString("[Pipeline] node"));
     }
 
