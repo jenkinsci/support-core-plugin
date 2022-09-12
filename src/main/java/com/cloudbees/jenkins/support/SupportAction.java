@@ -207,7 +207,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                     logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
             }
         }
-        rsp.sendRedirect("");
+        rsp.sendRedirect("generatedSupportContent");
     }
 
     @RequirePOST
@@ -399,9 +399,14 @@ public class SupportAction implements RootAction, StaplerProxy {
         return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getId()));
     }
 
+    @SuppressWarnings("unused") // used by Jelly
+    public static boolean isManageBundlesSupported() {
+        return Jenkins.get().hasPermission(Jenkins.ADMINISTER);
+    }
+
     public static class Selection {
         /** @see Component#getId */
-        private final String name;
+        private final String name;qq
         private final boolean selected;
 
         @DataBoundConstructor

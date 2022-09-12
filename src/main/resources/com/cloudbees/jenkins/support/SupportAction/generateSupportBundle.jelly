@@ -1,0 +1,64 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"  xmlns:l="/lib/layout" xmlns:f="/lib/form">
+  <l:layout title="${%Generate a Support Bundle}">
+    
+    <st:include page="sidepanel.jelly"/>
+    
+    <l:main-panel>
+      <h1>
+        <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
+        ${it.actionTitle}
+      </h1>
+      <p>
+        ${it.actionBlurb}
+      </p>
+      <p>
+        ${%detail}
+      </p>
+      <j:if test="${it.anonymized}">
+        <p>
+          Support bundle anonymization is enabled. View
+          <a href="../anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
+          <a href="${rootURL}/configureSecurity">global security</a>
+          under <i>Support Bundle Anonymization</i>.
+        </p>
+      </j:if>
+      <j:if test="${!it.anonymized}">
+        <p class="warning">
+          Support bundle anonymization is disabled. This can be enabled in the
+          <a href="${rootURL}/configureSecurity">global security</a>
+          under <i>Support Bundle Anonymization</i>.
+        </p>
+      </j:if>
+      <f:form name="bundle-contents" method="POST" action="generateAllBundles">
+        <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
+          <section class="jenkins-section jenkins-section__bottom-padding">
+            <h2 class="jenkins-section__title">${category.key.label}</h2>
+            <div class="jenkins-section__items">
+              <j:forEach var="component" items="${category.value}">
+                <div name="components" class="jenkins-section__item">
+                  <j:if test="${component.enabled}">
+                    <f:checkbox title="${component.displayName}" name="selected"
+                                checked="${it.selectedByDefault(component)}"/>
+                  </j:if>
+                  <j:if test="${!component.enabled}">
+                    <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected"
+                                checked="false" readOnlyMode="true"/>
+                  </j:if>
+                  <input type="hidden" name="name" value="${component.id}"/>
+                </div>
+              </j:forEach>
+            </div>
+          </section>
+        </j:forEach>
+        <f:entry>
+          <span class="yui-button yui-submit-button submit-button primary">
+            <span class="first-child">
+              <button type="submit" formaction="generateAllBundles">${%Generate Bundle}</button>
+            </span>
+          </span>
+        </f:entry>
+      </f:form>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

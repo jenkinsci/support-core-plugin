@@ -1,0 +1,20 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+  <l:side-panel>
+    <l:tasks>
+      <l:task icon="up"
+              href="${rootURL}/"
+              title="${%Back to Dashboard}"/>
+
+      <l:task icon="${h.getIconFilePath(it)}"
+              href="generateSupportBundle"
+              title="${%Generate a Support Bundle}"/>
+
+      <j:if test="${it.manageBundlesSupported}">
+        <l:task icon="${h.getIconFilePath(it)}"
+                href="generatedSupportContent"
+                title="${%Generated Support Content}"/>
+      </j:if>
+    </l:tasks>
+  </l:side-panel>
+</j:jelly>

@@ -1,0 +1,37 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+  <l:layout title="${%GeneratedSupportContent}">
+
+    <st:include page="sidepanel.jelly"/>
+
+    <l:main-panel>
+
+      <h1>${%GeneratedSupportContent}</h1>
+      <f:section title="${%ExistingSupportBundles}">
+
+        <f:form name="bundle-contents" method="POST" action="deleteBundles">
+          <j:forEach var="bundle" items="${it.bundles}">
+            <f:entry field="bundle">
+              <div name="bundles">
+                <f:checkbox name="selected" checked="false"
+                            title="${bundle}"/>
+                <input style="display:none" name="name" value="${bundle}"/>
+              </div>
+            </f:entry>
+          </j:forEach>
+          <f:entry>
+            <span class="yui-button">
+              <span class="yui-button yui-submit-button submit-button primary">
+                <button type="submit" formaction="downloadBundles">${%Download Bundles}</button>
+              </span>
+              <span class="yui-button yui-submit-button submit-button danger">
+                <button type="submit" formaction="deleteBundles">${%Delete Bundles}</button>
+              </span>
+            </span>
+          </f:entry>
+        </f:form>
+      </f:section>
+
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
