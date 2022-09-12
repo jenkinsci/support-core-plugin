@@ -31,7 +31,7 @@ import hudson.model.AbstractModelObject;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
+import org.springframework.security.core.Authentication;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -93,13 +93,10 @@ public abstract class Component implements ExtensionPoint {
     @Exported
     public boolean isEnabled() {
         ACL acl = Jenkins.get().getAuthorizationStrategy().getRootACL();
-        if (acl != null) {
-            Authentication authentication = Jenkins.getAuthentication();
-            assert authentication != null;
-            for (Permission p : _getRequiredPermissions()) {
-                if (!acl.hasPermission(authentication, p)) {
-                    return false;
-                }
+        Authentication authentication = Jenkins.getAuthentication2();
+        for (Permission p : _getRequiredPermissions()) {
+            if (!acl.hasPermission2(authentication, p)) {
+                return false;
             }
         }
         return true;

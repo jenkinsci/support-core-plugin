@@ -73,13 +73,13 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
-import org.acegisecurity.Authentication;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
+import org.springframework.security.core.Authentication;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -876,7 +876,7 @@ public class SupportPlugin extends Plugin {
                         thread.setName(String.format("%s periodic bundle generator: since %s",
                                 SupportPlugin.class.getSimpleName(), new Date()));
                         clearRequesterAuthentication();
-                        try (ACLContext old = ACL.as(ACL.SYSTEM)) {
+                        try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
                              File bundleDir = getRootDirectory();
                             if (!bundleDir.exists()) {
                                 if (!bundleDir.mkdirs()) {

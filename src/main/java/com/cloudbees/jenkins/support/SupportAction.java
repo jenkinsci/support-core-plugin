@@ -374,9 +374,9 @@ public class SupportAction implements RootAction, StaplerProxy {
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
             try {
-                try (ACLContext old = ACL.as(ACL.SYSTEM)) {
+                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
                      SupportPlugin.writeBundle(servletOutputStream, components);
                 } catch (IOException e) {
                     logger.log(Level.FINE, e.getMessage(), e);

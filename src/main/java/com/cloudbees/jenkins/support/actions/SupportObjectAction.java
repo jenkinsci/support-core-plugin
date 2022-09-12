@@ -142,8 +142,8 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate(getBundleNameQualifier()) + ";");
         
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
-            try (ACLContext old = ACL.as(ACL.SYSTEM)) {
+            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
+            try (ACLContext old = ACL.as2(ACL.SYSTEM2)) {
                 SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
                     @Override
                     public <C extends Component> void visit(Container container, C component) {
