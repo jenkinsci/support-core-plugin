@@ -25,7 +25,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -55,6 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -62,7 +62,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -72,9 +72,6 @@ import static org.junit.Assert.fail;
 public class SupportActionTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public ExpectedException exceptionRule = ExpectedException.none();
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -285,9 +282,9 @@ public class SupportActionTest {
     }
 
     @Test
-    public void generateBundleFailsWhenNoParameter() throws IOException, SAXException {
-        exceptionRule.expectMessage(startsWith("Server returned HTTP response code: 400 for URL:"));
-        downloadBundle("/generateBundle");
+    public void generateBundleFailsWhenNoParameter() {
+        Exception exception = assertThrows(IOException.class, () -> downloadBundle("/generateBundle"));
+        assertThat(exception.getMessage(), startsWith("Server returned HTTP response code: 400 for URL:"));
     }
 
     @Test
@@ -324,7 +321,7 @@ public class SupportActionTest {
         j.createSlave("agent1","test",null).getComputer().connect(false).get();
         j.createSlave("agent2","test",null).getComputer().connect(false).get();
 
-        RingBufferLogHandler checker = new RingBufferLogHandler();
+        RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
 
         logger.addHandler(checker);

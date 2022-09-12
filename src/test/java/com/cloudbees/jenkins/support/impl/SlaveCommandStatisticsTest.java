@@ -32,19 +32,23 @@ import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.SlaveComputer;
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
-import org.junit.Test;
 import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 
 public class SlaveCommandStatisticsTest {
 

@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 
 @Extension
 public class SupportCommand extends CLICommand {
@@ -95,9 +94,9 @@ public class SupportCommand extends CLICommand {
                 selected.add(c);
             }
         }
-        SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication());
+        SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
         try {
-            try (ACLContext old = ACL.as(ACL.SYSTEM)) {
+            try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
                 OutputStream os;
                 if (channel != null) { // Remoting mode
                     os = channel.call(new SaveBundle(BundleFileName.generate()));

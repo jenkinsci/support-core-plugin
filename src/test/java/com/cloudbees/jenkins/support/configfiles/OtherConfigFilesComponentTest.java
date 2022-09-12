@@ -4,14 +4,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.nio.file.Files;
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -19,8 +11,23 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class OtherConfigFilesComponentTest {
 
@@ -96,7 +103,7 @@ public class OtherConfigFilesComponentTest {
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
-        FileUtils.writeStringToFile(file, xml);
+        FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
         assertThat(patchedXml, equalToCompressingWhiteSpace(expectedXml));
     }
@@ -104,7 +111,7 @@ public class OtherConfigFilesComponentTest {
     @Test
     public void missingFile() throws Exception {
         File file = new File(j.jenkins.root, "x.xml");
-        FileUtils.writeStringToFile(file, xml);
+        FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         Map<String, Content> contents = new HashMap<>();
         new OtherConfigFilesComponent().addContents(new Container() {
             @Override

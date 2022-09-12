@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.util.StreamUtils;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Node;
@@ -201,13 +202,7 @@ class SmartLogFetcher {
                 }
                 return Hex.encodeHexString(digest.digest());
             } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (IOException e) {
-                        // ignore
-                    }
-                }
+                StreamUtils.closeQuietly(stream);
             }
         }
     }

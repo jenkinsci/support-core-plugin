@@ -8,11 +8,12 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import org.acegisecurity.Authentication;
-import org.acegisecurity.GrantedAuthority;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -49,7 +50,7 @@ public class AboutUser extends Component {
                     out.println();
                     out.println("  * Authenticated: " + authentication.isAuthenticated());
                     out.println("  * Name: " + ContentFilter.filter(filter, authentication.getName()));
-                    GrantedAuthority[] authorities = authentication.getAuthorities();
+                    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
                     if (authorities != null) {
                         out.println("  * Authorities ");
                         for (GrantedAuthority authority : authorities) {

@@ -150,7 +150,7 @@ public class CustomLogs extends Component {
         @Override public void publish(LogRecord record) {
             for (final LogRecorder recorder : logRecorders) {
                 for (LogRecorder.Target target : recorder.getLoggers()) {
-                    if (target.includes(record)) {
+                    if (Boolean.TRUE.equals(target.matches(record))) {
                         String name = recorder.getName();
                         try {
                             LogFile logFile;

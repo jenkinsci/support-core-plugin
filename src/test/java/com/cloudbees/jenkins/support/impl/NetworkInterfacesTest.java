@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 public class NetworkInterfacesTest {
 

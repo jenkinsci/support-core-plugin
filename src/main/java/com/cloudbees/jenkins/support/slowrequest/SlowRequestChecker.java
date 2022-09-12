@@ -7,7 +7,6 @@ import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
-import hudson.util.IOUtils;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -16,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
@@ -55,10 +55,7 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     SlowRequestFilter filter;
 
-    @Inject
-    Jenkins jenkins;
-
-    final FileListCap logs = new FileListCap(new File(Jenkins.getInstance().getRootDir(),"slow-requests"), 50);
+    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"slow-requests"), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
@@ -94,21 +91,19 @@ public class SlowRequestChecker extends PeriodicWork {
                 // if the thread has exited while we are taking the thread dump, ignore this.
                 if (req.ended)    continue;
 
-                PrintWriter w = null;
-                try {
-                    if (req.record==null) {
-                        req.record = logs.file(format.format(new Date(iota++)) + ".txt");
-                        logs.add(req.record);
-
-                        w = new PrintWriter(req.record,"UTF-8");
+                boolean newRecord = req.record == null;
+                if(newRecord) {
+                    req.record = logs.file(format.format(new Date(iota++)) + ".txt");
+                    logs.add(req.record);
+                } else {
+                    logs.touch(req.record);
+                }
+                try (PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record, !newRecord), StandardCharsets.UTF_8))) {
+                    if(newRecord) {
                         req.writeHeader(w, contentFilter);
-                    } else {
-                        w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(req.record,true),"UTF-8"));
-                        logs.touch(req.record);
                     }
-
                     if (req.record.length() >= FileListCapComponent.MAX_FILE_SIZE)
-                      continue;
+                        continue;
                     ThreadInfo lockedThread = ManagementFactory.getThreadMXBean().getThreadInfo(req.thread.getId(), Integer.MAX_VALUE);
                     if (lockedThread != null ) {
                         w.println(contentFilter.map(cf -> cf.filter(lockedThread.toString())).orElse(lockedThread.toString()));
@@ -125,8 +120,6 @@ public class SlowRequestChecker extends PeriodicWork {
                             }
                         }
                     }
-                } finally {
-                    IOUtils.closeQuietly(w);
                 }
             }
         }

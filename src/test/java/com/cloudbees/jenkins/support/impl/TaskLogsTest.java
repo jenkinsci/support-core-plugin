@@ -19,8 +19,8 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Objects;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class TaskLogsTest {

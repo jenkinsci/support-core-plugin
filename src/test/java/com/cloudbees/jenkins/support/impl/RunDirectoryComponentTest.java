@@ -15,7 +15,9 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class RunDirectoryComponentTest {
 

@@ -130,7 +130,7 @@ public class AboutJenkins extends Component {
         container.add(new Dockerfile(activePlugins, disabledPlugins));
 
         container.add(new ControllerChecksumsContent());
-        for (final Node node : Jenkins.getInstance().getNodes()) {
+        for (final Node node : Jenkins.get().getNodes()) {
             container.add(new NodeChecksumsContent(node));
         }
     }
@@ -184,13 +184,11 @@ public class AboutJenkins extends Component {
         private static final long serialVersionUID = 1L;
 
         @SuppressFBWarnings(
-                value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                justification = "Findbugs mis-diagnosing closeQuietly's built-in null check"
+                value = {"NP_LOAD_OF_KNOWN_NULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"},
+                justification = "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}"
         )
         public String call() throws RuntimeException {
-            InputStream is = null;
-            try {
-                is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties");
+            try (InputStream is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
                 if (is == null) {
                     return "N/A";
                 }
@@ -201,8 +199,9 @@ public class AboutJenkins extends Component {
                 } catch (IOException e) {
                     return "N/A";
                 }
-            } finally {
-                IOUtils.closeQuietly(is);
+            } catch (IOException e) {
+                logger.fine(String.format("Could not find remoting version in agent {}", e.getMessage()));
+                return "N/A";
             }
         }
     }
@@ -450,7 +449,7 @@ public class AboutJenkins extends Component {
                 if (w.isActive()) {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
                             ? " *(update available)*"
-                            : "") + " '" + w.getLongName() + "'");
+                            : "") + " '" + w.getDisplayName() + "'");
                 }
             }
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
@@ -527,7 +526,7 @@ public class AboutJenkins extends Component {
 
         @Override
         protected void printTo(PrintWriter out) throws IOException {
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.get().getPluginManager();
             List<PluginManager.FailedPlugin> plugins = pluginManager.getFailedPlugins();
             // no need to sort
             for (PluginManager.FailedPlugin w : plugins) {
@@ -561,7 +560,7 @@ public class AboutJenkins extends Component {
         @Override
         protected void printTo(PrintWriter out) throws IOException {
 
-            PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+            PluginManager pluginManager = Jenkins.get().getPluginManager();
             String fullVersion = Jenkins.VERSION;
             int s = fullVersion.indexOf(' ');
             if (s > 0 && fullVersion.contains("CloudBees")) {
@@ -726,7 +725,7 @@ public class AboutJenkins extends Component {
             super("nodes/master/checksums.md5");
         }
         @Override protected void printTo(PrintWriter out) throws IOException {
-            final Jenkins jenkins = Jenkins.getInstance();
+            final Jenkins jenkins = Jenkins.get();
             if (jenkins == null) {
                 // Lifecycle.get() depends on Jenkins instance, hence this method won't work in any case
                 throw new IOException("Jenkins has not been started, or was already shut down");
@@ -837,7 +836,7 @@ public class AboutJenkins extends Component {
      * @return new copy of the PluginManager.getPlugins sorted
      */
     private static Iterable<PluginWrapper> getPluginsSorted() {
-        PluginManager pluginManager = Jenkins.getInstance().getPluginManager();
+        PluginManager pluginManager = Jenkins.get().getPluginManager();
         return getPluginsSorted(pluginManager);
     }
 

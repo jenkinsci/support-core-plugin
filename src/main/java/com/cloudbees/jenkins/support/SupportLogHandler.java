@@ -24,8 +24,8 @@
 
 package com.cloudbees.jenkins.support;
 
+import com.cloudbees.jenkins.support.util.StreamUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.util.IOUtils;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import net.jcip.annotations.GuardedBy;
 
@@ -36,12 +36,11 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -142,12 +141,10 @@ public class SupportLogHandler extends Handler {
                     }
                 });
                 if (files != null && files.length > maxFiles) {
-                    Arrays.sort(files, new Comparator<File>() {
-                        public int compare(File o1, File o2) {
-                            long lm1 = o1.lastModified();
-                            long lm2 = o2.lastModified();
-                            return lm1 < lm2 ? -1 : lm1 == lm2 ? 0 : +1;
-                        }
+                    Arrays.sort(files, (o1, o2) -> {
+                        long lm1 = o1.lastModified();
+                        long lm2 = o2.lastModified();
+                        return Long.compare(lm1, lm2);
                     });
                     for (int i = 0; i < files.length - maxFiles; i++) {
                         files[i].delete();
@@ -182,7 +179,7 @@ public class SupportLogHandler extends Handler {
         outputLock.lock();
         try {
             if (writer != null) {
-                IOUtils.closeQuietly(writer);
+                StreamUtils.closeQuietly(writer);
                 writer = null;
             }
         } finally {
@@ -203,23 +200,25 @@ public class SupportLogHandler extends Handler {
         }
     }
 
+    @SuppressFBWarnings(
+        value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", 
+        justification = "https://github.com/spotbugs/spotbugs/issues/756"
+    )
     private void setWriter(Writer writer) {
-        Writer oldWriter = null;
-        boolean success = false;
         outputLock.lock();
-        try {
-            oldWriter = this.writer;
+        try (Writer oldWriter = this.writer) {
             if (oldWriter != null) {
                 try {
-                    this.writer.flush();
+                    oldWriter.flush();
                 } catch (IOException e) {
                     // ignore
                 }
             }
             this.writer = writer;
+        } catch (IOException e) {
+            // ignore
         } finally {
             outputLock.unlock();
-            IOUtils.closeQuietly(oldWriter);
         }
     }
 
@@ -238,6 +237,7 @@ public class SupportLogHandler extends Handler {
             if (parentFile != null) {
                 parentFile.mkdirs();
             }
+            
             boolean success = false;
             FileOutputStream fos = null;
             BufferedOutputStream bos = null;
@@ -245,19 +245,15 @@ public class SupportLogHandler extends Handler {
             try {
                 fos = new FileOutputStream(file);
                 bos = new BufferedOutputStream(fos);
-                try {
-                    writer = new OutputStreamWriter(bos, "utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    writer = new OutputStreamWriter(bos); // fall back to something sensible
-                }
+                writer = new OutputStreamWriter(bos, StandardCharsets.UTF_8);
                 setWriter(writer);
                 fileCount = 0;
                 success = true;
             } finally {
                 if (!success) {
-                    IOUtils.closeQuietly(writer);
-                    IOUtils.closeQuietly(bos);
-                    IOUtils.closeQuietly(fos);
+                    StreamUtils.closeQuietly(writer);
+                    StreamUtils.closeQuietly(bos);
+                    StreamUtils.closeQuietly(fos);
                 }
             }
         } finally {
