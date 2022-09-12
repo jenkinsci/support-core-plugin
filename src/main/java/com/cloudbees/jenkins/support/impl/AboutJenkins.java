@@ -184,8 +184,8 @@ public class AboutJenkins extends Component {
         private static final long serialVersionUID = 1L;
 
         @SuppressFBWarnings(
-                value = "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                justification = "Findbugs mis-diagnosing closeQuietly's built-in null check"
+                value = {"NP_LOAD_OF_KNOWN_NULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"},
+                justification = "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}"
         )
         public String call() throws RuntimeException {
             try (InputStream is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
