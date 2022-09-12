@@ -8,20 +8,24 @@
 The plugin provides the basic infrastructure for generating "bundles" of
 support information within Jenkins.
 
-There are three ways of generating bundles:
+## Support Bundle
 
--   Automatic bundles, these get saved in $JENKINS\_HOME/support once
-    per hour starting 3 minutes after Jenkins starts the plugin (i.e.
-    this may still be generated even if Jenkins will not fully start).
-    The automatic bundles are retained using an exponential aging
-    strategy, so you should have a bunch of them over the entire
-    lifetime once the plugin has been installed.
--   On demand bundles:
-    -   You can generate them from the root "Support" action, using the
-        User Interface ; or
+There are different ways Support Bundles may be generated:
+
+-   *On demand bundles*:
+    -   From Jenkins GUI at **Support > Generate a Support Bundle**
     -   By using the CLI Command. For the association documentation,
         please refer to `<yourJenkinsInstanceUrl>/cli/command/support`
         embedded documentation.
+    -   By using the REST API at `<yourJenkinsInstanceUrl>/support/bundle/generateBundle`. 
+        This endpoint accepts a parameter `components` with a comma separated list of component IDs.
+-   *Automatic bundles*: 
+    -   Support Bundles are automatically generated periodically once
+        per hour starting 3 minutes after Jenkins starts the plugin (i.e.
+        this may still be generated even if Jenkins will not fully start).
+        The automatic bundles are under `$JENKINS_HOME/support` using an 
+        exponential aging strategy, so you should have a bunch of them over
+        the entire lifetime once the plugin has been installed.
 
 ![](docs/images/support_page.png)
 

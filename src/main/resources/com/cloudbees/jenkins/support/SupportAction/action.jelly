@@ -24,6 +24,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
   <l:task icon="${h.getIconFilePath(action)}" title="${action.displayName}"
-          href="${h.getActionUrl(it.url,action)}"
+          href="${h.getActionUrl(it.url,action)}/${action.defaultChildAction.urlName}"
           permission="${app.ADMINISTER}"/>
 </j:jelly>

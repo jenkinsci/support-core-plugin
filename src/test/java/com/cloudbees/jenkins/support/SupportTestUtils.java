@@ -13,10 +13,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import hudson.ExtensionList;
 import hudson.model.AbstractModelObject;
 import hudson.model.Action;
 import hudson.security.Permission;
 import hudson.util.RingBufferLogHandler;
+
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +54,18 @@ import static org.junit.Assert.fail;
  * @since 2.26
  */
 public class SupportTestUtils {
+
+    /**
+     * Return a comma-separated list of component IDs from a list os {@link Component}
+     * @param components the list of {@link Component}
+     * @return comma-separated list of component IDs
+     */
+    @SafeVarargs
+    public static String componentIdsOf(Class<? extends Component>... components) {
+        return Arrays.stream(components)
+            .map(c -> ExtensionList.lookupSingleton(c).getId())
+            .collect(Collectors.joining(","));
+    }
 
     /**
      * Invoke a component, and return the component contents as a String.
