@@ -79,6 +79,11 @@ import java.util.zip.ZipOutputStream;
 @Extension
 @ExportedBean
 public class SupportAction implements RootAction, StaplerProxy {
+
+    /**
+     * @deprecated see {@link SupportPlugin#CREATE_BUNDLE}
+     */
+    @Deprecated
     public static final Permission CREATE_BUNDLE = SupportPlugin.CREATE_BUNDLE;
     /**
      * Our logger (retain an instance ref to avoid classloader leaks).
@@ -88,7 +93,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     @Override
     @Restricted(NoExternalUse.class)
     public Object getTarget() {
-        Jenkins.get().checkPermission(CREATE_BUNDLE);
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return this;
     }
     

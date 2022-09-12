@@ -74,7 +74,7 @@ public class SupportCommand extends CLICommand {
 
     @Override
     protected int run() throws Exception {
-        Jenkins.get().checkPermission(SupportPlugin.CREATE_BUNDLE);
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         Set<Component> selected = new HashSet<>();
         
         // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the components to the list 
