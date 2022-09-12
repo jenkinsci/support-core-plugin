@@ -449,7 +449,7 @@ public class AboutJenkins extends Component {
                 if (w.isActive()) {
                     out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
                             ? " *(update available)*"
-                            : "") + " '" + w.getLongName() + "'");
+                            : "") + " '" + w.getDisplayName() + "'");
                 }
             }
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
