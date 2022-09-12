@@ -203,7 +203,7 @@ public class SupportActionTest {
         Path bundle = createFakeSupportBundle();
         assertTrue(Files.exists(bundle));
         WebResponse response = deleteBundle(bundle.getFileName().toString(), "user");
-        assertThat(response.getContentAsString(), containsString(String.format("user is missing the %s/%s permission", SupportAction.CREATE_BUNDLE.group.title, SupportAction.CREATE_BUNDLE.name)));
+        assertThat(response.getContentAsString(), containsString(String.format("user is missing the %s/%s permission", Jenkins.ADMINISTER.group.title, Jenkins.ADMINISTER.name)));
         assertThat(response.getStatusCode(), equalTo(403));
     }
 

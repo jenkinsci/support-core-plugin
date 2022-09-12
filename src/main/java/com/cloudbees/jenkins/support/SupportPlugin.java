@@ -143,6 +143,10 @@ public class SupportPlugin extends Plugin {
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
 
+    /**
+     * @deprecated not used anymore as the usage has now been limited to {@link Jenkins#ADMINISTER}
+     */
+    @Deprecated
     public static final Permission CREATE_BUNDLE =
             new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
                     Jenkins.ADMINISTER, PermissionScope.JENKINS);
