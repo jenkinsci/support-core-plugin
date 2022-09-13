@@ -1,12 +1,12 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"  xmlns:l="/lib/layout" xmlns:f="/lib/form">
-  <l:layout title="${%Generate a Support Bundle}">
-    
-    <st:include page="sidepanel.jelly"/>
-    
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+  <l:layout title="${it.actionTitle}" norefresh="true" permission="${app.ADMINISTER}">
+
+    <st:include it="${it}" page="sidepanel"/>
+
     <l:main-panel>
       <h1>
-        <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
+        <img src="${resURL}/${h.getIconFilePath(it)}" alt=""/>
         ${it.actionTitle}
       </h1>
       <p>
@@ -31,6 +31,7 @@
         </p>
       </j:if>
       <f:form name="bundle-contents" method="POST" action="generateAllBundles">
+        <j:set var="instance" value="${it}"/>
         <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
           <section class="jenkins-section jenkins-section__bottom-padding">
             <h2 class="jenkins-section__title">${category.key.label}</h2>

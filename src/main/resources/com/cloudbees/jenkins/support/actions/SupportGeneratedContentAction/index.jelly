@@ -1,15 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
-  <l:layout title="${%GeneratedSupportContent}">
+  <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}">
 
-    <st:include page="sidepanel.jelly"/>
+    <st:include it="${it}" page="sidepanel"/>
 
     <l:main-panel>
-
-      <h1>${%GeneratedSupportContent}</h1>
       <f:section title="${%ExistingSupportBundles}">
 
         <f:form name="bundle-contents" method="POST" action="deleteBundles">
+          <j:set var="instance" value="${it}"/>
           <j:forEach var="bundle" items="${it.bundles}">
             <f:entry field="bundle">
               <div name="bundles">
