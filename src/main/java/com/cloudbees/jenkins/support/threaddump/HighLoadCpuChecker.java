@@ -24,20 +24,25 @@
 
 package com.cloudbees.jenkins.support.threaddump;
 
+import com.cloudbees.jenkins.support.api.SupportContentContributor;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.PeriodicWork;
 import jenkins.metrics.api.MetricProvider;
 import jenkins.metrics.impl.VMMetricProviderImpl;
 import jenkins.model.Jenkins;
+import jenkins.util.SystemProperties;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -53,7 +58,10 @@ import static java.util.logging.Level.WARNING;
  * to generate thread dumps in high heap memory consumption.
  */
 @Extension
-public class HighLoadCpuChecker extends PeriodicWork {
+public class HighLoadCpuChecker extends PeriodicWork implements SupportContentContributor {
+
+    private static final String HIGH_LOAD_CPU_PATH_PROPERTY = HighLoadCpuChecker.class.getName() + ".highLoadCpuDir";
+
     /**
      * Recurrence period to check high cpu load consumption. Thread dumps after there are CONSECUTIVE_HIGH_CPU
      * in the RECURRENCE_PERIOD_SEC
@@ -126,4 +134,35 @@ public class HighLoadCpuChecker extends PeriodicWork {
     }
 
     private static final Logger LOGGER = Logger.getLogger(HighLoadCpuChecker.class.getName());
+
+    @NonNull
+    @Override
+    public File getDirPath() {
+        String dirPath = SystemProperties.getString(HIGH_LOAD_CPU_PATH_PROPERTY);
+        return dirPath == null
+            ? new File(Jenkins.get().getRootDir(), "high-load/cpu")
+            : new File(dirPath);
+    }
+
+    @CheckForNull
+    @Override
+    public FilenameFilter getFilenameFilter() {
+        return (dir, name) -> name.endsWith(".txt");
+    }
+
+    @NonNull
+    @Override
+    public String getContributorId() {
+        return this.getClass().getSimpleName();
+    }
+
+    @Override
+    public String getContributorName() {
+        return "High Load CPU Thread Dumps";
+    }
+
+    @Override
+    public String getContributorDescription() {
+        return "Thread Dumps collected when the instance is under CPU load";
+    }
 }

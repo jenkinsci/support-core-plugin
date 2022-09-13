@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.ComponentVisitor;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.api.SupportContentContributor;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.api.SupportProviderDescriptor;
 import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
@@ -42,6 +43,7 @@ import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.OutputStreamSelector;
 import com.codahale.metrics.Histogram;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.BulkChange;
@@ -87,6 +89,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -868,7 +871,7 @@ public class SupportPlugin extends Plugin {
     }
 
     @Extension
-    public static class PeriodicWorkImpl extends PeriodicWork {
+    public static class PeriodicWorkImpl extends PeriodicWork implements SupportContentContributor {
 
         private Thread thread;
 
@@ -962,6 +965,30 @@ public class SupportPlugin extends Plugin {
                 }
             }
         }
+        
+        @NonNull
+        @Override
+        public File getDirPath() {
+            return getRootDirectory();
+        }
+
+        @CheckForNull
+        @Override
+        public FilenameFilter getFilenameFilter() {
+            return (dir, name) -> name.endsWith(".zip");
+        }
+
+        @NonNull
+        @Override
+        public String getContributorName() {
+            return "Auto-Generated Support Bundles";
+        }
+
+        @NonNull
+        @Override
+        public String getContributorDescription() {
+            return "Support Bundles generated periodically";
+        }
 
     }
 
@@ -989,5 +1016,38 @@ public class SupportPlugin extends Plugin {
             return true;
         }
     }
+    
+    @Extension
+    @SuppressWarnings("unused") // used by SupportAction
+    public static final class SupportLogContentContributor implements SupportContentContributor {
 
+        @NonNull
+        @Override
+        public File getDirPath() {
+            return getRootDirectory();
+        }
+
+        @Override
+        public FilenameFilter getFilenameFilter() {
+            return (dir, name) -> name.startsWith("all") && name.endsWith(".log");
+        }
+
+        @NonNull
+        @Override
+        public String getContributorId() {
+            return this.getClass().getSimpleName();
+        }
+
+        @NonNull
+        @Override
+        public String getContributorName() {
+            return "Controller Logs";
+        }
+
+        @NonNull
+        @Override
+        public String getContributorDescription() {
+            return "Latest Controller logs recorded";
+        }
+    }
 }

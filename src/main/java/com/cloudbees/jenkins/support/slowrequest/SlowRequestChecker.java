@@ -1,16 +1,21 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.api.SupportContentContributor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import com.google.inject.Inject;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
 import jenkins.model.Jenkins;
+import jenkins.util.SystemProperties;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
@@ -28,7 +33,10 @@ import java.util.concurrent.TimeUnit;
  * @author Kohsuke Kawaguchi
  */
 @Extension
-public class SlowRequestChecker extends PeriodicWork {
+public class SlowRequestChecker extends PeriodicWork implements SupportContentContributor {
+
+    private static final String SLOW_REQUESTS_PATH_PROPERTY = SlowRequestChecker.class.getName() + ".slowRequestsDir";
+    
     /**
      * How often to run the slow request checker
      * @since 2.12
@@ -55,7 +63,7 @@ public class SlowRequestChecker extends PeriodicWork {
     @Inject
     SlowRequestFilter filter;
 
-    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"slow-requests"), 50);
+    final FileListCap logs = new FileListCap(getDirPath(), 50);
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
     {
@@ -131,4 +139,30 @@ public class SlowRequestChecker extends PeriodicWork {
         }
     }
 
+    @NonNull
+    @Override
+    public File getDirPath() {
+        String slowRequestsPath = SystemProperties.getString(SLOW_REQUESTS_PATH_PROPERTY);
+        return slowRequestsPath == null
+            ? new File(Jenkins.get().getRootDir(), "slow-requests")
+            : new File(slowRequestsPath);
+    }
+
+    @CheckForNull
+    @Override
+    public FilenameFilter getFilenameFilter() {
+        return (dir, name) -> name.endsWith(".txt");
+    }
+
+    @Override
+    public String getContributorName() {
+        return "Slow Requests";
+    }
+
+    @NonNull
+    @Override
+    public String getContributorDescription() {
+        return "Slow HTTP requests dump generated when a requests take more than a certain amount of time";
+    }
+    
 }

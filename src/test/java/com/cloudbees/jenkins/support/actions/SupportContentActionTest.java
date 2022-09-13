@@ -42,7 +42,7 @@ public class SupportContentActionTest {
         logger.record(SupportContentAction.class, Level.FINE).capture(1);
         deleteBundle(bundle, "admin");
         assertTrue(logger.getMessages().stream()
-            .anyMatch(m ->m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
+            .anyMatch(m ->m.startsWith(String.format("The file selected %s does not exist", bundle))));
     }
 
     /*
