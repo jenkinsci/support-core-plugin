@@ -34,7 +34,7 @@
   </parent>
 
   <artifactId>support-core</artifactId>
-  <version>${changelist}</version>
+  <version>1201.${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Support Core Plugin</name>
