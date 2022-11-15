@@ -179,9 +179,15 @@ public final class SlaveCommandStatistics extends Component {
         @SuppressFBWarnings(value="UC_USELESS_OBJECT_STACK", justification="Maybe FindBugs is just confused? The TreeMap _is_ being used.")
         private void print(PrintWriter out) {
             out.println("# Totals");
-            out.printf("* Writes: %d%n  * sent %.1fMb%n", writes.values().stream().mapToLong(CountSum::count).sum(), writes.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
-            out.printf("* Reads: %d%n  * received %.1fMb%n", reads.values().stream().mapToLong(CountSum::count).sum(), reads.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
-            out.printf("* Responses: %d%n  * waited %s%n", responses.values().stream().mapToLong(CountSum::count).sum(), Util.getTimeSpanString(responses.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000));
+            synchronized (writes) {
+                out.printf("* Writes: %d%n  * sent %.1fMb%n", writes.values().stream().mapToLong(CountSum::count).sum(), writes.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
+            }
+            synchronized (reads) {
+                out.printf("* Reads: %d%n  * received %.1fMb%n", reads.values().stream().mapToLong(CountSum::count).sum(), reads.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000.0);
+            }
+            synchronized (responses) {
+                out.printf("* Responses: %d%n  * waited %s%n", responses.values().stream().mapToLong(CountSum::count).sum(), Util.getTimeSpanString(responses.values().stream().mapToLong(CountSum::sum).sum() / 1_000_000));
+            }
             out.println();
             out.println("# Commands sent");
             // TODO perhaps sort by count descending?
