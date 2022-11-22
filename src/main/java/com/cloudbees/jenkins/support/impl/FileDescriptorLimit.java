@@ -174,6 +174,7 @@ public class FileDescriptorLimit extends Component {
      * * going to /proc/self/fd. This will translate self to the correct PID of the current java
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "Intentional")
     private static void listAllOpenFileDescriptors(PrintWriter writer, ContentFilter filter) throws IOException {
         writer.println();
         writer.println("All open files");
