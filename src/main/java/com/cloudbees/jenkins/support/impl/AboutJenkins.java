@@ -395,7 +395,9 @@ public class AboutJenkins extends Component {
             super("about.md");
             this.plugins = plugins;
         }
-        @Override protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
+        @Override
+        @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
+        protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
             out.println("=======");
@@ -724,7 +726,9 @@ public class AboutJenkins extends Component {
         ControllerChecksumsContent() {
             super("nodes/master/checksums.md5");
         }
-        @Override protected void printTo(PrintWriter out) throws IOException {
+        @Override
+        @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
+        protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             if (jenkins == null) {
                 // Lifecycle.get() depends on Jenkins instance, hence this method won't work in any case

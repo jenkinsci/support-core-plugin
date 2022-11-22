@@ -200,10 +200,6 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @SuppressFBWarnings(
-        value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", 
-        justification = "https://github.com/spotbugs/spotbugs/issues/756"
-    )
     private void setWriter(Writer writer) {
         outputLock.lock();
         try (Writer oldWriter = this.writer) {

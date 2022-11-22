@@ -27,7 +27,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
@@ -155,10 +154,6 @@ public class ItemsContent extends Component {
                 }
             }
 
-            @SuppressFBWarnings(
-                    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-                    justification = "https://github.com/spotbugs/spotbugs/issues/756"
-            )
             private Integer countBuilds(Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
                 int builds = 0;
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDirPath)) {
