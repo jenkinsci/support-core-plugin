@@ -20,7 +20,6 @@ import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
-import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -154,7 +153,6 @@ public class FileDescriptorLimit extends Component {
     /**
      * * Using OperatingSystemMXBean, we can obtain the total number of open file descriptors.
      */
-    @IgnoreJRERequirement // UnixOperatingSystemMXBean
     private static void getOpenFileDescriptorCount(PrintWriter writer) {
         try {
             OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
