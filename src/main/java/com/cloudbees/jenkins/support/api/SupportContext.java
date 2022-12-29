@@ -32,7 +32,9 @@ import com.codahale.metrics.health.HealthCheckRegistry;
  * The context that a {@link Component} is being instantiated in.
  *
  * @author Stephen Connolly
+ * @deprecated usage removed
  */
+@Deprecated
 public interface SupportContext {
     /**
      * Returns the {@link MetricRegistry} for the current Jenkins.

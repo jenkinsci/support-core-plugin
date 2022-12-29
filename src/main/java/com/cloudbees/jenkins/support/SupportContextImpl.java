@@ -33,9 +33,12 @@ import jenkins.metrics.api.Metrics;
  * The implementation of {@link SupportContext}
  *
  * @author Stephen Connolly
+ * @deprecated usage removed
  */
+@Deprecated
 public class SupportContextImpl implements SupportContext {
 
+    @Deprecated
     public SupportContextImpl() {
     }
 
@@ -57,6 +60,7 @@ public class SupportContextImpl implements SupportContext {
         return Metrics.healthCheckRegistry();
     }
 
+    @Deprecated
     public void shutdown() {
     }
 }

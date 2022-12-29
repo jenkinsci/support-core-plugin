@@ -138,6 +138,7 @@ public abstract class Component implements ExtensionPoint {
         return getClass().getSimpleName();
     }
 
+    @Deprecated
     public void start(@NonNull SupportContext context) {
     }
 
