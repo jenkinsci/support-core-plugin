@@ -53,7 +53,6 @@ import hudson.Main;
 import hudson.Plugin;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
-import hudson.model.AbstractCIBase;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Node;
@@ -645,29 +644,14 @@ public class SupportPlugin extends Plugin {
         context = new SupportContextImpl();
     }
 
+    /**
+     * @return the {@link com.cloudbees.jenkins.support.api.SupportContext}
+     * @deprecated usage removed
+     */
     @NonNull
+    @Deprecated
     public synchronized SupportContextImpl getContext() {
         return context;
-    }
-
-    @Override
-    public void postInitialize() throws Exception {
-        super.postInitialize();
-        for (Component component : getComponents()) {
-            try {
-                long initializerStart = System.currentTimeMillis();
-                component.start(getContext());
-                if (AbstractCIBase.LOG_STARTUP_PERFORMANCE) {
-                    long delta = System.currentTimeMillis() - initializerStart;
-                    logger.info(String.format("Took %dms for support component %s startup", delta, component.getId()));
-                }
-            } catch (Throwable t) {
-                LogRecord logRecord = new LogRecord(Level.WARNING, "Exception propagated from component: {0}");
-                logRecord.setThrown(t);
-                logRecord.setParameters(new Object[]{component.getDisplayName()});
-                logger.log(logRecord);
-            }
-        }
     }
 
     @Override
