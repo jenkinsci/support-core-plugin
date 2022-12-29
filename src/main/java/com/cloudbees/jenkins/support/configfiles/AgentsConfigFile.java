@@ -95,9 +95,9 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
         }
         File agentDir = new File(Jenkins.get().getRootDir(), MessageFormat.format("nodes/{0}", item.getName()));
         File config = new File(agentDir, "config.xml");
-        container.add(new XmlRedactedSecretFileContent("nodes/slave/" + agentDir.getName() + "/config.xml", config));
+        container.add(new XmlRedactedSecretFileContent("nodes/slave/{0}/config.xml", 
+            new String[]{agentDir.getName()}, config));
     }
-
 
     @Override
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
