@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
+import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 
 import java.io.File;
@@ -59,7 +60,7 @@ public class TaskLogs extends Component {
     private void addControllerTasksLogs(Container result) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
-            File logsRoot = getLogsRoot();
+            File logsRoot = SafeTimerTask.getLogsRoot();
             for (File logs : new File[] {logsRoot, new File(logsRoot, "tasks")}) {
                 File[] files = logs.listFiles(ROTATED_LOGFILE_FILTER);
                 if (files != null) {
@@ -75,19 +76,4 @@ public class TaskLogs extends Component {
         }
     }
 
-    /**
-     * Returns the root directory for logs (historically always found under <code>$JENKINS_HOME/logs</code>.
-     * Configurable since Jenkins 2.114.
-     *
-     * @see hudson.triggers.SafeTimerTask#LOGS_ROOT_PATH_PROPERTY
-     * @return the root directory for logs.
-     */
-    protected static File getLogsRoot() {
-        final String overriddenLogsRoot = System.getProperty("hudson.triggers.SafeTimerTask.logsTargetDir");
-        if (overriddenLogsRoot == null) {
-            return new File(Jenkins.get().getRootDir(), "logs");
-        } else {
-            return new File(overriddenLogsRoot);
-        }
-    }
 }

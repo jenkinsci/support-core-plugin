@@ -12,6 +12,7 @@ import hudson.init.Terminator;
 import hudson.logging.LogRecorder;
 import hudson.model.PeriodicWork;
 import hudson.security.Permission;
+import hudson.triggers.SafeTimerTask;
 import hudson.util.CopyOnWriteList;
 import hudson.util.io.RewindableFileOutputStream;
 import hudson.util.io.RewindableRotatingFileOutputStream;
@@ -44,7 +45,7 @@ public class CustomLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(CustomLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(CustomLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
-    private static final File customLogs = new File(TaskLogs.getLogsRoot(), "custom");
+    private static final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
     private final List<LogRecorder> logRecorders = Jenkins.get().getLog().getRecorders();
 
     @NonNull
