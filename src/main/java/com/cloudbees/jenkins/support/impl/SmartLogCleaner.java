@@ -33,7 +33,7 @@ class SmartLogCleaner {
      *      Used to generate the cache keys to match within the target directory.
      */
     SmartLogCleaner(final String id, final Set<String> cackeKeys) {
-        this.rootCacheDir = new File(SupportPlugin.getRootDirectory(), id);
+        this.rootCacheDir = new File(SupportPlugin.getLogsDirectory(), id);
         this.cacheKeys = cackeKeys;
     }
 

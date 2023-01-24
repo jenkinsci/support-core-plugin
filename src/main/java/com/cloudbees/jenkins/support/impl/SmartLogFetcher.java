@@ -49,7 +49,7 @@ class SmartLogFetcher {
      *      Used to match log files within the target directory.
      */
     public SmartLogFetcher(String id, FilenameFilter filter) {
-        this.rootCacheDir = new File(SupportPlugin.getRootDirectory(), id);
+        this.rootCacheDir = new File(SupportPlugin.getLogsDirectory(), id);
         this.filter = filter;
         assert filter instanceof Serializable;
     }
