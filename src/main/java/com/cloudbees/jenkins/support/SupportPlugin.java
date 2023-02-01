@@ -181,7 +181,7 @@ public class SupportPlugin extends Plugin {
     public static void migrateExistingLogs() {
         File rootDirectory = getRootDirectory();
         File[] files = rootDirectory.listFiles();
-        if (rootDirectory != null) {
+        if (files != null) {
             for (File f : files) {
                 if (f.isFile() && f.getName().endsWith(".log")) {
                     Path p = f.toPath();
