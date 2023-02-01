@@ -31,8 +31,7 @@ public class SmartLogCleanerTest {
 
     @Test
     public void cleanUp() throws Exception {
-        File supportDir = new File(j.getInstance().getRootDir(), "support");
-        File cacheDir = new File(supportDir, "winsw");
+        File cacheDir = new File(SupportPlugin.getLogsDirectory(), "winsw");
 
         DumbSlave agent1 = j.createOnlineSlave();
         DumbSlave agent2 = j.createOnlineSlave();

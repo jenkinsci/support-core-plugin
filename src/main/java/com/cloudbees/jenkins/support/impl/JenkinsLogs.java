@@ -90,7 +90,7 @@ public class JenkinsLogs extends Component {
             }
         });
 
-        final File[] julLogFiles = SupportPlugin.getRootDirectory().listFiles(new LogFilenameFilter());
+        final File[] julLogFiles = SupportPlugin.getLogsDirectory().listFiles(new LogFilenameFilter());
         if (julLogFiles == null) {
             LOGGER.log(Level.WARNING, "Cannot add controller java.util.logging logs to the bundle. Cannot access log files");
             return;

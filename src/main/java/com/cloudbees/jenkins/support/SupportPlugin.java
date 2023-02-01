@@ -67,6 +67,9 @@ import hudson.security.Permission;
 import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.ComputerListener;
+import hudson.triggers.SafeTimerTask;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -171,7 +174,26 @@ public class SupportPlugin extends Plugin {
     public SupportPlugin() {
         super();
         handler.setLevel(getLogLevel());
-        handler.setDirectory(getRootDirectory(), "all");
+        handler.setDirectory(getLogsDirectory(), "all");
+    }
+
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    public static void migrateExistingLogs() {
+        File rootDirectory = getRootDirectory();
+        File[] files = rootDirectory.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile() && f.getName().endsWith(".log")) {
+                    Path p = f.toPath();
+                    try {
+                        Files.move(p, getLogsDirectory().toPath().resolve(p.getFileName()));
+                        LOGGER.log(Level.INFO, "Moved " + p + " to " + getLogsDirectory());
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, e, () -> "Unable to move " + p + " to " + getLogsDirectory());
+                    }
+                }
+            }
+        }
     }
 
     public SupportProvider getSupportProvider() {
@@ -193,12 +215,20 @@ public class SupportPlugin extends Plugin {
     /**
      * Working directory that the support-core plugin uses to write out files.
      *
-     * @return the wrking directory that the support-core plugin uses to write out files.
+     * @return the working directory that the support-core plugin uses to write out files.
      */
     public static File getRootDirectory() {
         return new File(Jenkins.get().getRootDir(), SUPPORT_DIRECTORY_NAME);
     }
 
+    /**
+     * Working directory that the support-core plugin uses to write out log files.
+     *
+     * @return the working directory that the support-core plugin uses to write out log files.
+     */
+    public static File getLogsDirectory() {
+        return new File(SafeTimerTask.getLogsRoot(), SUPPORT_DIRECTORY_NAME);
+    }
 
     public static Authentication getRequesterAuthentication() {
         return requesterAuthentication.get();

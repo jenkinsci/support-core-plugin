@@ -225,7 +225,8 @@ public class SupportActionTest {
     }
 
     private Path createFakeSupportBundle() throws IOException {
-        return Files.createTempFile(SupportPlugin.getRootDirectory().toPath(), "fake-bundle-", ".zip");
+        Path parent = Files.createDirectories(SupportPlugin.getRootDirectory().toPath());
+        return Files.createTempFile(parent, "fake-bundle-", ".zip");
     }
 
     /**
