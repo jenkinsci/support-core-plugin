@@ -100,6 +100,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -568,13 +569,13 @@ public class SupportPlugin extends Plugin {
                 errors.println();
             }
         }
-        return contentsContainer.contents;
+        return contentsContainer.getContents();
         
     }
 
     private static class ContentContainer extends Container {
         private final List<Content> contents = new ArrayList<>();
-        private final Set<String> names = new TreeSet<>();
+        private final Set<String> names = new HashSet<>();
 
         //The filter to return the names filtered
         private final Optional<ContentFilter> maybeFilter;
@@ -583,22 +584,29 @@ public class SupportPlugin extends Plugin {
          * We need the filter to be able to filter the contents written to the manifest
          * @param maybeFilter filter to use when writing the name of the contents
          */
-        public ContentContainer(Optional<ContentFilter> maybeFilter) {
+        ContentContainer(Optional<ContentFilter> maybeFilter) {
             this.maybeFilter = maybeFilter;
         }
 
         @Override
         public void add(Content content) {
             if (content != null) {
-                contents.add(content);
-                names.add(getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters()));
+                String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
+                synchronized (this) {
+                    contents.add(content);
+                    names.add(name);
+                }
             }
         }
 
-        private Set<String> getLatestNames() {
+        synchronized Set<String> getLatestNames() {
             Set<String> copy = new TreeSet<>(names);
             names.clear();
             return copy;
+        }
+
+        synchronized List<Content> getContents() {
+            return new ArrayList<>(contents);
         }
 
     }
