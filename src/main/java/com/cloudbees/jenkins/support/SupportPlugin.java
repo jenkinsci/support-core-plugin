@@ -808,7 +808,7 @@ public class SupportPlugin extends Plugin {
         @Override
         public void onOnline(Computer c, TaskListener listener) throws IOException, InterruptedException {
             final Node node = c.getNode();
-            if (node instanceof Jenkins) {
+            if (node == null || node instanceof Jenkins) {
                 return;
             }
             try {
