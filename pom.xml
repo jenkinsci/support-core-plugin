@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.51</version>
+    <version>4.52</version>
     <relativePath />
   </parent>
 
@@ -70,7 +70,7 @@
 
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <jenkins.version>2.332.1</jenkins.version>
+    <jenkins.version>2.361.4</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
   </properties>
 
@@ -91,8 +91,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.332.x</artifactId>
-        <version>1500.ve4d05cd32975</version>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>1723.vcb_9fee52c9fc</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -135,7 +135,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.23.1</version>
+      <version>3.24.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>

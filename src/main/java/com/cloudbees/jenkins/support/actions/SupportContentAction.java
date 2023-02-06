@@ -124,7 +124,7 @@ public class SupportContentAction extends SupportChildAction {
     public List<String> getBundles() {
         List<String> res = new ArrayList<>();
         File rootDirectory = SupportPlugin.getRootDirectory();
-        File[] bundlesFiles = rootDirectory.listFiles((dir, name) -> name.endsWith(".zip") || name.endsWith(".log"));
+        File[] bundlesFiles = rootDirectory.listFiles((dir, name) -> name.endsWith(".zip"));
         if (bundlesFiles != null) {
             for (File bundleFile : bundlesFiles) {
                 res.add(bundleFile.getName());
