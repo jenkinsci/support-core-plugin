@@ -102,7 +102,7 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
         static final int DEFAULT_MAX_DEPTH = 10;
 
         public DescriptorImpl() {
-            super("", "workspace/**, remoting/jarCache/**", true, DEFAULT_MAX_DEPTH);
+            super("remoting/**, support/**", "remoting/jarCache/**", true, DEFAULT_MAX_DEPTH);
         }
 
         /**
