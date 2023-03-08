@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import org.jenkinsci.Symbol;
@@ -46,7 +47,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public class ContentFilters extends GlobalConfiguration {
 
     public static ContentFilters get() {
-        return GlobalConfiguration.all().get(ContentFilters.class);
+        return ExtensionList.lookupSingleton(ContentFilters.class);
     }
 
     private boolean enabled;

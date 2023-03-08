@@ -32,7 +32,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.PeriodicWork;
-import jenkins.metrics.api.MetricProvider;
 import jenkins.metrics.impl.VMMetricProviderImpl;
 import jenkins.model.Jenkins;
 
@@ -102,26 +101,25 @@ public class HighLoadCpuChecker extends PeriodicWork {
     protected void doRun() throws Exception {
         Double cpuLoad;
         try {
-            VMMetricProviderImpl vmMetricProvider = ExtensionList.lookup(MetricProvider.class).get(VMMetricProviderImpl.class);
+            VMMetricProviderImpl vmMetricProvider = ExtensionList.lookupSingleton(VMMetricProviderImpl.class);
             MetricSet vmProviderMetricSet = vmMetricProvider.getMetricSet();
             Gauge cpu = (Gauge) vmProviderMetricSet.getMetrics().get("vm.cpu.load");
             cpuLoad = new Double(cpu.getValue().toString());
-        } catch (NullPointerException nullPointerException) {
-            LOGGER.log(WARNING, "Support Core plugin can't generate automatically thread dumps on high cpu load. Metrics plugin does not seem to be available", nullPointerException);
-            return;
-        }
-        if (cpuLoad != null && Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
-            countConsecutivePositives++;
-            if (countConsecutivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
-                countConsecutivePositives = 0;
+            if (Double.compare(Runtime.getRuntime().availableProcessors() * CPU_USAGE_THRESHOLD, cpuLoad) < 0) {
+                countConsecutivePositives++;
+                if (countConsecutivePositives >= HIGH_CPU_CONSECUTIVE_TIMES) {
+                    countConsecutivePositives = 0;
                     File threadDumpFile = logs.file(format.format(new Date()) + ".txt");
                     try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
                         ThreadDumps.threadDump(fileOutputStream);
                         logs.add(threadDumpFile);
                     }
+                }
+            } else {
+                countConsecutivePositives = 0;
             }
-        } else {
-            countConsecutivePositives = 0;
+        } catch (IllegalStateException ise) {
+            LOGGER.log(WARNING, "Support Core plugin can't generate automatically thread dumps on high cpu load. Metrics plugin does not seem to be available", ise);
         }
     }
 

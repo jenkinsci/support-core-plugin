@@ -27,6 +27,7 @@ package com.cloudbees.jenkins.support.filter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.util.Persistence;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
@@ -83,7 +84,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * @return the singleton instance
      */
     public static ContentMappings get() {
-        return all().get(ContentMappings.class);
+        return ExtensionList.lookupSingleton(ContentMappings.class);
     }
 
     /**
