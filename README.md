@@ -69,17 +69,6 @@ then run the docker image
 This should create a new Jenkins controller with the same version, and the
 same plugins and versions all bundled.
 
-## Third party support providers
-
-Various companies and organizations provide commercial support for
-Jenkins. They can provide additional content and branding to the support
-action. The following lists the known third party support providers (in
-date order) and the links to their support provider plugin.
-
--   [CloudBees Support
-    Plugin](https://release-notes.cloudbees.com/product/CloudBees+Support+Plugin) by
-    [CloudBees, Inc.](https://www.cloudbees.com)
-
 ## Frequent issues
 
 ### Support bundles corrupt through the UI
