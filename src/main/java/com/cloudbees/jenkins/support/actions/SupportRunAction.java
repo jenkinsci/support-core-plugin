@@ -1,9 +1,12 @@
 package com.cloudbees.jenkins.support.actions;
 
+import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Run;
 import jenkins.model.TransientActionFactory;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -28,6 +31,12 @@ public class SupportRunAction extends SupportObjectAction<Run> {
     @Override
     protected String getBundleNameQualifier() {
         return "build";
+    }
+
+    @Restricted(NoExternalUse.class) // stapler
+    @SuppressWarnings("unused") // used by Stapler
+    public boolean isAnonymized() {
+        return ContentFilters.get().isEnabled();
     }
 
     @Extension
