@@ -77,6 +77,7 @@ import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -372,7 +373,8 @@ public class SupportPlugin extends Plugin {
 
         try {
             try (BulkChange change = new BulkChange(ContentMappings.get());
-                 ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(outputStream, 16384))) {
+                 CountingOutputStream countingOs = new CountingOutputStream(outputStream);
+                 ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
                 // Get the filter to be used
                 Optional<ContentFilter> maybeFilter = getContentFilter();
 
@@ -396,12 +398,14 @@ public class SupportPlugin extends Plugin {
                 IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
                 boolean entryCreated = false;
                 startTime = System.currentTimeMillis();
+                long startSize = countingOs.getByteCount();
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
                     }
                     LOGGER.log(Level.FINE, "Start writing support content " + content.getClass());
                     long contentStartTime = System.currentTimeMillis();
+                    long contentStartSize = countingOs.getByteCount();
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
                     
                     try {
@@ -433,11 +437,13 @@ public class SupportPlugin extends Plugin {
                             entryCreated = false;
                         }
                         LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-contentStartTime) + "ms" +
+                            " and generated " + (countingOs.getByteCount()-contentStartSize) + " bytes" +
                             " to write content " + name);
                     }
                 }
-                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime)
-                    + "ms to process all contents");
+                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms" +
+                    " and generated " + (countingOs.getByteCount()-startSize) + " bytes" +
+                    " to process all contents");
                 errorWriter.close();
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
