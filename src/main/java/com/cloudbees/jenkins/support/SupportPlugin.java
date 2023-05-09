@@ -384,7 +384,9 @@ public class SupportPlugin extends Plugin {
                 // Generate the content of the manifest.md going trough all the components which will be included. It
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
+                long startTime = System.currentTimeMillis();
                 List<Content> contents = appendManifestContents(manifest, errorWriter, components, componentConsumer, maybeFilter);
+                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to process all components");
                 contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
 
                 Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
@@ -393,11 +395,13 @@ public class SupportPlugin extends Plugin {
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
                 IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
                 boolean entryCreated = false;
+                startTime = System.currentTimeMillis();
                 for (Content content : contents) {
                     if (content == null) {
                         continue;
                     }
-
+                    LOGGER.log(Level.FINE, "Start writing support content " + content.getClass());
+                    long contentStartTime = System.currentTimeMillis();
                     final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
                     
                     try {
@@ -428,8 +432,12 @@ public class SupportPlugin extends Plugin {
                             binaryOut.closeArchiveEntry();
                             entryCreated = false;
                         }
+                        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-contentStartTime) + "ms" +
+                            " to write content " + name);
                     }
                 }
+                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime)
+                    + "ms to process all contents");
                 errorWriter.close();
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
@@ -547,7 +555,11 @@ public class SupportPlugin extends Plugin {
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
+                LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
+                long startTime = System.currentTimeMillis();
                 componentVisitor.visit(contentsContainer, component);
+                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms" +
+                    " to process component " + component.getDisplayName());
                 Set<String> names = contentsContainer.getLatestNames();
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
