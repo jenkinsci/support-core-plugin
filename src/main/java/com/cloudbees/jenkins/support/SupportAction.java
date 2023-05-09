@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.Extension;
 import hudson.model.Api;
+import hudson.model.Failure;
 import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
@@ -223,6 +224,8 @@ public class SupportAction implements RootAction, StaplerProxy {
         if (bundlesToDownload.size() > 1) {
             // more than one bundles were selected, create a zip file
             fileToDownload = createZipFile(bundlesToDownload);
+        } else if (bundlesToDownload.isEmpty()) {
+            throw new Failure("No matching bundles");
         } else {
             fileToDownload = new File(SupportPlugin.getRootDirectory(), bundlesToDownload.iterator().next());
         }
