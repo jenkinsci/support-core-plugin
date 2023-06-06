@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
 import org.junit.Rule;
