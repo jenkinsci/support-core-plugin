@@ -24,21 +24,14 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.util.WordReplacer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Filters contents by mapping all found IPv4 and IPv6 addresses to generated names.
@@ -68,24 +61,19 @@ public class InetAddressContentFilter implements ContentFilter {
     @Override
     public @NonNull String filter(@NonNull String input) {
         ContentMappings mappings = ContentMappings.get();
-
         StringBuilder replacement = new StringBuilder();
         int lastIndex = 0;
-        int matcherInd = 0;
 
-        List<MatchResult> matchResults = IP_ADDRESS.matcher(input).results().collect(Collectors.toList());
-        while (matcherInd < matchResults.size()) {
-            MatchResult matchResult = matchResults.get(matcherInd);
-            String ip = matchResult.group();
-            replacement.append(input, lastIndex, matchResult.start());
+        Matcher matcher = IP_ADDRESS.matcher(input);
+        while (matcher.find()) {
+            String ip = matcher.group();
+            replacement.append(input, lastIndex, matcher.start());
             if (!mappings.getStopWords().contains(ip)) {
-                ContentMapping map = mappings.getMappingOrCreate(matchResult.group(), InetAddressContentFilter::newMapping);
-                replacement.append(map.getReplacement());
+                replacement.append(mappings.getMappingOrCreate(ip, InetAddressContentFilter::newMapping).getReplacement());
             } else {
                 replacement.append(ip);
             }
-            lastIndex = matchResult.end();
-            matcherInd++;
+            lastIndex = matcher.end();
         }
 
         if (lastIndex < input.length()) {
