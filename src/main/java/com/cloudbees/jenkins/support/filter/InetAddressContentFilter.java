@@ -32,9 +32,13 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Filters contents by mapping all found IPv4 and IPv6 addresses to generated names.
@@ -64,23 +68,31 @@ public class InetAddressContentFilter implements ContentFilter {
     @Override
     public @NonNull String filter(@NonNull String input) {
         ContentMappings mappings = ContentMappings.get();
-        Matcher m = IP_ADDRESS.matcher(input);
-        // Use the map keys to filter every IP found without repeating the filtering if the same is found twice.
-        Map<String, String> searchAndReplacementValues = new HashMap<>();
-        while (m.find()) {
-            String ip = m.group();
 
+        StringBuilder replacement = new StringBuilder();
+        int lastIndex = 0;
+        int matcherInd = 0;
+
+        List<MatchResult> matchResults = IP_ADDRESS.matcher(input).results().collect(Collectors.toList());
+        while (matcherInd < matchResults.size()) {
+            MatchResult matchResult = matchResults.get(matcherInd);
+            String ip = matchResult.group();
+            replacement.append(input, lastIndex, matchResult.start());
             if (!mappings.getStopWords().contains(ip)) {
-                ContentMapping map = mappings.getMappingOrCreate(ip, InetAddressContentFilter::newMapping);
-                searchAndReplacementValues.put(ip, map.getReplacement());
+                ContentMapping map = mappings.getMappingOrCreate(matchResult.group(), InetAddressContentFilter::newMapping);
+                replacement.append(map.getReplacement());
+            } else {
+                replacement.append(ip);
             }
-        }
-        String filtered = input;
-        if (!searchAndReplacementValues.isEmpty()) {
-            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchAndReplacementValues.keySet().toArray(new String[0]), searchAndReplacementValues.values().toArray(new String[0]));
+            lastIndex = matchResult.end();
+            matcherInd++;
         }
 
-        return filtered;
+        if (lastIndex < input.length()) {
+            replacement.append(input, lastIndex, input.length());
+        }
+
+        return replacement.toString();
     }
 
     private static ContentMapping newMapping(String original) {
