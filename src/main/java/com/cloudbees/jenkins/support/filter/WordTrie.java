@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.filter;
 
+import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Trie implementation to generate a "Trie regex". A regex that reduces backtracking by following a Trie structure.
@@ -99,7 +101,7 @@ public class WordTrie {
             // List of ending characters
             final List<Character> characters = new ArrayList<>();
 
-            for (final Map.Entry<Character, TrieNode> entry : this.data.entrySet()) {
+            for (Map.Entry<Character, TrieNode> entry : this.data.entrySet()) {
                 final String entryRegex = entry.getValue().getRegex();
                 if (entryRegex != null) {
                     // Need to escape special / metacharacters
@@ -114,11 +116,29 @@ public class WordTrie {
                 // Need to escape special / metacharacters
                 childPatterns.add(quote(String.valueOf(characters.get(0))));
             } else if (characters.size() > 0) {
-                final StringBuilder buf = new StringBuilder("[");
-                characters.forEach(buf::append);
-                buf.append("]");
+                // Chunking is necessary here to prevent StackOverFlow in pattern matching unions
+                final StringBuilder buf = new StringBuilder();
+                if (characters.size() < 1024) {
+                    buf.append("[");
+                    characters.forEach(character -> buf.append(quote(String.valueOf(character))));
+                    buf.append("]");
+                } else {
+                    buf.append("(?:");
+                    int chunkSize = 1024;
+                    for (int i = 0; i < characters.size(); i += chunkSize) {
+                        List<Character> charactersChunk = characters.subList(i, Math.min(i + chunkSize, characters.size()));
+                        buf.append('[');
+                        for (Character character : charactersChunk) {
+                            buf.append(quote(String.valueOf(character)));
+                        }
+                        buf.append("]|");
+                    }
+                    buf.deleteCharAt(buf.length() - 1);
+                    buf.append(')');
+                }
                 childPatterns.add(buf.toString());
             }
+
 
             String result = childPatterns.size() == 1
                 ? childPatterns.get(0)
