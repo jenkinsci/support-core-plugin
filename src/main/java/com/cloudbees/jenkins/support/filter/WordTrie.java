@@ -115,7 +115,7 @@ public class WordTrie {
                 childPatterns.add(quote(String.valueOf(characters.get(0))));
             } else if (characters.size() > 0) {
                 final StringBuilder buf = new StringBuilder("[");
-                characters.forEach(character -> buf.append("]"));
+                characters.forEach(buf::append);
                 buf.append("]");
                 childPatterns.add(buf.toString());
             }
