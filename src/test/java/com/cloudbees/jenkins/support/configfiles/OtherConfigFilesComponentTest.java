@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
@@ -129,6 +130,10 @@ public class OtherConfigFilesComponentTest {
                 filter(lr -> lr.getLevel().intValue() >= Level.WARNING.intValue()). // TODO .record(…, WARNING) does not accomplish this
                 map(lr -> lr.getSourceClassName() + "." + lr.getSourceMethodName() + ": " + lr.getMessage()).collect(Collectors.toList()), // LogRecord does not override toString
             emptyIterable());
-        assertThat(baos.toString(), allOf(containsString("FileNotFoundException"), containsString(file.getAbsolutePath())));
+        assertThat(
+                baos.toString(),
+                allOf(
+                        anyOf(containsString("FileNotFoundException"), containsString("NoSuchFileException")),
+                        containsString(file.getAbsolutePath())));
     }
 }
