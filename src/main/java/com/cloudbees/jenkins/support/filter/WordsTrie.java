@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.filter;
 
-import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -9,7 +8,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Trie implementation to generate a "Trie regex". A regex that reduces backtracking by following a Trie structure.
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
  * While this works, Such a pattern can be optimized significantly by following a Trie structure in the prefixes such
  * as {code}\b(?:go(?:(?:es|ing|ne|ose))?)\b{code}.
  */
-public class WordTrie {
+public class WordsTrie {
 
     /*
      * As per https://docs.oracle.com/javase/tutorial/essential/regex/literals.html, metacharacters need to be escaped
@@ -36,7 +34,7 @@ public class WordTrie {
 
     final TrieNode root;
 
-    public WordTrie() {
+    public WordsTrie() {
         this.root = new TrieNode(false);
     }
 

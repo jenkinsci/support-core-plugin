@@ -2,7 +2,7 @@ package com.cloudbees.jenkins.support.util;
 
 import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
-import com.cloudbees.jenkins.support.filter.WordTrie;
+import com.cloudbees.jenkins.support.filter.WordsTrie;
 import hudson.Functions;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -241,7 +241,7 @@ public class WordReplacerTest {
     }
 
     private Pattern triePattern(String [] searches) {
-        WordTrie trie = new WordTrie();
+        WordsTrie trie = new WordsTrie();
         for (String search : searches) {
             trie.add(search);
         }

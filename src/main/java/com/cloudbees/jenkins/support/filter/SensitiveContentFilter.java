@@ -63,7 +63,7 @@ public class SensitiveContentFilter implements ContentFilter {
     @Override
     public synchronized void reload() {
         final Map<String, String> replacementsMap = new HashMap<>();
-        final WordTrie trie = new WordTrie();
+        final WordsTrie trie = new WordsTrie();
         final ContentMappings mappings = ContentMappings.get();
         Set<String> stopWords = mappings.getStopWords();
         NameProvider.all().forEach(provider ->
