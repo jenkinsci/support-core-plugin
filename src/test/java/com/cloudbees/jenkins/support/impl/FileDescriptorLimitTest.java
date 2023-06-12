@@ -58,6 +58,7 @@ public class FileDescriptorLimitTest {
         ContentMapping mapping = ContentMapping.of(SENSITIVE_WORD, FILTERED_SENSITIVE_WORD);
         ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        filter.reload();
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
         String output;
         // Hold an open File Descriptor

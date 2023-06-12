@@ -64,6 +64,7 @@ public class RunningBuildsTest {
         ContentMapping mapping = ContentMapping.of(SENSITIVE_WORD, FILTERED_SENSITIVE_WORD);
         ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        filter.reload();
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
         SemaphoreBuilder semaphore = new SemaphoreBuilder();
         p.getBuildersList().add(semaphore);

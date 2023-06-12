@@ -65,6 +65,7 @@ public class AgentsConfigFileTest {
         ContentMapping mapping = ContentMapping.of(SENSITIVE_AGENT_NAME, FILTERED_AGENT_NAME);
         ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        filter.reload();
         j.createSlave(SENSITIVE_AGENT_NAME, "node1", new EnvVars());
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AgentsConfigFile());
         String sensitiveKey = "nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml";
