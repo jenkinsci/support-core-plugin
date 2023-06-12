@@ -2,12 +2,17 @@ package com.cloudbees.jenkins.support.util;
 
 import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
+import com.cloudbees.jenkins.support.filter.WordTrie;
 import hudson.Functions;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +38,9 @@ public class WordReplacerTest {
 
         String result = WordReplacer.replaceWordsIgnoreCase(input, search, replace);
         System.out.format("%s ->\n%s", input, result);
+        assertEquals(expected, result);
+
+        result = WordReplacer.replaceWords(input, triePattern(search), replacementsMap(search, replace));
         assertEquals(expected, result);
     }
 
@@ -63,11 +71,16 @@ public class WordReplacerTest {
 
             // Both filtered strings should be the same
             assertEquals("The string replaced should be the same using RegExp or WordReplacer", resultCM, resultWordReplacer);
+
+            resultWordReplacer = WordReplacer.replaceWords(input, triePattern(searches), replacementsMap(searches, replaces));
+
+            // Both filtered strings should be the same
+            assertEquals("The string replaced should be the same using RegExp or WordReplacer", resultCM, resultWordReplacer);
         }
     }
 
-    @Ignore("It was useful to make the decision to move out of Reg Exp. As the implementation of the Content Mapping is" +
-            "now WordReplacer, it has no sense to test. We keep it here for future cases.")
+    @Ignore("It was useful to make the decision to move out of ContentMapping#filter and later out of WordReplacer " +
+        "without Pattern. It has no sense to test. We keep it here for future cases.")
     @Test
     public void performanceTest() {
         // Create a lot of word and replaces (each character letter or digit. Aprox: 4070)
@@ -86,8 +99,9 @@ public class WordReplacerTest {
         // Generate a fake long text (well, not so long to avoid lasts too much)
         List<String> text = generateFakeListString(10);
         //Result with 100 lines in i7
-        //Point 'RegExp': 31.16 seconds since last point
-        //Point 'WordReplacer': 731.0 milliseconds since last point
+        //Point 'ContentMappings': 1.785 seconds since last point
+        //Point 'WordReplacer': 6.114 seconds since last point
+        //Point 'TrieRegexPattern': 649.0 milliseconds since last point
 
         //Create the content mappings
         ContentMapping[] contentMappings = getContentMappings(searches, replaces);
@@ -95,15 +109,19 @@ public class WordReplacerTest {
         // Create the searches and replaces for the WordReplacer mimicking the behavior of the Content Mapping
         String[][][] tokens = getWordsLikeContentMapping(searches, replaces);
 
-        Chrono c = new Chrono("Test ContentMapping Vs WordReplacer");
-        // Filter using ContentMappings
-        for (String line : text) {
+        // Create the Trie pattern and replacements map mimicking the behavior of the Content Mapping
+        Pattern triePattern = triePattern(searches);
+        Map<String, String> replacementMap = getReplacementsLikeContentMapping(tokens);
+
+        Chrono c = new Chrono("Test ContentMapping vs WordReplacer vs TrieRegexPattern");
+        // Filter using WordReplacer in the same way as ContentMapping
+        for (String line: text) {
             String resultCM = line;
             for (ContentMapping cm : contentMappings) {
                 resultCM = cm.filter(resultCM);
             }
         }
-        c.markFromPrevious("ContentMapping#filter");
+        c.markFromPrevious("ContentMappings");
 
         // Filter using WordReplacer in the same way as ContentMapping
         for (String line: text) {
@@ -111,12 +129,21 @@ public class WordReplacerTest {
             for (String[][] token : tokens) {
                 resultWR = WordReplacer.replaceWordsIgnoreCase(resultWR, token[0], token[1]);
             }
+//            WordReplacer.replaceWordsIgnoreCase(line, searches, replaces);
         }
         c.markFromPrevious("WordReplacer");
 
-        System.out.println(c.printMeasure("ContentMapping#filter"));
-        System.out.println(c.printMeasure("WordReplacer"));
-        assertTrue(c.getMeasure("ContentMapping#filter") > c.getMeasure("WordReplacer"));
+        // Filter using TrieRegex pattern
+        for (String line: text) {
+            WordReplacer.replaceWords(line, triePattern, replacementMap);
+        }
+        c.markFromPrevious("TrieRegexPattern");
+
+        System.out.print(c.printMeasure("ContentMappings"));
+        System.out.print(c.printMeasure("WordReplacer"));
+        System.out.print(c.printMeasure("TrieRegexPattern"));
+        assertTrue(c.getMeasure("ContentMappings") > c.getMeasure("TrieRegexPattern"));
+        assertTrue(c.getMeasure("WordReplacer") > c.getMeasure("TrieRegexPattern"));
     }
 
     /**
@@ -131,6 +158,7 @@ public class WordReplacerTest {
         // Test string replacements with and without ignoring the case
         assertEquals("1 A 2,B.3:C abc ABC ignored", WordReplacer.replaceWords(input, originals, replaces));
         assertEquals("1 1 2,2.3:3 abc ABC ignored", WordReplacer.replaceWordsIgnoreCase(input, originals, replaces));
+        assertEquals("1 1 2,2.3:3 abc ABC ignored", WordReplacer.replaceWords(input, triePattern(originals), replacementsMap(originals, replaces)));
 
         // Test string builder replacements
         StringBuilder inputSB = new StringBuilder(input);
@@ -163,9 +191,8 @@ public class WordReplacerTest {
 
         String result = "i o i";
 
-        String replaced = WordReplacer.replaceWords(input, words, replaces);
-
-        assertEquals(result, replaced);
+        assertEquals(result, WordReplacer.replaceWords(input, words, replaces));
+        assertEquals(result, WordReplacer.replaceWords(input, triePattern(words), replacementsMap(words, replaces)));
     }
 
     private List<String> generateFakeListString(int lines) {
@@ -201,5 +228,31 @@ public class WordReplacerTest {
         }
 
         return result;
+    }
+
+    private Map<String, String> getReplacementsLikeContentMapping(String[][][] tokens) {
+        Map<String, String> replacementMap = new HashMap<>();
+        for (String[][] token : tokens) {
+            for(int i=0; i<token[0].length; i++) {
+                replacementMap.put(token[0][i].toLowerCase(Locale.ENGLISH), token[1][i]);
+            }
+        }
+        return replacementMap;
+    }
+
+    private Pattern triePattern(String [] searches) {
+        WordTrie trie = new WordTrie();
+        for (String search : searches) {
+            trie.add(search);
+        }
+        return Pattern.compile("(?:\\b(?:" + trie.getRegex() + ")\\b)", Pattern.CASE_INSENSITIVE);
+    }
+
+    private Map<String, String> replacementsMap(String [] searches, String [] replaces) {
+        Map<String, String> replacements = new HashMap<>();
+        for (int i = 0; i < searches.length; i++) {
+            replacements.put(searches[i].toLowerCase(Locale.ENGLISH), replaces[i]);
+        }
+        return replacements;
     }
 }
