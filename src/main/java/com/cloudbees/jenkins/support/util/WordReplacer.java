@@ -1,8 +1,39 @@
 package com.cloudbees.jenkins.support.util;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WordReplacer {
+
+    /**
+     * Replace all matches in the input by their replacement.
+     * NOTE: To ignore casing, make sure replacements keys are lowercase and Pattern set up with the
+     * Pattern.CASE_INSENSITIVE option.
+     * @param input the text where the replacements take place
+     * @param pattern the pattern
+     * @param replacements the new words to use
+     */
+    public static String replaceWords(String input, Pattern pattern, Map<String, String> replacements) {
+        StringBuilder replacement = new StringBuilder();
+        int lastIndex = 0;
+
+        Matcher matcher = pattern.matcher(input.toLowerCase(Locale.ENGLISH));
+
+        while (matcher.find()) {
+            replacement.append(input, lastIndex, matcher.start());
+            replacement.append(replacements.get(matcher.group()));
+            lastIndex = matcher.end();
+        }
+
+        if (lastIndex < input.length()) {
+            replacement.append(input, lastIndex, input.length());
+        }
+
+        return replacement.toString();
+    }
+
     /**
      * Replace all words in the input by the replaces. The replacements happens only if the texts to replace are not
      * part of a greater word, that is, if the text is a whole word, separated by non {@link Character#isLetterOrDigit(char)}

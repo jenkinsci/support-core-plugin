@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import com.cloudbees.jenkins.support.util.WordReplacer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -57,23 +57,7 @@ public class SensitiveContentFilter implements ContentFilter {
 
     @Override
     public @NonNull String filter(@NonNull String input) {
-        StringBuilder replacement = new StringBuilder();
-        int lastIndex = 0;
-
-        Matcher matcher = mappingsPattern.get().matcher(input.toLowerCase(Locale.ENGLISH));
-        Map<String, String> replacements = replacementsMap.get();
-
-        while (matcher.find()) {
-            replacement.append(input, lastIndex, matcher.start());
-            replacement.append(replacements.get(matcher.group()));
-            lastIndex = matcher.end();
-        }
-
-        if (lastIndex < input.length()) {
-            replacement.append(input, lastIndex, input.length());
-        }
-
-        return replacement.toString();
+        return WordReplacer.replaceWords(input, mappingsPattern.get(), replacementsMap.get());
     }
 
     @Override
