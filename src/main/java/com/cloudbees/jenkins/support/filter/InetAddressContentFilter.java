@@ -51,11 +51,11 @@ public class InetAddressContentFilter implements ContentFilter {
     }
 
     // http://www.java2s.com/example/java/java.util.regex/is-ipv4-address-by-regex.html
-    private static final String IPv4 = "(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}";
-    // Following is based http://www.java2s.com/example/java/java.util.regex/is-ipv6-address-by-regex.html to which 
+    private static final String IPv4 = "(?:25[0-5]|2[0-4]\\d|[01]?\\d{1,2})(?:\\.(?:25[0-5]|2[0-4]\\d|[01]?\\d{1,2})){3}";
+    // Following is based http://www.java2s.com/example/java/java.util.regex/is-ipv6-address-by-regex.html to which
     // we add the mix notation (last 2 octet is IPv4)
-    private static final String IPv6_STANDARD_AND_MIX = "(?i)(?:[0-9a-f]{1,4}:){6}(?:([0-9a-f]{1,4}):[0-9a-f]{1,4}|" + IPv4 + ")";
-    private static final String IPv6_COMPRESSED_AND_MIX = "(?i)((?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)?)::(((?:[0-9a-f]{1,4}:){1,5})?(" + IPv4 + ")|((?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4})*)?))";
+    private static final String IPv6_STANDARD_AND_MIX = "(?:[0-9a-fA-F]{1,4}:){6}(?:[0-9a-fA-F]{1,4}:[0-9a-fA-F]{1,4}|" + IPv4 + ")";
+    private static final String IPv6_COMPRESSED_AND_MIX = "(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:(?:(?:[0-9a-fA-F]{1,4}:){1,5})?(" + IPv4 + ")|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)";
     private static final Pattern IP_ADDRESS = Pattern.compile("(?<![:.\\w])(" + IPv4 + '|' + IPv6_STANDARD_AND_MIX + '|' + IPv6_COMPRESSED_AND_MIX + ")(?![:.\\w])");
 
     @Override
@@ -66,8 +66,8 @@ public class InetAddressContentFilter implements ContentFilter {
 
         Matcher matcher = IP_ADDRESS.matcher(input);
         while (matcher.find()) {
-            String ip = matcher.group();
             replacement.append(input, lastIndex, matcher.start());
+            String ip = matcher.group();
             if (!mappings.getStopWords().contains(ip)) {
                 replacement.append(mappings.getMappingOrCreate(ip, InetAddressContentFilter::newMapping).getReplacement());
             } else {
@@ -84,8 +84,7 @@ public class InetAddressContentFilter implements ContentFilter {
     }
 
     private static ContentMapping newMapping(String original) {
-        String replacement = DataFaker.get().apply(name -> "ip_" + name).get();
-        return ContentMapping.of(original, replacement);
+        return ContentMapping.of(original, DataFaker.get().apply(name -> "ip_" + name).get());
     }
 
 }
