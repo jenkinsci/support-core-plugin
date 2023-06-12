@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -52,8 +53,8 @@ public class SensitiveContentFilter implements ContentFilter {
 
     private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
 
-    private final transient ThreadLocal<Pattern> mappingsPattern = new ThreadLocal<>();
-    private final transient ThreadLocal<Map<String, String>> replacementsMap = new ThreadLocal<>();
+    private final transient AtomicReference<Pattern> mappingsPattern = new AtomicReference<>();
+    private final transient AtomicReference<Map<String, String>> replacementsMap = new AtomicReference<>();
 
     public static SensitiveContentFilter get() {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
