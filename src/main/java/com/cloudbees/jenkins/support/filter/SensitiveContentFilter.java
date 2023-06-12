@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -48,8 +50,10 @@ import java.util.regex.Pattern;
 @Restricted(NoExternalUse.class)
 public class SensitiveContentFilter implements ContentFilter {
 
-    private final ThreadLocal<Pattern> mappingsPattern = new ThreadLocal<>();
-    private final ThreadLocal<Map<String, String>> replacementsMap = new ThreadLocal<>();
+    private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
+
+    private final transient ThreadLocal<Pattern> mappingsPattern = new ThreadLocal<>();
+    private final transient ThreadLocal<Map<String, String>> replacementsMap = new ThreadLocal<>();
 
     public static SensitiveContentFilter get() {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
@@ -62,6 +66,7 @@ public class SensitiveContentFilter implements ContentFilter {
 
     @Override
     public synchronized void reload() {
+        final long startTime = System.currentTimeMillis();
         final Map<String, String> replacementsMap = new HashMap<>();
         final WordsTrie trie = new WordsTrie();
         final ContentMappings mappings = ContentMappings.get();
@@ -69,15 +74,20 @@ public class SensitiveContentFilter implements ContentFilter {
         NameProvider.all().forEach(provider ->
             provider.names()
                 .filter(StringUtils::isNotBlank)
-                .filter(name -> !stopWords.contains(name))
                 .forEach(name -> {
-                    ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
                     String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
-                    replacementsMap.put(lowerCaseOriginal, mapping.getReplacement());
-                    trie.add(lowerCaseOriginal);
+                    // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the
+                    // conditional here. Or find a better way to deal with insensitive key mapping in general.
+                    // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
+                    // container)
+                    if(!stopWords.contains(lowerCaseOriginal)) {
+                        ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
+                        replacementsMap.put(lowerCaseOriginal, mapping.getReplacement());
+                        trie.add(lowerCaseOriginal);
+                    }
                 }));
-        this.mappingsPattern.set(Pattern.compile("(?:\\b(?:" + trie.getRegex() + ")\\b)", Pattern.CASE_INSENSITIVE));
+        this.mappingsPattern.set(Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE));
         this.replacementsMap.set(replacementsMap);
-        this.replacementsMap.set(replacementsMap);
+        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to reload");
     }
 }
