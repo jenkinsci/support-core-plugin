@@ -69,12 +69,12 @@ public class SensitiveContentFilter implements ContentFilter {
         NameProvider.all().forEach(provider ->
             provider.names()
                 .filter(StringUtils::isNotBlank)
-                .map(name -> name.toLowerCase(Locale.ENGLISH))
                 .filter(name -> !stopWords.contains(name))
                 .forEach(name -> {
                     ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
-                    replacementsMap.put(mapping.getOriginal(), mapping.getReplacement());
-                    trie.add(mapping.getOriginal());
+                    String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
+                    replacementsMap.put(lowerCaseOriginal, mapping.getReplacement());
+                    trie.add(lowerCaseOriginal);
                 }));
         this.mappingsPattern.set(Pattern.compile("(?:\\b(?:" + trie.getRegex() + ")\\b)", Pattern.CASE_INSENSITIVE));
         this.replacementsMap.set(replacementsMap);
