@@ -32,10 +32,7 @@ import static org.hamcrest.Matchers.not;
 public class RunningBuildsTest {
 
     private static final String JOB_NAME = "job-name";
-    private static final String SENSITIVE_WORD = "authenticated";
-    private static final String SENSITIVE_JOB_NAME = SENSITIVE_WORD + "-" + JOB_NAME;
-    private static final String FILTERED_SENSITIVE_WORD = "filtered";
-    private static final String FILTERED_JOB_NAME = FILTERED_SENSITIVE_WORD + "-" + JOB_NAME;
+    private static final String SENSITIVE_JOB_NAME = "sensitive-" + JOB_NAME;
     private static final String FOLDER_NAME = "folder-name";
     private static final String EXPECTED_OUTPUT_FORMAT = "%s #%d";
     private static final String EXPECTED_FOLDER_OUTPUT_FORMAT = "%s/" + EXPECTED_OUTPUT_FORMAT;
@@ -61,11 +58,10 @@ public class RunningBuildsTest {
     @Test
     public void addContentsFiltered() throws Exception {
         ContentFilters.get().setEnabled(true);
-        ContentMapping mapping = ContentMapping.of(SENSITIVE_WORD, FILTERED_SENSITIVE_WORD);
-        ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
-        filter.reload();
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
+        filter.reload();
+        String filtered = ContentMappings.get().getMappings().get(SENSITIVE_JOB_NAME);
         SemaphoreBuilder semaphore = new SemaphoreBuilder();
         p.getBuildersList().add(semaphore);
         FreeStyleBuild build = p.scheduleBuild2(0).waitForStart();
@@ -76,7 +72,7 @@ public class RunningBuildsTest {
         j.waitForCompletion(build);
 
         assertThat(output, not(containsString(String.format(EXPECTED_OUTPUT_FORMAT, p.getName(), build.getNumber()))));
-        assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, FILTERED_JOB_NAME, build.getNumber())));
+        assertThat(output, containsString(String.format(EXPECTED_OUTPUT_FORMAT, filtered, build.getNumber())));
     }
 
     @Test

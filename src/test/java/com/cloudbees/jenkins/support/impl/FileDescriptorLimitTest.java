@@ -21,14 +21,12 @@ import java.io.FileInputStream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 
 public class FileDescriptorLimitTest {
 
     private static final String JOB_NAME = "job-name";
-    private static final String SENSITIVE_WORD = "sensitive";
-    private static final String SENSITIVE_JOB_NAME = SENSITIVE_WORD + "-" + JOB_NAME;
-    private static final String FILTERED_SENSITIVE_WORD = "filtered";
-    private static final String FILTERED_JOB_NAME = FILTERED_SENSITIVE_WORD + "-" + JOB_NAME;
+    private static final String SENSITIVE_JOB_NAME = "sensitive-" + JOB_NAME;
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -37,7 +35,7 @@ public class FileDescriptorLimitTest {
     public void addContents() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
-        FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
+        FreeStyleProject p = j.createFreeStyleProject(JOB_NAME);
         String output;
         // Hold an open File Descriptor
         try (FileInputStream ignored = new FileInputStream(p.getConfigFile().getFile())) {
@@ -46,8 +44,7 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, containsString("core file size"));
         MatcherAssert.assertThat(output, containsString("Open File Descriptor Count:"));
         MatcherAssert.assertThat(output, containsString("All open files\n=============="));
-        MatcherAssert.assertThat(output, not(containsString(FILTERED_JOB_NAME)));
-        MatcherAssert.assertThat(output, containsString(SENSITIVE_JOB_NAME));
+        MatcherAssert.assertThat(output, containsString(JOB_NAME));
     }
 
     @Test
@@ -55,11 +52,10 @@ public class FileDescriptorLimitTest {
         Assume.assumeTrue(!Functions.isWindows());
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
-        ContentMapping mapping = ContentMapping.of(SENSITIVE_WORD, FILTERED_SENSITIVE_WORD);
-        ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
         ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
-        filter.reload();
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
+        filter.reload();
+        String filtered = ContentMappings.get().getMappings().get(SENSITIVE_JOB_NAME);
         String output;
         // Hold an open File Descriptor
         try (FileInputStream ignored = new FileInputStream(p.getConfigFile().getFile())) {
@@ -69,6 +65,6 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, containsString("Open File Descriptor Count:"));
         MatcherAssert.assertThat(output, containsString("All open files\n=============="));
         MatcherAssert.assertThat(output, not(containsString(SENSITIVE_JOB_NAME)));
-        MatcherAssert.assertThat(output, containsString(FILTERED_JOB_NAME));
+        MatcherAssert.assertThat(output, containsString(filtered));
     }
 }
