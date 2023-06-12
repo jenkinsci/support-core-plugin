@@ -414,7 +414,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestBySlash() throws Exception {
-        String objectName = "agent";
+        String objectName = "agent-test";
         j.createSlave(objectName, "/", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -431,7 +431,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByDot() throws Exception {
-        String objectName = "agent";
+        String objectName = "agent-test";
         j.createSlave(objectName, ".", null);
 
         List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
@@ -448,7 +448,7 @@ public class SupportActionTest {
      */
     @Test
     public void corruptZipTestByWordsInFileName() throws Exception {
-        String objectName = "agent";
+        String objectName = "agent-test";
         // Create an agent with very bad words
         j.createSlave(objectName, "active plugins checksums md5 items about nodes manifest errors", null);
 
