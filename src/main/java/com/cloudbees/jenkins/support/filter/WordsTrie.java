@@ -21,6 +21,12 @@ import java.util.regex.Pattern;
 public class WordsTrie {
 
     /*
+     * The maximum number of union in Character classes. For example [abcde.....] would result in stackoverflow
+     * due to a recursive process in Pattern.
+     */
+    private final static int MAX_UNION = 1024;
+
+    /*
      * As per https://docs.oracle.com/javase/tutorial/essential/regex/literals.html, metacharacters need to be escaped
      * in the regex String. The regular expression matches any metacharacter occurrence in a String, in which case
      * the String will need to be quoted.
@@ -31,6 +37,12 @@ public class WordsTrie {
      */
     private final static Pattern METACHARACTER =
         Pattern.compile("[\\x21\\x24\\x28-\\x2B\\x2D-\\x2F\\x3C-\\x3F\\x5B-\\x5E\\x7B-\\x7D]+");
+    /*
+     * For Character Class, only / - [ ] ^ \ must be escaped.
+     */
+    private final static Pattern METACHARACTER_CHARACTER_CLASS =
+        Pattern.compile("[\\x2D\\x2F\\x5B-\\x5E]+");
+
 
     final TrieNode root;
 
@@ -103,7 +115,7 @@ public class WordsTrie {
                 final String entryRegex = entry.getValue().getRegex();
                 if (entryRegex != null) {
                     // Need to escape special / metacharacters
-                    childPatterns.add(quote(String.valueOf(entry.getKey())) + entryRegex);
+                    childPatterns.add(quote(entry.getKey()) + entryRegex);
                 } else {
                     characters.add(entry.getKey());
                 }
@@ -112,22 +124,22 @@ public class WordsTrie {
             final boolean charsOnly = childPatterns.isEmpty();
             if (characters.size() == 1) {
                 // Need to escape special / metacharacters
-                childPatterns.add(quote(String.valueOf(characters.get(0))));
+                childPatterns.add(quote(characters.get(0)));
             } else if (characters.size() > 0) {
                 // Chunking is necessary here to prevent StackOverFlow in pattern matching unions
                 final StringBuilder buf = new StringBuilder();
-                if (characters.size() < 1024) {
+                if (characters.size() < MAX_UNION) {
                     buf.append("[");
-                    characters.forEach(character -> buf.append(quote(String.valueOf(character))));
+                    characters.forEach(character -> buf.append(quote(character)));
                     buf.append("]");
                 } else {
                     buf.append("(?:");
-                    int chunkSize = 1024;
+                    int chunkSize = MAX_UNION;
                     for (int i = 0; i < characters.size(); i += chunkSize) {
                         List<Character> charactersChunk = characters.subList(i, Math.min(i + chunkSize, characters.size()));
                         buf.append('[');
                         for (Character character : charactersChunk) {
-                            buf.append(quote(String.valueOf(character)));
+                            buf.append(quoteCharacterClass(character));
                         }
                         buf.append("]|");
                     }
@@ -159,13 +171,25 @@ public class WordsTrie {
         }
 
         /**
-         * Quote the String passed in if necessary (i.e. if it is metacharacter).
+         * Quote the Character passed in if necessary.
          *
-         * @param s the String
+         * @param c the Character
          * @return the maybe quoted string
          */
-        private String quote(String s) {
-            return METACHARACTER.matcher(s).matches() ? Pattern.quote(s) : s;
+        private String quote(Character c) {
+            String charStr = String.valueOf(c);
+            return METACHARACTER.matcher(charStr).matches() ? "\\" + c : charStr;
+        }
+
+        /**
+         * Quote the Character passed in if necessary.
+         *
+         * @param c the Character
+         * @return the maybe quoted string
+         */
+        private String quoteCharacterClass(Character c) {
+            String charStr = String.valueOf(c);
+            return METACHARACTER_CHARACTER_CLASS.matcher(charStr).matches() ? "\\" + c : charStr;
         }
     }
 }

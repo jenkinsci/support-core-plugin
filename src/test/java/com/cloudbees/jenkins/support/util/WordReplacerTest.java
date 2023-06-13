@@ -79,6 +79,50 @@ public class WordReplacerTest {
         }
     }
 
+    @Test
+    public void specialCharacter() {
+        // Test the replacement of a single word a*z with * being a set of special characters
+        String singleWord = "a~`!@#$%^&*()_+-={}[]|\\:\";'<>?,./z";
+        String singleWordReplace = "filtered";
+
+        String[] searches = new String[]{singleWord};
+        String[] replaces = new String[]{singleWordReplace};
+
+        Pattern triePattern = triePattern(searches);
+        Map<String, String> replacementMap = replacementsMap(searches, replaces);
+
+        assertEquals(singleWordReplace, WordReplacer.replaceWords(singleWord, searches, replaces));
+        assertEquals(singleWordReplace, WordReplacer.replaceWords(singleWord, triePattern, replacementMap));
+
+        // Test the replacement of a single word a*z with * being a simple special character
+        searches = new String[singleWord.length()];
+        replaces = new String[singleWord.length()];
+        StringBuilder individualWord = new StringBuilder();
+        StringBuilder individualWordReplace = new StringBuilder();
+        for(int i=0; i<singleWord.length(); i++) {
+            Character character = singleWord.charAt(i);
+            individualWord
+                .append('a').append(character).append("z").append(" ");
+            individualWordReplace
+                .append("**")
+                .append(character)
+                .append("**")
+                .append(" ");
+
+            searches[i] = "a" + character + "z";
+            replaces[i] = "**" + character + "**";
+
+        }
+        individualWord.deleteCharAt(individualWord.length()-1);
+        individualWordReplace.deleteCharAt(individualWordReplace.length()-1);
+
+        triePattern = triePattern(searches);
+        replacementMap = replacementsMap(searches, replaces);
+
+        assertEquals(individualWordReplace.toString(), WordReplacer.replaceWords(individualWord.toString(), searches, replaces));
+        assertEquals(individualWordReplace.toString(), WordReplacer.replaceWords(individualWord.toString(), triePattern, replacementMap));
+    }
+
     @Ignore("It was useful to make the decision to move out of ContentMapping#filter and later out of WordReplacer " +
         "without Pattern. It has no sense to test. We keep it here for future cases.")
     @Test
@@ -243,9 +287,9 @@ public class WordReplacerTest {
     private Pattern triePattern(String [] searches) {
         WordsTrie trie = new WordsTrie();
         for (String search : searches) {
-            trie.add(search);
+            trie.add(search.toLowerCase(Locale.ENGLISH));
         }
-        return Pattern.compile("(?:\\b(?:" + trie.getRegex() + ")\\b)", Pattern.CASE_INSENSITIVE);
+        return Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE);
     }
 
     private Map<String, String> replacementsMap(String [] searches, String [] replaces) {
