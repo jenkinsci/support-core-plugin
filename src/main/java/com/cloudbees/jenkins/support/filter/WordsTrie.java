@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 /**
  * Trie implementation to generate a "Trie regex". A regex that reduces backtracking by following a Trie structure.
  * <p>
- * When searching for a match within a list of words, for example ["go", "goes", "going", "gone", "goose"],  a simple
- * regex that matches any word would typically look like {code}\b(?:(go|goes|going|gone|goose))\b{code}.
+ * When searching for a match within a list of words, for example {@code ["go", "goes", "going", "gone", "goose"]},  a simple
+ * regex that matches any word would typically look like {@code\b(?:(go|goes|going|gone|goose))\b}.
  * <p>
  * While this works, Such a pattern can be optimized significantly by following a Trie structure in the prefixes such
- * as {code}\b(?:go(?:(?:es|ing|ne|ose))?)\b{code}.
+ * as {@code\b(?:go(?:(?:es|ing|ne|ose))?)\b}.
  */
 public class WordsTrie {
 
@@ -31,7 +31,7 @@ public class WordsTrie {
      * in the regex String. The regular expression matches any metacharacter occurrence in a String, in which case
      * the String will need to be quoted.
      *
-     * NOTE: We could instead choose to escape everything and not do that check. This would increase the size of the
+     * NOTE: We could instead choose to {@link Pattern#quote} and not do that check. This would increase the size of the
      * regex String. This does seem to have a significant impact on performance. So escaping only those characters for
      * now.
      */
