@@ -1,37 +1,36 @@
 package com.cloudbees.jenkins.support.util;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class WordReplacer {
 
     /**
-     * Replace all matches in the input by their replacement.
-     * NOTE: To ignore casing, make sure replacements keys are lowercase and Pattern set up with the
-     * Pattern.CASE_INSENSITIVE option.
+     * Replace all matches in the input by their replacement. Matcher#appendReplacement is used and therefore `\` and
+     * `$` characters must be escaped in the replacement string.
+     * NOTE: To ignore casing, Pattern must be case-insensitive or contain all possible cases. And replacements must
+     * either be a case-insensitive map or have lowercase keys.
      * @param input the text where the replacements take place
      * @param pattern the pattern
      * @param replacements the new words to use
      */
     public static String replaceWords(String input, Pattern pattern, Map<String, String> replacements) {
-        StringBuilder replacement = new StringBuilder();
-        int lastIndex = 0;
+        return replaceWords(input, pattern, s -> replacements.get(s.toLowerCase(Locale.ENGLISH)));
+    }
 
-        Matcher matcher = pattern.matcher(input.toLowerCase(Locale.ENGLISH));
-
-        while (matcher.find()) {
-            replacement.append(input, lastIndex, matcher.start());
-            replacement.append(replacements.get(matcher.group()));
-            lastIndex = matcher.end();
-        }
-
-        if (lastIndex < input.length()) {
-            replacement.append(input, lastIndex, input.length());
-        }
-
-        return replacement.toString();
+    /**
+     * Replace all matches in the input by their replacement. Matcher#appendReplacement is used and therefore `\` and
+     * `$` characters must be escaped in the replacement string.
+     * NOTE: To ignore casing, Pattern must be case-insensitive or contain all possible cases.
+     * @param input the text where the replacements take place
+     * @param pattern the pattern
+     * @param replace the replace function. Accepts the matched word, and return the replacement
+     */
+    public static String replaceWords(String input, Pattern pattern, Function<String, String> replace) {
+        return pattern.matcher(input).replaceAll(matchResult -> replace.apply(matchResult.group()));
     }
 
     /**

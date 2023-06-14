@@ -83,11 +83,13 @@ public class SensitiveContentFilter implements ContentFilter {
                     // container)
                     if(!stopWords.contains(lowerCaseOriginal)) {
                         ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
-                        replacementsMap.put(lowerCaseOriginal, mapping.getReplacement());
+                        // Matcher#appendReplacement needs to have the `\` and `$` escaped.
+                        replacementsMap.put(lowerCaseOriginal,
+                            mapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
                         trie.add(lowerCaseOriginal);
                     }
                 }));
-        this.mappingsPattern.set(Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE));
+        this.mappingsPattern.set(Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
         this.replacementsMap.set(replacementsMap);
         LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to reload");
     }
