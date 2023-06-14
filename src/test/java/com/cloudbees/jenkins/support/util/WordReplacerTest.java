@@ -6,8 +6,10 @@ import com.cloudbees.jenkins.support.filter.WordsTrie;
 import hudson.Functions;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.jvnet.hudson.test.recipes.WithTimeout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -123,6 +125,81 @@ public class WordReplacerTest {
         assertEquals(individualWordReplace.toString(), WordReplacer.replaceWords(individualWord.toString(), triePattern, replacementMap));
     }
 
+    @Test
+    public void characterScopeReplaceWordsPattern() {
+        // Test the replacement of single words a*z for all characters
+        List<String> words = new ArrayList<>();
+        List<String> replaceList = new ArrayList<>();
+        for (char c = 0; c < Character.MAX_VALUE; c++) {
+            if(Character.isLetterOrDigit(c)) {
+                words.add("a" + c + "z");
+                replaceList.add("**" + c + "**");
+            }
+        }
+
+        Pattern triePattern = triePattern(words.toArray(new String[0]), false);
+        Map<String, String> replacementMap = replacementsMap(words.toArray(new String[0]), replaceList.toArray(new String[0]), false);
+
+        assertEquals(String.join(" ", replaceList),
+            WordReplacer.replaceWords(String.join(" ", words), triePattern, replacementMap::get));
+    }
+
+    @Test
+    @WithTimeout(120)
+    public void characterScopeReplaceWordsPatternIgnoreCase() {
+        // Test the replacement of single words a*z for all characters
+        List<String> words = new ArrayList<>();
+        List<String> replaceList = new ArrayList<>();
+        for (char c = 0; c < Character.MAX_VALUE; c++) {
+            if(Character.isLetterOrDigit(c)) {
+                words.add("a" + c + "z");
+                replaceList.add(("**" + c + "**").toLowerCase(Locale.ENGLISH));
+            }
+        }
+
+        Pattern triePattern = triePattern(words.toArray(new String[0]));
+        Map<String, String> replacementMap = replacementsMap(words.toArray(new String[0]), replaceList.toArray(new String[0]));
+
+        assertEquals(String.join(" ", replaceList),
+            WordReplacer.replaceWords(String.join(" ", words), triePattern, s -> replacementMap.get(s.toLowerCase(Locale.ENGLISH))));
+    }
+
+    @Test
+    @WithTimeout(120)
+    public void characterScopeReplaceWords() {
+        // Test the replacement of single words a*z for all characters
+        List<String> words = new ArrayList<>();
+        List<String> replaceList = new ArrayList<>();
+        for (char c = 0; c < Character.MAX_VALUE; c++) {
+            if(Character.isLetterOrDigit(c)) {
+                words.add("a" + c + "z");
+                replaceList.add("**" + c + "**");
+            }
+        }
+        String[] searches = words.toArray(new String[0]);
+        String[] replaces = replaceList.toArray(new String[0]);
+        assertEquals(String.join(" ", replaceList),
+            WordReplacer.replaceWords(String.join(" ", words), searches, replaces));
+    }
+
+    @Ignore("This test takes a very long time but we keep it here for future cases")
+    @Test
+    public void characterScopeReplaceWordsIgnoreCase() {
+        // Test the replacement of single words a*z for all characters
+        List<String> words = new ArrayList<>();
+        List<String> replaceList = new ArrayList<>();
+        for (char c = 0; c < Character.MAX_VALUE; c++) {
+            if(Character.isLetterOrDigit(c)) {
+                words.add("a" + c + "z");
+                replaceList.add("**" + c + "**");
+            }
+        }
+        String[] searches = words.toArray(new String[0]);
+        String[] replaces = replaceList.toArray(new String[0]);
+        assertEquals(String.join(" ", replaceList),
+            WordReplacer.replaceWordsIgnoreCase(String.join(" ", words), searches, replaces));
+    }
+
     @Ignore("It was useful to make the decision to move out of ContentMapping#filter and later out of WordReplacer " +
         "without Pattern. It has no sense to test. We keep it here for future cases.")
     @Test
@@ -133,7 +210,7 @@ public class WordReplacerTest {
         for (char c = 0; c < Character.MAX_VALUE; c++) {
             if (Character.isLetterOrDigit(c)) {
                 words.add(String.valueOf(c));
-                replaceList.add("**" + c + "**" );
+                replaceList.add("**" + c + "**");
             }
         }
 
@@ -177,6 +254,14 @@ public class WordReplacerTest {
         }
         c.markFromPrevious("WordReplacer");
 
+        Pattern pattern2 = unionPattern(searches);
+
+        // Filter using TrieRegex pattern
+        for (String line: text) {
+            WordReplacer.replaceWords(line, pattern2, replacementMap);
+        }
+        c.markFromPrevious("RegexPatterns");
+
         // Filter using TrieRegex pattern
         for (String line: text) {
             WordReplacer.replaceWords(line, triePattern, replacementMap);
@@ -185,9 +270,11 @@ public class WordReplacerTest {
 
         System.out.print(c.printMeasure("ContentMappings"));
         System.out.print(c.printMeasure("WordReplacer"));
+        System.out.print(c.printMeasure("RegexPatterns"));
         System.out.print(c.printMeasure("TrieRegexPattern"));
         assertTrue(c.getMeasure("ContentMappings") > c.getMeasure("TrieRegexPattern"));
         assertTrue(c.getMeasure("WordReplacer") > c.getMeasure("TrieRegexPattern"));
+        assertTrue(c.getMeasure("RegexPatterns") > c.getMeasure("TrieRegexPattern"));
     }
 
     /**
@@ -284,19 +371,69 @@ public class WordReplacerTest {
         return replacementMap;
     }
 
-    private Pattern triePattern(String [] searches) {
+    /**
+     * Generate a trie regex pattern.
+     * @param originals the original words
+     * @param lowercase whether to force lowercase or not (lowercase used for case-insensitive matching in filters)
+     * @return the Pattern
+     */
+    private Pattern triePattern(String [] originals, boolean lowercase) {
         WordsTrie trie = new WordsTrie();
-        for (String search : searches) {
-            trie.add(search.toLowerCase(Locale.ENGLISH));
+        for (String search : originals) {
+            trie.add(lowercase ? search.toLowerCase(Locale.ENGLISH): search);
         }
-        return Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE);
+        return Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    }
+
+
+    /**
+     * Generate a replacement map <original , replacement> based on an array of originals and an array of replacements.
+     * @param originals the original words
+     * @param lowercase whether to force lowercase or not (lowercase used for case-insensitive matching in filters)
+     * @return the Pattern
+     */
+    private Map<String, String> replacementsMap(String [] originals, String [] replacements, boolean lowercase) {
+        Map<String, String> result = new HashMap<>();
+        for (int i = 0; i < originals.length; i++) {
+            result.put(lowercase ? originals[i].toLowerCase(Locale.ENGLISH) : originals[i],
+                replacements[i].replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
+        }
+        return result;
+    }
+
+    private Pattern triePattern(String [] searches) {
+        return triePattern(searches, true);
     }
 
     private Map<String, String> replacementsMap(String [] searches, String [] replaces) {
-        Map<String, String> replacements = new HashMap<>();
-        for (int i = 0; i < searches.length; i++) {
-            replacements.put(searches[i].toLowerCase(Locale.ENGLISH), replaces[i]);
+        return replacementsMap(searches, replaces, true);
+    }
+
+    /**
+     * Create a union pattern (word1|word2|...) from a list of original words.
+     * @param originals the original words
+     * @return the pattern
+     */
+    private Pattern unionPattern(String [] originals) {
+        // Chunking is necessary here to prevent StackOverFlow in pattern matching unions
+        final StringBuilder buf = new StringBuilder();
+        if (originals.length < 1024) {
+            buf.append("(?:");
+            buf.append(Arrays.stream(originals).map(Pattern::quote).collect(Collectors.joining("|")));
+            buf.append(")");
+        } else {
+            buf.append("(?:");
+            int chunkSize = 1024;
+            for (int i = 0; i < originals.length; i += chunkSize) {
+                List<String> originalsChunk = Arrays.asList(originals).subList(i, Math.min(i + chunkSize, originals.length));
+                buf.append("(?:");
+                buf.append(originalsChunk.stream().map(Pattern::quote).collect(Collectors.joining("|")));
+                buf.append(")");
+                buf.append("]|");
+            }
+            buf.deleteCharAt(buf.length() - 1);
+            buf.append(')');
         }
-        return replacements;
+        return Pattern.compile("\\b" + buf.toString() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 }
