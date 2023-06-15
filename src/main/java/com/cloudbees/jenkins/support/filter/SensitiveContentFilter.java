@@ -66,6 +66,13 @@ public class SensitiveContentFilter implements ContentFilter {
     }
 
     @Override
+    public void ensureLoaded() {
+        if (mappingsPattern.get() == null || replacementsMap.get() == null) {
+            reload();
+        }
+    }
+
+    @Override
     public synchronized void reload() {
         final long startTime = System.currentTimeMillis();
         final Map<String, String> replacementsMap = new HashMap<>();

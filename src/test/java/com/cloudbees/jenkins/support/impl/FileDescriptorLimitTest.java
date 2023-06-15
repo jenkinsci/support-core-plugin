@@ -52,9 +52,8 @@ public class FileDescriptorLimitTest {
         Assume.assumeTrue(!Functions.isWindows());
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
-        filter.reload();
+        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
         String filtered = ContentMappings.get().getMappings().get(SENSITIVE_JOB_NAME);
         String output;
         // Hold an open File Descriptor

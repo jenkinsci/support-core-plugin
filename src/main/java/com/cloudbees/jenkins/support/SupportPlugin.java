@@ -376,12 +376,9 @@ public class SupportPlugin extends Plugin {
                  CountingOutputStream countingOs = new CountingOutputStream(outputStream);
                  ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
                 // Get the filter to be used
-                Optional<ContentFilter> maybeFilter = getContentFilter();
-
+                Optional<ContentFilter> maybeFilter = getContentFilter(false);
                 // Recalculate the mappings and stop words and save it to disk
-                if(maybeFilter.isPresent()) {
-                    reloadAndSaveMappings(maybeFilter.get());
-                }
+                maybeFilter.ifPresent(SupportPlugin::reloadAndSaveMappings);
 
                 // Generate the content of the manifest.md going trough all the components which will be included. It
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
@@ -499,9 +496,22 @@ public class SupportPlugin extends Plugin {
      * @return the filter.
      */
     public static Optional<ContentFilter> getContentFilter() {
+        return getContentFilter(true);
+    }
+
+    /**
+     * Get the filter to be used in an {@link Optional} just in case.
+     * @param ensureLoaded true to ensure that the filter is loaded. Not necessary if {@link ContentFilter#reload()} is
+     *                     done explicitly by the caller.
+     * @return the filter.
+     */
+    public static Optional<ContentFilter> getContentFilter(boolean ensureLoaded) {
         ContentFilters filters = ContentFilters.get();
-        if (filters != null  && filters.isEnabled()) {
+        if (filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;
+            if (ensureLoaded) {
+                filter.ensureLoaded();
+            }
             return Optional.of(filter);
         }
         return Optional.empty();

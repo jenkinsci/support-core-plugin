@@ -63,10 +63,8 @@ public class AgentsConfigFileTest {
     public void agentsConfigFileFiltered() throws Exception {
         ContentFilters.get().setEnabled(true);
         j.createSlave(SENSITIVE_AGENT_NAME, "node1", new EnvVars());
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
-        filter.reload();
-        String filtered = ContentMappings.get().getMappings().get(SENSITIVE_AGENT_NAME);
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AgentsConfigFile());
+        String filtered = ContentMappings.get().getMappings().get(SENSITIVE_AGENT_NAME);
         MatcherAssert.assertThat(output, hasKey("nodes/slave/" + filtered + "/config.xml"));
         MatcherAssert.assertThat(output, not(hasKey("nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml")));
     }
