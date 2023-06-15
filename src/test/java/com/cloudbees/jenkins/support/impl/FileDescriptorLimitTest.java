@@ -9,18 +9,23 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.Functions;
 import hudson.model.FreeStyleProject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.List;
+import java.util.zip.ZipFile;
 import junit.framework.AssertionFailedError;
+import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.FileInputStream;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 
 public class FileDescriptorLimitTest {
 
@@ -32,6 +37,9 @@ public class FileDescriptorLimitTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
 
     @Test
     public void addContents() throws Exception {
@@ -70,4 +78,24 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, not(containsString(SENSITIVE_JOB_NAME)));
         MatcherAssert.assertThat(output, containsString(FILTERED_JOB_NAME));
     }
+
+    @Ignore("TODO file contains only: java.io.NotSerializableException: com.cloudbees.jenkins.support.filter.AllContentFilters ⇒ java.io.IOException: Unable to serialize com.cloudbees.jenkins.support.impl.FileDescriptorLimit$GetUlimit@…")
+    @Test
+    public void agentContentFilter() throws Exception {
+        ContentFilters.get().setEnabled(true);
+        j.createOnlineSlave();
+        File bundle = tmp.newFile("bundle.zip");
+        try (var os = new FileOutputStream(bundle)) {
+            SupportPlugin.writeBundle(os, List.of(new FileDescriptorLimit()));
+        }
+        try (var zf = new ZipFile(bundle)) {
+            try (var is = zf.getInputStream(zf.stream().filter(n -> n.getName().matches("nodes/master/file-descriptors[.]txt")).findFirst().get())) {
+                assertThat("worked on controller", IOUtils.toString(is, (String) null), containsString("All open files"));
+            }
+            try (var is = zf.getInputStream(zf.stream().filter(n -> n.getName().matches("nodes/slave/.+/file-descriptors[.]txt")).findFirst().get())) {
+                assertThat("worked on agent", IOUtils.toString(is, (String) null), containsString("All open files"));
+            }
+        }
+    }
+
 }
