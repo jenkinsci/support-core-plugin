@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 /**
  * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
@@ -79,6 +80,23 @@ public class SensitiveContentFilter implements ContentFilter {
         final WordsTrie trie = new WordsTrie();
         final ContentMappings mappings = ContentMappings.get();
         Set<String> stopWords = mappings.getStopWords();
+
+
+        // Pre-fill with existing mappings (but filter out IPs that is handled by a different filter)
+        // This is required to filter out names of items that does not exist anymore, for which they could be record
+        // in some content (such as log files that are anonymized when being written)
+        StreamSupport.stream(mappings.spliterator(), false)
+            // Filter out IP mappings
+            .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
+            .forEach(contentMapping -> {
+                String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
+                if (!stopWords.contains(lowerCaseOriginal)) {
+                    replacementsMap.put(lowerCaseOriginal,
+                        contentMapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
+                    trie.add(lowerCaseOriginal);
+                }
+            });
+
         NameProvider.all().forEach(provider ->
             provider.names()
                 .filter(StringUtils::isNotBlank)
@@ -91,7 +109,7 @@ public class SensitiveContentFilter implements ContentFilter {
                     if(!stopWords.contains(lowerCaseOriginal)) {
                         ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
                         // Matcher#appendReplacement needs to have the `\` and `$` escaped.
-                        replacementsMap.put(lowerCaseOriginal,
+                        replacementsMap.putIfAbsent(lowerCaseOriginal,
                             mapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
                         trie.add(lowerCaseOriginal);
                     }
