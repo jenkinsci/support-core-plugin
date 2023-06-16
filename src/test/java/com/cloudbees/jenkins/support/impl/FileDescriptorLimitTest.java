@@ -81,6 +81,8 @@ public class FileDescriptorLimitTest {
 
     @Test
     public void agentContentFilter() throws Exception {
+        Assume.assumeTrue(!Functions.isWindows());
+        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
         j.createOnlineSlave();
         File bundle = tmp.newFile("bundle.zip");
