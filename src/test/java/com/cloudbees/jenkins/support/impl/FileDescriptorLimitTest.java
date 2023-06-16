@@ -79,7 +79,6 @@ public class FileDescriptorLimitTest {
         MatcherAssert.assertThat(output, containsString(FILTERED_JOB_NAME));
     }
 
-    @Ignore("TODO file contains only: java.io.NotSerializableException: com.cloudbees.jenkins.support.filter.AllContentFilters ⇒ java.io.IOException: Unable to serialize com.cloudbees.jenkins.support.impl.FileDescriptorLimit$GetUlimit@…")
     @Test
     public void agentContentFilter() throws Exception {
         ContentFilters.get().setEnabled(true);
