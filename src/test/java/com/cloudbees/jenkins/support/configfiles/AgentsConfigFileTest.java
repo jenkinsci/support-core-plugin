@@ -41,12 +41,12 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertTrue;
 
 public class AgentsConfigFileTest {
 
-    private static final String SENSITIVE_AGENT_NAME = "sensitive";
-    private static final String FILTERED_AGENT_NAME = "filtered";
+    private static final String SENSITIVE_AGENT_NAME = "sensitive-agent";
     
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -62,14 +62,10 @@ public class AgentsConfigFileTest {
     @Test
     public void agentsConfigFileFiltered() throws Exception {
         ContentFilters.get().setEnabled(true);
-        ContentMapping mapping = ContentMapping.of(SENSITIVE_AGENT_NAME, FILTERED_AGENT_NAME);
-        ContentMappings.get().getMappingOrCreate(mapping.getOriginal(), original -> mapping);
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
         j.createSlave(SENSITIVE_AGENT_NAME, "node1", new EnvVars());
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AgentsConfigFile());
-        String sensitiveKey = "nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml";
-        String filteredKey = "nodes/slave/" + FILTERED_AGENT_NAME + "/config.xml";
-        MatcherAssert.assertThat(output, hasKey(filteredKey));
-        MatcherAssert.assertThat(output, not(hasKey(sensitiveKey)));
+        String filtered = ContentMappings.get().getMappings().get(SENSITIVE_AGENT_NAME);
+        MatcherAssert.assertThat(output, hasKey("nodes/slave/" + filtered + "/config.xml"));
+        MatcherAssert.assertThat(output, not(hasKey("nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml")));
     }
 }

@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
@@ -15,7 +14,6 @@ import hudson.Util;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
 import jenkins.model.Jenkins;
@@ -109,15 +107,6 @@ public class FileDescriptorLimit extends Component {
                 }
             }
         );
-    }
-
-    @Deprecated
-    public static String getUlimit(VirtualChannel channel) throws IOException, InterruptedException {
-        if (channel == null) {
-            return "N/A: No connection to node.";
-        }
-        return ContentFilter.filter(SupportPlugin.getContentFilter().orElse(null),
-            channel.call(new GetUlimit()));
     }
 
     /**

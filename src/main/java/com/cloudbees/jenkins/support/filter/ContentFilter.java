@@ -60,6 +60,12 @@ public interface ContentFilter extends ExtensionPoint {
     @NonNull String filter(@NonNull String input);
 
     /**
+     * Ensure that the filter has been loaded at least once.
+     */
+    default void ensureLoaded() {
+    }
+
+    /**
      * Reloads the state of this filter. This may be implemented to rescan for more items to filter.
      */
     default void reload() {

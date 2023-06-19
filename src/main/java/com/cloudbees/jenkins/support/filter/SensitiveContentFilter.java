@@ -25,17 +25,22 @@
 package com.cloudbees.jenkins.support.filter;
 
 import com.cloudbees.jenkins.support.util.WordReplacer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 /**
  * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
@@ -47,37 +52,70 @@ import java.util.Set;
 @Restricted(NoExternalUse.class)
 public class SensitiveContentFilter implements ContentFilter {
 
+    private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
+
+    private final AtomicReference<Pattern> mappingsPattern = new AtomicReference<>();
+    private final AtomicReference<Map<String, String>> replacementsMap = new AtomicReference<>();
+
     public static SensitiveContentFilter get() {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
     }
 
     @Override
     public @NonNull String filter(@NonNull String input) {
-        ContentMappings mappings = ContentMappings.get();
-        String filtered = input;
-        List<String> searchList = new ArrayList<>();
-        List<String> replacementList = new ArrayList<>();
+        return WordReplacer.replaceWords(input, mappingsPattern.get(), replacementsMap.get());
+    }
 
-        for (ContentMapping mapping : mappings) {
-            searchList.add(mapping.getOriginal());
-            replacementList.add(mapping.getReplacement());
+    @Override
+    public void ensureLoaded() {
+        if (mappingsPattern.get() == null || replacementsMap.get() == null) {
+            reload();
         }
-        if (!searchList.isEmpty()) {
-            filtered = WordReplacer.replaceWordsIgnoreCase(input, searchList.toArray(new String[0]), replacementList.toArray(new String[0]));
-        }
-
-        return filtered;
     }
 
     @Override
     public synchronized void reload() {
-        ContentMappings mappings = ContentMappings.get();
+        final long startTime = System.currentTimeMillis();
+        final Map<String, String> replacementsMap = new HashMap<>();
+        final WordsTrie trie = new WordsTrie();
+        final ContentMappings mappings = ContentMappings.get();
         Set<String> stopWords = mappings.getStopWords();
-        for (NameProvider provider : NameProvider.all()) {
-            provider.names()
-                    .filter(name -> StringUtils.isNotBlank(name) && !stopWords.contains(name.toLowerCase(Locale.ENGLISH)))
-                    .forEach(name -> mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake())));
-        }
-    }
 
+
+        // Pre-fill with existing mappings (but filter out IPs that is handled by a different filter)
+        // This is required to filter out names of items that does not exist anymore, for which they could be record
+        // in some content (such as log files that are anonymized when being written)
+        StreamSupport.stream(mappings.spliterator(), false)
+            // Filter out IP mappings
+            .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
+            .forEach(contentMapping -> {
+                String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
+                if (!stopWords.contains(lowerCaseOriginal)) {
+                    replacementsMap.put(lowerCaseOriginal,
+                        contentMapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
+                    trie.add(lowerCaseOriginal);
+                }
+            });
+
+        NameProvider.all().forEach(provider ->
+            provider.names()
+                .filter(StringUtils::isNotBlank)
+                .forEach(name -> {
+                    String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
+                    // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the
+                    // conditional here. Or find a better way to deal with insensitive key mapping in general.
+                    // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
+                    // container)
+                    if(!stopWords.contains(lowerCaseOriginal)) {
+                        ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
+                        // Matcher#appendReplacement needs to have the `\` and `$` escaped.
+                        replacementsMap.putIfAbsent(lowerCaseOriginal,
+                            mapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
+                        trie.add(lowerCaseOriginal);
+                    }
+                }));
+        this.mappingsPattern.set(Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+        this.replacementsMap.set(replacementsMap);
+        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to reload");
+    }
 }

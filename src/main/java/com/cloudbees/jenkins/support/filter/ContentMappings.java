@@ -136,7 +136,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      */
     private static Set<String> getDefaultStopWords() {
         return new HashSet<>(Arrays.asList(
-                "jenkins", "node", "master", "computer",
+                "agent", "jenkins", "node", "master", "computer",
                 "item", "label", "view", "all", "unknown",
                 "user", "anonymous", "authenticated",
                 "everyone", "system", "admin", Jenkins.VERSION

@@ -46,6 +46,11 @@ class AllContentFilters implements ContentFilter {
     }
 
     @Override
+    public void ensureLoaded() {
+        ContentFilter.all().forEach(ContentFilter::ensureLoaded);
+    }
+
+    @Override
     public void reload() {
         ContentFilter.all().forEach(ContentFilter::reload);
     }

@@ -69,12 +69,9 @@ public class SlowRequestChecker extends PeriodicWork {
 
     @Override
     protected void doRun() throws Exception {
-        if (DISABLED) {
+        if (DISABLED || filter.tracker.isEmpty()) {
             return;
         }
-
-        // We filter the information written to the slow-requests files
-        Optional<ContentFilter> contentFilter = SupportPlugin.getContentFilter();
 
         final long now = System.currentTimeMillis();
 
@@ -83,6 +80,9 @@ public class SlowRequestChecker extends PeriodicWork {
         final long recurrencePeriosMillis = TimeUnit.SECONDS.toMillis(RECURRENCE_PERIOD_SEC);
         long thresholdMillis = recurrencePeriosMillis > THRESHOLD ?
                 recurrencePeriosMillis * 2 : THRESHOLD;
+
+        // We filter the information written to the slow-requests files
+        Optional<ContentFilter> contentFilter = SupportPlugin.getContentFilter();
 
         for (InflightRequest req : filter.tracker.values()) {
             long totalTime = now - req.startTime;
