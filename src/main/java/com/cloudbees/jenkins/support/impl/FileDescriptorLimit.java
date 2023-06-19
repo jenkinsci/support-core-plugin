@@ -94,8 +94,11 @@ public class FileDescriptorLimit extends Component {
                     out.println("======");
                     out.println();
                     try {
-                        out.println(AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(filter),
-                            "file descriptor info", "N/A: Either no connection to node or no cached result"));
+                        out.println(ContentFilter.filter( filter,
+                            AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(),
+                            "file descriptor info",
+                            "N/A: Either no connection to node or no cached result")
+                        ));
                     } catch (IOException e) {
                         Functions.printStackTrace(e, out);
                     } finally {
@@ -110,11 +113,8 @@ public class FileDescriptorLimit extends Component {
      * * For agent machines.
      */
     private static final class GetUlimit extends MasterToSlaveCallable<String, RuntimeException> {
-        
-        private final ContentFilter filter;
 
-        public GetUlimit(ContentFilter filter) {
-            this.filter = filter;
+        public GetUlimit() {
         }
 
         public String call() {
@@ -131,7 +131,7 @@ public class FileDescriptorLimit extends Component {
                 Functions.printStackTrace(e, pw);
             }
             try {
-                listAllOpenFileDescriptors(pw, filter);
+                listAllOpenFileDescriptors(pw);
             } catch (Exception e) {
                 Functions.printStackTrace(e, pw);
             }
@@ -163,7 +163,7 @@ public class FileDescriptorLimit extends Component {
      * * process. Each file in the folder is a symlink to the location of the file descriptor.
      */
     @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "Intentional")
-    private static void listAllOpenFileDescriptors(PrintWriter writer, ContentFilter filter) throws IOException {
+    private static void listAllOpenFileDescriptors(PrintWriter writer) throws IOException {
         writer.println();
         writer.println("All open files");
         writer.println("==============");
@@ -171,10 +171,10 @@ public class FileDescriptorLimit extends Component {
         if (files != null) {
             for (File file : files) {
                 try {
-                    writer.println(ContentFilter.filter(filter, Objects.requireNonNull(Util.resolveSymlink(file))));
+                    writer.println(Objects.requireNonNull(Util.resolveSymlink(file)));
                 } catch (NullPointerException | IOException e) {
                     // If we fail to resolve the symlink, just print the file.
-                    writer.println(ContentFilter.filter(filter, file.getCanonicalPath()));
+                    writer.println(file.getCanonicalPath());
                 }
             }
         }

@@ -101,7 +101,7 @@ class BaseFileContent {
                     IOUtils.copy(new TruncatedInputStream(is, maxSize), os);
                 }
             }
-        } catch (FileNotFoundException e) { // TODO FilePathContent.isFileNotFound?
+        } catch (FileNotFoundException | NoSuchFileException e) { // TODO FilePathContent.isFileNotFound?
             OutputStreamWriter osw = new OutputStreamWriter(os, ENCODING);
             try {
                 PrintWriter pw = new PrintWriter(osw, true);
