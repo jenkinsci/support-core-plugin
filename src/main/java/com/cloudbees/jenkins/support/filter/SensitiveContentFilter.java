@@ -54,8 +54,8 @@ public class SensitiveContentFilter implements ContentFilter {
 
     private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
 
-    private final transient AtomicReference<Pattern> mappingsPattern = new AtomicReference<>();
-    private final transient AtomicReference<Map<String, String>> replacementsMap = new AtomicReference<>();
+    private final AtomicReference<Pattern> mappingsPattern = new AtomicReference<>();
+    private final AtomicReference<Map<String, String>> replacementsMap = new AtomicReference<>();
 
     public static SensitiveContentFilter get() {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
