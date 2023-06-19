@@ -27,18 +27,22 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FileContentTest {
 
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
 
-    @Test public void truncation() throws Exception {
+    @Test
+    public void truncation() throws Exception {
         File f = tmp.newFile();
         FileUtils.writeStringToFile(f, "hello world\n", Charset.defaultCharset());
 
@@ -53,5 +57,17 @@ public class FileContentTest {
         baos.reset();
         new FileContent("-", f, 20).writeTo(baos);
         assertEquals("hello world\n", baos.toString());
+    }
+
+    @Test
+    @Issue("JENKINS-71466")
+    public void encoding() throws Exception {
+        File f = new File(getClass().getResource("non-utf8.txt").getFile());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new FileContent("-", f).writeTo(baos);
+        assertTrue(baos.toString().contains("Checking folder"));
+        baos.reset();
+        new FileContent("-", f).writeTo(baos, input -> input);
+        assertTrue(baos.toString().contains("Checking folder"));
     }
 }
