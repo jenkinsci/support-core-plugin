@@ -33,7 +33,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -124,17 +123,22 @@ class BaseFileContent {
         }
 
         try {
-            if (maxSize == -1) {
-                for (String s : Files.readAllLines(file.toPath())) {
-                    String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s)) + "\n";
-                    IOUtils.write(filtered, os, ENCODING);
-                }
-            } else {
-                try (TruncatedFileReader reader = new TruncatedFileReader(file, maxSize)) {
-                    String s;
-                    while ((s = reader.readLine()) != null) {
-                        String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s)) + "\n";
-                        IOUtils.write(filtered, os, ENCODING);
+            try (InputStream is = inputStreamSupplier.get()) {
+                if (maxSize == -1) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, ENCODING))) {
+                        String s;
+                        while ((s = reader.readLine()) != null) {
+                            String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s)) + "\n";
+                            IOUtils.write(filtered, os, ENCODING);
+                        }
+                    }
+                } else {
+                    try (TruncatedInputStreamReader reader = new TruncatedInputStreamReader(is, maxSize)) {
+                        String s;
+                        while ((s = reader.readLine()) != null) {
+                            String filtered = ContentFilter.filter(filter, secretsFilterFunction.apply(s)) + "\n";
+                            IOUtils.write(filtered, os, ENCODING);
+                        }
                     }
                 }
             }
@@ -234,11 +238,11 @@ class BaseFileContent {
         }
     }
 
-    private static final class TruncatedFileReader extends BufferedReader {
+    private static final class TruncatedInputStreamReader extends BufferedReader {
         private long len;
 
-        TruncatedFileReader(File file, long len) throws IOException {
-            super(new InputStreamReader(new FileInputStream(file), ENCODING));
+        TruncatedInputStreamReader(InputStream is, long len) throws IOException {
+            super(new InputStreamReader(is, ENCODING));
             this.len = len;
         }
 
