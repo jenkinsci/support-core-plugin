@@ -1,9 +1,9 @@
 package com.cloudbees.jenkins.support.config;
 
 import com.cloudbees.jenkins.support.api.Component;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
 import hudson.lifecycle.RestartNotSupportedException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class SupportAutomatedBundleConfigurationTest {
     public void testRoundTrip() throws Exception {
         HtmlForm cfg = j.createWebClient().goTo("supportCore").getFormByName("config");
         ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).setChecked(true);
-        ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "period")).setValueAttribute("2");
+        ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "period")).setValue("2");
         for (HtmlElement element : cfg.getElementsByAttribute("div", "name", "components")) {
             ((HtmlInput) element.getOneHtmlElementByAttribute("input", "name", "selected")).setChecked(true);
         }

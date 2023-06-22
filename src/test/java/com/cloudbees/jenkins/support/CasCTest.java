@@ -2,21 +2,27 @@ package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
-import io.jenkins.plugins.casc.misc.RoundTripAbstractTest;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
+import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
+import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertTrue;
 
-public class CasCTest extends RoundTripAbstractTest {
+public class CasCTest {
 
-    @Override
-    protected void assertConfiguredAsExpected(RestartableJenkinsRule restartableJenkinsRule, String s) {
-        assertTrue("JCasC should have configured support core to anonymize contents, but it didn't", 
+    @Rule
+    public JenkinsConfiguredWithCodeRule r = new JenkinsConfiguredWithCodeRule();
+
+    @Test
+    @ConfiguredWithCode("configuration-as-code.yaml")
+    public void assertConfiguredAsExpected() {
+        assertTrue("JCasC should have configured support core to anonymize contents, but it didn't",
             ContentFilters.get().isEnabled());
-        assertTrue("JCasC should have configured support period bundle generation enabled, but it didn't", 
+        assertTrue("JCasC should have configured support period bundle generation enabled, but it didn't",
             SupportAutomatedBundleConfiguration.get().isEnabled());
         assertThat("JCasC should have configured support period bundle generation period, but it didn't",
             SupportAutomatedBundleConfiguration.get().getPeriod(),
@@ -24,7 +30,7 @@ public class CasCTest extends RoundTripAbstractTest {
         assertThat("JCasC should have configured support period bundle generation period, but it didn't",
             SupportAutomatedBundleConfiguration.get().getComponentIds(),
             containsInAnyOrder(
-        "AboutBrowser",
+                "AboutBrowser",
                 "AboutJenkins",
                 "AboutUser",
                 "AdministrativeMonitors",
@@ -58,8 +64,4 @@ public class CasCTest extends RoundTripAbstractTest {
             ));
     }
 
-    @Override
-    protected String stringInLogExpected() {
-        return ".enabled = true";
-    }
 }
