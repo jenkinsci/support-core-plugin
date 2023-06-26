@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.support.filter.WordsTrie;
 import hudson.Functions;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.recipes.WithTimeout;
 
 import java.util.ArrayList;
@@ -326,6 +327,22 @@ public class WordReplacerTest {
         assertEquals(result, WordReplacer.replaceWords(input, triePattern(words), replacementsMap(words, replaces)));
     }
 
+    @Test
+    @Issue("JENKINS-71529")
+    public void testBoundaries() {
+        String specialChars = "~`!@#$%^&*()_+-={}[]|\\:\";'<>?,./";
+        String[] words = new String[specialChars.length()];
+        String[] replaces = new String[specialChars.length()];
+        for(int i=0; i< specialChars.length(); i++) {
+            words[i] = specialChars.charAt(i) + "word" + specialChars.charAt(i);
+            replaces[i] = "**" + words[i] + "**";
+        }
+        String result = String.join(" ", replaces);
+
+        assertEquals(result, WordReplacer.replaceWords(String.join(" ", words), words, replaces));
+        assertEquals(result, WordReplacer.replaceWords(String.join(" ", words), triePattern(words), replacementsMap(words, replaces)));
+    }
+
     private List<String> generateFakeListString(int lines) {
         assertTrue(lines < 1001);
         return Stream.generate(() -> FilteredOutputStreamTest.FAKE_TEXT).limit(lines).collect(Collectors.toList());
@@ -434,6 +451,6 @@ public class WordReplacerTest {
             buf.deleteCharAt(buf.length() - 1);
             buf.append(')');
         }
-        return Pattern.compile("\\b" + buf.toString() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        return Pattern.compile("\\b" + buf + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 }
