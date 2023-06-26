@@ -114,7 +114,7 @@ public class SensitiveContentFilter implements ContentFilter {
                         trie.add(lowerCaseOriginal);
                     }
                 }));
-        this.mappingsPattern.set(Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+        this.mappingsPattern.set(Pattern.compile("(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
         this.replacementsMap.set(replacementsMap);
         LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to reload");
     }
