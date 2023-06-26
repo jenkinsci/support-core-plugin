@@ -399,7 +399,7 @@ public class WordReplacerTest {
         for (String search : originals) {
             trie.add(lowercase ? search.toLowerCase(Locale.ENGLISH): search);
         }
-        return Pattern.compile("\\b" + trie.getRegex() + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        return Pattern.compile("(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 
 
@@ -451,6 +451,6 @@ public class WordReplacerTest {
             buf.deleteCharAt(buf.length() - 1);
             buf.append(')');
         }
-        return Pattern.compile("\\b" + buf + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        return Pattern.compile("(?<!\\w)" + buf + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 }
