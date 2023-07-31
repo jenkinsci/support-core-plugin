@@ -38,7 +38,10 @@ public class AsyncResultCache<T> implements Runnable {
 
             throws IOException {
         
-        if (node == null) return null;
+        if (node == null) {
+            LOGGER.fine("no node");
+            return null;
+        }
         Future<V> future;
         // If launching execution on the built-in node, no need to use the CallAsyncWrapper
         if (node instanceof Jenkins) {
@@ -52,6 +55,7 @@ public class AsyncResultCache<T> implements Runnable {
         } else {
             VirtualChannel channel = node.getChannel();
             if (channel == null) {
+                LOGGER.fine("no channel for " + getNodeName(node));
                 synchronized (cache) {
                     return cache.get(node);
                 }
@@ -63,6 +67,7 @@ public class AsyncResultCache<T> implements Runnable {
             synchronized (cache) {
                 cache.put(node, result);
             }
+            LOGGER.finer(() -> operation + " on " + getNodeName(node) + " succeeded");
             return result;
         } catch (InterruptedException | ExecutionException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
