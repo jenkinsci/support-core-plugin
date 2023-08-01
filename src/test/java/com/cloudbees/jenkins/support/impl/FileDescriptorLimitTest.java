@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
@@ -21,11 +22,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.zip.ZipFile;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import org.jvnet.hudson.test.LoggerRule;
 
 public class FileDescriptorLimitTest {
 
@@ -37,6 +40,9 @@ public class FileDescriptorLimitTest {
 
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Rule
+    public LoggerRule logging = new LoggerRule();
 
     @Test
     public void addContents() throws Exception {
@@ -78,6 +84,7 @@ public class FileDescriptorLimitTest {
     public void agentContentFilter() throws Exception {
         Assume.assumeTrue(!Functions.isWindows());
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+        logging.record(AsyncResultCache.class, Level.FINER);
         ContentFilters.get().setEnabled(true);
         j.createOnlineSlave();
         File bundle = tmp.newFile("bundle.zip");
