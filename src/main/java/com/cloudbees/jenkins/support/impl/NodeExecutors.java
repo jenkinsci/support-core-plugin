@@ -76,7 +76,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
         @Override
         public void printTo(PrintWriter out, ContentFilter filter) {
           try {
-            out.println("Nodes Executors");
+            out.println("Node Executors");
             out.println("===========");
             out.println();
 
