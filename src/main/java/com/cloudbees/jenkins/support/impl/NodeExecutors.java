@@ -126,7 +126,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
         out.println("          - idle: " + executor.isIdle());
         long idleStartMilliseconds = executor.getIdleStartMilliseconds();
         out.println("          - idleStartMilliseconds: " + idleStartMilliseconds
-            + "(" + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
+            + " (" + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
         out.println("          - progress: " + executor.getProgress());
         out.println("          - state: " + executor.getState());
         WorkUnit workUnit = executor.getCurrentWorkUnit();
