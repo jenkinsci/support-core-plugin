@@ -31,6 +31,7 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Node;
@@ -129,19 +130,21 @@ public class NodeExecutors extends ObjectComponent<Computer> {
             executor.getCausesOfInterruption().stream()
                 .map(CauseOfInterruption::getShortDescription)
                 .collect(Collectors.joining(","))) + "]");
+        out.println("          - idle: " + executor.isIdle());
+        long idleStartMilliseconds = executor.getIdleStartMilliseconds();
+        out.println("          - idleStartMilliseconds: " + idleStartMilliseconds
+            + "(" + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
+        out.println("          - progress: " + executor.getProgress());
+        out.println("          - state: " + executor.getState());
         WorkUnit workUnit = executor.getCurrentWorkUnit();
         if (workUnit != null) {
           out.println("          - currentWorkUnit: " + ContentFilter.filter(filter, workUnit.toString()));
         }
-        out.println("          - elapsedTime: " + executor.getElapsedTime());
         Queue.Executable executable = executor.getCurrentExecutable();
         if (executable != null) {
           out.println("          - executable: " + ContentFilter.filter(filter, executable.getParent().toString()));
+          out.println("          - elapsedTime: " + executor.getTimestampString());
         }
-        out.println("          - idle: " + executor.isIdle());
-        out.println("          - idleStartMilliseconds: " + executor.getIdleStartMilliseconds());
-        out.println("          - progress: " + executor.getProgress());
-        out.println("          - state: " + executor.getState());
       });
     }
   }
