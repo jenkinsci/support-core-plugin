@@ -919,14 +919,15 @@ public class SupportPlugin extends Plugin {
             if (plugin == null) {
                 return;
             }
-            if (nextBundleWrite.get() < System.currentTimeMillis() && AUTO_BUNDLE_PERIOD_HOURS > 0) {
+            SupportAutomatedBundleConfiguration automatedBundleConfig = SupportAutomatedBundleConfiguration.get();
+            if (nextBundleWrite.get() < System.currentTimeMillis() && automatedBundleConfig.isEnabled()) {
                 if (thread != null && thread.isAlive()) {
                     LOGGER.log(Level.INFO, "Periodic bundle generating thread is still running. Execution aborted.");
                     return;
                 }
                 try {
                     thread = new Thread(() -> {
-                        nextBundleWrite.set(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(AUTO_BUNDLE_PERIOD_HOURS));
+                        nextBundleWrite.set(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(automatedBundleConfig.getPeriod()));
                         thread.setName(String.format("%s periodic bundle generator: since %s",
                                 SupportPlugin.class.getSimpleName(), new Date()));
                         clearRequesterAuthentication();
@@ -942,7 +943,7 @@ public class SupportPlugin extends Plugin {
                             thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
                                     SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
                             try (FileOutputStream fos = new FileOutputStream(file)) {
-                                writeBundle(fos, SupportAutomatedBundleConfiguration.get().getComponents());
+                                writeBundle(fos, automatedBundleConfig.getComponents());
                             } finally {
                                 cleanupOldBundles(bundleDir, file);   
                             }
