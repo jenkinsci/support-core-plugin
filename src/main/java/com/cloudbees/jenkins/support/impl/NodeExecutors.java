@@ -142,7 +142,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
         }
         Queue.Executable executable = executor.getCurrentExecutable();
         if (executable != null) {
-          out.println("          - executable: " + ContentFilter.filter(filter, executable.getParent().toString()));
+          out.println("          - executable: " + ContentFilter.filter(filter, executable.toString()));
           out.println("          - elapsedTime: " + executor.getTimestampString());
         }
       });
