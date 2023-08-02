@@ -39,31 +39,31 @@ public class NodeExecutorsTest {
         String executorMd = SupportTestUtils.invokeComponentToString(new NodeExecutors());
         assertNotNull(executorMd);
         assertTrue(Pattern.compile(
-            " {2}\\* " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()+ "\n" +
-            " {6}- Executor #0\n" +
-            " {10}- active: true\n" +
-            " {10}- busy: false\n" +
-            " {10}- causesOfInterruption: \\[]\n" +
-            " {10}- idle: true\n" +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)\n" +
-            " {10}- progress: -1\n" +
-            " {10}- state: NEW\n" +
-            " {6}- Executor #1\n" +
-            " {10}- active: true\n" +
-            " {10}- busy: false\n" +
-            " {10}- causesOfInterruption: \\[]\n" +
-            " {10}- idle: true\n" +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)\n" +
-            " {10}- progress: -1\n" +
+            " {2}\\* " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()+ "" + System.lineSeparator() +
+            " {6}- Executor #0" + System.lineSeparator() +
+            " {10}- active: true" + System.lineSeparator() +
+            " {10}- busy: false" + System.lineSeparator() +
+            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
+            " {10}- idle: true" + System.lineSeparator() +
+            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
+            " {10}- progress: -1" + System.lineSeparator() +
+            " {10}- state: NEW" + System.lineSeparator() +
+            " {6}- Executor #1" + System.lineSeparator() +
+            " {10}- active: true" + System.lineSeparator() +
+            " {10}- busy: false" + System.lineSeparator() +
+            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
+            " {10}- idle: true" + System.lineSeparator() +
+            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
+            " {10}- progress: -1" + System.lineSeparator() +
             " {10}- state: NEW\n").matcher(executorMd).find());
-        assertTrue(Pattern.compile(" {2}\\* " + Objects.requireNonNull(agent.toComputer()).getDisplayName()+ "\n" +
-            " {6}- Executor #0\n" +
-            " {10}- active: true\n" +
-            " {10}- busy: false\n" +
-            " {10}- causesOfInterruption: \\[]\n" +
-            " {10}- idle: true\n" +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)\n" +
-            " {10}- progress: -1\n" +
+        assertTrue(Pattern.compile(" {2}\\* " + Objects.requireNonNull(agent.toComputer()).getDisplayName()+ "" + System.lineSeparator() +
+            " {6}- Executor #0" + System.lineSeparator() +
+            " {10}- active: true" + System.lineSeparator() +
+            " {10}- busy: false" + System.lineSeparator() +
+            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
+            " {10}- idle: true" + System.lineSeparator() +
+            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
+            " {10}- progress: -1" + System.lineSeparator() +
             " {10}- state: NEW\n").matcher(executorMd).find());
 
         // No running task
@@ -88,17 +88,17 @@ public class NodeExecutorsTest {
         assertFalse(executorMd.contains("  * " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()));
         assertTrue(executorMd.contains("  * " + agent.getDisplayName()));
         assertTrue(Pattern.compile(
-            " {2}\\* slave0\n" +
-                " {6}- Executor #0\n" +
-                " {10}- active: true\n" +
-                " {10}- busy: true\n" +
-                " {10}- causesOfInterruption: \\[]\n" +
-                " {10}- idle: false\n" +
-                " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)\n" +
-                " {10}- progress: -1\n" +
-                " {10}- state: (?!NEW).*\n" +
-                " {10}- currentWorkUnit:.*" + workflowRun.getFullDisplayName() + ".*\n" +
-                " {10}- executable:.*" + workflowRun.getFullDisplayName() + ".*\n" +
+            " {2}\\* slave0" + System.lineSeparator() +
+                " {6}- Executor #0" + System.lineSeparator() +
+                " {10}- active: true" + System.lineSeparator() +
+                " {10}- busy: true" + System.lineSeparator() +
+                " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
+                " {10}- idle: false" + System.lineSeparator() +
+                " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
+                " {10}- progress: -1" + System.lineSeparator() +
+                " {10}- state: (?!NEW).*" + System.lineSeparator() +
+                " {10}- currentWorkUnit:.*" + workflowRun.getFullDisplayName() + ".*" + System.lineSeparator() +
+                " {10}- executable:.*" + workflowRun.getFullDisplayName() + ".*" + System.lineSeparator() +
                 " {10}- elapsedTime:.*").matcher(executorMd).find());
 
         SemaphoreStep.success("wait/1", null);
@@ -109,14 +109,14 @@ public class NodeExecutorsTest {
         assertFalse(executorMd.contains("  * " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()));
         assertTrue(executorMd.contains("  * " + agent.getDisplayName()));
         assertTrue(Pattern.compile(
-            " {2}\\* slave0\n" +
-            " {6}- Executor #0\n" +
-            " {10}- active: true\n" +
-            " {10}- busy: false\n" +
-            " {10}- causesOfInterruption: \\[]\n" +
-            " {10}- idle: true\n" +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)\n" +
-            " {10}- progress: -1\n" +
+            " {2}\\* slave0" + System.lineSeparator() +
+            " {6}- Executor #0" + System.lineSeparator() +
+            " {10}- active: true" + System.lineSeparator() +
+            " {10}- busy: false" + System.lineSeparator() +
+            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
+            " {10}- idle: true" + System.lineSeparator() +
+            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
+            " {10}- progress: -1" + System.lineSeparator() +
             " {10}- state: NEW\n").matcher(executorMd).find());
 
         // No running task
