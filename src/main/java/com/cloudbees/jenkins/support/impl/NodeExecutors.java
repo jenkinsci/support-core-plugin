@@ -34,7 +34,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
-import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.queue.WorkUnit;
 import hudson.security.Permission;
@@ -44,6 +43,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,12 +81,8 @@ public class NodeExecutors extends ObjectComponent<Computer> {
             out.println("===========");
             out.println();
 
-            out.println("  * built-in (Jenkins)");
-            dumpExecutorInfo(Jenkins.get().toComputer(), out, filter);
-
-            Jenkins.get().getNodes().forEach(node -> {
-              out.println("  * " + ContentFilter.filter(filter, node.getDisplayName()));
-              dumpExecutorInfo(node.toComputer(), out, filter);
+            Arrays.stream(Jenkins.get().getComputers()).forEach(computer -> {
+              dumpExecutorInfo(computer, out, filter);
             });
 
           } finally {
@@ -107,11 +103,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
           out.println("===========");
           out.println();
 
-          Node node = computer.getNode();
-          if (node != null) {
-            out.println("  * " + ContentFilter.filter(filter, node.getDisplayName()));
-            dumpExecutorInfo(node.toComputer(), out, filter);
-          }
+          dumpExecutorInfo(computer, out, filter);
 
         } finally {
           out.flush();
@@ -122,6 +114,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
 
   private void dumpExecutorInfo(@CheckForNull Computer computer, PrintWriter out, ContentFilter filter) {
     if (computer != null) {
+      out.println("  * " + ContentFilter.filter(filter, computer.getDisplayName()));
       computer.getAllExecutors().forEach(executor -> {
         out.println("      - " + ContentFilter.filter(filter, executor.getDisplayName()));
         out.println("          - active: " + executor.isActive());
