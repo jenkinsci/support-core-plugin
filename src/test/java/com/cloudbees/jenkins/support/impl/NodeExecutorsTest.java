@@ -18,8 +18,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -38,33 +40,40 @@ public class NodeExecutorsTest {
 
         String executorMd = SupportTestUtils.invokeComponentToString(new NodeExecutors());
         assertNotNull(executorMd);
-        assertTrue(Pattern.compile(
-            " {2}\\* " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()+ "" + System.lineSeparator() +
-            " {6}- Executor #0" + System.lineSeparator() +
-            " {10}- active: true" + System.lineSeparator() +
-            " {10}- busy: false" + System.lineSeparator() +
-            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
-            " {10}- idle: true" + System.lineSeparator() +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
-            " {10}- progress: -1" + System.lineSeparator() +
-            " {10}- state: NEW" + System.lineSeparator() +
-            " {6}- Executor #1" + System.lineSeparator() +
-            " {10}- active: true" + System.lineSeparator() +
-            " {10}- busy: false" + System.lineSeparator() +
-            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
-            " {10}- idle: true" + System.lineSeparator() +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
-            " {10}- progress: -1" + System.lineSeparator() +
-            " {10}- state: NEW\n").matcher(executorMd).find());
-        assertTrue(Pattern.compile(" {2}\\* " + Objects.requireNonNull(agent.toComputer()).getDisplayName()+ "" + System.lineSeparator() +
-            " {6}- Executor #0" + System.lineSeparator() +
-            " {10}- active: true" + System.lineSeparator() +
-            " {10}- busy: false" + System.lineSeparator() +
-            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
-            " {10}- idle: true" + System.lineSeparator() +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
-            " {10}- progress: -1" + System.lineSeparator() +
-            " {10}- state: NEW\n").matcher(executorMd).find());
+        String [] agentSnippets = executorMd.split(" {2}\\* ");
+        // headers, built-in node and permanent agent
+        assertEquals(3, agentSnippets.length);
+        Scanner scanner = new Scanner(agentSnippets[1]);
+        assertTrue(scanner.nextLine().contains(Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()));
+        assertTrue(scanner.nextLine().contains("- Executor #0"));
+        assertTrue(scanner.nextLine().contains("- active: true"));
+        assertTrue(scanner.nextLine().contains("- busy: false"));
+        assertTrue(scanner.nextLine().contains("- causesOfInterruption: []"));
+        assertTrue(scanner.nextLine().contains("- idle: true"));
+        assertTrue(scanner.nextLine().contains("- idleStartMilliseconds:"));
+        assertTrue(scanner.nextLine().contains("- progress: -1"));
+        assertTrue(scanner.nextLine().contains("- state: NEW"));
+        assertTrue(scanner.nextLine().contains("- Executor #1"));
+        assertTrue(scanner.nextLine().contains("- active: true"));
+        assertTrue(scanner.nextLine().contains("- busy: false"));
+        assertTrue(scanner.nextLine().contains("- causesOfInterruption: []"));
+        assertTrue(scanner.nextLine().contains("- idle: true"));
+        assertTrue(scanner.nextLine().contains("- idleStartMilliseconds:"));
+        assertTrue(scanner.nextLine().contains("- progress: -1"));
+        assertTrue(scanner.nextLine().contains("- state: NEW"));
+        assertFalse(scanner.hasNextLine());
+        scanner = new Scanner(agentSnippets[2]);
+        assertTrue(scanner.nextLine().contains(Objects.requireNonNull(agent.toComputer()).getDisplayName()));
+        assertTrue(scanner.nextLine().contains("- Executor #0"));
+        assertTrue(scanner.nextLine().contains("- active: true"));
+        assertTrue(scanner.nextLine().contains("- busy: false"));
+        assertTrue(scanner.nextLine().contains("- causesOfInterruption: []"));
+        assertTrue(scanner.nextLine().contains("- idle: true"));
+        assertTrue(scanner.nextLine().contains("- idleStartMilliseconds:"));
+        assertTrue(scanner.nextLine().contains("- progress: -1"));
+        assertTrue(scanner.nextLine().contains("- state: NEW"));
+        assertFalse(scanner.hasNextLine());
+        scanner.close();
 
         // No running task
         assertFalse(executorMd.contains("- currentWorkUnit:"));
@@ -87,19 +96,25 @@ public class NodeExecutorsTest {
         assertNotNull(executorMd);
         assertFalse(executorMd.contains("  * " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()));
         assertTrue(executorMd.contains("  * " + agent.getDisplayName()));
-        assertTrue(Pattern.compile(
-            " {2}\\* slave0" + System.lineSeparator() +
-                " {6}- Executor #0" + System.lineSeparator() +
-                " {10}- active: true" + System.lineSeparator() +
-                " {10}- busy: true" + System.lineSeparator() +
-                " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
-                " {10}- idle: false" + System.lineSeparator() +
-                " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
-                " {10}- progress: -1" + System.lineSeparator() +
-                " {10}- state: (?!NEW).*" + System.lineSeparator() +
-                " {10}- currentWorkUnit:.*" + workflowRun.getFullDisplayName() + ".*" + System.lineSeparator() +
-                " {10}- executable:.*" + workflowRun.getFullDisplayName() + ".*" + System.lineSeparator() +
-                " {10}- elapsedTime:.*").matcher(executorMd).find());
+
+        String [] agentSnippets = executorMd.split(" {2}\\* ");
+        // headers and the agent
+        assertEquals(2, agentSnippets.length);
+        Scanner scanner = new Scanner(agentSnippets[1]);
+        assertTrue(scanner.nextLine().contains(Objects.requireNonNull(agent.toComputer()).getDisplayName()));
+        assertTrue(scanner.nextLine().contains("- Executor #0"));
+        assertTrue(scanner.nextLine().contains("- active: true"));
+        assertTrue(scanner.nextLine().contains("- busy: true"));
+        assertTrue(scanner.nextLine().contains("- causesOfInterruption: []"));
+        assertTrue(scanner.nextLine().contains("- idle: false"));
+        assertTrue(scanner.nextLine().contains("- idleStartMilliseconds:"));
+        assertTrue(scanner.nextLine().contains("- progress: -1"));
+        assertTrue(Pattern.compile("- state: (?!NEW).*").matcher(scanner.nextLine()).find());
+        assertTrue(Pattern.compile("- currentWorkUnit:.*" + workflowRun.getFullDisplayName() + ".*").matcher(scanner.nextLine()).find());
+        assertTrue(Pattern.compile("- executable:.*" + workflowRun.getFullDisplayName() + ".*").matcher(scanner.nextLine()).find());
+        assertTrue(scanner.nextLine().contains("- elapsedTime: "));
+        assertFalse(scanner.hasNextLine());
+        scanner.close();
 
         SemaphoreStep.success("wait/1", null);
         j.waitForCompletion(workflowRun);
@@ -108,16 +123,21 @@ public class NodeExecutorsTest {
         assertNotNull(executorMd);
         assertFalse(executorMd.contains("  * " + Objects.requireNonNull(j.jenkins.toComputer()).getDisplayName()));
         assertTrue(executorMd.contains("  * " + agent.getDisplayName()));
-        assertTrue(Pattern.compile(
-            " {2}\\* slave0" + System.lineSeparator() +
-            " {6}- Executor #0" + System.lineSeparator() +
-            " {10}- active: true" + System.lineSeparator() +
-            " {10}- busy: false" + System.lineSeparator() +
-            " {10}- causesOfInterruption: \\[]" + System.lineSeparator() +
-            " {10}- idle: true" + System.lineSeparator() +
-            " {10}- idleStartMilliseconds: [0-9]* \\(.*\\)" + System.lineSeparator() +
-            " {10}- progress: -1" + System.lineSeparator() +
-            " {10}- state: NEW\n").matcher(executorMd).find());
+
+        agentSnippets = executorMd.split(" {2}\\* ");
+        // headers and the agent
+        assertEquals(2, agentSnippets.length);
+        scanner = new Scanner(agentSnippets[1]);
+        assertTrue(scanner.nextLine().contains(Objects.requireNonNull(agent.toComputer()).getDisplayName()));
+        assertTrue(scanner.nextLine().contains("- Executor #0"));
+        assertTrue(scanner.nextLine().contains("- active: true"));
+        assertTrue(scanner.nextLine().contains("- busy: false"));
+        assertTrue(scanner.nextLine().contains("- causesOfInterruption: []"));
+        assertTrue(scanner.nextLine().contains("- idle: true"));
+        assertTrue(scanner.nextLine().contains("- idleStartMilliseconds:"));
+        assertTrue(scanner.nextLine().contains("- progress: -1"));
+        assertTrue(scanner.nextLine().contains("- state: NEW"));
+        assertFalse(scanner.hasNextLine());
 
         // No running task
         assertFalse(executorMd.contains("- currentWorkUnit:"));
