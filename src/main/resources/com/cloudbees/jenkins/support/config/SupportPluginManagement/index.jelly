@@ -17,11 +17,12 @@
                 <j:set var="descriptor" value="${it.descriptor}"/>
                 <j:forEach var="descriptor" items="${it.descriptors}">
                     <j:set var="instance" value="${descriptor}"/>
-                    <f:rowSet name="${descriptor.jsonSafeClassName}"> 
-                        <st:include from="${descriptor}" page="${descriptor.globalConfigPage}"/>
+                    <f:rowSet name="${descriptor.jsonSafeClassName}">
+                        <f:section title="${descriptor.displayName}">
+                            <st:include from="${descriptor}" page="${descriptor.globalConfigPage}"/>
+                        </f:section>
                     </f:rowSet>
                 </j:forEach>
-
                 <f:bottomButtonBar>
                     <f:submit value="Save"/>
                     <f:apply/>

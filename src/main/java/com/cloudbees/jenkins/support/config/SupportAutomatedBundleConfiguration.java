@@ -188,7 +188,9 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
         }
         try (BulkChange bc = new BulkChange(this)) {
             setComponentIds(parseRequest(req, json));
-            setPeriod(json.getInt("period"));
+            if (!isEnforcedPeriod()) {
+                setPeriod(json.getInt("period"));
+            }
             setEnabled(json.getBoolean("enabled"));
             bc.commit();
         } catch (IOException e) {

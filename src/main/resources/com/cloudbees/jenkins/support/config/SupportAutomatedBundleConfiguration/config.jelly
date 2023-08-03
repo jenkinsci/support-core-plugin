@@ -1,40 +1,30 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core"
          xmlns:st="jelly:stapler"
-         xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <f:section title="${descriptor.displayName}">
         <j:choose>
-            <j:when test="${it.isEnforcedDisabled()}">
-                <f:entry>
-                    <label title="Enable">Enable</label>
-                    <input name="enabled"
-                           type="checkbox"
-                           value="false"
-                           disabled="disabled"/>
-                    <pre>Disable enforced on startup by system property</pre>
-                </f:entry>
+            <j:when test="${instance.enforcedDisabled}">
+                <j:set var="readOnlyMode" value="${instance.enforcedDisabled}"/>
+                <f:optionalBlock name="enabled" title="${%Enable}" field="enabled" inline="true" checked="false"/>
+                <div><i>(${%enforcedDisable})</i></div>
             </j:when>
             <j:otherwise>
-                <f:optionalBlock name="enabled" title="${%Enable}" field="enabled" inline="true">
-                    <f:entry title="${%Period}" field="period">
-                        <j:choose>
-                            <j:when test="${it.isEnforcedDisabled()}">
-                                <f:number name="period" disabled="disabled"/>
-                                <pre>Period enforced on startup by system property</pre>
-                            </j:when>
-                            <j:otherwise>
-                                <f:number name="period" min="1" max="24" step="1"/>
-                            </j:otherwise>
-                        </j:choose>
-                    </f:entry>
-                    <f:advanced title="Components...">
-                        <f:entry title="Components" help="${descriptor.getHelpFile('components')}">
-                            <st:include from="${instance}" page="components.jelly"/>
+                <j:scope>
+                    <j:set var="readOnlyMode" value="${instance.enforcedPeriod}"/>
+                    <f:optionalBlock name="enabled" title="${%Enable}" field="enabled" inline="true">
+                        <f:entry title="${%Period}" field="period">
+                            <f:number name="period" min="1" max="24" step="1"/>
+                            <j:if test="${instance.enforcedPeriod}">
+                                <i>(${%enforcedPeriod})</i>
+                            </j:if>
                         </f:entry>
-                    </f:advanced>
-                </f:optionalBlock>
+                    </f:optionalBlock>
+                </j:scope>
+                <f:advanced title="Components...">
+                    <f:entry title="Components" help="${descriptor.getHelpFile('components')}">
+                        <st:include from="${instance}" page="components.jelly"/>
+                    </f:entry>
+                </f:advanced>
             </j:otherwise>
         </j:choose>
-    </f:section>
 </j:jelly>
