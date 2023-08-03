@@ -10,9 +10,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RealJenkinsRule;
 
-import java.util.stream.Collectors;
-
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
@@ -37,6 +36,35 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
             SupportAutomatedBundleConfiguration.get().setEnabled(false);
             assertThat(SupportAutomatedBundleConfiguration.get().getPeriod(), is(2));
             assertThat(SupportAutomatedBundleConfiguration.get().isEnabled(), is(true));
+
+            try (JenkinsRule.WebClient wc = r.createWebClient()) {
+                HtmlForm cfg = wc.goTo("supportCore").getFormByName("config");
+                assertThat("should be checked",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
+                    is(true));
+                assertThat("should not be able to disable",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
+                    is(true));
+                assertThat("should not even show an input for period",
+                    cfg.getElementsByAttribute("input", "name", "period"),
+                    hasSize(0));
+                for (HtmlElement element : cfg.getElementsByAttribute("div", "name", "components")) {
+                    ((HtmlInput) element.getOneHtmlElementByAttribute("input", "name", "selected")).setChecked(true);
+                }
+                r.submit(cfg);
+
+                assertThat("should be enabled",
+                    SupportAutomatedBundleConfiguration.get().isEnabled(),
+                    is(true));
+                assertThat("period should be 2",
+                    SupportAutomatedBundleConfiguration.get().getPeriod(),
+                    is(2));
+                assertThat("all applicable components should be saved",
+                    SupportAutomatedBundleConfiguration.get().getComponentIds(),
+                    containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
+                        .map(Component::getId).toArray())
+                );
+            }
         });
     }
 
@@ -51,6 +79,32 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
             SupportAutomatedBundleConfiguration.get().setEnabled(true);
             assertThat(SupportAutomatedBundleConfiguration.get().getPeriod(), is(0));
             assertThat(SupportAutomatedBundleConfiguration.get().isEnabled(), is(false));
+
+
+            try (JenkinsRule.WebClient wc = r.createWebClient()) {
+                HtmlForm cfg = wc.goTo("supportCore").getFormByName("config");
+                assertThat("should not be checked",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
+                    is(false));
+                assertThat("should not be able to enable",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
+                    is(true));
+                assertThat("should not even show period",
+                    cfg.getElementsByAttribute("input", "name", "period"),
+                    hasSize(0));
+                assertThat("should not even show components",
+                    cfg.getElementsByAttribute("div", "name", "components"),
+                    hasSize(0));
+                r.submit(cfg);
+
+                assertThat("should be disabled",
+                    SupportAutomatedBundleConfiguration.get().isEnabled(),
+                    is(false));
+                assertThat("period should be 0",
+                    SupportAutomatedBundleConfiguration.get().getPeriod(),
+                    is(0));
+            }
         });
+
     }
 }
