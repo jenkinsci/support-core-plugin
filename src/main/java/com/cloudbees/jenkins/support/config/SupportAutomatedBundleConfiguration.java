@@ -22,7 +22,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -94,18 +93,19 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     }
 
     public boolean isEnabled() {
-        return enabled;
+        return !isEnforcedDisabled() && (isEnforcedPeriod() || enabled);
     }
 
     public int getPeriod() {
-        return period;
+        return isEnforcedDisabled() ? 0
+            : Math.max(Math.min(24, isEnforcedPeriod() ? SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS : period), 1);
     }
 
     /**
      * Return if the {@link SupportAutomatedBundleConfiguration#period} is enforced by the System Property
      * {@link SupportPlugin#AUTO_BUNDLE_PERIOD_HOURS}.
      *
-     * @return a list of {@link String}
+     * @return true if enforced by system property, false otherwise
      */
     public boolean isEnforcedPeriod() {
         return System.getProperty(SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS") != null;
@@ -118,14 +118,14 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
 
     @DataBoundSetter
     public void setEnabled(boolean enabled) {
-        this.enabled = !isEnforcedDisabled() && enabled;
+        this.enabled = enabled;
     }
 
     /**
      * Return if the {@link SupportAutomatedBundleConfiguration#enabled} is enforced to false by the System Property
      * {@link SupportPlugin#AUTO_BUNDLE_PERIOD_HOURS}. That is if the system property value is 0.
      *
-     * @return a list of {@link String}
+     * @return true if enforced by system property, false otherwise
      */
     public boolean isEnforcedDisabled() {
         return SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS == 0;
@@ -133,11 +133,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
 
     @DataBoundSetter
     public void setPeriod(Integer period) {
-        if (!isEnforcedPeriod()) {
-            this.period = Math.max(Math.min(24, period), 1);
-        } else {
-            this.period = SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS;
-        }
+        this.period = Math.max(Math.min(24, period), 1);
     }
 
     @NonNull
@@ -147,7 +143,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     }
 
     /**
-     * Get the list of {@link Component} currnetly configured for automated bundle generation.
+     * Get the list of {@link Component} currently configured for automated bundle generation.
      *
      * @return The list of {@link Component} currently configured
      */
@@ -179,13 +175,22 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     @POST
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-        if (json.getBoolean("enabled") && !json.has("components")) {
+
+        if(isEnforcedDisabled()) {
+            return true;
+        }
+
+        boolean isEnabled = isEnforcedPeriod() || json.getBoolean("enabled");
+
+        if (isEnabled && !json.has("components")) {
             throw new Descriptor.FormException(Messages.SupportAutomatedBundleConfiguration_enabled_noComponents(),
                 "components");
         }
         try (BulkChange bc = new BulkChange(this)) {
             setComponentIds(parseRequest(req, json));
-            setPeriod(json.getInt("period"));
+            if (!isEnforcedPeriod()) {
+                setPeriod(json.getInt("period"));
+            }
             setEnabled(json.getBoolean("enabled"));
             bc.commit();
         } catch (IOException e) {

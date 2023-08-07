@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.api.Component;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
-import hudson.lifecycle.RestartNotSupportedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
