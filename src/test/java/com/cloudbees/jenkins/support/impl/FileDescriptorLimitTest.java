@@ -9,6 +9,7 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.Functions;
 import hudson.model.FreeStyleProject;
+import hudson.slaves.SlaveComputer;
 import junit.framework.AssertionFailedError;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
@@ -86,7 +87,7 @@ public class FileDescriptorLimitTest {
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         logging.record(AsyncResultCache.class, Level.FINER);
         ContentFilters.get().setEnabled(true);
-        j.createOnlineSlave();
+        SlaveComputer agent = j.createOnlineSlave().getComputer();
         File bundle = tmp.newFile("bundle.zip");
         try (var os = new FileOutputStream(bundle)) {
             SupportPlugin.writeBundle(os, List.of(new FileDescriptorLimit()));
@@ -96,7 +97,7 @@ public class FileDescriptorLimitTest {
                 assertThat("worked on controller", IOUtils.toString(is, (String) null), containsString("All open files"));
             }
             try (var is = zf.getInputStream(zf.stream().filter(n -> n.getName().matches("nodes/slave/.+/file-descriptors[.]txt")).findFirst().get())) {
-                assertThat("worked on agent", IOUtils.toString(is, (String) null), containsString("All open files"));
+                assertThat("worked on agent\n" + agent.getLog(), IOUtils.toString(is, (String) null), containsString("All open files"));
             }
         }
     }
