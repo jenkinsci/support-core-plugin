@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.api;
 
 import hudson.model.Node;
-
 import java.util.WeakHashMap;
 
 /**
@@ -17,16 +16,19 @@ public class UnfilteredCommandOutputContent extends UnfilteredStringContent {
         return runOnNode(node, name, null, command);
     }
 
-    public static UnfilteredCommandOutputContent runOnNode(Node node, String name, String[] filterableParameters, String... command) {
+    public static UnfilteredCommandOutputContent runOnNode(
+            Node node, String name, String[] filterableParameters, String... command) {
         String content = BaseCommandOutputContent.runOnNode(node, command);
         return new UnfilteredCommandOutputContent(name, filterableParameters, content);
     }
 
-    public static UnfilteredCommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String... command) {
+    public static UnfilteredCommandOutputContent runOnNodeAndCache(
+            WeakHashMap<Node, String> cache, Node node, String name, String... command) {
         return runOnNodeAndCache(cache, node, name, null, command);
     }
 
-    public static UnfilteredCommandOutputContent runOnNodeAndCache(WeakHashMap<Node, String> cache, Node node, String name, String[] filterableParameters, String... command) {
+    public static UnfilteredCommandOutputContent runOnNodeAndCache(
+            WeakHashMap<Node, String> cache, Node node, String name, String[] filterableParameters, String... command) {
         String content = BaseCommandOutputContent.runOnNodeAndCache(cache, node, command);
         return new UnfilteredCommandOutputContent(name, filterableParameters, content);
     }

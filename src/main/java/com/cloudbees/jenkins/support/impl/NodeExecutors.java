@@ -37,16 +37,15 @@ import hudson.model.Computer;
 import hudson.model.Queue;
 import hudson.model.queue.WorkUnit;
 import hudson.security.Permission;
-import jenkins.model.CauseOfInterruption;
-import jenkins.model.Jenkins;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jenkins.model.CauseOfInterruption;
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Gather information about the node executors.
@@ -54,132 +53,133 @@ import java.util.stream.Collectors;
 @Extension
 public class NodeExecutors extends ObjectComponent<Computer> {
 
-  @DataBoundConstructor
-  public NodeExecutors() {
-    super();
-  }
-
-  @NonNull
-  @Override
-  public Set<Permission> getRequiredPermissions() {
-    return Collections.singleton(Jenkins.ADMINISTER);
-  }
-
-  @NonNull
-  @Override
-  public String getDisplayName() {
-    return "Node Executors";
-  }
-
-  @Override
-  public void addContents(@NonNull Container container) {
-    container.add(new PrefilteredPrintedContent("executors.md") {
-        @Override
-        public void printTo(PrintWriter out, ContentFilter filter) {
-          try {
-            out.println("Node Executors");
-            out.println("===========");
-            out.println();
-
-            Arrays.stream(Jenkins.get().getComputers()).forEach(computer -> {
-              dumpExecutorInfo(computer, out, filter);
-            });
-
-          } finally {
-            out.flush();
-          }
-        }
-      }
-    );
-  }
-
-  @Override
-  public void addContents(@NonNull Container container, @NonNull Computer computer) {
-    container.add(new PrefilteredPrintedContent("executors.md") {
-      @Override
-      public void printTo(PrintWriter out, ContentFilter filter) {
-        try {
-          out.println("Node Executors");
-          out.println("===========");
-          out.println();
-
-          dumpExecutorInfo(computer, out, filter);
-
-        } finally {
-          out.flush();
-        }
-      }
-    });
-  }
-
-  private void dumpExecutorInfo(@CheckForNull Computer computer, PrintWriter out, ContentFilter filter) {
-    if (computer != null) {
-      out.println("  * " + ContentFilter.filter(filter, computer.getDisplayName()));
-      computer.getAllExecutors().forEach(executor -> {
-        out.println("      - " + ContentFilter.filter(filter, executor.getDisplayName()));
-        out.println("          - active: " + executor.isActive());
-        out.println("          - busy: " + executor.isBusy());
-        out.println("          - causesOfInterruption: [" + ContentFilter.filter(filter,
-            executor.getCausesOfInterruption().stream()
-                .map(CauseOfInterruption::getShortDescription)
-                .collect(Collectors.joining(","))) + "]");
-        out.println("          - idle: " + executor.isIdle());
-        long idleStartMilliseconds = executor.getIdleStartMilliseconds();
-        out.println("          - idleStartMilliseconds: " + idleStartMilliseconds
-            + " (" + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
-        out.println("          - progress: " + executor.getProgress());
-        out.println("          - state: " + executor.getState());
-        WorkUnit workUnit = executor.getCurrentWorkUnit();
-        if (workUnit != null) {
-          out.println("          - currentWorkUnit: " + ContentFilter.filter(filter, workUnit.toString()));
-        }
-        Queue.Executable executable = executor.getCurrentExecutable();
-        if (executable != null) {
-          out.println("          - executable: " + ContentFilter.filter(filter, executable.toString()));
-          out.println("          - elapsedTime: " + executor.getTimestampString());
-        }
-      });
+    @DataBoundConstructor
+    public NodeExecutors() {
+        super();
     }
-  }
 
-  @NonNull
-  @Override
-  public ComponentCategory getCategory() {
-    return ComponentCategory.CONTROLLER;
-  }
+    @NonNull
+    @Override
+    public Set<Permission> getRequiredPermissions() {
+        return Collections.singleton(Jenkins.ADMINISTER);
+    }
 
-  @Override
-  public boolean isSelectedByDefault() {
-    return false;
-  }
-
-  @Override
-  public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
-    return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
-  }
-
-  @Override
-  public boolean isApplicable(Computer item) {
-    return item != Jenkins.get().toComputer();
-  }
-
-  @Override
-  public DescriptorImpl getDescriptor() {
-    return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
-  }
-
-  @Extension
-  @Symbol("nodeExecutors")
-  public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
-
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public String getDisplayName() {
-      return "Node Executors";
+        return "Node Executors";
     }
 
-  }
+    @Override
+    public void addContents(@NonNull Container container) {
+        container.add(new PrefilteredPrintedContent("executors.md") {
+            @Override
+            public void printTo(PrintWriter out, ContentFilter filter) {
+                try {
+                    out.println("Node Executors");
+                    out.println("===========");
+                    out.println();
+
+                    Arrays.stream(Jenkins.get().getComputers()).forEach(computer -> {
+                        dumpExecutorInfo(computer, out, filter);
+                    });
+
+                } finally {
+                    out.flush();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void addContents(@NonNull Container container, @NonNull Computer computer) {
+        container.add(new PrefilteredPrintedContent("executors.md") {
+            @Override
+            public void printTo(PrintWriter out, ContentFilter filter) {
+                try {
+                    out.println("Node Executors");
+                    out.println("===========");
+                    out.println();
+
+                    dumpExecutorInfo(computer, out, filter);
+
+                } finally {
+                    out.flush();
+                }
+            }
+        });
+    }
+
+    private void dumpExecutorInfo(@CheckForNull Computer computer, PrintWriter out, ContentFilter filter) {
+        if (computer != null) {
+            out.println("  * " + ContentFilter.filter(filter, computer.getDisplayName()));
+            computer.getAllExecutors().forEach(executor -> {
+                out.println("      - " + ContentFilter.filter(filter, executor.getDisplayName()));
+                out.println("          - active: " + executor.isActive());
+                out.println("          - busy: " + executor.isBusy());
+                out.println("          - causesOfInterruption: ["
+                        + ContentFilter.filter(
+                                filter,
+                                executor.getCausesOfInterruption().stream()
+                                        .map(CauseOfInterruption::getShortDescription)
+                                        .collect(Collectors.joining(",")))
+                        + "]");
+                out.println("          - idle: " + executor.isIdle());
+                long idleStartMilliseconds = executor.getIdleStartMilliseconds();
+                out.println("          - idleStartMilliseconds: " + idleStartMilliseconds + " ("
+                        + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
+                out.println("          - progress: " + executor.getProgress());
+                out.println("          - state: " + executor.getState());
+                WorkUnit workUnit = executor.getCurrentWorkUnit();
+                if (workUnit != null) {
+                    out.println("          - currentWorkUnit: " + ContentFilter.filter(filter, workUnit.toString()));
+                }
+                Queue.Executable executable = executor.getCurrentExecutable();
+                if (executable != null) {
+                    out.println("          - executable: " + ContentFilter.filter(filter, executable.toString()));
+                    out.println("          - elapsedTime: " + executor.getTimestampString());
+                }
+            });
+        }
+    }
+
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
+        return ComponentCategory.CONTROLLER;
+    }
+
+    @Override
+    public boolean isSelectedByDefault() {
+        return false;
+    }
+
+    @Override
+    public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
+        return Jenkins.class.isAssignableFrom(clazz) || Computer.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public boolean isApplicable(Computer item) {
+        return item != Jenkins.get().toComputer();
+    }
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+    }
+
+    @Extension
+    @Symbol("nodeExecutors")
+    public static class DescriptorImpl extends ObjectComponentDescriptor<Computer> {
+
+        /**
+         * {@inheritDoc}
+         */
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return "Node Executors";
+        }
+    }
 }

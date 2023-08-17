@@ -27,10 +27,6 @@ package com.cloudbees.jenkins.support.api;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.util.StreamUtils;
 import hudson.Functions;
-import org.apache.commons.io.IOUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,6 +42,9 @@ import java.nio.file.NoSuchFileException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import org.apache.commons.io.IOUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Utility class with the common logic to FileContent and UnfilteredFileContent.
@@ -61,10 +60,11 @@ class BaseFileContent {
      * the function to filter secret text if comes from {@link com.cloudbees.jenkins.support.configfiles.XmlRedactedSecretFileContent} or {@link com.cloudbees.jenkins.support.api.LaunchLogsFileContent}
      */
     private final Function<String, String> secretsFilterFunction;
+
     private final long maxSize;
     private final boolean isBinary;
 
-    private final static String ENCODING = "UTF-8";
+    private static final String ENCODING = "UTF-8";
 
     /**
      *  @deprecated (as it is placed in the api package we keep backward compatibility, no relevant usage was found)
@@ -74,7 +74,8 @@ class BaseFileContent {
         this(file, inputStreamSupplier, -1, s -> s);
     }
 
-    protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier, UnaryOperator<String> secretsFilterFunction) {
+    protected BaseFileContent(
+            File file, Supplier<InputStream> inputStreamSupplier, UnaryOperator<String> secretsFilterFunction) {
         this(file, inputStreamSupplier, -1, secretsFilterFunction);
     }
 
@@ -83,7 +84,11 @@ class BaseFileContent {
         this(file, inputStreamSupplier, maxSize, s -> s);
     }
 
-    protected BaseFileContent(File file, Supplier<InputStream> inputStreamSupplier, long maxSize, UnaryOperator<String>secretsFilterFunction) {
+    protected BaseFileContent(
+            File file,
+            Supplier<InputStream> inputStreamSupplier,
+            long maxSize,
+            UnaryOperator<String> secretsFilterFunction) {
         this.file = file;
         this.inputStreamSupplier = inputStreamSupplier;
         this.secretsFilterFunction = secretsFilterFunction;
@@ -142,7 +147,7 @@ class BaseFileContent {
                     }
                 }
             }
-        } catch (FileNotFoundException | NoSuchFileException e ) { // TODO FilePathContent.isFileNotFound?
+        } catch (FileNotFoundException | NoSuchFileException e) { // TODO FilePathContent.isFileNotFound?
             OutputStreamWriter osw = new OutputStreamWriter(os, ENCODING);
             try {
                 PrintWriter pw = new PrintWriter(osw, true);
@@ -172,7 +177,7 @@ class BaseFileContent {
                 return true;
             }
 
-            byte[] b = new byte[( size < StreamUtils.DEFAULT_PROBE_SIZE ? (int)size : StreamUtils.DEFAULT_PROBE_SIZE)];
+            byte[] b = new byte[(size < StreamUtils.DEFAULT_PROBE_SIZE ? (int) size : StreamUtils.DEFAULT_PROBE_SIZE)];
             int read = in.read(b);
             if (read != b.length) {
                 // Something went wrong, so better not to read line by line
@@ -186,7 +191,6 @@ class BaseFileContent {
             return true;
         }
     }
-
 
     /**
      * {@link InputStream} decorator that chops off the underlying stream at the
@@ -258,7 +262,7 @@ class BaseFileContent {
             }
 
             int length = line.getBytes(ENCODING).length;
-            int toRead = (length <= len ? length : (int)len);
+            int toRead = (length <= len ? length : (int) len);
             len -= length;
 
             byte[] dest = new byte[toRead];
@@ -267,5 +271,4 @@ class BaseFileContent {
             return new String(dest, ENCODING);
         }
     }
-
 }

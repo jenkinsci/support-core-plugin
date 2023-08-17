@@ -1,5 +1,17 @@
 package com.cloudbees.jenkins.support;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.configfiles.ConfigFileComponent;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
@@ -7,34 +19,12 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
 import com.cloudbees.jenkins.support.impl.AboutUser;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
-import org.htmlunit.HttpMethod;
-import org.htmlunit.Page;
-import org.htmlunit.WebRequest;
-import org.htmlunit.WebResponse;
-import org.htmlunit.html.HtmlButton;
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlPage;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
 import hudson.util.RingBufferLogHandler;
-import jenkins.model.Jenkins;
-import org.apache.commons.io.IOUtils;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.LoggerRule;
-import org.jvnet.hudson.test.MockAuthorizationStrategy;
-import org.xml.sax.SAXException;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,18 +43,27 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import javax.inject.Inject;
+import jenkins.model.Jenkins;
+import org.apache.commons.io.IOUtils;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.Page;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlButton;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.xml.sax.SAXException;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -104,71 +103,98 @@ public class SupportActionTest {
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
 
         List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
-            "proc/meminfo.txt",
-            "proc/self/status.txt",
-            "proc/self/cmdline",
-            "proc/self/environ",
-            "proc/self/limits.txt",
-            "proc/self/mountstats.txt");
+                "proc/meminfo.txt",
+                "proc/self/status.txt",
+                "proc/self/cmdline",
+                "proc/self/environ",
+                "proc/self/limits.txt",
+                "proc/self/mountstats.txt");
         List<String> systemConfigurationFiles = Arrays.asList(
-            "proc/swaps.txt",
-            "proc/cpuinfo.txt",
-            "proc/mounts.txt",
-            "proc/system-uptime.txt",
-            "proc/net/rpc/nfs.txt",
-            "proc/net/rpc/nfsd.txt",
-            "sysctl.txt",
-            "dmesg.txt",
-            "userid.txt",
-            "dmi.txt");
+                "proc/swaps.txt",
+                "proc/cpuinfo.txt",
+                "proc/mounts.txt",
+                "proc/system-uptime.txt",
+                "proc/net/rpc/nfs.txt",
+                "proc/net/rpc/nfsd.txt",
+                "sysctl.txt",
+                "dmesg.txt",
+                "userid.txt",
+                "dmi.txt");
         List<String> allFiles = Stream.of(jvmSystemProcessMetricsFiles, systemConfigurationFiles)
-            .flatMap(Collection::stream).collect(Collectors.toList());
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
 
         // Master should retrieve all files (backward compatibility)
-        ZipFile zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "Master"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+        ZipFile zip = downloadBundle("/generateBundle?components=" + String.join(",", "Master"));
+        assertBundleContains(
+                zip, allFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
 
         // MasterSystemConfiguration should retrieve only master system configuration files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "MasterSystemConfiguration"));
-        assertBundleContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
-        assertBundleNotContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+        zip = downloadBundle("/generateBundle?components=" + String.join(",", "MasterSystemConfiguration"));
+        assertBundleContains(
+                zip,
+                systemConfigurationFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
+        assertBundleNotContains(
+                zip,
+                jvmSystemProcessMetricsFiles.stream()
+                        .map(s -> "nodes/master/" + s)
+                        .collect(Collectors.toList()));
 
         // MasterJVMProcessSystemMetricsContents should retrieve only master JVM process files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "MasterJVMProcessSystemMetricsContents"));
-        assertBundleContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
-        assertBundleNotContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+        zip = downloadBundle("/generateBundle?components=" + String.join(",", "MasterJVMProcessSystemMetricsContents"));
+        assertBundleContains(
+                zip,
+                jvmSystemProcessMetricsFiles.stream()
+                        .map(s -> "nodes/master/" + s)
+                        .collect(Collectors.toList()));
+        assertBundleNotContains(
+                zip,
+                systemConfigurationFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
 
         // MasterSystemConfiguration and MasterJVMProcessSystemMetricsContents should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "MasterSystemConfiguration", "MasterJVMProcessSystemMetricsContents"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/master/"+s).collect(Collectors.toList()));
+                + String.join(",", "MasterSystemConfiguration", "MasterJVMProcessSystemMetricsContents"));
+        assertBundleContains(
+                zip, allFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
 
         j.createSlave("agent1", "test", null).getComputer().connect(false).get();
 
         // Agents should retrieve all agents files (backward compatibility)
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "Agents"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        zip = downloadBundle("/generateBundle?components=" + String.join(",", "Agents"));
+        assertBundleContains(
+                zip, allFiles.stream().map(s -> "nodes/slave/agent1/" + s).collect(Collectors.toList()));
 
         // AgentsSystemConfiguration should retrieve only agents system configuration files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "AgentsSystemConfiguration"));
-        assertBundleContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
-        assertBundleNotContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+        zip = downloadBundle("/generateBundle?components=" + String.join(",", "AgentsSystemConfiguration"));
+        assertBundleContains(
+                zip,
+                systemConfigurationFiles.stream()
+                        .map(s -> "nodes/slave/agent1/" + s)
+                        .collect(Collectors.toList()));
+        assertBundleNotContains(
+                zip,
+                jvmSystemProcessMetricsFiles.stream()
+                        .map(s -> "nodes/slave/agent1/" + s)
+                        .collect(Collectors.toList()));
 
         // AgentsJVMProcessSystemMetricsContents should retrieve only agents JVM process files
-        zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "AgentsJVMProcessSystemMetricsContents"));
-        assertBundleContains(zip, jvmSystemProcessMetricsFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
-        assertBundleNotContains(zip, systemConfigurationFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
-        
+        zip = downloadBundle("/generateBundle?components=" + String.join(",", "AgentsJVMProcessSystemMetricsContents"));
+        assertBundleContains(
+                zip,
+                jvmSystemProcessMetricsFiles.stream()
+                        .map(s -> "nodes/slave/agent1/" + s)
+                        .collect(Collectors.toList()));
+        assertBundleNotContains(
+                zip,
+                systemConfigurationFiles.stream()
+                        .map(s -> "nodes/slave/agent1/" + s)
+                        .collect(Collectors.toList()));
+
         // AgentsSystemConfiguration and AgentsJVMProcessSystemMetricsContents should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
-            + String.join(",", "AgentsSystemConfiguration", "AgentsJVMProcessSystemMetricsContents"));
-        assertBundleContains(zip, allFiles.stream().map(s -> "nodes/slave/agent1/"+s).collect(Collectors.toList()));
+                + String.join(",", "AgentsSystemConfiguration", "AgentsJVMProcessSystemMetricsContents"));
+        assertBundleContains(
+                zip, allFiles.stream().map(s -> "nodes/slave/agent1/" + s).collect(Collectors.toList()));
     }
 
     /*
@@ -179,7 +205,8 @@ public class SupportActionTest {
         String bundle = "../config.xml";
         logger.record(SupportAction.class, Level.FINE).capture(1);
         deleteBundle(bundle, "admin");
-        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
+        assertTrue(logger.getMessages().stream()
+                .anyMatch(m -> m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
     }
 
     /*
@@ -200,7 +227,11 @@ public class SupportActionTest {
         Path bundle = createFakeSupportBundle();
         assertTrue(Files.exists(bundle));
         WebResponse response = deleteBundle(bundle.getFileName().toString(), "user");
-        assertThat(response.getContentAsString(), containsString(String.format("user is missing the %s/%s permission", Jenkins.ADMINISTER.group.title, Jenkins.ADMINISTER.name)));
+        assertThat(
+                response.getContentAsString(),
+                containsString(String.format(
+                        "user is missing the %s/%s permission",
+                        Jenkins.ADMINISTER.group.title, Jenkins.ADMINISTER.name)));
         assertThat(response.getStatusCode(), equalTo(403));
     }
 
@@ -211,7 +242,8 @@ public class SupportActionTest {
         assertTrue(Files.exists(bundle));
         logger.record(SupportAction.class, Level.FINE).capture(1);
         downloadBundle(bundle.getFileName().toString(), "admin", null);
-        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("Bundle %s successfully downloaded", bundle))));
+        assertTrue(logger.getMessages().stream()
+                .anyMatch(m -> m.startsWith(String.format("Bundle %s successfully downloaded", bundle))));
     }
 
     @Test
@@ -219,9 +251,11 @@ public class SupportActionTest {
         Path bundle = createFakeSupportBundle();
         Path bundle2 = createFakeSupportBundle();
         logger.record(SupportAction.class, Level.FINE).capture(2);
-        downloadBundle(bundle.getFileName().toString(), "admin", bundle2.getFileName().toString());
+        downloadBundle(
+                bundle.getFileName().toString(), "admin", bundle2.getFileName().toString());
         assertTrue(logger.getMessages().stream().anyMatch(m -> m.endsWith(String.format("successfully downloaded"))));
-        assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith(String.format("Temporary multiBundle file deleted"))));
+        assertTrue(logger.getMessages().stream()
+                .anyMatch(m -> m.startsWith(String.format("Temporary multiBundle file deleted"))));
     }
 
     private Path createFakeSupportBundle() throws IOException {
@@ -237,7 +271,7 @@ public class SupportActionTest {
      * @throws IOException when any exception creating the url to call
      */
     private WebResponse downloadBundle(String bundle, String user, String extraBundle) throws IOException {
-      return doBundle("downloadBundles", bundle, user, extraBundle);
+        return doBundle("downloadBundles", bundle, user, extraBundle);
     }
 
     /**
@@ -255,22 +289,24 @@ public class SupportActionTest {
         j.jenkins.setCrumbIssuer(null);
 
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-        j.jenkins.setAuthorizationStrategy(
-                new MockAuthorizationStrategy()
-                        .grant(Jenkins.ADMINISTER).everywhere().to("admin")
-                        .grant(Jenkins.READ).everywhere().to("user")
-        );
-        WebClient wc = j.createWebClient()
-                .withBasicCredentials(user)
-                .withThrowExceptionOnFailingStatusCode(false);
+        j.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
+                .grant(Jenkins.ADMINISTER)
+                .everywhere()
+                .to("admin")
+                .grant(Jenkins.READ)
+                .everywhere()
+                .to("user"));
+        WebClient wc = j.createWebClient().withBasicCredentials(user).withThrowExceptionOnFailingStatusCode(false);
 
         String json = "?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22}]}";
 
         if (extraBundle != null) {
-            json = "?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle + "%22},{%22selected%22:+true,%22name%22:+%22" + extraBundle + "%22}]}"; 
+            json = "?json={%22bundles%22:[{%22selected%22:+true,%22name%22:+%22" + bundle
+                    + "%22},{%22selected%22:+true,%22name%22:+%22" + extraBundle + "%22}]}";
         }
 
-        WebRequest request = new WebRequest(new URL(j.getURL() + root.getUrlName() + "/" +action + json), HttpMethod.POST);
+        WebRequest request =
+                new WebRequest(new URL(j.getURL() + root.getUrlName() + "/" + action + json), HttpMethod.POST);
         return wc.getPage(request).getWebResponse();
     }
 
@@ -290,7 +326,7 @@ public class SupportActionTest {
 
     @Test
     public void generateBundleWithSingleComponent() throws IOException, SAXException {
-        ZipFile zip = downloadBundle("/generateBundle?components="+ componentIdsOf(ConfigFileComponent.class));
+        ZipFile zip = downloadBundle("/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class));
         assertNotNull(zip.getEntry("manifest.md"));
         assertNotNull(zip.getEntry("jenkins-root-configuration-files/config.xml"));
         assertEquals(2, zip.size());
@@ -298,7 +334,8 @@ public class SupportActionTest {
 
     @Test
     public void generateBundleWith2Components() throws IOException, SAXException {
-        ZipFile zip = downloadBundle("/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class, AboutUser.class));
+        ZipFile zip = downloadBundle(
+                "/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class, AboutUser.class));
         assertNotNull(zip.getEntry("manifest.md"));
         assertNotNull(zip.getEntry("jenkins-root-configuration-files/config.xml"));
         assertNotNull(zip.getEntry("user.md"));
@@ -306,9 +343,10 @@ public class SupportActionTest {
     }
 
     private String componentIdsOf(Class<? extends Component>... components) {
-        return Arrays.asList(components).stream().map(c -> ExtensionList.lookupSingleton(c).getId()).collect(Collectors.joining(","));
+        return Arrays.asList(components).stream()
+                .map(c -> ExtensionList.lookupSingleton(c).getId())
+                .collect(Collectors.joining(","));
     }
-
 
     /*
      * Integration test that simulates the user action of clicking the button to generate the bundle.
@@ -319,8 +357,8 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("agent1","test",null).getComputer().connect(false).get();
-        j.createSlave("agent2","test",null).getComputer().connect(false).get();
+        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
+        j.createSlave("agent2", "test", null).getComputer().connect(false).get();
 
         RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
@@ -346,26 +384,26 @@ public class SupportActionTest {
             assertNotNull(z.getEntry("nodes/master/thread-dump.txt"));
 
             if (SystemPlatform.LINUX == SystemPlatform.current()) {
-                List<String> files = Arrays.asList("proc/swaps.txt",
-                                                       "proc/cpuinfo.txt",
-                                                       "proc/mounts.txt",
-                                                       "proc/system-uptime.txt",
-                                                       "proc/net/rpc/nfs.txt",
-                                                       "proc/net/rpc/nfsd.txt",
-                                                       "proc/meminfo.txt",
-                                                       "proc/self/status.txt",
-                                                       "proc/self/cmdline",
-                                                       "proc/self/environ",
-                                                       "proc/self/limits.txt",
-                                                       "proc/self/mountstats.txt",
-                                                       "sysctl.txt",
-                                                       "dmesg.txt",
-                                                       "userid.txt",
-                                                       "dmi.txt");
+                List<String> files = Arrays.asList(
+                        "proc/swaps.txt",
+                        "proc/cpuinfo.txt",
+                        "proc/mounts.txt",
+                        "proc/system-uptime.txt",
+                        "proc/net/rpc/nfs.txt",
+                        "proc/net/rpc/nfsd.txt",
+                        "proc/meminfo.txt",
+                        "proc/self/status.txt",
+                        "proc/self/cmdline",
+                        "proc/self/environ",
+                        "proc/self/limits.txt",
+                        "proc/self/mountstats.txt",
+                        "sysctl.txt",
+                        "dmesg.txt",
+                        "userid.txt",
+                        "dmi.txt");
 
                 for (String file : files) {
-                    assertNotNull(file +" was not found in the bundle",
-                                  z.getEntry("nodes/master/"+file));
+                    assertNotNull(file + " was not found in the bundle", z.getEntry("nodes/master/" + file));
                 }
             }
         } finally {
@@ -373,8 +411,7 @@ public class SupportActionTest {
             for (LogRecord r : checker.getView()) {
                 if (r.getLevel().intValue() >= Level.WARNING.intValue()) {
                     Throwable thrown = r.getThrown();
-                    if (thrown != null)
-                        thrown.printStackTrace(System.err);
+                    if (thrown != null) thrown.printStackTrace(System.err);
 
                     fail(r.getMessage());
                 }
@@ -386,26 +423,35 @@ public class SupportActionTest {
     public void anonymizationSmokes() throws Exception {
         Slave node = j.createSlave(Label.get("super_secret_node"));
         File bundleFile = temp.newFile();
-        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+        List<Component> componentsToCreate =
+                Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(false);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
-            String nodeComponentText = IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
-            assertThat("Node name should be present when anonymization is disabled",
-                    nodeComponentText, containsString(node.getNodeName()));
+            String nodeComponentText =
+                    IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
+            assertThat(
+                    "Node name should be present when anonymization is disabled",
+                    nodeComponentText,
+                    containsString(node.getNodeName()));
         }
         bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(true);
             SupportPlugin.writeBundle(os, componentsToCreate);
             ZipFile zip = new ZipFile(bundleFile);
-            String nodeComponentText = IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
-            assertThat("Node name should not be present when anonymization is enabled",
-                    nodeComponentText, not(containsString(node.getNodeName())));
+            String nodeComponentText =
+                    IOUtils.toString(zip.getInputStream(zip.getEntry("nodes.md")), StandardCharsets.UTF_8);
+            assertThat(
+                    "Node name should not be present when anonymization is enabled",
+                    nodeComponentText,
+                    not(containsString(node.getNodeName())));
             String anonymousNodeName = ContentMappings.get().getMappings().get(node.getNodeName());
-            assertThat("Anonymous node name should be present when anonymization is enabled",
-                    nodeComponentText, containsString(anonymousNodeName));
+            assertThat(
+                    "Anonymous node name should be present when anonymization is enabled",
+                    nodeComponentText,
+                    containsString(anonymousNodeName));
         }
     }
 
@@ -417,12 +463,17 @@ public class SupportActionTest {
         String objectName = "agent-test";
         j.createSlave(objectName, "/", null);
 
-        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+        List<Component> componentsToCreate =
+                Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
+        bundlesMatch(
+                zip,
+                anonymizedZip,
+                objectName,
+                ContentMappings.get().getMappings().get(objectName));
     }
 
     /*
@@ -434,12 +485,17 @@ public class SupportActionTest {
         String objectName = "agent-test";
         j.createSlave(objectName, ".", null);
 
-        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+        List<Component> componentsToCreate =
+                Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
+        bundlesMatch(
+                zip,
+                anonymizedZip,
+                objectName,
+                ContentMappings.get().getMappings().get(objectName));
     }
 
     /*
@@ -457,12 +513,17 @@ public class SupportActionTest {
         "authenticated", "everyone", "system", "admin", Jenkins.VERSION
         */
 
-        List<Component> componentsToCreate = Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
+        List<Component> componentsToCreate =
+                Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
 
         ZipFile zip = generateBundle(componentsToCreate, false);
         ZipFile anonymizedZip = generateBundle(componentsToCreate, true);
 
-        bundlesMatch(zip, anonymizedZip, objectName, ContentMappings.get().getMappings().get(objectName));
+        bundlesMatch(
+                zip,
+                anonymizedZip,
+                objectName,
+                ContentMappings.get().getMappings().get(objectName));
     }
 
     /**
@@ -475,23 +536,29 @@ public class SupportActionTest {
         List<String> entries = getFileNamesFromBundle(zip);
 
         // Debugging
-        //entries.stream().forEach(entry -> System.out.println(entry));
-        //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
+        // entries.stream().forEach(entry -> System.out.println(entry));
+        // System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
 
         List<String> anonymizedEntries = getFileNamesFromBundle(anonymizedZip);
 
-        //The name of the node created becomes replaced, so we change it to how the anonymization process has left it
-        List<String> anonymizedEntriesRestored = anonymizedEntries.stream().map(entry -> entry.replaceAll(anonymizedObjectName, objectName)).collect(Collectors.toList());
+        // The name of the node created becomes replaced, so we change it to how the anonymization process has left it
+        List<String> anonymizedEntriesRestored = anonymizedEntries.stream()
+                .map(entry -> entry.replaceAll(anonymizedObjectName, objectName))
+                .collect(Collectors.toList());
 
         // More debugging
-        //System.out.println("Anonymized:");
-        //entries.stream().forEach(entry -> System.out.println(entry));
-        //System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
+        // System.out.println("Anonymized:");
+        // entries.stream().forEach(entry -> System.out.println(entry));
+        // System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
 
-        assertTrue("Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n " + anonymizedEntriesRestored, anonymizedEntriesRestored.equals(entries));
+        assertTrue(
+                "Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n "
+                        + anonymizedEntriesRestored,
+                anonymizedEntriesRestored.equals(entries));
     }
 
-    private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization) throws IOException {
+    private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization)
+            throws IOException {
         File bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(enabledAnonymization);
@@ -509,7 +576,7 @@ public class SupportActionTest {
 
     /**
      * Check that the list of files passed in exist in the bundle.
-     * 
+     *
      * @param zip the bundle {@link ZipFile}
      * @param fileNames the list of files names
      */
@@ -531,4 +598,3 @@ public class SupportActionTest {
         }
     }
 }
-

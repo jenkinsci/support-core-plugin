@@ -24,18 +24,17 @@
 
 package com.cloudbees.jenkins.support.util;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.BulkChange;
 import hudson.XmlFile;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
+import java.io.File;
+import java.io.IOException;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Utility methods for persisting non-Describable classes.
@@ -72,6 +71,5 @@ public final class Persistence {
         return file.exists() ? clazz.cast(file.read()) : null;
     }
 
-    private Persistence() {
-    }
+    private Persistence() {}
 }

@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.CoreMatchers.containsString;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
@@ -8,8 +10,6 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import static org.hamcrest.CoreMatchers.containsString;
 
 public class AgentProtocolsTest {
 
@@ -21,8 +21,8 @@ public class AgentProtocolsTest {
         String itemsContentToString = SupportTestUtils.invokeComponentToString(
                 ExtensionList.lookup(Component.class).get(AgentProtocols.class));
         AgentProtocol.all().forEach(s -> {
-            MatcherAssert.assertThat(itemsContentToString,
-                    containsString(" * `" + s.getName() + "`: " + s.getDisplayName()));
+            MatcherAssert.assertThat(
+                    itemsContentToString, containsString(" * `" + s.getName() + "`: " + s.getDisplayName()));
         });
     }
 }

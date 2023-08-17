@@ -13,10 +13,6 @@ import hudson.model.Node;
 import hudson.remoting.Channel;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -24,6 +20,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Dump export table of nodes to detect potential
@@ -39,12 +38,11 @@ import java.util.logging.Logger;
 public class DumpExportTable extends ObjectComponent<Computer> {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final Logger logger = Logger.getLogger(DumpExportTable.class.getName());
 
     @DataBoundConstructor
-    public DumpExportTable() {
-    }
+    public DumpExportTable() {}
 
     @NonNull
     @Override
@@ -60,36 +58,29 @@ public class DumpExportTable extends ObjectComponent<Computer> {
 
     @Override
     public void addContents(@NonNull Container result) {
-        Jenkins.get().getNodes().stream()
-                .map(Node::toComputer)
-                .forEach(computer -> Optional.ofNullable(computer)
-                        .ifPresent(comp -> addContents(result, comp))
-                );
+        Jenkins.get().getNodes().stream().map(Node::toComputer).forEach(computer -> Optional.ofNullable(computer)
+                .ifPresent(comp -> addContents(result, comp)));
     }
 
     @Override
     public void addContents(@NonNull Container container, @NonNull Computer item) {
-        container.add(
-                new TruncatedContent("nodes/slave/{0}/exportTable.txt", item.getName()) {
-                    @Override
-                    protected void printTo(PrintWriter out) {
-                        try {
+        container.add(new TruncatedContent("nodes/slave/{0}/exportTable.txt", item.getName()) {
+            @Override
+            protected void printTo(PrintWriter out) {
+                try {
 
-                            VirtualChannel channel = item.getChannel();
-                            if (channel instanceof Channel) // Should never be false but just in case.
-                            {
-                                ((Channel) channel).dumpExportTable(out);
-                            }
-                        } catch (TruncationException e) {
-                            logger.log(Level.WARNING,
-                                    "Truncated the output of export table for node: " + item.getName(), e);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING,
-                                    "Could not record environment of node " + item.getName(), e);
-                        }
+                    VirtualChannel channel = item.getChannel();
+                    if (channel instanceof Channel) // Should never be false but just in case.
+                    {
+                        ((Channel) channel).dumpExportTable(out);
                     }
+                } catch (TruncationException e) {
+                    logger.log(Level.WARNING, "Truncated the output of export table for node: " + item.getName(), e);
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Could not record environment of node " + item.getName(), e);
                 }
-        );
+            }
+        });
     }
 
     @NonNull
@@ -124,6 +115,5 @@ public class DumpExportTable extends ObjectComponent<Computer> {
         public String getDisplayName() {
             return "Dump agent export tables (could reveal some memory leaks)";
         }
-
     }
 }

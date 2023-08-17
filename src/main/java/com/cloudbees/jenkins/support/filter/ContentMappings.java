@@ -24,19 +24,17 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import static java.util.stream.Collectors.toConcurrentMap;
+import static java.util.stream.Collectors.toMap;
+
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.util.Persistence;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,9 +55,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.util.stream.Collectors.toConcurrentMap;
-import static java.util.stream.Collectors.toMap;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Holds all anonymized content mappings and provides a management view to see those mappings.
@@ -76,10 +75,10 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     /**
      * Property to set to add <b>additional</b> stop words.
-     * The location should point to a line separated file containing words. Each line is treated as a word. 
+     * The location should point to a line separated file containing words. Each line is treated as a word.
      */
-    static final String ADDITIONAL_STOP_WORDS_PROPERTY = ContentMappings.class.getName()+".additionalStopWordsFile";
-    
+    static final String ADDITIONAL_STOP_WORDS_PROPERTY = ContentMappings.class.getName() + ".additionalStopWordsFile";
+
     /**
      * @return the singleton instance
      */
@@ -126,8 +125,15 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
                 : proxy.mappings.stream()
-                    .filter(mapping -> !stopWords.contains(mapping.getOriginal().toLowerCase(Locale.ENGLISH)))
-                    .collect(toConcurrentMap(ContentMapping::getOriginal, Function.identity(), (a, b) -> {throw new IllegalArgumentException();}, () -> new ConcurrentSkipListMap<>(COMPARATOR)));
+                        .filter(mapping ->
+                                !stopWords.contains(mapping.getOriginal().toLowerCase(Locale.ENGLISH)))
+                        .collect(toConcurrentMap(
+                                ContentMapping::getOriginal,
+                                Function.identity(),
+                                (a, b) -> {
+                                    throw new IllegalArgumentException();
+                                },
+                                () -> new ConcurrentSkipListMap<>(COMPARATOR)));
     }
 
     /**
@@ -136,11 +142,23 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      */
     private static Set<String> getDefaultStopWords() {
         return new HashSet<>(Arrays.asList(
-                "agent", "jenkins", "node", "master", "computer",
-                "item", "label", "view", "all", "unknown",
-                "user", "anonymous", "authenticated",
-                "everyone", "system", "admin", Jenkins.VERSION
-        ));
+                "agent",
+                "jenkins",
+                "node",
+                "master",
+                "computer",
+                "item",
+                "label",
+                "view",
+                "all",
+                "unknown",
+                "user",
+                "anonymous",
+                "authenticated",
+                "everyone",
+                "system",
+                "admin",
+                Jenkins.VERSION));
     }
 
     /**
@@ -150,8 +168,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
      * @return Set of characters in ascii code chart
      */
     private static Set<String> getAllAsciiCharacters() {
-        final int SPACE = ' '; //20
-        final int TILDE = '~'; //126
+        final int SPACE = ' '; // 20
+        final int TILDE = '~'; // 126
         Set<String> singleChars = new HashSet<>(TILDE - SPACE + 1);
 
         for (char i = SPACE; i <= TILDE; i++) {
@@ -165,15 +183,18 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
         Set<String> words = new HashSet<>();
         String fileLocationFromProperty = System.getProperty(ADDITIONAL_STOP_WORDS_PROPERTY);
         String fileLocation = fileLocationFromProperty == null
-            ? SupportPlugin.getRootDirectory() + "/" + ADDITIONAL_STOP_WORDS_FILENAME
-            : fileLocationFromProperty;
+                ? SupportPlugin.getRootDirectory() + "/" + ADDITIONAL_STOP_WORDS_FILENAME
+                : fileLocationFromProperty;
         LOGGER.log(Level.FINE, "Attempting to load user provided stop words from ''{0}''.", fileLocation);
         File f = new File(fileLocation);
         if (f.exists()) {
             if (!f.canRead()) {
-                LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocation + " is not readable.");
+                LOGGER.log(
+                        Level.WARNING,
+                        "Could not load user provided stop words as " + fileLocation + " is not readable.");
             } else {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
                     for (String line = br.readLine(); line != null; line = br.readLine()) {
                         if (StringUtils.isNotEmpty(line)) {
                             words.add(line);
@@ -181,21 +202,35 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                     }
                     return words;
                 } catch (IOException ex) {
-                    LOGGER.log(Level.WARNING, "Could not load user provided stop words. there was an error reading " + fileLocation, ex);
+                    LOGGER.log(
+                            Level.WARNING,
+                            "Could not load user provided stop words. there was an error reading " + fileLocation,
+                            ex);
                 }
             }
         } else if (fileLocationFromProperty != null) {
-            LOGGER.log(Level.WARNING, "Could not load user provided stop words as " + fileLocationFromProperty + " does not exists.");
+            LOGGER.log(
+                    Level.WARNING,
+                    "Could not load user provided stop words as " + fileLocationFromProperty + " does not exists.");
         }
         return words;
     }
 
     private static Set<String> getAllowedOSName() {
         return new HashSet<>(Arrays.asList(
-                "linux", "windows", "win", "mac", "macos", "macosx",
-                "mac os x", "ubuntu", "debian", "fedora", "red hat",
-                "sunos", "freebsd"
-        ));
+                "linux",
+                "windows",
+                "win",
+                "mac",
+                "macos",
+                "macosx",
+                "mac os x",
+                "ubuntu",
+                "debian",
+                "fedora",
+                "red hat",
+                "sunos",
+                "freebsd"));
     }
 
     /**
@@ -215,7 +250,8 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     /**
      * Looks up or creates a new ContentMapping for the given original string and a ContentMapping generator.
      */
-    public @NonNull ContentMapping getMappingOrCreate(@NonNull String original, @NonNull Function<String, ContentMapping> generator) {
+    public @NonNull ContentMapping getMappingOrCreate(
+            @NonNull String original, @NonNull Function<String, ContentMapping> generator) {
         boolean isNew = !mappings.containsKey(original);
         ContentMapping mapping = mappings.computeIfAbsent(original, generator);
         try {

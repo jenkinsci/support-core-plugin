@@ -26,11 +26,10 @@ package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.google.common.annotations.VisibleForTesting;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,23 +58,33 @@ public abstract class BundleNameInstanceTypeProvider implements ExtensionPoint {
 
     @NonNull
     static BundleNameInstanceTypeProvider getInstance() {
-        final ExtensionList<BundleNameInstanceTypeProvider> all = ExtensionList.lookup(BundleNameInstanceTypeProvider.class);
+        final ExtensionList<BundleNameInstanceTypeProvider> all =
+                ExtensionList.lookup(BundleNameInstanceTypeProvider.class);
         final int extensionCount = all.size();
 
         if (extensionCount > 2) {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, "{0} implementations found for support bundle prefix naming strategy. " +
-                        "Can be only 1 (default one) or 2 (default one, plus alternative). " +
-                        "Choosing the first found among the following:", extensionCount);
+                LOGGER.log(
+                        Level.WARNING,
+                        "{0} implementations found for support bundle prefix naming strategy. "
+                                + "Can be only 1 (default one) or 2 (default one, plus alternative). "
+                                + "Choosing the first found among the following:",
+                        extensionCount);
                 for (BundleNameInstanceTypeProvider nameProvider : all) {
-                    LOGGER.log(Level.WARNING, "Class {0} found", nameProvider.getClass().getName());
+                    LOGGER.log(
+                            Level.WARNING,
+                            "Class {0} found",
+                            nameProvider.getClass().getName());
                 }
             }
         }
 
         final BundleNameInstanceTypeProvider chosen = all.get(0);
         if (extensionCount > 1) {
-            LOGGER.log(Level.FINE, "Using {0} as BundleNameInstanceTypeProvider implementation", chosen.getClass().getName());
+            LOGGER.log(
+                    Level.FINE,
+                    "Using {0} as BundleNameInstanceTypeProvider implementation",
+                    chosen.getClass().getName());
         }
         return chosen;
     }

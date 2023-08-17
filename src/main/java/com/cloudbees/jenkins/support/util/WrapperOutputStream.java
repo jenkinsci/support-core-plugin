@@ -24,12 +24,11 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.OutputStream;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Allows for nested OutputStream wrappers and getting access to the unwrapped stream.
@@ -45,7 +44,8 @@ public interface WrapperOutputStream {
      * @throws IOException if an exception occurs preparing the unwrapped reference
      * @throws IllegalStateException if this stream is closed
      */
-    @NonNull OutputStream unwrap() throws IOException;
+    @NonNull
+    OutputStream unwrap() throws IOException;
 
     /**
      * Unwraps this stream, recursively descending through any further WrapperOutputStream instances.

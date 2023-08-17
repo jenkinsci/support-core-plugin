@@ -28,7 +28,10 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -39,10 +42,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * The metrics filter.
@@ -63,34 +62,25 @@ public class SupportMetricsFilter implements Filter {
      *                               interested in.
      * @param otherMetricName        The name used for the catch-all meter.
      */
-    public SupportMetricsFilter(MetricRegistry registry, Map<Integer, String> meterNamesByStatusCode,
-                                String otherMetricName) {
-        this.metersByStatusCode = new ConcurrentHashMap<Integer, Meter>(meterNamesByStatusCode
-                .size());
+    public SupportMetricsFilter(
+            MetricRegistry registry, Map<Integer, String> meterNamesByStatusCode, String otherMetricName) {
+        this.metersByStatusCode = new ConcurrentHashMap<Integer, Meter>(meterNamesByStatusCode.size());
         for (Map.Entry<Integer, String> entry : meterNamesByStatusCode.entrySet()) {
-            metersByStatusCode.put(entry.getKey(),
-                    registry.meter(MetricRegistry.name(HttpServlet.class,
-                            entry.getValue(),
-                            "responses")));
+            metersByStatusCode.put(
+                    entry.getKey(),
+                    registry.meter(MetricRegistry.name(HttpServlet.class, entry.getValue(), "responses")));
         }
-        this.otherMeter = registry.meter(MetricRegistry.name(HttpServlet.class,
-                otherMetricName,
-                "responses"));
+        this.otherMeter = registry.meter(MetricRegistry.name(HttpServlet.class, otherMetricName, "responses"));
         this.activeRequests = registry.counter(MetricRegistry.name(HttpServlet.class, "activeRequests"));
-        this.requestTimer = registry.timer(MetricRegistry.name(HttpServlet.class,
-                "requests"));
-
+        this.requestTimer = registry.timer(MetricRegistry.name(HttpServlet.class, "requests"));
     }
 
-    public void init(FilterConfig filterConfig) throws ServletException {
-    }
+    public void init(FilterConfig filterConfig) throws ServletException {}
 
-    public void destroy() {
-    }
+    public void destroy() {}
 
-    public void doFilter(ServletRequest request,
-                         ServletResponse response,
-                         FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
             final StatusExposingServletResponse wrappedResponse =
                     new StatusExposingServletResponse((HttpServletResponse) response);

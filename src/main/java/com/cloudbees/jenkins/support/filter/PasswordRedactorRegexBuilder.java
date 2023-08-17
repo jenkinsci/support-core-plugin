@@ -1,8 +1,6 @@
 package com.cloudbees.jenkins.support.filter;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
 
 public class PasswordRedactorRegexBuilder {
 
@@ -24,7 +23,8 @@ public class PasswordRedactorRegexBuilder {
 
     public static final String ADDITIONAL_SECURITY_WORDS_FILENAME = "security-stop-words.txt";
     private static final Set<String> SECRET_WORDS = getSecretWords();
-    //ex: (?i)(private[^=\s]*|key[^=\s]*|passwd[^=\s]*|password[^=\s]*|token[^=\s]*|passphrase[^=\s]*|secret[^=\s]*)\s*=\s*([^,\s\0]*)
+    // ex:
+    // (?i)(private[^=\s]*|key[^=\s]*|passwd[^=\s]*|password[^=\s]*|token[^=\s]*|passphrase[^=\s]*|secret[^=\s]*)\s*=\s*([^,\s\0]*)
     public static final Pattern PASSWORD_PATTERN = getPasswordPattern(SECRET_WORDS);
     // ex: "(?i).*(password|private|passwd|passphrase|key|token).*"
     public static final String SECRET_PROPERTY_MATCHER = getSecretMatcher(SECRET_WORDS);
@@ -57,8 +57,15 @@ public class PasswordRedactorRegexBuilder {
 
     private static Set<String> getDefaultSecurityWords() {
         return new HashSet<>(Arrays.asList(
-                "password", "token", "passwd", "passphrase", "private", "key", "secret", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"
-        ));
+                "password",
+                "token",
+                "passwd",
+                "passphrase",
+                "private",
+                "key",
+                "secret",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY"));
     }
 
     private static Set<String> getSecretWords() {
@@ -67,7 +74,9 @@ public class PasswordRedactorRegexBuilder {
         LOGGER.log(Level.FINE, () -> "Attempting to load user provided secret words from '" + fileLocation + "'.");
         File f = new File(fileLocation);
         if (!f.canRead()) {
-            LOGGER.log(Level.FINE, () -> "Could not load user provided secret words as '" + fileLocation + "' is not readable.");
+            LOGGER.log(
+                    Level.FINE,
+                    () -> "Could not load user provided secret words as '" + fileLocation + "' is not readable.");
             if (!f.exists()) {
                 try {
                     Files.createDirectories(f.getParentFile().toPath());
@@ -79,7 +88,8 @@ public class PasswordRedactorRegexBuilder {
             words.addAll(getDefaultSecurityWords());
             return words;
         } else {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
                 for (String line = br.readLine(); line != null; line = br.readLine()) {
                     if (StringUtils.isNotEmpty(line)) {
                         words.add(line);
@@ -87,7 +97,11 @@ public class PasswordRedactorRegexBuilder {
                 }
                 return words;
             } catch (IOException ex) {
-                LOGGER.log(Level.WARNING, ex, () -> "Could not load user provided security words. there was an error reading " + fileLocation);
+                LOGGER.log(
+                        Level.WARNING,
+                        ex,
+                        () -> "Could not load user provided security words. there was an error reading "
+                                + fileLocation);
             }
         }
         return words;

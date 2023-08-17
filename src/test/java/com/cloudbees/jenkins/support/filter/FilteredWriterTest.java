@@ -23,17 +23,16 @@
  */
 package com.cloudbees.jenkins.support.filter;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.CharSequenceReader;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringWriter;
 import java.nio.CharBuffer;
 import java.util.stream.IntStream;
-
-import static java.util.stream.Collectors.joining;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CharSequenceReader;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 public class FilteredWriterTest {
 
@@ -41,9 +40,8 @@ public class FilteredWriterTest {
     @Test
     public void shouldModifyStream() throws Exception {
         int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
-        String inputContents = IntStream.range(0, nrLines)
-                .mapToObj(i -> "ManagedNode" + i)
-                .collect(joining(System.lineSeparator()));
+        String inputContents =
+                IntStream.range(0, nrLines).mapToObj(i -> "ManagedNode" + i).collect(joining(System.lineSeparator()));
         CharSequenceReader reader = new CharSequenceReader(inputContents);
         ContentFilter filter = s -> s.replace("ManagedNode", "Anonymous_");
         StringWriter output = new StringWriter();
@@ -78,8 +76,6 @@ public class FilteredWriterTest {
 
         writer.flush();
 
-        assertThat(output.toString())
-                .isNotEmpty()
-                .matches("^-+$");
+        assertThat(output.toString()).isNotEmpty().matches("^-+$");
     }
 }

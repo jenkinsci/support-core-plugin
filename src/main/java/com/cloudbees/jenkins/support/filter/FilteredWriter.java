@@ -24,16 +24,15 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-import net.jcip.annotations.GuardedBy;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.util.regex.Matcher;
+import net.jcip.annotations.GuardedBy;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Wraps a Writer by filtering written lines using a provided ContentFilter.
@@ -46,6 +45,7 @@ import java.util.regex.Matcher;
 public class FilteredWriter extends FilterWriter {
 
     private final ContentFilter contentFilter;
+
     @GuardedBy("this")
     private CharBuffer buf;
 
@@ -142,5 +142,4 @@ public class FilteredWriter extends FilterWriter {
             buf.compact();
         }
     }
-
 }

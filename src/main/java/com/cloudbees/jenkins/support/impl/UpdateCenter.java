@@ -9,12 +9,11 @@ import hudson.Extension;
 import hudson.ProxyConfiguration;
 import hudson.model.UpdateSite;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import jenkins.model.Jenkins;
 
 /**
  * Add information about the different update centers available to
@@ -39,29 +38,28 @@ public class UpdateCenter extends Component {
     @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("update-center.md") {
-                    @Override
-                    public void printTo(PrintWriter out, ContentFilter filter) {
-                        try {
-                            hudson.model.UpdateCenter updateCenter = Jenkins.get().getUpdateCenter();
-                            out.println("=== Sites ===");
-                            for (UpdateSite c : updateCenter.getSiteList()) {
-                                out.printf(" - Id: %s%n", c.getId());
-                                out.println(" - Url: " + ContentFilter.filter(filter, c.getUrl()));
-                                out.println(" - Connection Url: " + ContentFilter.filter(filter, c.getConnectionCheckUrl()));
-                                out.println(" - Implementation Type: " + c.getClass().getName());
-                            }
-
-                            out.println("======");
-
-                            out.println("Last updated: " + updateCenter.getLastUpdatedString());
-
-                            addProxyInformation(out, filter);
-                        } finally {
-                            out.flush();
-                        }
+            @Override
+            public void printTo(PrintWriter out, ContentFilter filter) {
+                try {
+                    hudson.model.UpdateCenter updateCenter = Jenkins.get().getUpdateCenter();
+                    out.println("=== Sites ===");
+                    for (UpdateSite c : updateCenter.getSiteList()) {
+                        out.printf(" - Id: %s%n", c.getId());
+                        out.println(" - Url: " + ContentFilter.filter(filter, c.getUrl()));
+                        out.println(" - Connection Url: " + ContentFilter.filter(filter, c.getConnectionCheckUrl()));
+                        out.println(" - Implementation Type: " + c.getClass().getName());
                     }
+
+                    out.println("======");
+
+                    out.println("Last updated: " + updateCenter.getLastUpdatedString());
+
+                    addProxyInformation(out, filter);
+                } finally {
+                    out.flush();
                 }
-        );
+            }
+        });
     }
 
     @NonNull
@@ -78,9 +76,9 @@ public class UpdateCenter extends Component {
             out.println(" - Port: " + proxy.getPort());
             out.println(" - No Proxy Hosts: ");
             String noProxyHostsString = proxy.getNoProxyHost();
-            if(noProxyHostsString != null) {
+            if (noProxyHostsString != null) {
                 Arrays.stream(noProxyHostsString.split("[ \t\n,|]+"))
-                    .forEach(noProxyHost -> out.println(" * " + ContentFilter.filter(filter, noProxyHost)));
+                        .forEach(noProxyHost -> out.println(" * " + ContentFilter.filter(filter, noProxyHost)));
             }
         }
     }

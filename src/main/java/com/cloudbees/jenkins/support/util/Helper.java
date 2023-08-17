@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.util;
 
-import jenkins.model.Jenkins;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
 
 /**
  * Simple helper so we don't have to check {@code Jenkins.getInstance() != null} everywhere.

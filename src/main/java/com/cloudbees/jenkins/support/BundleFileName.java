@@ -1,13 +1,12 @@
 package com.cloudbees.jenkins.support;
 
 import com.cloudbees.jenkins.support.api.SupportProvider;
-import org.apache.commons.lang.StringUtils;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * <p>Generate the support bundle names.</p>

@@ -17,11 +17,6 @@ import hudson.util.CopyOnWriteList;
 import hudson.util.io.RewindableFileOutputStream;
 import hudson.util.io.RewindableRotatingFileOutputStream;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
-import java.util.List;
-import jenkins.model.Jenkins;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Handler;
@@ -36,6 +32,9 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
+import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Custom Log recorders files from the controller.
@@ -81,10 +80,10 @@ public class CustomLogs extends Component {
             String entryName = "nodes/master/logs/custom/{0}.log"; // name to be filtered in the bundle
             File storedFile = new File(customLogs, name + ".log");
             if (storedFile.isFile()) {
-                result.add(new FileContent(entryName, new String[]{name}, storedFile));
+                result.add(new FileContent(entryName, new String[] {name}, storedFile));
             } else {
                 // Was not stored for some reason; fine, just load the memory buffer.
-                result.add(new LogRecordContent(entryName, new String[]{name}) {
+                result.add(new LogRecordContent(entryName, new String[] {name}) {
                     @Override
                     public Iterable<LogRecord> getLogRecords() {
                         return recorder.getLogRecords();
@@ -98,16 +97,21 @@ public class CustomLogs extends Component {
         private final RewindableRotatingFileOutputStream stream;
         private final Handler handler;
         private int count;
-        @SuppressFBWarnings(value="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification="if mkdirs fails, will just get a stack trace later")
+
+        @SuppressFBWarnings(
+                value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
+                justification = "if mkdirs fails, will just get a stack trace later")
         LogFile(String name) throws IOException {
             customLogs.mkdirs();
             stream = new RewindableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
-            // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just truncated
+            // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just
+            // truncated
             stream.rewind();
             handler = new StreamHandler(stream, new SupportLogFormatter());
             handler.setLevel(Level.ALL);
             count = 0;
         }
+
         void publish(LogRecord record) throws IOException {
             boolean rewind = false;
             synchronized (this) {
@@ -132,27 +136,28 @@ public class CustomLogs extends Component {
 
     private final class CustomHandler extends Handler {
 
-        private final Map<String,LogFile> logFiles = new HashMap<String,LogFile>();
+        private final Map<String, LogFile> logFiles = new HashMap<String, LogFile>();
 
         /** JENKINS-27669: try to preload classes that will be needed by {@link #publish} */
         CustomHandler() {
             Arrays.hashCode(new Class<?>[] {
-                    Map.Entry.class,
-                    LogRecorder.class,
-                    LogRecorder.Target.class,
-                    LogFile.class,
-                    RewindableFileOutputStream.class,
-                    RewindableRotatingFileOutputStream.class,
-                    StreamHandler.class,
-                    SupportLogFormatter.class,
-                    LogFlusher.class,
-                    CopyOnWriteList.class,
-                    PrintWriter.class,
-                    Throwable.class,
+                Map.Entry.class,
+                LogRecorder.class,
+                LogRecorder.Target.class,
+                LogFile.class,
+                RewindableFileOutputStream.class,
+                RewindableRotatingFileOutputStream.class,
+                StreamHandler.class,
+                SupportLogFormatter.class,
+                LogFlusher.class,
+                CopyOnWriteList.class,
+                PrintWriter.class,
+                Throwable.class,
             });
         }
 
-        @Override public void publish(LogRecord record) {
+        @Override
+        public void publish(LogRecord record) {
             for (final LogRecorder recorder : logRecorders) {
                 for (LogRecorder.Target target : recorder.getLoggers()) {
                     if (Boolean.TRUE.equals(target.matches(record))) {
@@ -175,13 +180,15 @@ public class CustomLogs extends Component {
             }
         }
 
-        @Override public void flush() {}
+        @Override
+        public void flush() {}
 
-        @Override public void close() throws SecurityException {}
-
+        @Override
+        public void close() throws SecurityException {}
     }
 
-    @Extension public static final class LogFlusher extends PeriodicWork {
+    @Extension
+    public static final class LogFlusher extends PeriodicWork {
 
         private static final Set<Handler> unflushedHandlers = new HashSet<Handler>();
 
@@ -189,15 +196,18 @@ public class CustomLogs extends Component {
             unflushedHandlers.add(h);
         }
 
-        @Override public long getRecurrencePeriod() {
+        @Override
+        public long getRecurrencePeriod() {
             return 3000; // 3s
         }
 
-        @Override protected void doRun() throws Exception {
+        @Override
+        protected void doRun() throws Exception {
             flush();
         }
 
-        @Terminator public static void flush() {
+        @Terminator
+        public static void flush() {
             Handler[] handlers;
             synchronized (LogFlusher.class) {
                 handlers = unflushedHandlers.toArray(new Handler[unflushedHandlers.size()]);
@@ -207,6 +217,5 @@ public class CustomLogs extends Component {
                 h.flush();
             }
         }
-
     }
 }

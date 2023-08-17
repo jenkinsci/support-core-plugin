@@ -35,16 +35,19 @@ import java.util.concurrent.TimeUnit;
  */
 class LogFilenameAgentFilter implements FilenameFilter, Serializable {
 
-    public static final long MAX_TIME_AGENT_LOG_RETRIEVAL = Long.getLong(System.getProperty(LogFilenameAgentFilter.class.getName() + ".maxTimeAgentLogRetrieval"), TimeUnit.DAYS.toMillis(7));
+    public static final long MAX_TIME_AGENT_LOG_RETRIEVAL = Long.getLong(
+            System.getProperty(LogFilenameAgentFilter.class.getName() + ".maxTimeAgentLogRetrieval"),
+            TimeUnit.DAYS.toMillis(7));
 
     public boolean accept(File dir, String name) {
         // We should avoid taking agent files which are very old
         // as they are not usually very helpful to troubleshoot
         // 1 week should be enough in most of the cases
-        if (name.endsWith(".log") && new Date().getTime() -  dir.lastModified() < MAX_TIME_AGENT_LOG_RETRIEVAL) {
+        if (name.endsWith(".log") && new Date().getTime() - dir.lastModified() < MAX_TIME_AGENT_LOG_RETRIEVAL) {
             return true;
         }
         return false;
     }
+
     private static final long serialVersionUID = 1L;
 }

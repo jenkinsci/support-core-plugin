@@ -8,17 +8,16 @@ import hudson.Extension;
 import hudson.Functions;
 import hudson.security.Permission;
 import hudson.util.Area;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Set;
 import net.sf.uadetector.OperatingSystem;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Basic information about the user's browser.
@@ -68,7 +67,8 @@ public class AboutBrowser extends Component {
                     out.println("      - Name:     " + operatingSystem.getName());
                     out.println("      - Family:   " + operatingSystem.getFamily());
                     out.println("      - Producer: " + operatingSystem.getProducer());
-                    out.println("      - Version:  " + operatingSystem.getVersionNumber().toVersionString());
+                    out.println("      - Version:  "
+                            + operatingSystem.getVersionNumber().toVersionString());
                     out.println();
                 }
 

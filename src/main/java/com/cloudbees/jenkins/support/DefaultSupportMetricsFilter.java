@@ -25,7 +25,6 @@
 package com.cloudbees.jenkins.support;
 
 import com.codahale.metrics.MetricRegistry;
-
 import java.util.HashMap;
 import java.util.Map;
 

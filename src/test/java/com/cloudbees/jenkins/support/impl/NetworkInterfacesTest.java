@@ -1,19 +1,18 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class NetworkInterfacesTest {
 
@@ -44,7 +43,8 @@ public class NetworkInterfacesTest {
         });
         String controllerNetworkInterfaces = baos.toString();
 
-        assertThat("Should at least contain one network interface.",
+        assertThat(
+                "Should at least contain one network interface.",
                 controllerNetworkInterfaces,
                 containsString(expectedName));
     }

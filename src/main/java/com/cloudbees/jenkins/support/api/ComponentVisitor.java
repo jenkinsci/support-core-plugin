@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.api;
 
 /**
- * A Visitor that define actions to carry out when visiting {@link Component}s. 
+ * A Visitor that define actions to carry out when visiting {@link Component}s.
  */
 public interface ComponentVisitor {
 

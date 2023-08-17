@@ -28,10 +28,6 @@ import com.cloudbees.jenkins.support.util.WordReplacer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -41,6 +37,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Filters contents based on names provided by all {@linkplain NameProvider known sources}.
@@ -81,24 +80,26 @@ public class SensitiveContentFilter implements ContentFilter {
         final ContentMappings mappings = ContentMappings.get();
         Set<String> stopWords = mappings.getStopWords();
 
-
         // Pre-fill with existing mappings (but filter out IPs that is handled by a different filter)
         // This is required to filter out names of items that does not exist anymore, for which they could be record
         // in some content (such as log files that are anonymized when being written)
         StreamSupport.stream(mappings.spliterator(), false)
-            // Filter out IP mappings
-            .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
-            .forEach(contentMapping -> {
-                String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
-                if (!stopWords.contains(lowerCaseOriginal)) {
-                    replacementsMap.put(lowerCaseOriginal,
-                        contentMapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
-                    trie.add(lowerCaseOriginal);
-                }
-            });
+                // Filter out IP mappings
+                .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
+                .forEach(contentMapping -> {
+                    String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
+                    if (!stopWords.contains(lowerCaseOriginal)) {
+                        replacementsMap.put(
+                                lowerCaseOriginal,
+                                contentMapping
+                                        .getReplacement()
+                                        .replaceAll("\\\\", "\\\\\\\\")
+                                        .replaceAll("\\$", "\\\\\\$"));
+                        trie.add(lowerCaseOriginal);
+                    }
+                });
 
-        NameProvider.all().forEach(provider ->
-            provider.names()
+        NameProvider.all().forEach(provider -> provider.names()
                 .filter(StringUtils::isNotBlank)
                 .forEach(name -> {
                     String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
@@ -106,16 +107,21 @@ public class SensitiveContentFilter implements ContentFilter {
                     // conditional here. Or find a better way to deal with insensitive key mapping in general.
                     // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
                     // container)
-                    if(!stopWords.contains(lowerCaseOriginal)) {
-                        ContentMapping mapping = mappings.getMappingOrCreate(name, original -> ContentMapping.of(original, provider.generateFake()));
+                    if (!stopWords.contains(lowerCaseOriginal)) {
+                        ContentMapping mapping = mappings.getMappingOrCreate(
+                                name, original -> ContentMapping.of(original, provider.generateFake()));
                         // Matcher#appendReplacement needs to have the `\` and `$` escaped.
-                        replacementsMap.putIfAbsent(lowerCaseOriginal,
-                            mapping.getReplacement().replaceAll("\\\\", "\\\\\\\\").replaceAll("\\$", "\\\\\\$"));
+                        replacementsMap.putIfAbsent(
+                                lowerCaseOriginal,
+                                mapping.getReplacement()
+                                        .replaceAll("\\\\", "\\\\\\\\")
+                                        .replaceAll("\\$", "\\\\\\$"));
                         trie.add(lowerCaseOriginal);
                     }
                 }));
-        this.mappingsPattern.set(Pattern.compile("(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+        this.mappingsPattern.set(Pattern.compile(
+                "(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
         this.replacementsMap.set(replacementsMap);
-        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to reload");
+        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis() - startTime) + "ms to reload");
     }
 }

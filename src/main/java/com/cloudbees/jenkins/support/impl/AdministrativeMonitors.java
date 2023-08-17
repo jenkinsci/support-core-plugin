@@ -34,62 +34,67 @@ import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Warns if any administrative monitors are currently active.
  */
-@Extension public final class AdministrativeMonitors extends Component {
+@Extension
+public final class AdministrativeMonitors extends Component {
 
-    @Override public String getDisplayName() {
+    @Override
+    public String getDisplayName() {
         return "Administrative monitors";
     }
 
-    @Override public Set<Permission> getRequiredPermissions() {
+    @Override
+    public Set<Permission> getRequiredPermissions() {
         return Collections.singleton(Jenkins.ADMINISTER);
     }
 
-    @Override public void addContents(Container result) {
+    @Override
+    public void addContents(Container result) {
         result.add(new PrintedContent("admin-monitors.md") {
-            @Override protected void printTo(PrintWriter out) {
+            @Override
+            protected void printTo(PrintWriter out) {
                 out.println("Monitors");
                 out.println("========");
                 AdministrativeMonitor.all().stream()
-                    .filter(monitor -> 
-                        !(monitor instanceof ReverseProxySetupMonitor)
-                        && monitor.isEnabled()
-                        && monitor.isActivated())
-                    .sorted(Comparator.comparing(o -> o.id))
-                    .forEach(monitor -> {
-                        out.println();
-                        out.println("`" + monitor.id + "`");
-                        out.println("--------------");
-                        if (monitor instanceof OldDataMonitor) {
-                            OldDataMonitor odm = (OldDataMonitor) monitor;
-                            for (Map.Entry<Saveable, OldDataMonitor.VersionRange> entry : odm.getData().entrySet()) {
-                                out.println("  * Problematic object: `" + entry.getKey() + "`");
-                                OldDataMonitor.VersionRange value = entry.getValue();
-                                String range = value.toString();
-                                if (!range.isEmpty()) {
-                                    out.println("    - " + range);
+                        .filter(monitor -> !(monitor instanceof ReverseProxySetupMonitor)
+                                && monitor.isEnabled()
+                                && monitor.isActivated())
+                        .sorted(Comparator.comparing(o -> o.id))
+                        .forEach(monitor -> {
+                            out.println();
+                            out.println("`" + monitor.id + "`");
+                            out.println("--------------");
+                            if (monitor instanceof OldDataMonitor) {
+                                OldDataMonitor odm = (OldDataMonitor) monitor;
+                                for (Map.Entry<Saveable, OldDataMonitor.VersionRange> entry :
+                                        odm.getData().entrySet()) {
+                                    out.println("  * Problematic object: `" + entry.getKey() + "`");
+                                    OldDataMonitor.VersionRange value = entry.getValue();
+                                    String range = value.toString();
+                                    if (!range.isEmpty()) {
+                                        out.println("    - " + range);
+                                    }
+                                    String extra = value.extra;
+                                    if (!StringUtils.isBlank(extra)) {
+                                        out.println(
+                                                "    - " + extra); // TODO could be a multiline stack trace, quote it
+                                    }
                                 }
-                                String extra = value.extra;
-                                if (!StringUtils.isBlank(extra)) {
-                                    out.println("    - " + extra); // TODO could be a multiline stack trace, quote it
-                                }
+                            } else {
+                                // No specific content we can show; message.jelly is for HTML only.
+                                out.println("(active and enabled)");
                             }
-                        } else {
-                            // No specific content we can show; message.jelly is for HTML only.
-                            out.println("(active and enabled)");
-                        }
-                    });
+                        });
             }
 
             @Override
@@ -100,7 +105,9 @@ import java.util.Set;
         });
     }
 
-    @NonNull @Override public ComponentCategory getCategory() {
+    @NonNull
+    @Override
+    public ComponentCategory getCategory() {
         return ComponentCategory.CONTROLLER;
     }
 }

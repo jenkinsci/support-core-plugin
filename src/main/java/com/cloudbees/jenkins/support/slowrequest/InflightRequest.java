@@ -1,14 +1,13 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-import jenkins.model.Jenkins;
-import net.sf.uadetector.service.UADetectorServiceFactory;
-
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import jenkins.model.Jenkins;
+import net.sf.uadetector.service.UADetectorServiceFactory;
 
 /**
  * Tracks the request handling in progress.
@@ -76,11 +75,17 @@ final class InflightRequest {
     }
 
     void writeHeader(PrintWriter w, Optional<ContentFilter> filter) {
-        w.println("Username: " + filter.map(contentFilter -> contentFilter.filter(userName)).orElse(userName));
-        w.println("Referer: " + filter.map(contentFilter -> contentFilter.filter(referer)).orElse(referer));
-        w.println("User Agent: " + (userAgent != null ? UADetectorServiceFactory.getResourceModuleParser().parse(userAgent) : null));
+        w.println("Username: "
+                + filter.map(contentFilter -> contentFilter.filter(userName)).orElse(userName));
+        w.println("Referer: "
+                + filter.map(contentFilter -> contentFilter.filter(referer)).orElse(referer));
+        w.println("User Agent: "
+                + (userAgent != null
+                        ? UADetectorServiceFactory.getResourceModuleParser().parse(userAgent)
+                        : null));
         w.println("Date: " + new Date());
-        w.println("URL: " + filter.map(contentFilter -> contentFilter.filter(url)).orElse(url));
+        w.println(
+                "URL: " + filter.map(contentFilter -> contentFilter.filter(url)).orElse(url));
         w.println("Locale: " + locale);
         w.println();
     }

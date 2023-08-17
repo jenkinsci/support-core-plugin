@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.config;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.BulkChange;
 import hudson.Extension;
@@ -13,6 +14,13 @@ import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
 import hudson.security.Permission;
 import hudson.util.FormApply;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
@@ -22,19 +30,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.verb.POST;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
- * A {@link ManagementLink} for the management of Support Core. This extension also manages the GUI for the 
+ * A {@link ManagementLink} for the management of Support Core. This extension also manages the GUI for the
  * {@link jenkins.model.GlobalConfiguration} under the {@link SupportPluginConfigurationCategory}.
- * 
+ *
  * @author Allan Burdajewicz
  */
 @Extension
@@ -44,15 +43,15 @@ public class SupportPluginManagement extends ManagementLink implements Describab
 
     private static final Logger LOG = Logger.getLogger(SupportPluginManagement.class.getName());
 
-    public final static Predicate<Descriptor> CATEGORY_FILTER = descriptor -> descriptor.getCategory() instanceof SupportPluginConfigurationCategory;
+    public static final Predicate<Descriptor> CATEGORY_FILTER =
+            descriptor -> descriptor.getCategory() instanceof SupportPluginConfigurationCategory;
 
     /**
      * Gets the singleton instance.
      *
      * @return Singleton instance
      */
-    public static @NonNull
-    SupportPluginManagement get() {
+    public static @NonNull SupportPluginManagement get() {
         return ExtensionList.lookupSingleton(SupportPluginManagement.class);
     }
 
@@ -87,8 +86,7 @@ public class SupportPluginManagement extends ManagementLink implements Describab
     }
 
     // TODO Use getCategory when core requirement is greater or equal to 2.226
-    public @NonNull
-    String getCategoryName() {
+    public @NonNull String getCategoryName() {
         return "CONFIGURATION";
     }
 
@@ -121,10 +119,10 @@ public class SupportPluginManagement extends ManagementLink implements Describab
             LOG.log(Level.WARNING, "Failed to save " + getConfigFile(), e);
         }
     }
-    
+
     @POST
     public synchronized void doConfigure(StaplerRequest req, StaplerResponse rsp)
-        throws IOException, ServletException, Descriptor.FormException {
+            throws IOException, ServletException, Descriptor.FormException {
 
         configure(req, req.getSubmittedForm());
         FormApply.success(req.getContextPath() + "/manage").generateResponse(req, rsp, null);
@@ -142,7 +140,7 @@ public class SupportPluginManagement extends ManagementLink implements Describab
     }
 
     private boolean configureDescriptor(StaplerRequest req, JSONObject json, Descriptor<?> d)
-        throws Descriptor.FormException {
+            throws Descriptor.FormException {
         String name = d.getJsonSafeClassName();
         JSONObject js = json.has(name) ? json.getJSONObject(name) : new JSONObject();
         json.putAll(js);

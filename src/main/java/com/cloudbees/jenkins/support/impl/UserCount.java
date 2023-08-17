@@ -30,14 +30,13 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.User;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import jenkins.security.LastGrantedAuthoritiesProperty;
-
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jenkins.model.Jenkins;
+import jenkins.security.LastGrantedAuthoritiesProperty;
 
 @Extension
 public class UserCount extends UnfilteredFileListCapComponent {
@@ -65,15 +64,13 @@ public class UserCount extends UnfilteredFileListCapComponent {
                 }
 
                 User.getAll().stream()
-                    .collect(
-                        Collectors.groupingBy(
-                            (user) -> Optional.ofNullable(user.getProperty(LastGrantedAuthoritiesProperty.class)).isPresent(),
-                            Collectors.counting()))
-                        .forEach((lastGrantedAuthoritiesProperty, aLong) ->
-                            out.println(" * "
-                                    + (lastGrantedAuthoritiesProperty ? "Authenticated" : "Non Authenticated")
-                                    + " User Count: " + aLong)
-                        );
+                        .collect(Collectors.groupingBy(
+                                (user) -> Optional.ofNullable(user.getProperty(LastGrantedAuthoritiesProperty.class))
+                                        .isPresent(),
+                                Collectors.counting()))
+                        .forEach((lastGrantedAuthoritiesProperty, aLong) -> out.println(" * "
+                                + (lastGrantedAuthoritiesProperty ? "Authenticated" : "Non Authenticated")
+                                + " User Count: " + aLong));
             }
 
             @Override

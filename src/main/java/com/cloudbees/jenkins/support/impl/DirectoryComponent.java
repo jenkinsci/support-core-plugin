@@ -10,6 +10,14 @@ import hudson.security.Permission;
 import hudson.util.DirScanner;
 import hudson.util.FileVisitor;
 import hudson.util.FormValidation;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.tools.ant.DirectoryScanner;
@@ -19,16 +27,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.QueryParameter;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
-
-public abstract class DirectoryComponent<T extends AbstractModelObject> extends ObjectComponent<T> implements ExtensionPoint {
+public abstract class DirectoryComponent<T extends AbstractModelObject> extends ObjectComponent<T>
+        implements ExtensionPoint {
 
     static final Logger LOGGER = Logger.getLogger(DirectoryComponent.class.getName());
 
@@ -63,7 +63,7 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
                     visitor.visit(file, s);
                 }
             }
-            
+
             @Override
             public void visitSymlink(File link, String target, String relativePath) throws IOException {
                 if (Paths.get(relativePath).getNameCount() <= getMaxDepth()) {
@@ -127,7 +127,8 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
         return "Files in Directory";
     }
 
-    public static class DirectoryComponentsDescriptor<T extends AbstractModelObject> extends ObjectComponentDescriptor<T> {
+    public static class DirectoryComponentsDescriptor<T extends AbstractModelObject>
+            extends ObjectComponentDescriptor<T> {
 
         static final int DEFAULT_MAX_DEPTH = 10;
 
@@ -197,17 +198,14 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
     }
 
     public static class DirGlobScanner extends DirScanner {
-        
+
         private final String includes;
         private final String excludes;
         private boolean useDefaultExcludes;
         private boolean followSymlinks;
         private static final long serialVersionUID = 1L;
 
-        public DirGlobScanner(String includes, 
-                              String excludes,
-                              boolean useDefaultExcludes, 
-                              boolean followSymlinks) {
+        public DirGlobScanner(String includes, String excludes, boolean useDefaultExcludes, boolean followSymlinks) {
             this.includes = includes;
             this.excludes = excludes;
             this.useDefaultExcludes = useDefaultExcludes;
@@ -215,18 +213,19 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
         }
 
         public void scan(File dir, FileVisitor visitor) throws IOException {
-            FileSet fileSet = Util.createFileSet(dir,
+            FileSet fileSet = Util.createFileSet(
+                    dir,
                     Optional.ofNullable(Util.fixEmpty(this.includes)).orElse("**/*"),
                     Optional.ofNullable(Util.fixEmpty(this.excludes)).orElse(""));
             fileSet.setDefaultexcludes(this.useDefaultExcludes);
             fileSet.setFollowSymlinks(followSymlinks);
             if (dir.exists()) {
                 DirectoryScanner dirScanner = fileSet.getDirectoryScanner(new Project());
-                String[] var5 = (String[]) ArrayUtils.addAll(dirScanner.getIncludedFiles(),
+                String[] var5 = (String[]) ArrayUtils.addAll(
+                        dirScanner.getIncludedFiles(),
                         Stream.of(dirScanner.getNotFollowedSymlinks())
                                 .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
-                                .toArray()
-                );
+                                .toArray());
                 int var6 = var5.length;
 
                 for (int var7 = 0; var7 < var6; ++var7) {

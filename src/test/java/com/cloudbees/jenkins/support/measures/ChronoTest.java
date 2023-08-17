@@ -1,10 +1,10 @@
 package com.cloudbees.jenkins.support.measures;
 
-import com.cloudbees.jenkins.support.util.Chrono;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.cloudbees.jenkins.support.util.Chrono;
+import org.junit.Test;
 
 public class ChronoTest {
     @Test

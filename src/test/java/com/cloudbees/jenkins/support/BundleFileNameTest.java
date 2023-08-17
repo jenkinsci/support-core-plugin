@@ -1,21 +1,20 @@
 package com.cloudbees.jenkins.support;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.cloudbees.jenkins.support.api.SupportProvider;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.PrintWriter;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.localizer.Localizable;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.PrintWriter;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class BundleFileNameTest {
 
@@ -58,17 +57,20 @@ public class BundleFileNameTest {
         }
 
         @Override
-        public void printAboutJenkins(PrintWriter out) { }
+        public void printAboutJenkins(PrintWriter out) {}
     }
 
     @Test
     public void testGenerate_WithQualifier() {
-        assertThat(BundleFileName.generate(TEST_CLOCK, "qualifier"), equalTo("support_qualifier_2020-10-01_10.20.30.zip"));
+        assertThat(
+                BundleFileName.generate(TEST_CLOCK, "qualifier"), equalTo("support_qualifier_2020-10-01_10.20.30.zip"));
     }
 
     @Test
     public void testGenerate_WithQualifierAndInstanceType() {
-        assertThat(BundleFileName.generate(TEST_CLOCK, "qualifier"), equalTo("support_qualifier_instance_type_2020-10-01_10.20.30.zip"));
+        assertThat(
+                BundleFileName.generate(TEST_CLOCK, "qualifier"),
+                equalTo("support_qualifier_instance_type_2020-10-01_10.20.30.zip"));
     }
 
     @TestExtension("testGenerate_WithQualifierAndInstanceType")

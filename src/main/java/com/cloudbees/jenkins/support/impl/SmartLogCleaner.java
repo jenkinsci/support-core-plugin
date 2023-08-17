@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -8,15 +9,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.io.FileUtils;
-
-import com.cloudbees.jenkins.support.SupportPlugin;
-
 
 /**
  * <p>
- * Iterate over the cache entries stored by the {@link SmartLogFetcher} and remove those which 
+ * Iterate over the cache entries stored by the {@link SmartLogFetcher} and remove those which
  * belong to agents that are no longer attached.
  * </p>
  */
@@ -53,15 +50,22 @@ class SmartLogCleaner {
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        for (File dir: cacheKeyDirs) {
+                        for (File dir : cacheKeyDirs) {
                             if (cacheKeys.contains(dir.getName())) {
-                                LOGGER.log(Level.FINE, "cacheKey belongs to agent, keeping the directory '{0}'", dir.getName());
+                                LOGGER.log(
+                                        Level.FINE,
+                                        "cacheKey belongs to agent, keeping the directory '{0}'",
+                                        dir.getName());
                             } else {
                                 try {
                                     FileUtils.deleteDirectory(dir);
-                                    LOGGER.log(Level.INFO, "The agent is no longer available, cache entry {0} was deleted", dir.getAbsolutePath() );
+                                    LOGGER.log(
+                                            Level.INFO,
+                                            "The agent is no longer available, cache entry {0} was deleted",
+                                            dir.getAbsolutePath());
                                 } catch (IOException e) {
-                                    LOGGER.log(Level.WARNING, "Couldn't remove the cache directory " + dir.getName(), e);
+                                    LOGGER.log(
+                                            Level.WARNING, "Couldn't remove the cache directory " + dir.getName(), e);
                                 }
                             }
                         }

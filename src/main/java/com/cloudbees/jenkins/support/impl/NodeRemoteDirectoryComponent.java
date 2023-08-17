@@ -9,6 +9,12 @@ import hudson.Functions;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -16,13 +22,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.logging.Level;
 
 /**
  * @author Allan Burdajewicz
@@ -55,22 +54,22 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
         try {
             Arrays.stream(rootPath.list(getIncludes(), getExcludes(), getDefaultExcludes()))
                     .forEach(filePath -> {
-                        Path relativePath = Paths.get(rootPath.getRemote())
-                                .relativize(Paths.get(filePath.getRemote()));
+                        Path relativePath = Paths.get(rootPath.getRemote()).relativize(Paths.get(filePath.getRemote()));
                         if (relativePath.getNameCount() <= getMaxDepth()) {
                             container.add(new FilePathContent(
                                     "nodes/slave/{0}/remote/{1}",
-                                    new String[]{node.getNodeName(), Functions.isWindows() 
-                                            ? relativePath.toString().replace('\\','/') 
-                                            : relativePath.toString()},
-                                    filePath)
-                            );
+                                    new String[] {
+                                        node.getNodeName(),
+                                        Functions.isWindows()
+                                                ? relativePath.toString().replace('\\', '/')
+                                                : relativePath.toString()
+                                    },
+                                    filePath));
                         }
                     });
         } catch (IOException | InterruptedException e) {
             LOGGER.log(Level.WARNING, "Could not list files from remote directory of " + node.getNodeName(), e);
         }
-
     }
 
     @NonNull
@@ -133,7 +132,7 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
             if (rootPath == null) {
                 return FormValidation.ok();
             }
-            
+
             return FilePath.validateFileMask(rootPath, includes, true);
         }
 
@@ -160,5 +159,4 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
             return FilePath.validateFileMask(rootPath, excludes, true);
         }
     }
-
 }

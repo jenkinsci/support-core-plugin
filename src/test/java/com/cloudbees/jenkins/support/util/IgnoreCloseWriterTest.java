@@ -23,22 +23,21 @@
  */
 package com.cloudbees.jenkins.support.util;
 
+import static org.mockito.BDDMockito.then;
+
+import java.io.IOException;
+import java.io.Writer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import static org.mockito.BDDMockito.then;
-
 public class IgnoreCloseWriterTest {
 
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
-    
+
     @Mock
     private Writer out;
 

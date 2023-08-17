@@ -5,14 +5,12 @@ import com.cloudbees.jenkins.support.api.Container;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import jenkins.model.Jenkins;
 
 /**
  * Support component to add config.xml to the support bundle.
@@ -36,11 +34,10 @@ public class ConfigFileComponent extends Component {
         Jenkins jenkins = Jenkins.get();
         File configFile = new File(jenkins.getRootDir(), "config.xml");
         if (configFile.exists()) {
-            container.add(
-                    new XmlRedactedSecretFileContent("jenkins-root-configuration-files/{0}",
-                            new String[] {configFile.getName()}, configFile));
+            container.add(new XmlRedactedSecretFileContent(
+                    "jenkins-root-configuration-files/{0}", new String[] {configFile.getName()}, configFile));
         } else {
-            //this should never happen..
+            // this should never happen..
             LOGGER.log(Level.WARNING, "Jenkins global config file does not exist.");
         }
     }

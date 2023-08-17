@@ -23,31 +23,25 @@
  */
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
-import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
-import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.EnvVars;
-import junit.framework.AssertionFailedError;
+import java.util.Map;
 import org.hamcrest.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.util.Map;
-
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertTrue;
-
 public class AgentsConfigFileTest {
 
     private static final String SENSITIVE_AGENT_NAME = "sensitive-agent";
-    
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
 

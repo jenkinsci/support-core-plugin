@@ -23,7 +23,22 @@
  */
 package com.cloudbees.jenkins.support.filter;
 
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInRelativeOrder;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import hudson.model.FreeStyleProject;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.StreamSupport;
 import jenkins.model.Jenkins;
 import org.hamcrest.MatcherAssert;
 import org.junit.After;
@@ -34,22 +49,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.stream.StreamSupport;
-
-import static java.util.stream.Collectors.toList;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInRelativeOrder;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class ContentMappingsTest {
 
@@ -76,8 +75,7 @@ public class ContentMappingsTest {
         rr.then(r -> {
             FreeStyleProject job = r.createFreeStyleProject();
             String[] expectedStopWords = {
-                job.getPronoun().toLowerCase(Locale.ENGLISH),
-                job.getTaskNoun().toLowerCase(Locale.ENGLISH)
+                job.getPronoun().toLowerCase(Locale.ENGLISH), job.getTaskNoun().toLowerCase(Locale.ENGLISH)
             };
             ContentMappings mappings = ContentMappings.get();
             assertThat(mappings.getStopWords(), not(hasItems(expectedStopWords)));
@@ -116,20 +114,20 @@ public class ContentMappingsTest {
     @Test
     @Ignore("Bug to be resolved. Elements removed aren't removed from the persisted mapping (ContentMappings.xml")
     public void contentMappingsRemovedSerialized() {
-        //To be final and reuse in the steps
+        // To be final and reuse in the steps
         StringBuilder jobReplacement = new StringBuilder();
 
         // Create a project and check its mapping
         rr.then(r -> {
-            //Create a project
+            // Create a project
             r.createFreeStyleProject("ShortName");
             ContentFilter.ALL.reload();
 
-            //Store their replacements
+            // Store their replacements
             ContentMappings mappings = ContentMappings.get();
             jobReplacement.append(mappings.getMappings().get("ShortName"));
 
-            //Check if the mapping exists
+            // Check if the mapping exists
             assertThat(mappings.getMappings(), hasEntry("ShortName", jobReplacement.toString()));
         });
 
@@ -137,13 +135,13 @@ public class ContentMappingsTest {
         rr.then(r -> {
             ContentMappings mappings = ContentMappings.get();
 
-            //Check if the mapping exists after restart
+            // Check if the mapping exists after restart
             assertThat(mappings.getMappings(), hasEntry("ShortName", jobReplacement.toString()));
 
-            //Remove the project
+            // Remove the project
             r.jenkins.remove(r.jenkins.getItem("ShortName"));
 
-            //Run the getMappingOrCreate of every mapping
+            // Run the getMappingOrCreate of every mapping
             SensitiveContentFilter.get().reload();
         });
 
@@ -151,8 +149,11 @@ public class ContentMappingsTest {
         rr.then(r -> {
             ContentMappings mappings = ContentMappings.get();
 
-            //Check if the mapping exists after restart
-            assertThat("The mapping of a removed project shouldn't persist", mappings.getMappings(), not(hasEntry("ShortName", jobReplacement.toString())));
+            // Check if the mapping exists after restart
+            assertThat(
+                    "The mapping of a removed project shouldn't persist",
+                    mappings.getMappings(),
+                    not(hasEntry("ShortName", jobReplacement.toString())));
         });
     }
 
@@ -196,13 +197,7 @@ public class ContentMappingsTest {
     @LocalData
     public void additionalStopWordsIncludedAsStopWord() {
         String[] expectedStopWords = {
-            "abc", 
-            "https://core.example.com", 
-            "john doe", 
-            "192.168.0.1", 
-            "<h1>",
-            "  leadingspaces", 
-            "trailingspaces  "
+            "abc", "https://core.example.com", "john doe", "192.168.0.1", "<h1>", "  leadingspaces", "trailingspaces  "
         };
         rr.then(r -> {
             ContentMappings mappings = ContentMappings.get();

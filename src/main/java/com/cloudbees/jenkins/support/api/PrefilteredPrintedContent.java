@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.util.IgnoreCloseWriter;
 import com.cloudbees.jenkins.support.util.WrapperOutputStream;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;

@@ -23,11 +23,11 @@
  */
 package com.cloudbees.jenkins.support.timer;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import static org.junit.Assert.assertEquals;
 
 public class FileListCapTest {
 

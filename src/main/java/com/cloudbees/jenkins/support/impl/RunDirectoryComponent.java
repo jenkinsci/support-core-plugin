@@ -9,6 +9,10 @@ import hudson.Functions;
 import hudson.model.Run;
 import hudson.util.FileVisitor;
 import hudson.util.FormValidation;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -18,11 +22,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.logging.Level;
 
 /**
  * @author Allan Burdajewicz
@@ -44,35 +43,42 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
         try {
             File itemRootDir = item.getRootDir();
             String relativeToRoot = Functions.isWindows()
-                    ? new File(Jenkins.get().getRootDir(), "jobs").toPath()
-                    .relativize(itemRootDir.toPath()).toString().replace('\\','/')
-                    : new File(Jenkins.get().getRootDir(), "jobs").toPath()
-                    .relativize(itemRootDir.toPath()).toString();
+                    ? new File(Jenkins.get().getRootDir(), "jobs")
+                            .toPath()
+                            .relativize(itemRootDir.toPath())
+                            .toString()
+                            .replace('\\', '/')
+                    : new File(Jenkins.get().getRootDir(), "jobs")
+                            .toPath()
+                            .relativize(itemRootDir.toPath())
+                            .toString();
             list(itemRootDir, new FileVisitor() {
 
                 @Override
                 public void visitSymlink(File link, String target, String relativePath) {
-                    container.add(new PrintedContent("items/{0}/{1}", relativeToRoot,
-                            Functions.isWindows() ? relativePath.replace('\\','/') : relativePath) {
+                    container.add(
+                            new PrintedContent(
+                                    "items/{0}/{1}",
+                                    relativeToRoot,
+                                    Functions.isWindows() ? relativePath.replace('\\', '/') : relativePath) {
 
-                        @Override
-                        protected void printTo(PrintWriter out) {
-                            out.println("symlink -> " + target);
-                        }
+                                @Override
+                                protected void printTo(PrintWriter out) {
+                                    out.println("symlink -> " + target);
+                                }
 
-                        @Override
-                        public boolean shouldBeFiltered() {
-                            return true;
-                        }
-                    });
+                                @Override
+                                public boolean shouldBeFiltered() {
+                                    return true;
+                                }
+                            });
                 }
-                
+
                 @Override
                 public void visit(File file, String s) {
-                    container.add(new FileContent("items/{0}/{1}",
-                            new String[]{relativeToRoot, Functions.isWindows() ? s.replace('\\','/') : s},
-                            file)
-                    );
+                    container.add(new FileContent(
+                            "items/{0}/{1}",
+                            new String[] {relativeToRoot, Functions.isWindows() ? s.replace('\\', '/') : s}, file));
                 }
 
                 @Override
@@ -81,7 +87,11 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
                 }
             });
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Could not list files from root directory of " + item.getParent().getFullName() + "#" + item.getNumber(), e);
+            LOGGER.log(
+                    Level.WARNING,
+                    "Could not list files from root directory of "
+                            + item.getParent().getFullName() + "#" + item.getNumber(),
+                    e);
         }
     }
 
@@ -129,7 +139,8 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused") // used by Stapler
-        public FormValidation doCheckIncludes(@AncestorInPath Run item, @QueryParameter String includes) throws IOException {
+        public FormValidation doCheckIncludes(@AncestorInPath Run item, @QueryParameter String includes)
+                throws IOException {
             if (item == null) {
                 return FormValidation.ok();
             }

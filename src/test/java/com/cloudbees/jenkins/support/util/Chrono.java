@@ -1,5 +1,11 @@
 package com.cloudbees.jenkins.support.util;
 
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -9,12 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Chrono {
     private Map<String, Point> points = new LinkedHashMap<>();
@@ -32,7 +32,7 @@ public class Chrono {
      *                  getMeasures methods.
      * @param fromPointNames all the points to get measure from. If it's null, the start point is considered.
      */
-    public void mark( String pointName,  String... fromPointNames) {
+    public void mark(String pointName, String... fromPointNames) {
         mark(pointName, System.currentTimeMillis(), fromPointNames);
     }
 
@@ -41,15 +41,15 @@ public class Chrono {
      * @param pointName the point name to be used when printing the info or requesting the information with any of the
      *                  getMeasures methods.
      */
-    public void mark( String pointName) {
+    public void mark(String pointName) {
         mark(pointName, (String[]) null);
     }
 
-    public void markFromPrevious( String pointName, Long time) {
+    public void markFromPrevious(String pointName, Long time) {
         mark(pointName, time, lastPoint);
     }
 
-    public void markFromPrevious( String pointName) {
+    public void markFromPrevious(String pointName) {
         mark(pointName, lastPoint);
     }
 
@@ -59,7 +59,7 @@ public class Chrono {
      *                  getMeasures methods.
      * @param time time when this point happens.
      */
-    public void mark( String pointName, Long time) {
+    public void mark(String pointName, Long time) {
         mark(pointName, time, null);
     }
 
@@ -70,7 +70,7 @@ public class Chrono {
      * @param time time when this point happens
      * @param fromPointNames all the points to get measure from. If it's null, the start point is considered.
      */
-    public void mark( String pointName,  Long time,  String... fromPointNames) {
+    public void mark(String pointName, Long time, String... fromPointNames) {
         if (fromPointNames == null) {
             fromPointNames = new String[] {initName};
         }
@@ -111,7 +111,7 @@ public class Chrono {
         Set<String> keys = points.keySet();
         Map<String, Map<String, Long>> measures = new LinkedHashMap<>(points.size());
 
-        for(String key : keys) {
+        for (String key : keys) {
             measures.put(key, getMeasures(key));
         }
 
@@ -125,14 +125,14 @@ public class Chrono {
         sb.append(" started at ");
         sb.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(initTime));
         sb.append("\n");
-        for(String key : getMeasures().keySet()) {
+        for (String key : getMeasures().keySet()) {
             sb.append(printMeasures(key));
         }
 
         return sb.toString();
     }
 
-    public String printMeasures (String pointName) {
+    public String printMeasures(String pointName) {
         StringBuilder sb = new StringBuilder();
 
         if (pointName != initName) {
@@ -162,7 +162,6 @@ public class Chrono {
             } else {
                 sb.append("\t - This point was not defined\n");
             }
-
         }
         return sb.toString();
     }
@@ -192,20 +191,20 @@ public class Chrono {
         Map<String, Long> measures = getMeasures(pointName);
 
         Map.Entry<String, Long> lastPoint = null;
-        //Go to the last element
-        for(Map.Entry<String, Long> entry: measures.entrySet()) {
+        // Go to the last element
+        for (Map.Entry<String, Long> entry : measures.entrySet()) {
             lastPoint = entry;
         }
         return lastPoint != null ? lastPoint.getValue() : null;
     }
 
     public static String timeToString(long millis) {
-        Optional<TimeUnit> first = Stream.of(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS).filter(u -> u.convert(millis,
-                MILLISECONDS) > 0).findFirst();
+        Optional<TimeUnit> first = Stream.of(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
+                .filter(u -> u.convert(millis, MILLISECONDS) > 0)
+                .findFirst();
         TimeUnit unit = first.isPresent() ? first.get() : MILLISECONDS;
         double value = (double) millis / MILLISECONDS.convert(1, unit);
-        return String.format("%.4g %s", value, unit.name().
-                toLowerCase());
+        return String.format("%.4g %s", value, unit.name().toLowerCase());
     }
 
     /**

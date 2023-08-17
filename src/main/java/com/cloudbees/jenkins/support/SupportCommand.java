@@ -33,10 +33,6 @@ import hudson.cli.CLICommand;
 import hudson.remoting.RemoteOutputStream;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-import org.kohsuke.args4j.Argument;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,6 +44,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import org.kohsuke.args4j.Argument;
 
 @Extension
 public class SupportCommand extends CLICommand {
@@ -76,10 +75,10 @@ public class SupportCommand extends CLICommand {
     protected int run() throws Exception {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         Set<Component> selected = new HashSet<>();
-        
-        // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the components to the list 
+
+        // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the components to the list
         // for backward compatibility
-        if(components.contains("Master")) {
+        if (components.contains("Master")) {
             stderr.println("WARNING:" + Messages._SupportCommand_jenkins_63722_deprecated_ids("Master"));
             selected.addAll(Jenkins.get().getExtensionList(JVMProcessSystemMetricsContents.Master.class));
             selected.addAll(Jenkins.get().getExtensionList(SystemConfiguration.Master.class));
@@ -88,7 +87,7 @@ public class SupportCommand extends CLICommand {
             selected.addAll(Jenkins.get().getExtensionList(JVMProcessSystemMetricsContents.Agents.class));
             selected.addAll(Jenkins.get().getExtensionList(SystemConfiguration.Agents.class));
         }
-        
+
         for (Component c : SupportPlugin.getComponents()) {
             if (c.isEnabled() && (components.isEmpty() || components.contains(c.getId()))) {
                 selected.add(c);
@@ -125,5 +124,4 @@ public class SupportCommand extends CLICommand {
             return new RemoteOutputStream(new FileOutputStream(path.toFile()));
         }
     }
-
 }

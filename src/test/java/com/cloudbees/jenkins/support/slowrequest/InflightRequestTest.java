@@ -1,8 +1,14 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import org.htmlunit.html.HtmlPage;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
+import java.io.IOException;
+import java.net.URL;
+import javax.servlet.ServletException;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -11,13 +17,6 @@ import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.net.URL;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author schristou88
@@ -58,12 +57,12 @@ public class InflightRequestTest {
         public static int seconds;
         public static InflightRequest request;
 
-        public HttpResponse doSubmitReferer(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-            String literalHTML = "<html>" +
-                                 "  <body>" +
-                                 "    <a href='" + req.getContextPath() + "/mockSlowURLCall/submit"+ "' id='link'>link</a>" +
-                                 "  </body>" +
-                                 "</html>";
+        public HttpResponse doSubmitReferer(StaplerRequest req, StaplerResponse rsp)
+                throws ServletException, IOException {
+            String literalHTML = "<html>" + "  <body>"
+                    + "    <a href='"
+                    + req.getContextPath() + "/mockSlowURLCall/submit" + "' id='link'>link</a>" + "  </body>"
+                    + "</html>";
             return HttpResponses.literalHtml(literalHTML);
         }
 

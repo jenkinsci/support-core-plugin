@@ -23,21 +23,20 @@
  */
 package com.cloudbees.jenkins.support.util;
 
-import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.quicktheories.QuickTheory.qt;
 import static org.quicktheories.generators.SourceDSL.strings;
+
+import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.junit.Test;
 
 public class OutputStreamSelectorTest {
 
@@ -48,45 +47,36 @@ public class OutputStreamSelectorTest {
     @Test
     public void shouldNotAllowWritesAfterClose() throws IOException {
         selector.close();
+        assertThatIllegalStateException().isThrownBy(() -> selector.write(0)).withMessageContaining("closed");
         assertThatIllegalStateException()
-                .isThrownBy(() -> selector.write(0))
+                .isThrownBy(() -> selector.write(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}))
                 .withMessageContaining("closed");
         assertThatIllegalStateException()
-                .isThrownBy(() -> selector.write(new byte[]{0, 1, 2, 3, 4, 5, 6, 7}))
+                .isThrownBy(() -> selector.write(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}, 4, 4))
                 .withMessageContaining("closed");
-        assertThatIllegalStateException()
-                .isThrownBy(() -> selector.write(new byte[]{0, 1, 2, 3, 4, 5, 6, 7}, 4, 4))
-                .withMessageContaining("closed");
-        assertThatIllegalStateException()
-                .isThrownBy(() -> selector.flush());
-        assertThatIllegalStateException()
-                .isThrownBy(() -> selector.unwrap());
-        assertThatIllegalStateException()
-                .isThrownBy(() -> selector.reset());
+        assertThatIllegalStateException().isThrownBy(() -> selector.flush());
+        assertThatIllegalStateException().isThrownBy(() -> selector.unwrap());
+        assertThatIllegalStateException().isThrownBy(() -> selector.reset());
     }
 
     @Test
     public void shouldNotAllowNullOutputStreamReturnedBySupplier() {
-        assertThatNullPointerException()
-                .isThrownBy(() -> {
-                    OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
-                    selector.write(0);
-                    selector.flush();
-                });
-        assertThatNullPointerException()
-                .isThrownBy(() -> {
-                    OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
-                    selector.write('A');
-                    selector.flush();
-                });
-        assertThatNullPointerException()
-                .isThrownBy(() -> new OutputStreamSelector(() -> null, () -> null).flush());
+        assertThatNullPointerException().isThrownBy(() -> {
+            OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
+            selector.write(0);
+            selector.flush();
+        });
+        assertThatNullPointerException().isThrownBy(() -> {
+            OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
+            selector.write('A');
+            selector.flush();
+        });
+        assertThatNullPointerException().isThrownBy(() -> new OutputStreamSelector(() -> null, () -> null).flush());
     }
 
     @Test
     public void shouldNotAllowInvalidLengths() {
-        assertThatIllegalArgumentException()
-                .isThrownBy(() -> selector.write(new byte[0], 0, -1));
+        assertThatIllegalArgumentException().isThrownBy(() -> selector.write(new byte[0], 0, -1));
     }
 
     @Test
@@ -95,15 +85,14 @@ public class OutputStreamSelectorTest {
         selector.write(new byte[0], 0, 0);
         selector.close();
 
-        assertThatIllegalStateException()
-                .isThrownBy(() -> selector.write(new byte[0]));
+        assertThatIllegalStateException().isThrownBy(() -> selector.write(new byte[0]));
         assertThat(binaryOut.toByteArray()).isEmpty();
         assertThat(textOut.toByteArray()).isEmpty();
     }
 
     @Test
     public void shouldUseBinaryStreamWhenNonPrintableCharactersFoundEarly() throws IOException {
-        byte[] bytes = new byte[]{0x41, 0x42, 0x43, 0x44, 0x4, 0x46, 0x47, 0x48, 0x49, 0x50}; // 0x4 is EOT
+        byte[] bytes = new byte[] {0x41, 0x42, 0x43, 0x44, 0x4, 0x46, 0x47, 0x48, 0x49, 0x50}; // 0x4 is EOT
 
         selector.write(bytes);
         selector.close();
@@ -128,11 +117,8 @@ public class OutputStreamSelectorTest {
             selector.write(contents.getBytes(UTF_8));
             selector.flush();
 
-            assertThat(binaryOut.toByteArray())
-                    .isEmpty();
-            assertThat(new String(textOut.toByteArray(), UTF_8))
-                    .isNotEmpty()
-                    .isEqualTo(contents);
+            assertThat(binaryOut.toByteArray()).isEmpty();
+            assertThat(new String(textOut.toByteArray(), UTF_8)).isNotEmpty().isEqualTo(contents);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
@@ -146,9 +132,7 @@ public class OutputStreamSelectorTest {
     public void shouldForceStreamChoiceWhenFlushed() throws IOException {
         selector.write(0x42);
         selector.flush();
-        assertThat(textOut.toByteArray())
-                .isNotEmpty()
-                .containsOnly(0x42);
+        assertThat(textOut.toByteArray()).isNotEmpty().containsOnly(0x42);
         assertThat(binaryOut.toByteArray()).isEmpty();
     }
 

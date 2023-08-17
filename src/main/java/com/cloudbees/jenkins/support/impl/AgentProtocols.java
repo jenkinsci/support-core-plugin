@@ -6,13 +6,12 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import jenkins.AgentProtocol;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
+import jenkins.AgentProtocol;
+import jenkins.model.Jenkins;
 
 @Extension
 public class AgentProtocols extends Component {
@@ -41,7 +40,8 @@ public class AgentProtocols extends Component {
                     out.println("================");
                     out.println();
                     AgentProtocol.all().stream()
-                            .filter(agentProtocol -> agentProtocol.getName() != null && agentProtocols.contains(agentProtocol.getName()))
+                            .filter(agentProtocol ->
+                                    agentProtocol.getName() != null && agentProtocols.contains(agentProtocol.getName()))
                             .forEach(agentProtocol -> {
                                 out.println(" * `" + agentProtocol.getName() + "`: " + agentProtocol.getDisplayName());
                                 out.println("    * Deprecated: " + agentProtocol.isDeprecated());
@@ -53,7 +53,8 @@ public class AgentProtocols extends Component {
                     out.println("==================");
                     out.println();
                     AgentProtocol.all().stream()
-                            .filter(agentProtocol -> agentProtocol.getName() != null && !agentProtocols.contains(agentProtocol.getName()))
+                            .filter(agentProtocol -> agentProtocol.getName() != null
+                                    && !agentProtocols.contains(agentProtocol.getName()))
                             .forEach(agentProtocol -> {
                                 out.println(" * `" + agentProtocol.getName() + "`: " + agentProtocol.getDisplayName());
                                 out.println("    * Deprecated: " + agentProtocol.isDeprecated());

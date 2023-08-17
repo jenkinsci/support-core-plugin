@@ -28,8 +28,6 @@ import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import hudson.FilePath;
 import hudson.Functions;
-import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,6 +39,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Content that is stored as a file on a remote disk
@@ -81,7 +80,8 @@ public class FilePathContent extends Content {
                 try {
                     PrintWriter pw = new PrintWriter(osw, true);
                     try {
-                        pw.println("--- WARNING: Could not attach " + file.getRemote() + " as it cannot currently be found ---");
+                        pw.println("--- WARNING: Could not attach " + file.getRemote()
+                                + " as it cannot currently be found ---");
                         pw.println();
                         Functions.printStackTrace(e, pw);
                     } finally {
@@ -106,7 +106,8 @@ public class FilePathContent extends Content {
     }
 
     private void copyRedacted(OutputStream os) throws IOException, InterruptedException {
-        CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder()
+        CharsetDecoder charsetDecoder = StandardCharsets.UTF_8
+                .newDecoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)
                 .onUnmappableCharacter(CodingErrorAction.REPLACE)
                 .replaceWith(FilteredOutputStream.UNKNOWN_INPUT);

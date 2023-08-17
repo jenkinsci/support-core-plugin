@@ -4,12 +4,6 @@ import com.cloudbees.jenkins.support.AsyncResultCache;
 import hudson.Functions;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-import org.apache.commons.io.IOUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -18,6 +12,11 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import org.apache.commons.io.IOUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Common logic to CommandOutputContent and UnfilteredCommandOutputContent.
@@ -39,7 +38,10 @@ class BaseCommandOutputContent {
             StringWriter bos = new StringWriter();
             PrintWriter pw = new PrintWriter(bos);
             try {
-                Process proc = new ProcessBuilder().command(command).redirectErrorStream(true).start();
+                Process proc = new ProcessBuilder()
+                        .command(command)
+                        .redirectErrorStream(true)
+                        .start();
                 IOUtils.copy(proc.getInputStream(), pw, Charset.defaultCharset());
             } catch (Exception e) {
                 Functions.printStackTrace(e, pw);
@@ -64,7 +66,7 @@ class BaseCommandOutputContent {
                 content = chan.call(new BaseCommandOutputContent.CommandLauncher(command));
             } catch (IOException | InterruptedException e) {
                 final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve command content from {0}");
-                lr.setParameters(new Object[]{getNodeName(node)});
+                lr.setParameters(new Object[] {getNodeName(node)});
                 lr.setThrown(e);
                 LOGGER.log(lr);
             }
@@ -77,16 +79,19 @@ class BaseCommandOutputContent {
         String content = "Exception occurred while retrieving command content";
 
         try {
-            content = AsyncResultCache.get(node, cache, new BaseCommandOutputContent.CommandLauncher(command), "sysctl info",
+            content = AsyncResultCache.get(
+                    node,
+                    cache,
+                    new BaseCommandOutputContent.CommandLauncher(command),
+                    "sysctl info",
                     "N/A: Either no connection to node or no cached result");
         } catch (IOException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve sysctl content from {0}");
-            lr.setParameters(new Object[]{getNodeName(node)});
+            lr.setParameters(new Object[] {getNodeName(node)});
             lr.setThrown(e);
             LOGGER.log(lr);
         }
 
         return content;
     }
-
 }

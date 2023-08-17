@@ -1,5 +1,8 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
@@ -8,9 +11,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Allan Burdajewicz
@@ -30,12 +30,14 @@ public class ItemsContentTest {
         j.waitUntilNoActivity();
 
         testFolder1.createProject(FreeStyleProject.class, "testProject21");
-        
-        FreeStyleProject project21 = j.createFolder("testFolder2").createProject(FreeStyleProject.class, "testProject21");
+
+        FreeStyleProject project21 =
+                j.createFolder("testFolder2").createProject(FreeStyleProject.class, "testProject21");
         project21.scheduleBuild2(0);
         j.waitUntilNoActivity();
 
-        String itemsContentToString = SupportTestUtils.invokeComponentToString(ExtensionList.lookup(Component.class).get(ItemsContent.class));
+        String itemsContentToString = SupportTestUtils.invokeComponentToString(
+                ExtensionList.lookup(Component.class).get(ItemsContent.class));
 
         assertThat(itemsContentToString, containsString("  * `hudson.model.FreeStyleProject`"));
         assertThat(itemsContentToString, containsString("    - Number of items: 3"));

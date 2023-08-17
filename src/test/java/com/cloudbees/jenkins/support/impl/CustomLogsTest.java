@@ -3,6 +3,10 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -11,21 +15,16 @@ import hudson.ExtensionList;
 import hudson.logging.LogRecorder;
 import hudson.security.Permission;
 import java.io.IOException;
-import jenkins.model.Jenkins;
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import jenkins.model.Jenkins;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class CustomLogsTest {
 
@@ -69,6 +68,6 @@ public class CustomLogsTest {
         String customLogs = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(CustomLogs.class)));
         assertFalse("Should write CustomLogsTest FINE logs", customLogs.isEmpty());
-        assertThat(customLogs , Matchers.containsString("Testing custom log recorders"));
+        assertThat(customLogs, Matchers.containsString("Testing custom log recorders"));
     }
 }

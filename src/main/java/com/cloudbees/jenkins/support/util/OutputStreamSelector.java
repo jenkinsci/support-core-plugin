@@ -24,17 +24,16 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
+import static java.util.Objects.requireNonNull;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import net.jcip.annotations.GuardedBy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
-
-import static java.util.Objects.requireNonNull;
+import net.jcip.annotations.GuardedBy;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Dynamically selects either a textual or binary OutputStream destination based on simple content type probing.
@@ -46,10 +45,13 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
 
     private final Supplier<OutputStream> binaryOutputStreamProvider;
     private final Supplier<OutputStream> textOutputStreamProvider;
+
     @GuardedBy("this")
     private ByteBuffer head;
+
     @GuardedBy("this")
     private OutputStream out;
+
     @GuardedBy("this")
     private boolean closed;
 
@@ -59,7 +61,9 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
      * @param binaryOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be binary
      * @param textOutputStreamProvider a provider of an OutputStream to use if the contents written appear to be textual
      */
-    public OutputStreamSelector(@NonNull Supplier<OutputStream> binaryOutputStreamProvider, @NonNull Supplier<OutputStream> textOutputStreamProvider) {
+    public OutputStreamSelector(
+            @NonNull Supplier<OutputStream> binaryOutputStreamProvider,
+            @NonNull Supplier<OutputStream> textOutputStreamProvider) {
         this.binaryOutputStreamProvider = binaryOutputStreamProvider;
         this.textOutputStreamProvider = textOutputStreamProvider;
     }
@@ -71,7 +75,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
     @Override
     public synchronized void write(int b) throws IOException {
         ensureOpen();
-        write(new byte[]{(byte) b});
+        write(new byte[] {(byte) b});
     }
 
     @Override
@@ -91,7 +95,8 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             head = ByteBuffer.allocate(StreamUtils.DEFAULT_PROBE_SIZE);
         }
         int toCopy = Math.min(head.remaining(), len);
-        if (toCopy == 0) throw new IllegalStateException("No more room to buffer header, should have chosen stream by now");
+        if (toCopy == 0)
+            throw new IllegalStateException("No more room to buffer header, should have chosen stream by now");
         head.put(b, off, toCopy);
         if (head.hasRemaining()) return;
         chooseStream();
@@ -109,8 +114,7 @@ public class OutputStreamSelector extends OutputStream implements WrapperOutputS
             head.reset();
             out = requireNonNull(
                     (hasControlCharacter ? binaryOutputStreamProvider : textOutputStreamProvider).get(),
-                    String.format("No OutputStream returned by %s supplier", hasControlCharacter ? "binary" : "text")
-            );
+                    String.format("No OutputStream returned by %s supplier", hasControlCharacter ? "binary" : "text"));
             byte[] b = new byte[head.remaining()];
             head.get(b);
             write(b);

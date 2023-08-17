@@ -37,11 +37,6 @@ import hudson.Util;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Node;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -52,6 +47,10 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * System configuration data (CPU information, swap configuration, mount points,
@@ -65,7 +64,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         public Master() {
             super();
         }
-        
+
         @Override
         @NonNull
         public String getDisplayName() {
@@ -86,7 +85,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         public boolean isApplicable(Computer item) {
             return item == Jenkins.get().toComputer();
         }
-        
+
         @Override
         public DescriptorImpl getDescriptor() {
             return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
@@ -110,7 +109,6 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             public String getDisplayName() {
                 return "Controller system configuration (Linux only)";
             }
-
         }
     }
 
@@ -121,7 +119,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         public Agents() {
             super();
         }
-        
+
         @Override
         @NonNull
         public String getDisplayName() {
@@ -177,15 +175,14 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             public String getDisplayName() {
                 return "Agent system configuration (Linux only)";
             }
-
         }
     }
 
-    private final WeakHashMap<Node,String> sysCtlCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> sysCtlCache = new WeakHashMap<Node, String>();
 
-    private final WeakHashMap<Node,String> userIdCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> userIdCache = new WeakHashMap<Node, String>();
 
-    private final WeakHashMap<Node,String> dmiCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> dmiCache = new WeakHashMap<Node, String>();
 
     private static final Logger LOGGER = Logger.getLogger(SystemConfiguration.class.getName());
     private static final Set<ProcFile> UNIX_PROC_CONTENTS;
@@ -197,7 +194,7 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         contents.add(ProcFile.of("/proc/cpuinfo", "cpuinfo.txt", false));
         contents.add(ProcFile.of("/proc/mounts", "mounts.txt", false));
         contents.add(ProcFile.of("/proc/uptime", "system-uptime.txt", false));
-        contents.add(ProcFile.of("/proc/net/rpc/nfs", "net/rpc/nfs.txt",false));
+        contents.add(ProcFile.of("/proc/net/rpc/nfs", "net/rpc/nfs.txt", false));
         contents.add(ProcFile.of("/proc/net/rpc/nfsd", "net/rpc/nfsd.txt", false));
         UNIX_PROC_CONTENTS = Collections.unmodifiableSet(contents);
     }
@@ -209,11 +206,18 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
 
     @Override
     protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
-        container.add(
-                UnfilteredCommandOutputContent.runOnNodeAndCache(sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[]{name},  "/bin/sh", "-c", "sysctl -a"));
-        container.add(UnfilteredCommandOutputContent.runOnNode(node, "nodes/{0}/dmesg.txt", new String[]{name}, "/bin/sh", "-c", "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
-        container.add(CommandOutputContent.runOnNodeAndCache(userIdCache, node, "nodes/{0}/userid.txt", new String[]{name}, "/bin/sh", "-c", "id -a"));
-        container.add(new UnfilteredStringContent("nodes/{0}/dmi.txt", new String[]{name}, getDmiInfo(node)));
+        container.add(UnfilteredCommandOutputContent.runOnNodeAndCache(
+                sysCtlCache, node, "nodes/{0}/sysctl.txt", new String[] {name}, "/bin/sh", "-c", "sysctl -a"));
+        container.add(UnfilteredCommandOutputContent.runOnNode(
+                node,
+                "nodes/{0}/dmesg.txt",
+                new String[] {name},
+                "/bin/sh",
+                "-c",
+                "(dmesg --ctime 2>/dev/null||dmesg) |tail -1000"));
+        container.add(CommandOutputContent.runOnNodeAndCache(
+                userIdCache, node, "nodes/{0}/userid.txt", new String[] {name}, "/bin/sh", "-c", "id -a"));
+        container.add(new UnfilteredStringContent("nodes/{0}/dmi.txt", new String[] {name}, getDmiInfo(node)));
     }
 
     public String getDmiInfo(Node node) {
@@ -226,8 +230,9 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
     }
 
     @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-    static public class GetDmiInfo extends MasterToSlaveCallable<String, Exception> {
+    public static class GetDmiInfo extends MasterToSlaveCallable<String, Exception> {
         private static final long serialVersionUID = 1L;
+
         public String call() {
             StringBuilder sb = new StringBuilder();
 
@@ -238,7 +243,8 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
                         sb.append(file.getName());
                         sb.append(": ");
                         try {
-                            sb.append(Util.loadFile(file, Charset.defaultCharset()).trim());
+                            sb.append(Util.loadFile(file, Charset.defaultCharset())
+                                    .trim());
                         } catch (IOException e) {
                             sb.append("failed, " + e.getMessage());
                         }

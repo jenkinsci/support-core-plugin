@@ -5,8 +5,6 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
@@ -16,10 +14,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
-* @author Stephen Connolly
-*/
+ * @author Stephen Connolly
+ */
 public class AsyncResultCache<T> implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(AsyncResultCache.class.getName());
     private final WeakHashMap<Node, T> cache;
@@ -27,17 +26,21 @@ public class AsyncResultCache<T> implements Runnable {
     private final Node node;
     private final String name;
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name, V defaultIfNull)
-
+    public static <V, T extends java.lang.Throwable> V get(
+            Node node,
+            WeakHashMap<Node, V> cache, /*MasterToSlave*/
+            Callable<V, T> operation,
+            String name,
+            V defaultIfNull)
             throws IOException {
         V result = get(node, cache, operation, name);
         return result == null ? defaultIfNull : result;
     }
 
-    public static <V, T extends java.lang.Throwable> V get(Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/Callable<V,T> operation, String name)
-
+    public static <V, T extends java.lang.Throwable> V get(
+            Node node, WeakHashMap<Node, V> cache, /*MasterToSlave*/ Callable<V, T> operation, String name)
             throws IOException {
-        
+
         if (node == null) {
             LOGGER.fine("no node");
             return null;
@@ -71,7 +74,7 @@ public class AsyncResultCache<T> implements Runnable {
             return result;
         } catch (InterruptedException | ExecutionException e) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[] {name, getNodeName(node)});
             lr.setThrown(e);
             LOGGER.log(lr);
             synchronized (cache) {
@@ -79,7 +82,7 @@ public class AsyncResultCache<T> implements Runnable {
             }
         } catch (TimeoutException e) {
             final LogRecord lr = new LogRecord(Level.FINER, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[] {name, getNodeName(node)});
             lr.setThrown(e);
             LOGGER.log(lr);
             Computer.threadPoolForRemoting.submit(new AsyncResultCache<>(node, cache, future, name));
@@ -110,12 +113,12 @@ public class AsyncResultCache<T> implements Runnable {
             }
         } catch (InterruptedException | ExecutionException e1) {
             final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[] {name, getNodeName(node)});
             lr.setThrown(e1);
             LOGGER.log(lr);
         } catch (TimeoutException e1) {
             final LogRecord lr = new LogRecord(Level.INFO, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[]{name, getNodeName(node)});
+            lr.setParameters(new Object[] {name, getNodeName(node)});
             lr.setThrown(e1);
             LOGGER.log(lr);
             future.cancel(true);

@@ -1,8 +1,8 @@
 package com.cloudbees.jenkins.support.util;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class MarkdownTest {
 

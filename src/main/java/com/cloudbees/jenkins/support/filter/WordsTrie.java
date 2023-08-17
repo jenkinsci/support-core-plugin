@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ public class WordsTrie {
      * The maximum number of union in Character classes. For example [abcde.....] would result in stackoverflow
      * due to a recursive process in Pattern.
      */
-    private final static int MAX_UNION = 1024;
+    private static final int MAX_UNION = 1024;
 
     /*
      * As per https://docs.oracle.com/javase/tutorial/essential/regex/literals.html, metacharacters need to be escaped
@@ -35,14 +34,12 @@ public class WordsTrie {
      * regex String. This does seem to have a significant impact on performance. So escaping only those characters for
      * now.
      */
-    private final static Pattern METACHARACTER =
-        Pattern.compile("[\\x21\\x24\\x28-\\x2B\\x2D-\\x2F\\x3C-\\x3F\\x5B-\\x5E\\x7B-\\x7D]+");
+    private static final Pattern METACHARACTER =
+            Pattern.compile("[\\x21\\x24\\x28-\\x2B\\x2D-\\x2F\\x3C-\\x3F\\x5B-\\x5E\\x7B-\\x7D]+");
     /*
      * For Character Class, only / - [ ] ^ \ must be escaped.
      */
-    private final static Pattern METACHARACTER_CHARACTER_CLASS =
-        Pattern.compile("[\\x2D\\x2F\\x5B-\\x5E]+");
-
+    private static final Pattern METACHARACTER_CHARACTER_CLASS = Pattern.compile("[\\x2D\\x2F\\x5B-\\x5E]+");
 
     final TrieNode root;
 
@@ -74,7 +71,6 @@ public class WordsTrie {
     public String getRegex() {
         return root.getRegex();
     }
-
 
     static class TrieNode {
 
@@ -136,7 +132,8 @@ public class WordsTrie {
                     buf.append("(?:");
                     int chunkSize = MAX_UNION;
                     for (int i = 0; i < characters.size(); i += chunkSize) {
-                        List<Character> charactersChunk = characters.subList(i, Math.min(i + chunkSize, characters.size()));
+                        List<Character> charactersChunk =
+                                characters.subList(i, Math.min(i + chunkSize, characters.size()));
                         buf.append('[');
                         for (Character character : charactersChunk) {
                             buf.append(quoteCharacterClass(character));
@@ -149,10 +146,8 @@ public class WordsTrie {
                 childPatterns.add(buf.toString());
             }
 
-
-            String result = childPatterns.size() == 1
-                ? childPatterns.get(0)
-                : "(?:" + String.join("|", childPatterns) + ")";
+            String result =
+                    childPatterns.size() == 1 ? childPatterns.get(0) : "(?:" + String.join("|", childPatterns) + ")";
 
             // Is this is also a final character of a word, we need to add the ?
             if (end) {
@@ -165,8 +160,8 @@ public class WordsTrie {
             return result;
         }
 
-        public @NonNull TrieNode getOrCreate(@NonNull Character character,
-                                                                    @NonNull Function<Character, TrieNode> generator) {
+        public @NonNull TrieNode getOrCreate(
+                @NonNull Character character, @NonNull Function<Character, TrieNode> generator) {
             return data.computeIfAbsent(character, generator);
         }
 

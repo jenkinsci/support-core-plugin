@@ -9,8 +9,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.WebAppMain;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
@@ -20,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import jenkins.model.Jenkins;
 
 /**
  * Log files from the controller node only.
@@ -92,13 +91,15 @@ public class JenkinsLogs extends Component {
 
         final File[] julLogFiles = SupportPlugin.getLogsDirectory().listFiles(new LogFilenameFilter());
         if (julLogFiles == null) {
-            LOGGER.log(Level.WARNING, "Cannot add controller java.util.logging logs to the bundle. Cannot access log files");
+            LOGGER.log(
+                    Level.WARNING,
+                    "Cannot add controller java.util.logging logs to the bundle. Cannot access log files");
             return;
         }
 
         // log records written to the disk
-        for (File file : julLogFiles){
-            result.add(new FileContent("nodes/master/logs/{0}", new String[]{file.getName()}, file));
+        for (File file : julLogFiles) {
+            result.add(new FileContent("nodes/master/logs/{0}", new String[] {file.getName()}, file));
         }
     }
 
@@ -109,7 +110,7 @@ public class JenkinsLogs extends Component {
         final Pattern pattern = Pattern.compile("^.*\\.log(\\.\\d+)?$");
 
         public boolean accept(File f) {
-            return pattern.matcher(f.getName()).matches() && f.length()>0;
+            return pattern.matcher(f.getName()).matches() && f.length() > 0;
         }
     };
 }

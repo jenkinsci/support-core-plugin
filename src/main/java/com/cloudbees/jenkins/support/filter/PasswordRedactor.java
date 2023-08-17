@@ -2,8 +2,6 @@ package com.cloudbees.jenkins.support.filter;
 
 import hudson.Extension;
 import hudson.ExtensionList;
-import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,13 +11,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
 @Extension
 public class PasswordRedactor implements SerializableOnlyOverRemoting {
 
     private static final Logger LOGGER = Logger.getLogger(PasswordRedactor.class.getName());
     public static final String REDACTED = "REDACTED";
-    public static final List<String> FILES_WITH_SECRETS = Collections.unmodifiableList(Arrays.asList("cmdline", "environ"));
+    public static final List<String> FILES_WITH_SECRETS =
+            Collections.unmodifiableList(Arrays.asList("cmdline", "environ"));
 
     private final Pattern pattern;
     private final String matcher;
@@ -77,5 +77,4 @@ public class PasswordRedactor implements SerializableOnlyOverRemoting {
         }
         return value.matches(matcher);
     }
-
 }

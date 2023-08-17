@@ -6,8 +6,6 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -16,6 +14,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
  * Output the current list of loggers for the controller and display the
@@ -48,7 +47,7 @@ public class LoggerManager extends Component {
                 LogManager logManager = LogManager.getLogManager();
                 Enumeration<String> loggerNames = logManager.getLoggerNames();
                 while (loggerNames.hasMoreElements()) {
-                    String loggerName =  loggerNames.nextElement();
+                    String loggerName = loggerNames.nextElement();
                     Logger loggerByName = logManager.getLogger(loggerName);
                     if (loggerByName != null) {
                         Level level = loggerByName.getLevel();

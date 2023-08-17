@@ -68,22 +68,6 @@ import hudson.security.PermissionGroup;
 import hudson.security.PermissionScope;
 import hudson.slaves.ComputerListener;
 import hudson.triggers.SafeTimerTask;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import jenkins.metrics.impl.JenkinsMetricProviderImpl;
-import jenkins.model.GlobalConfiguration;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-import net.sf.json.JSONObject;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.io.output.CountingOutputStream;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.springframework.security.core.Authentication;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -95,6 +79,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -117,6 +103,19 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import jenkins.metrics.impl.JenkinsMetricProviderImpl;
+import jenkins.model.GlobalConfiguration;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
+import net.sf.json.JSONObject;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.StaplerRequest;
+import org.springframework.security.core.Authentication;
 
 /**
  * Main entry point for the support plugin.
@@ -125,7 +124,7 @@ import java.util.stream.Collectors;
  */
 public class SupportPlugin extends Plugin {
 
-    private static final Logger LOGGER = Logger.getLogger(SupportPlugin.class.getName()); 
+    private static final Logger LOGGER = Logger.getLogger(SupportPlugin.class.getName());
 
     /**
      * How long remote operations can block support bundle generation for.
@@ -143,8 +142,8 @@ public class SupportPlugin extends Plugin {
      * How often automatic support bundles should be collected. Should be {@code 1} unless you have very good reason
      * to use a different period. {@code 0} disables bundle generation and {@code 24} is the longest period permitted.
      */
-    public static final int AUTO_BUNDLE_PERIOD_HOURS =
-            Math.max(Math.min(24, Integer.getInteger(SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS", 1)), 0);
+    public static final int AUTO_BUNDLE_PERIOD_HOURS = Math.max(
+            Math.min(24, Integer.getInteger(SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS", 1)), 0);
 
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
@@ -153,14 +152,18 @@ public class SupportPlugin extends Plugin {
      * @deprecated not used anymore as the usage has now been limited to {@link Jenkins#ADMINISTER}
      */
     @Deprecated
-    public static final Permission CREATE_BUNDLE =
-            new Permission(SUPPORT_PERMISSIONS, "DownloadBundle", Messages._SupportPlugin_CreateBundle(),
-                    Jenkins.ADMINISTER, PermissionScope.JENKINS);
+    public static final Permission CREATE_BUNDLE = new Permission(
+            SUPPORT_PERMISSIONS,
+            "DownloadBundle",
+            Messages._SupportPlugin_CreateBundle(),
+            Jenkins.ADMINISTER,
+            PermissionScope.JENKINS);
+
     private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal<>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     public static final String SUPPORT_DIRECTORY_NAME = "support";
-    private transient final SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
+    private final transient SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
 
     private transient SupportContextImpl context = null;
     private transient Logger rootLogger;
@@ -318,8 +321,7 @@ public class SupportPlugin extends Plugin {
         ExtensionList list = ExtensionList.create(Jenkins.get(), NonExistentComponent.class);
 
         if (list.isEmpty()) {
-            List<Component> applicableComponents = Jenkins.get().getExtensionList(Component.class)
-                    .stream()
+            List<Component> applicableComponents = Jenkins.get().getExtensionList(Component.class).stream()
                     .filter(component -> component.isApplicable(Jenkins.class))
                     .collect(Collectors.toList());
 
@@ -329,11 +331,11 @@ public class SupportPlugin extends Plugin {
         return list;
     }
 
-    private static abstract class NonExistentComponent extends Component {}
+    private abstract static class NonExistentComponent extends Component {}
 
     /**
      * Generate a bundle for all components that are selected in the Global Configuration.
-     * 
+     *
      * @param outputStream an {@link OutputStream}
      * @throws IOException if an error occurs while generating the bundle.
      */
@@ -349,7 +351,8 @@ public class SupportPlugin extends Plugin {
      * @param components a list of {@link Component} to include in the bundle
      * @throws IOException if an error occurs while generating the bundle.
      */
-    public static void writeBundle(OutputStream outputStream, final List<? extends Component> components) throws IOException {
+    public static void writeBundle(OutputStream outputStream, final List<? extends Component> components)
+            throws IOException {
         writeBundle(outputStream, components, new ComponentVisitor() {
             @Override
             public <T extends Component> void visit(Container container, T component) {
@@ -357,7 +360,7 @@ public class SupportPlugin extends Plugin {
             }
         });
     }
-    
+
     /**
      * Generate a bundle for all components that are selected in the Global Configuration.
      *
@@ -366,15 +369,18 @@ public class SupportPlugin extends Plugin {
      * @param componentConsumer a {@link ComponentVisitor}
      * @throws IOException if an error occurs while generating the bundle.
      */
-    public static void writeBundle(OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer) throws IOException {
+    public static void writeBundle(
+            OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer)
+            throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
         PrintWriter errorWriter = new PrintWriter(errors);
 
         try {
             try (BulkChange change = new BulkChange(ContentMappings.get());
-                 CountingOutputStream countingOs = new CountingOutputStream(outputStream);
-                 ZipArchiveOutputStream binaryOut = new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
+                    CountingOutputStream countingOs = new CountingOutputStream(outputStream);
+                    ZipArchiveOutputStream binaryOut =
+                            new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
                 // Get the filter to be used
                 Optional<ContentFilter> maybeFilter = getContentFilter(false);
                 // Recalculate the mappings and stop words and save it to disk
@@ -384,12 +390,17 @@ public class SupportPlugin extends Plugin {
                 // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
                 appendManifestHeader(manifest);
                 long startTime = System.currentTimeMillis();
-                List<Content> contents = appendManifestContents(manifest, errorWriter, components, componentConsumer, maybeFilter);
-                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms to process all components");
+                List<Content> contents =
+                        appendManifestContents(manifest, errorWriter, components, componentConsumer, maybeFilter);
+                LOGGER.log(
+                        Level.FINE,
+                        "Took " + (System.currentTimeMillis() - startTime) + "ms to process all components");
                 contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
 
-                Optional<FilteredOutputStream> maybeFilteredOut = maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
-                OutputStream textOut = maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
+                Optional<FilteredOutputStream> maybeFilteredOut =
+                        maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
+                OutputStream textOut =
+                        maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
                 IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
@@ -403,8 +414,9 @@ public class SupportPlugin extends Plugin {
                     LOGGER.log(Level.FINE, "Start writing support content " + content.getClass());
                     long contentStartTime = System.currentTimeMillis();
                     long contentStartSize = countingOs.getByteCount();
-                    final String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
-                    
+                    final String name =
+                            getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
+
                     try {
                         final ZipArchiveEntry entry = new ZipArchiveEntry(name);
                         entry.setTime(content.getTime());
@@ -413,7 +425,7 @@ public class SupportPlugin extends Plugin {
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
                         if (content instanceof PrefilteredContent && maybeFilter.isPresent()) {
-                            ((PrefilteredContent)content).writeTo(out, maybeFilter.get());
+                            ((PrefilteredContent) content).writeTo(out, maybeFilter.get());
                         } else {
                             content.writeTo(out);
                         }
@@ -433,14 +445,18 @@ public class SupportPlugin extends Plugin {
                             binaryOut.closeArchiveEntry();
                             entryCreated = false;
                         }
-                        LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-contentStartTime) + "ms" +
-                            " and generated " + (countingOs.getByteCount()-contentStartSize) + " bytes" +
-                            " to write content " + name);
+                        LOGGER.log(
+                                Level.FINE,
+                                "Took " + (System.currentTimeMillis() - contentStartTime) + "ms" + " and generated "
+                                        + (countingOs.getByteCount() - contentStartSize) + " bytes"
+                                        + " to write content "
+                                        + name);
                     }
                 }
-                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms" +
-                    " and generated " + (countingOs.getByteCount()-startSize) + " bytes" +
-                    " to process all contents");
+                LOGGER.log(
+                        Level.FINE,
+                        "Took " + (System.currentTimeMillis() - startTime) + "ms" + " and generated "
+                                + (countingOs.getByteCount() - startSize) + " bytes" + " to process all contents");
                 errorWriter.close();
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
@@ -477,14 +493,18 @@ public class SupportPlugin extends Plugin {
 
         if (filterableParameters != null) {
             // Filter each token or return the token depending on whether the filter is active or not
-            String[] replacedParameters = Arrays.stream(filterableParameters).map(filterableParameter -> maybeFilter.map(filter -> filter.filter(filterableParameter)).orElse(filterableParameter)).toArray(String[]::new);
+            String[] replacedParameters = Arrays.stream(filterableParameters)
+                    .map(filterableParameter -> maybeFilter
+                            .map(filter -> filter.filter(filterableParameter))
+                            .orElse(filterableParameter))
+                    .toArray(String[]::new);
 
             // Replace each placeholder {0}, {1} in the name, with the replaced token
             filteredName = MessageFormat.format(name, replacedParameters);
         } else {
             // Previous behavior was filter all the name, but it could end up in having a corrupted bundle. So we expect
             // implementors to use the appropriate constructor of Content.
-            //filteredName = maybeFilter.map(filter -> filter.filter(name)).orElse(name);
+            // filteredName = maybeFilter.map(filter -> filter.filter(name)).orElse(name);
             filteredName = name;
         }
 
@@ -543,9 +563,7 @@ public class SupportPlugin extends Plugin {
                 .append("\n\n");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
         f.setTimeZone(TimeZone.getTimeZone("UTC"));
-        manifest.append("Generated on ")
-                .append(f.format(new Date()))
-                .append("\n\n");
+        manifest.append("Generated on ").append(f.format(new Date())).append("\n\n");
     }
 
     /**
@@ -560,12 +578,13 @@ public class SupportPlugin extends Plugin {
      * @return the list of contents whose names has been added to the manifest and their content will be added to the
      * bundle.
      */
-    private static List<Content> appendManifestContents(StringBuilder manifest, 
-                                                        PrintWriter errors, 
-                                                        List<? extends Component> components,
-                                                        ComponentVisitor componentVisitor,
-                                                        Optional<ContentFilter> maybeFilter) {
-        
+    private static List<Content> appendManifestContents(
+            StringBuilder manifest,
+            PrintWriter errors,
+            List<? extends Component> components,
+            ComponentVisitor componentVisitor,
+            Optional<ContentFilter> maybeFilter) {
+
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(maybeFilter);
         for (Component component : components) {
@@ -574,8 +593,10 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
                 componentVisitor.visit(contentsContainer, component);
-                LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis()-startTime) + "ms" +
-                    " to process component " + component.getDisplayName());
+                LOGGER.log(
+                        Level.FINE,
+                        "Took " + (System.currentTimeMillis() - startTime) + "ms" + " to process component "
+                                + component.getDisplayName());
                 Set<String> names = contentsContainer.getLatestNames();
                 for (String name : names) {
                     manifest.append("      - `").append(name).append("`\n\n");
@@ -598,14 +619,13 @@ public class SupportPlugin extends Plugin {
             }
         }
         return contentsContainer.getContents();
-        
     }
 
     private static class ContentContainer extends Container {
         private final List<Content> contents = new ArrayList<>();
         private final Set<String> names = new HashSet<>();
 
-        //The filter to return the names filtered
+        // The filter to return the names filtered
         private final Optional<ContentFilter> maybeFilter;
 
         /**
@@ -636,7 +656,6 @@ public class SupportPlugin extends Plugin {
         synchronized List<Content> getContents() {
             return new ArrayList<>(contents);
         }
-
     }
 
     public List<LogRecord> getAllLogRecords() {
@@ -646,12 +665,13 @@ public class SupportPlugin extends Plugin {
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED, before = InitMilestone.JOB_LOADED)
     public static void loadConfig() throws IOException {
         SupportPlugin instance = getInstance();
-        if (instance != null)
-            instance.load();
+        if (instance != null) instance.load();
     }
 
-    private static final boolean logStartupPerformanceIssues = Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
-    private static final int secondsPerThreadDump = Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
+    private static final boolean logStartupPerformanceIssues =
+            Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
+    private static final int secondsPerThreadDump =
+            Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
 
     @Deprecated
     @Restricted(NoExternalUse.class)
@@ -701,7 +721,6 @@ public class SupportPlugin extends Plugin {
         t.start();
     }
 
-
     @Override
     public synchronized void start() throws Exception {
         super.start();
@@ -749,18 +768,15 @@ public class SupportPlugin extends Plugin {
                         try {
                             records = future.get(REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
                         } catch (InterruptedException e1) {
-                            final LogRecord lr =
-                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                             lr.setThrown(e1);
                             records = Collections.singletonList(lr);
                         } catch (ExecutionException e1) {
-                            final LogRecord lr =
-                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                             lr.setThrown(e1);
                             records = Collections.singletonList(lr);
                         } catch (TimeoutException e1) {
-                            final LogRecord lr =
-                                    new LogRecord(Level.WARNING, "Could not retrieve remote log records");
+                            final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                             lr.setThrown(e1);
                             records = Collections.singletonList(lr);
                             future.cancel(true);
@@ -826,7 +842,9 @@ public class SupportPlugin extends Plugin {
             // and each connection gets a different RemoteClassLoader, so we need to evict them by class name,
             // not by their identity.
             for (Handler h : ROOT_LOGGER.getHandlers()) {
-                if (h.getClass().getName().equals(LogHolder.AGENT_LOG_HANDLER.getClass().getName())) {
+                if (h.getClass()
+                        .getName()
+                        .equals(LogHolder.AGENT_LOG_HANDLER.getClass().getName())) {
                     ROOT_LOGGER.removeHandler(h);
                     try {
                         h.close();
@@ -840,7 +858,6 @@ public class SupportPlugin extends Plugin {
             ROOT_LOGGER.addHandler(LogHolder.AGENT_LOG_HANDLER);
             return null;
         }
-
     }
 
     public static class LogFetcher extends MasterToSlaveCallable<List<LogRecord>, RuntimeException> {
@@ -849,7 +866,6 @@ public class SupportPlugin extends Plugin {
         public List<LogRecord> call() throws RuntimeException {
             return new ArrayList<>(LogHolder.AGENT_LOG_HANDLER.getRecent());
         }
-
     }
 
     public static class LogUpdater extends MasterToSlaveCallable<Void, RuntimeException> {
@@ -866,7 +882,6 @@ public class SupportPlugin extends Plugin {
             LogHolder.AGENT_LOG_HANDLER.setLevel(level);
             return null;
         }
-
     }
 
     @Extension
@@ -889,8 +904,8 @@ public class SupportPlugin extends Plugin {
                 Logger.getLogger(SupportPlugin.class.getName())
                         .log(Level.WARNING, "Could not install root log handler on node: " + c.getName(), e);
             } catch (RuntimeException e) {
-                Logger.getLogger(SupportPlugin.class.getName()).log(Level.WARNING,
-                        "Could not install root log handler on node: " + c.getName(), e);
+                Logger.getLogger(SupportPlugin.class.getName())
+                        .log(Level.WARNING, "Could not install root log handler on node: " + c.getName(), e);
             }
         }
     }
@@ -926,31 +941,36 @@ public class SupportPlugin extends Plugin {
                     return;
                 }
                 try {
-                    thread = new Thread(() -> {
-                        nextBundleWrite.set(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(automatedBundleConfig.getPeriod()));
-                        thread.setName(String.format("%s periodic bundle generator: since %s",
-                                SupportPlugin.class.getSimpleName(), new Date()));
-                        clearRequesterAuthentication();
-                        try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                             File bundleDir = getRootDirectory();
-                            if (!bundleDir.exists()) {
-                                if (!bundleDir.mkdirs()) {
-                                    return;
-                                }
-                            }
+                    thread = new Thread(
+                            () -> {
+                                nextBundleWrite.set(System.currentTimeMillis()
+                                        + TimeUnit.HOURS.toMillis(automatedBundleConfig.getPeriod()));
+                                thread.setName(String.format(
+                                        "%s periodic bundle generator: since %s",
+                                        SupportPlugin.class.getSimpleName(), new Date()));
+                                clearRequesterAuthentication();
+                                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+                                    File bundleDir = getRootDirectory();
+                                    if (!bundleDir.exists()) {
+                                        if (!bundleDir.mkdirs()) {
+                                            return;
+                                        }
+                                    }
 
-                            File file = new File(bundleDir, BundleFileName.generate());
-                            thread.setName(String.format("%s periodic bundle generator: writing %s since %s",
-                                    SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
-                            try (FileOutputStream fos = new FileOutputStream(file)) {
-                                writeBundle(fos, automatedBundleConfig.getComponents());
-                            } finally {
-                                cleanupOldBundles(bundleDir, file);   
-                            }
-                        } catch (Throwable t) {
-                            LOGGER.log(Level.WARNING, "Could not save support bundle", t);
-                        }
-                    }, SupportPlugin.class.getSimpleName() + " periodic bundle generator");
+                                    File file = new File(bundleDir, BundleFileName.generate());
+                                    thread.setName(String.format(
+                                            "%s periodic bundle generator: writing %s since %s",
+                                            SupportPlugin.class.getSimpleName(), file.getName(), new Date()));
+                                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                                        writeBundle(fos, automatedBundleConfig.getComponents());
+                                    } finally {
+                                        cleanupOldBundles(bundleDir, file);
+                                    }
+                                } catch (Throwable t) {
+                                    LOGGER.log(Level.WARNING, "Could not save support bundle", t);
+                                }
+                            },
+                            SupportPlugin.class.getSimpleName() + " periodic bundle generator");
                     thread.start();
                 } catch (Throwable t) {
                     LOGGER.log(Level.SEVERE, "Periodic bundle generating thread failed with error", t);
@@ -960,15 +980,17 @@ public class SupportPlugin extends Plugin {
 
         @SuppressFBWarnings(
                 value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "IS2_INCONSISTENT_SYNC"},
-                justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, " +
-                        "IS2_INCONSISTENT_SYNC=only called from an already synchronized method"
-        )
+                justification = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE=Best effort, "
+                        + "IS2_INCONSISTENT_SYNC=only called from an already synchronized method")
         private void cleanupOldBundles(File bundleDir, File justGenerated) {
-            thread.setName(String.format("%s periodic bundle generator: tidying old bundles since %s",
+            thread.setName(String.format(
+                    "%s periodic bundle generator: tidying old bundles since %s",
                     SupportPlugin.class.getSimpleName(), new Date()));
             File[] files = bundleDir.listFiles((dir, name) -> name.endsWith(".zip"));
             if (files == null) {
-                LOGGER.log(Level.WARNING, "Something is wrong: {0} does not exist or there was an IO issue.",
+                LOGGER.log(
+                        Level.WARNING,
+                        "Something is wrong: {0} does not exist or there was an IO issue.",
                         bundleDir.getAbsolutePath());
                 return;
             }
@@ -991,7 +1013,6 @@ public class SupportPlugin extends Plugin {
                 }
             }
         }
-
     }
 
     @Extension
@@ -1009,8 +1030,9 @@ public class SupportPlugin extends Plugin {
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
             if (json.has("supportProvider")) {
                 try {
-                    getInstance().setSupportProvider(req.bindJSON(SupportProvider.class,
-                            json.getJSONObject("supportProvider")));
+                    getInstance()
+                            .setSupportProvider(
+                                    req.bindJSON(SupportProvider.class, json.getJSONObject("supportProvider")));
                 } catch (IOException e) {
                     throw new FormException(e, "supportProvider");
                 }
@@ -1018,5 +1040,4 @@ public class SupportPlugin extends Plugin {
             return true;
         }
     }
-
 }

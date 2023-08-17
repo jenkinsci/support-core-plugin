@@ -24,13 +24,12 @@
 
 package com.cloudbees.jenkins.support.util;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Provides a {@link FilterWriter} that ignores calls to close its underlying writer and instead simply flushes it.

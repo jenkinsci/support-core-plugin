@@ -23,7 +23,12 @@
  */
 package com.cloudbees.jenkins.support.filter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.quicktheories.QuickTheory.qt;
+import static org.quicktheories.generators.SourceDSL.integers;
+
 import hudson.BulkChange;
+import java.util.stream.IntStream;
 import jenkins.model.Jenkins;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -33,12 +38,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.quicktheories.core.Gen;
-
-import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.quicktheories.QuickTheory.qt;
-import static org.quicktheories.generators.SourceDSL.integers;
 
 public class InetAddressContentFilterTest {
 
@@ -69,11 +68,9 @@ public class InetAddressContentFilterTest {
         // speed up test execution by ignoring new content mappings
         ContentMappings mappings = ContentMappings.get();
         try (BulkChange ignored = new BulkChange(mappings)) {
-            qt().forAll(inetAddress()).checkAssert(address ->
-                assertThat(ContentFilter.filter(filter, address))
+            qt().forAll(inetAddress()).checkAssert(address -> assertThat(ContentFilter.filter(filter, address))
                     .contains("ip_")
-                    .doesNotContain(address)
-            );
+                    .doesNotContain(address));
         }
     }
 
@@ -83,8 +80,7 @@ public class InetAddressContentFilterTest {
         Jenkins.VERSION = "1.2.3.4";
         resetMappings();
         InetAddressContentFilter filter = InetAddressContentFilter.get();
-        assertThat(ContentFilter.filter(filter, Jenkins.VERSION))
-            .isEqualTo(Jenkins.VERSION);
+        assertThat(ContentFilter.filter(filter, Jenkins.VERSION)).isEqualTo(Jenkins.VERSION);
     }
 
     private Gen<String> inetAddress() {
@@ -103,9 +99,9 @@ public class InetAddressContentFilterTest {
     private Gen<String> ipv6Standard() {
         Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
         return IntStream.range(0, 8)
-            .mapToObj(i -> part)
-            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-            .orElseThrow(IllegalStateException::new);
+                .mapToObj(i -> part)
+                .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                .orElseThrow(IllegalStateException::new);
     }
 
     private Gen<String> ipv6Compressed() {
@@ -120,30 +116,30 @@ public class InetAddressContentFilterTest {
         for (int compStartIndex = 0; compStartIndex < 7; compStartIndex++) {
             for (int compStopIndex = compStartIndex + 1; compStopIndex < 8; compStopIndex++) {
                 Gen<String> compResult;
-                if(compStartIndex == 0) {
+                if (compStartIndex == 0) {
                     compResult = IntStream.range(compStopIndex, 8)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new)
-                        .map(s -> "::" + s);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new)
+                            .map(s -> "::" + s);
                 } else if (compStopIndex == 7) {
                     compResult = IntStream.range(0, compStartIndex)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new)
-                        .map(s -> s + "::");
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new)
+                            .map(s -> s + "::");
                 } else {
                     Gen<String> leftPart = IntStream.range(0, compStartIndex)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new);
                     Gen<String> rightPart = IntStream.range(compStopIndex, 8)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new);
                     compResult = leftPart.zip(rightPart, (s1, s2) -> s1 + "::" + s2);
                 }
-                if(result == null) {
+                if (result == null) {
                     result = compResult;
                 } else {
                     result.mix(compResult);
@@ -157,10 +153,10 @@ public class InetAddressContentFilterTest {
         Gen<String> part = integers().between(0, 65535).map(Integer::toHexString);
         Gen<String> ipv4 = ipv4();
         return IntStream.range(0, 6)
-            .mapToObj(i -> part)
-            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-            .orElseThrow(IllegalStateException::new)
-            .zip(ipv4, (s1, s2) -> s1 + ':' + s2);
+                .mapToObj(i -> part)
+                .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                .orElseThrow(IllegalStateException::new)
+                .zip(ipv4, (s1, s2) -> s1 + ':' + s2);
     }
 
     private Gen<String> ipv6MixedCompressed() {
@@ -176,31 +172,32 @@ public class InetAddressContentFilterTest {
         for (int compStartIndex = 0; compStartIndex < 6; compStartIndex++) {
             for (int compStopIndex = compStartIndex + 1; compStopIndex < 6; compStopIndex++) {
                 Gen<String> compResult;
-                if(compStartIndex == 0) {
+                if (compStartIndex == 0) {
                     compResult = IntStream.range(compStopIndex, 6)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new)
-                        .zip(ipv4, (s1, s2) -> s1 + ":" + s2)
-                        .map(s -> "::" + s);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new)
+                            .zip(ipv4, (s1, s2) -> s1 + ":" + s2)
+                            .map(s -> "::" + s);
                 } else if (compStopIndex == 5) {
                     compResult = IntStream.range(0, compStartIndex)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new)
-                        .zip(ipv4, (s1, s2) -> s1 + "::" + s2);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new)
+                            .zip(ipv4, (s1, s2) -> s1 + "::" + s2);
                 } else {
                     Gen<String> leftPart = IntStream.range(0, compStartIndex)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new);
                     Gen<String> rightPart = IntStream.range(compStopIndex, 6)
-                        .mapToObj(i -> part)
-                        .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
-                        .orElseThrow(IllegalStateException::new);
-                    compResult = leftPart.zip(rightPart, (s1, s2) -> s1 + "::" + s2).zip(ipv4, (s1, s2) -> s1 + ':' + s2);
+                            .mapToObj(i -> part)
+                            .reduce((left, right) -> left.zip(right, (s1, s2) -> s1 + ':' + s2))
+                            .orElseThrow(IllegalStateException::new);
+                    compResult =
+                            leftPart.zip(rightPart, (s1, s2) -> s1 + "::" + s2).zip(ipv4, (s1, s2) -> s1 + ':' + s2);
                 }
-                if(result == null) {
+                if (result == null) {
                     result = compResult;
                 } else {
                     result.mix(compResult);

@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support;
 
+import static org.junit.Assert.fail;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.configfiles.AgentsConfigFile;
 import com.cloudbees.jenkins.support.configfiles.ConfigFileComponent;
@@ -17,6 +19,7 @@ import com.cloudbees.jenkins.support.impl.SystemConfiguration;
 import com.cloudbees.jenkins.support.impl.SystemProperties;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.impl.UpdateCenter;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -29,17 +32,6 @@ import hudson.model.User;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.Builder;
-import jenkins.model.Jenkins;
-import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -63,16 +55,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.junit.Assert.fail;
+import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class CheckFilterTest {
-    private final static Logger LOGGER = Logger.getLogger(CheckFilterTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CheckFilterTest.class.getName());
 
-    private final static String JOB_NAME = "thejob";
-    private final static String AGENT_NAME = "agent0"; //it's the name used by createOnlineSlave
-    private final static String VIEW_ALL_NEW_NAME = "all-view";
-    private final static String ENV_VAR = getFirstEnvVar();
+    private static final String JOB_NAME = "thejob";
+    private static final String AGENT_NAME = "agent0"; // it's the name used by createOnlineSlave
+    private static final String VIEW_ALL_NEW_NAME = "all-view";
+    private static final String ENV_VAR = getFirstEnvVar();
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -94,22 +93,24 @@ public class CheckFilterTest {
         checker.generateFilteredWords();
 
         // Check the components are filtered correctly
-        assertComponent(Arrays.asList(  AboutJenkins.class,
-                                        AboutUser.class,
-                                        AgentsConfigFile.class,
-                                        BuildQueue.class,
-                                        ConfigFileComponent.class,
-                                        DumpExportTable.class,
-                                        EnvironmentVariables.class,
-                                        JVMProcessSystemMetricsContents.Agents.class,
-                                        JVMProcessSystemMetricsContents.Master.class,
-                                        SystemConfiguration.class,
-                                        NetworkInterfaces.class,
-                                        NodeMonitors.class,
-                                        UpdateCenter.class,
-                                        SystemProperties.class,
-                                        ThreadDumps.class
-                                    ), checker);
+        assertComponent(
+                Arrays.asList(
+                        AboutJenkins.class,
+                        AboutUser.class,
+                        AgentsConfigFile.class,
+                        BuildQueue.class,
+                        ConfigFileComponent.class,
+                        DumpExportTable.class,
+                        EnvironmentVariables.class,
+                        JVMProcessSystemMetricsContents.Agents.class,
+                        JVMProcessSystemMetricsContents.Master.class,
+                        SystemConfiguration.class,
+                        NetworkInterfaces.class,
+                        NodeMonitors.class,
+                        UpdateCenter.class,
+                        SystemProperties.class,
+                        ThreadDumps.class),
+                checker);
 
         // Cancel the job running
         build.cancel(true);
@@ -142,22 +143,25 @@ public class CheckFilterTest {
 
         // Create a job to have something pending in the queue for the BuilQueue component
         FreeStyleProject project = j.createFreeStyleProject(JOB_NAME);
-        project.setAssignedLabel(new LabelAtom("foo")); //it's mandatory
+        project.setAssignedLabel(new LabelAtom("foo")); // it's mandatory
 
-        //project.getBuildersList().add(new SimpleBuilder());
+        // project.getBuildersList().add(new SimpleBuilder());
         return project.scheduleBuild2(0);
     }
 
-    private void assertComponent(List<Class<? extends Component>> componentClasses, FileChecker checker) throws IOException {
+    private void assertComponent(List<Class<? extends Component>> componentClasses, FileChecker checker)
+            throws IOException {
         File fileZip = new File(temp.getRoot(), "filteredBundle.zip");
         Files.deleteIfExists(fileZip.toPath());
 
         try (FileOutputStream zipOutputStream = new FileOutputStream(fileZip)) {
             ExtensionList<Component> existingComponents = ExtensionList.lookup(Component.class);
-            List<Component> componentsRequested = existingComponents.stream().filter(existingComponent -> componentClasses.contains(existingComponent.getClass())).collect(Collectors.toList());
+            List<Component> componentsRequested = existingComponents.stream()
+                    .filter(existingComponent -> componentClasses.contains(existingComponent.getClass()))
+                    .collect(Collectors.toList());
             SupportPlugin.writeBundle(zipOutputStream, componentsRequested);
 
-            //ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(fileZip));
+            // ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(fileZip));
             try (ZipFile zip = new ZipFile(fileZip)) {
                 Enumeration<ZipArchiveEntry> zipFileEntries = zip.getEntries();
 
@@ -167,7 +171,10 @@ public class CheckFilterTest {
                         break;
                     }
                     if (entry.getSize() > 2048 * 1024) {
-                        LOGGER.log(Level.WARNING, "Cannot check file '%s' because its content is bigger than 2Mb", entry.getName());
+                        LOGGER.log(
+                                Level.WARNING,
+                                "Cannot check file '%s' because its content is bigger than 2Mb",
+                                entry.getName());
                         break;
                     }
 
@@ -185,7 +192,7 @@ public class CheckFilterTest {
 
         String content;
         try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-            BufferedInputStream is = new BufferedInputStream(zip.getInputStream(entry))) {
+                BufferedInputStream is = new BufferedInputStream(zip.getInputStream(entry))) {
 
             int currentByte;
             // buffer of same size as the entry
@@ -222,12 +229,12 @@ public class CheckFilterTest {
             fileSet.add(of("manifest.md", "about", false));
             fileSet.add(of("about.md", "b", false));
             fileSet.add(of("items.md", "jobs", false));
-            //checksum.md5 is not generated in tests
+            // checksum.md5 is not generated in tests
 
-            //AboutJenkins -> nodes.md
-            //The agent node name should be filtered
+            // AboutJenkins -> nodes.md
+            // The agent node name should be filtered
             fileSet.add(of("nodes.md", AGENT_NAME, true));
-            //AboutUser
+            // AboutUser
             fileSet.add(of("user.md", "anonymous", true));
 
             fileSet.add(of("node-monitors.md", AGENT_NAME, true));
@@ -235,13 +242,12 @@ public class CheckFilterTest {
             fileSet.add(of("admin-monitors.md", "diagnostics", false));
             fileSet.add(of("admin-monitors.md", "Family", false));
 
-
             fileSet.add(of("nodes/slave/*/config.xml", AGENT_NAME, true));
 
-            //BuildQueue -> Name of item: ...
+            // BuildQueue -> Name of item: ...
             fileSet.add(of("buildqueue.md", JOB_NAME, true));
 
-            //ConfigFileComponent --> jenkins-root-configuration-files/config.xml
+            // ConfigFileComponent --> jenkins-root-configuration-files/config.xml
             fileSet.add(of("jenkins-root-configuration-files/config.xml", "all-view", true));
 
             // DumpExportTable --> nodes/slave/*/exportTable.txt
@@ -254,15 +260,14 @@ public class CheckFilterTest {
                 fileSet.add(of("nodes/slave/*/environment.txt", ENV_VAR, true));
             }
 
-//            JVMProcessSystemMetricsContents -->
-//            nodes/master/proc/meminfo.txt
-//            nodes/slave/*/proc/meminfo.txt
-//            nodes/*/self/status.txt
-//            nodes/*/self/cmdline
-//            nodes/*/self/environ
-//            nodes/*/self/limits.txt
-//            nodes/*/self/mountstats.txt
-
+            //            JVMProcessSystemMetricsContents -->
+            //            nodes/master/proc/meminfo.txt
+            //            nodes/slave/*/proc/meminfo.txt
+            //            nodes/*/self/status.txt
+            //            nodes/*/self/cmdline
+            //            nodes/*/self/environ
+            //            nodes/*/self/limits.txt
+            //            nodes/*/self/mountstats.txt
 
             fileSet.add(of("nodes/master/proc/meminfo.txt", "kb", false));
             fileSet.add(of("nodes/slave/*/proc/meminfo.txt", "kb", false));
@@ -310,32 +315,33 @@ public class CheckFilterTest {
             fileSet.add(of("nodes/master/proc/net/rpc/nfsd.txt", "cpu", false));
             fileSet.add(of("nodes/slave/*/proc/net/rpc/nfsd.txt", "cpu", false));
 
-            //NetworkInterfaces --> nodes/master/networkInterface.md, nodes/slave/*/networkInterface.md
+            // NetworkInterfaces --> nodes/master/networkInterface.md, nodes/slave/*/networkInterface.md
             String anIP = getInetAddress();
             if (anIP != null) {
                 fileSet.add(of("nodes/master/networkInterface.md", anIP, true));
                 fileSet.add(of("nodes/slave/*/networkInterface.md", anIP, true));
             }
 
-            //NodeMonitors --> node-monitors.md
+            // NodeMonitors --> node-monitors.md
             fileSet.add(of("node-monitors.md", AGENT_NAME, true));
 
-            //UpdateCenter --> update-center.md
+            // UpdateCenter --> update-center.md
             if (getUpdateCenterURL(jenkins) != null) {
                 fileSet.add(of("update-center.md", getUpdateCenterURL(jenkins), true));
             }
 
-            //SystemProperties --> nodes/master/system.properties, nodes/slave/*/system.properties
+            // SystemProperties --> nodes/master/system.properties, nodes/slave/*/system.properties
             fileSet.add(of("nodes/master/system.properties", "encoding", true));
             fileSet.add(of("nodes/slave/*/system.properties", "encoding", true));
 
-            //ThreadDumps --> nodes/slave/*/thread-dump.txt, nodes/master/thread-dump.txt
+            // ThreadDumps --> nodes/slave/*/thread-dump.txt, nodes/master/thread-dump.txt
             fileSet.add(of("nodes/master/thread-dump.txt", "runnable", true));
             fileSet.add(of("nodes/slave/*/thread-dump.txt", "runnable", true));
         }
 
         private String getUpdateCenterURL(Jenkins jenkins) {
-            if (jenkins.getUpdateCenter().getSiteList() != null && jenkins.getUpdateCenter().getSiteList().get(0) != null) {
+            if (jenkins.getUpdateCenter().getSiteList() != null
+                    && jenkins.getUpdateCenter().getSiteList().get(0) != null) {
                 return jenkins.getUpdateCenter().getSiteList().get(0).getUrl();
             }
             return null;
@@ -394,7 +400,15 @@ public class CheckFilterTest {
                     if (content == null) {
                         fail(String.format("Error checking the file %s because its content was null", file));
                     } else {
-                        Assert.assertTrue(String.format("The file '%s' should have the word '%s'. File content:\n\n----------\n%s\n%s----------\n\n", file, value.wordFiltered, content.substring(0, Math.min(MAX_CONTENT_LENGTH, content.length())), content.length() > MAX_CONTENT_LENGTH ? "...\n(content cut off)\n" : ""), content.toLowerCase(Locale.ENGLISH).contains(value.wordFiltered.toLowerCase(Locale.ENGLISH)));
+                        Assert.assertTrue(
+                                String.format(
+                                        "The file '%s' should have the word '%s'. File content:\n\n----------\n%s\n%s----------\n\n",
+                                        file,
+                                        value.wordFiltered,
+                                        content.substring(0, Math.min(MAX_CONTENT_LENGTH, content.length())),
+                                        content.length() > MAX_CONTENT_LENGTH ? "...\n(content cut off)\n" : ""),
+                                content.toLowerCase(Locale.ENGLISH)
+                                        .contains(value.wordFiltered.toLowerCase(Locale.ENGLISH)));
                     }
                     return;
                 }
@@ -423,7 +437,12 @@ public class CheckFilterTest {
 
     private static class SimpleBuilder extends Builder implements SimpleBuildStep, Serializable {
         @Override
-        public void perform(@NonNull Run<?, ?> run, @NonNull FilePath filePath, @NonNull Launcher launcher, @NonNull TaskListener taskListener) throws InterruptedException, IOException {
+        public void perform(
+                @NonNull Run<?, ?> run,
+                @NonNull FilePath filePath,
+                @NonNull Launcher launcher,
+                @NonNull TaskListener taskListener)
+                throws InterruptedException, IOException {
             taskListener.getLogger().println("Doing my job, sleeping...");
             Thread.sleep(Long.MAX_VALUE);
         }

@@ -24,10 +24,9 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Composite ContentFilter of all registered ContentFilter extensions.

@@ -25,7 +25,6 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,7 +43,6 @@ public abstract class Content {
      * Parts of the name to be filtered
      */
     private String[] filterableParameters;
-
 
     /**
      * Create a Content with this name. The name is not filtered so this constructor should be used exclusively when
@@ -85,7 +83,9 @@ public abstract class Content {
 
     public abstract void writeTo(OutputStream os) throws IOException;
 
-    public long getTime() throws IOException { return System.currentTimeMillis(); }
+    public long getTime() throws IOException {
+        return System.currentTimeMillis();
+    }
 
     /**
      * Indicates if this Content should be filtered when anonymization is enabled. When {@code true}, the contents written via

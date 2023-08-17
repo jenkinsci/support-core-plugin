@@ -26,7 +26,6 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
-
 import java.io.IOException;
 import java.io.OutputStream;
 

@@ -31,8 +31,6 @@ import hudson.Extension;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -50,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+import jenkins.model.Jenkins;
 
 /**
  * Items content
@@ -68,7 +67,7 @@ public class ItemsContent extends Component {
     public String getDisplayName() {
         return "Items Content (Computationally expensive)";
     }
-    
+
     private final DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     @Override
@@ -94,7 +93,7 @@ public class ItemsContent extends Component {
                         // too expensive: int builds = j.getBuilds().size();
                         int builds = 0;
                         File buildDir = jenkins.getBuildDirFor(j);
-                        if(new File(buildDir, "legacyIds").isFile()) {
+                        if (new File(buildDir, "legacyIds").isFile()) {
                             builds += countBuilds(buildDir.toPath(), this::parseInt);
                         } else {
                             builds += countBuilds(buildDir.toPath(), this::parseDate);
@@ -154,11 +153,13 @@ public class ItemsContent extends Component {
                 }
             }
 
-            private Integer countBuilds(Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
+            private Integer countBuilds(
+                    Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
                 int builds = 0;
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDirPath)) {
                     for (Path path : stream) {
-                        if (Files.isDirectory(path) && parseMethod.apply(path.toFile().getName()).isPresent()) {
+                        if (Files.isDirectory(path)
+                                && parseMethod.apply(path.toFile().getName()).isPresent()) {
                             builds++;
                         }
                     }
@@ -213,11 +214,13 @@ public class ItemsContent extends Component {
 
         /**
          * Compute the Standard Deviation (or Variance) as a measure of dispersion
-         * @return the standard deviation 
+         * @return the standard deviation
          */
         public synchronized double standardDeviation() {
             if (count >= 2) {
-                double v = Math.sqrt((count * (double) sumOfSquaredValues - sumOfValues * (double) sumOfValues) / count / (count - 1));
+                double v = Math.sqrt((count * (double) sumOfSquaredValues - sumOfValues * (double) sumOfValues)
+                        / count
+                        / (count - 1));
                 if (count <= 100) {
                     return roundToSigFig(v, 1); // 0.88*SD to 1.16*SD
                 }

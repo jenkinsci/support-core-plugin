@@ -7,14 +7,13 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.model.Node;
-import jenkins.model.Jenkins;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.DoNotUse;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
  * Base class for gathering specified /proc files with the capacity of selecting whether filter or not each file
@@ -29,7 +28,8 @@ public abstract class AdvancedProcFilesRetriever extends ProcFilesRetriever {
     @Override
     @Restricted(DoNotUse.class)
     public Map<String, String> getFilesToRetrieve() {
-        LOGGER.warning("No proc files will be included to the bundle. You should use the class ProcFilesRetriever or the method AdvancedProdFilesRetriever#getProcFilesToRetrieve");
+        LOGGER.warning(
+                "No proc files will be included to the bundle. You should use the class ProcFilesRetriever or the method AdvancedProdFilesRetriever#getProcFilesToRetrieve");
         return Collections.emptyMap();
     }
 
@@ -62,15 +62,18 @@ public abstract class AdvancedProcFilesRetriever extends ProcFilesRetriever {
         }
 
         for (ProcFile procDescriptor : getProcFilesToRetrieve()) {
-            container.add(new FilePathContent("nodes/{0}/proc/{1}", new String[]{name, procDescriptor.getName()},
-                    new FilePath(c.getChannel(), procDescriptor.getFile())) {
+            container.add(
+                    new FilePathContent(
+                            "nodes/{0}/proc/{1}",
+                            new String[] {name, procDescriptor.getName()},
+                            new FilePath(c.getChannel(), procDescriptor.getFile())) {
 
                         @Override
                         public boolean shouldBeFiltered() {
                             // Whether this specific file should be filtered or not
                             return procDescriptor.isFiltered();
                         }
-            });
+                    });
         }
 
         afterAddUnixContents(container, node, name);

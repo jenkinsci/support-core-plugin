@@ -24,11 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-import net.jcip.annotations.GuardedBy;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,6 +37,9 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
+import net.jcip.annotations.GuardedBy;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Wraps an OutputStream by filtering written lines using a provided ContentFilter.
@@ -58,11 +57,15 @@ public class FilteredOutputStream extends FilterOutputStream {
 
     @GuardedBy("this")
     private final ByteBuffer encodedBuf = ByteBuffer.allocate(256);
+
     @GuardedBy("this")
     private CharBuffer decodedBuf;
+
     private final Charset charset;
+
     @GuardedBy("this")
     private final CharsetDecoder decoder;
+
     private final ContentFilter contentFilter;
 
     /**
@@ -82,7 +85,8 @@ public class FilteredOutputStream extends FilterOutputStream {
      * @param charset       character set to use for decoding and encoding bytes written to this stream
      * @param contentFilter content filter to apply to lines written through this stream
      */
-    public FilteredOutputStream(@NonNull OutputStream out, @NonNull Charset charset, @NonNull ContentFilter contentFilter) {
+    public FilteredOutputStream(
+            @NonNull OutputStream out, @NonNull Charset charset, @NonNull ContentFilter contentFilter) {
         super(out);
         this.charset = charset;
         this.decoder = charset.newDecoder()
@@ -103,7 +107,7 @@ public class FilteredOutputStream extends FilterOutputStream {
 
     @Override
     public synchronized void write(int b) throws IOException {
-        write(new byte[]{(byte) b}, 0, 1);
+        write(new byte[] {(byte) b}, 0, 1);
     }
 
     @Override

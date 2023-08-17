@@ -1,5 +1,10 @@
 package com.cloudbees.jenkins.support.config;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import org.htmlunit.html.HtmlElement;
@@ -9,11 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RealJenkinsRule;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
 /**
  * Test for the {@link SupportAutomatedBundleConfiguration}
@@ -26,12 +26,18 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
 
     @Test
     public void enforcePeriod() throws Throwable {
-        rr.javaOptions().javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=2")
-            .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforcePeriod);
+        rr.javaOptions()
+                .javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=2")
+                .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforcePeriod);
     }
 
     private static void _enforcePeriod(JenkinsRule r) throws Exception {
-        assertThat(r.getInstance().getExtensionList(SupportAutomatedBundleConfiguration.class).get(0).getPeriod(), is(2));
+        assertThat(
+                r.getInstance()
+                        .getExtensionList(SupportAutomatedBundleConfiguration.class)
+                        .get(0)
+                        .getPeriod(),
+                is(2));
         assertThat(SupportAutomatedBundleConfiguration.get().isEnforcedPeriod(), is(true));
         assertThat(SupportAutomatedBundleConfiguration.get().isEnforcedDisabled(), is(false));
         assertThat(SupportAutomatedBundleConfiguration.get().isEnabled(), is(true));
@@ -42,38 +48,45 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
 
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             HtmlForm cfg = wc.goTo("supportCore").getFormByName("config");
-            assertThat("should be checked",
-                ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
-                is(true));
-            assertThat("should not be able to disable",
-                ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
-                is(true));
-            assertThat("should not even show an input for period",
-                cfg.getElementsByAttribute("input", "name", "period"),
-                hasSize(0));
+            assertThat(
+                    "should be checked",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
+                    is(true));
+            assertThat(
+                    "should not be able to disable",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
+                    is(true));
+            assertThat(
+                    "should not even show an input for period",
+                    cfg.getElementsByAttribute("input", "name", "period"),
+                    hasSize(0));
             for (HtmlElement element : cfg.getElementsByAttribute("div", "name", "components")) {
                 ((HtmlInput) element.getOneHtmlElementByAttribute("input", "name", "selected")).setChecked(true);
             }
             r.submit(cfg);
 
-            assertThat("should be enabled",
-                SupportAutomatedBundleConfiguration.get().isEnabled(),
-                is(true));
-            assertThat("period should be 2",
-                SupportAutomatedBundleConfiguration.get().getPeriod(),
-                is(2));
-            assertThat("all applicable components should be saved",
-                SupportAutomatedBundleConfiguration.get().getComponentIds(),
-                containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
-                    .map(Component::getId).toArray())
-            );
+            assertThat(
+                    "should be enabled",
+                    SupportAutomatedBundleConfiguration.get().isEnabled(),
+                    is(true));
+            assertThat(
+                    "period should be 2",
+                    SupportAutomatedBundleConfiguration.get().getPeriod(),
+                    is(2));
+            assertThat(
+                    "all applicable components should be saved",
+                    SupportAutomatedBundleConfiguration.get().getComponentIds(),
+                    containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
+                            .map(Component::getId)
+                            .toArray()));
         }
     }
 
     @Test
     public void enforceDisable() throws Throwable {
-        rr.javaOptions().javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=0")
-            .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforceDisabled);
+        rr.javaOptions()
+                .javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=0")
+                .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforceDisabled);
     }
 
     private static void _enforceDisabled(JenkinsRule r) throws Exception {
@@ -87,26 +100,30 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
 
         try (JenkinsRule.WebClient wc = r.createWebClient()) {
             HtmlForm cfg = wc.goTo("supportCore").getFormByName("config");
-            assertThat("should not be checked",
-                ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
-                is(false));
-            assertThat("should not be able to enable",
-                ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
-                is(true));
-            assertThat("should not even show period",
-                cfg.getElementsByAttribute("input", "name", "period"),
-                hasSize(0));
-            assertThat("should not even show components",
-                cfg.getElementsByAttribute("div", "name", "components"),
-                hasSize(0));
+            assertThat(
+                    "should not be checked",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isChecked(),
+                    is(false));
+            assertThat(
+                    "should not be able to enable",
+                    ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).isCheckable(),
+                    is(true));
+            assertThat(
+                    "should not even show period", cfg.getElementsByAttribute("input", "name", "period"), hasSize(0));
+            assertThat(
+                    "should not even show components",
+                    cfg.getElementsByAttribute("div", "name", "components"),
+                    hasSize(0));
             r.submit(cfg);
 
-            assertThat("should be disabled",
-                SupportAutomatedBundleConfiguration.get().isEnabled(),
-                is(false));
-            assertThat("period should be 0",
-                SupportAutomatedBundleConfiguration.get().getPeriod(),
-                is(0));
+            assertThat(
+                    "should be disabled",
+                    SupportAutomatedBundleConfiguration.get().isEnabled(),
+                    is(false));
+            assertThat(
+                    "period should be 0",
+                    SupportAutomatedBundleConfiguration.get().getPeriod(),
+                    is(0));
         }
     }
 }

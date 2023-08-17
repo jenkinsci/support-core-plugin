@@ -23,22 +23,21 @@
  */
 package com.cloudbees.jenkins.support.util;
 
+import static org.mockito.BDDMockito.then;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
-import static org.mockito.BDDMockito.then;
-
 public class IgnoreCloseOutputStreamTest {
 
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
-    
+
     @Mock
     private OutputStream out;
 

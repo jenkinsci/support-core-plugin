@@ -39,8 +39,7 @@ import jenkins.metrics.api.Metrics;
 public class SupportContextImpl implements SupportContext {
 
     @Deprecated
-    public SupportContextImpl() {
-    }
+    public SupportContextImpl() {}
 
     /**
      * {@inheritDoc}
@@ -61,6 +60,5 @@ public class SupportContextImpl implements SupportContext {
     }
 
     @Deprecated
-    public void shutdown() {
-    }
+    public void shutdown() {}
 }
