@@ -6,7 +6,7 @@ import org.jenkinsci.Symbol;
 
 /**
  * A {@link GlobalConfigurationCategory} for the global configuration implementation for Support Core.
- * 
+ *
  * @author Allan Burdajewicz
  */
 @Extension
@@ -22,4 +22,3 @@ public class SupportPluginConfigurationCategory extends GlobalConfigurationCateg
         return com.cloudbees.jenkins.support.config.Messages.SupportPluginConfigurationCategory_displayName();
     }
 }
-

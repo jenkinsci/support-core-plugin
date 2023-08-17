@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.api;
 
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 

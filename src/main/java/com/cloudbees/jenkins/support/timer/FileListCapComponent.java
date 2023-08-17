@@ -5,14 +5,13 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 
 /**
  * {@link Component} that attaches files inside {@link FileListCap} into a support bundle.
@@ -47,15 +46,15 @@ public abstract class FileListCapComponent extends Component {
             // while we read and put the reports into the support bundle, we don't want
             // the FileListCap to delete files. So we lock it.
 
-            final Collection<File> files = FileUtils.listFiles(
-                    fileListCap.getFolder(), new String[] {"txt"}, false);
+            final Collection<File> files = FileUtils.listFiles(fileListCap.getFolder(), new String[] {"txt"}, false);
             long recently = System.currentTimeMillis() - MAX_LOG_FILE_AGE_MS;
             for (File f : files) {
                 if (f.lastModified() > recently) {
-                    container.add(new FileContent("{0}/{1}", new String[]{fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
+                    container.add(new FileContent(
+                            "{0}/{1}",
+                            new String[] {fileListCap.getFolder().getName(), f.getName()}, f, MAX_FILE_SIZE));
                 }
             }
         }
     }
-
 }

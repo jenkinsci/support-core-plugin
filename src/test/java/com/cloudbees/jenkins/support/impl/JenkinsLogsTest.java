@@ -3,16 +3,15 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import static org.junit.Assert.assertFalse;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
+import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Objects;
-
-import static org.junit.Assert.assertFalse;
 
 public class JenkinsLogsTest {
 

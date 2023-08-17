@@ -16,9 +16,6 @@ import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +29,8 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 
 /**
  * @author schristou88
@@ -39,7 +38,7 @@ import java.util.WeakHashMap;
 @Extension
 public class FileDescriptorLimit extends Component {
 
-    private final WeakHashMap<Node,String> fileDescriptorCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> fileDescriptorCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -85,28 +84,29 @@ public class FileDescriptorLimit extends Component {
         } else {
             name = "slave/" + node.getNodeName();
         }
-        container.add(
-            new PrefilteredPrintedContent("nodes/{0}/file-descriptors.txt", name) {
+        container.add(new PrefilteredPrintedContent("nodes/{0}/file-descriptors.txt", name) {
 
-                @Override
-                protected void printTo(PrintWriter out, ContentFilter filter) {
-                    out.println(node.getDisplayName());
-                    out.println("======");
-                    out.println();
-                    try {
-                        out.println(ContentFilter.filter( filter,
-                            AsyncResultCache.get(node, fileDescriptorCache, new GetUlimit(),
-                            "file descriptor info",
-                            "N/A: Either no connection to node or no cached result")
-                        ));
-                    } catch (IOException e) {
-                        Functions.printStackTrace(e, out);
-                    } finally {
-                        out.flush();
-                    }
+            @Override
+            protected void printTo(PrintWriter out, ContentFilter filter) {
+                out.println(node.getDisplayName());
+                out.println("======");
+                out.println();
+                try {
+                    out.println(ContentFilter.filter(
+                            filter,
+                            AsyncResultCache.get(
+                                    node,
+                                    fileDescriptorCache,
+                                    new GetUlimit(),
+                                    "file descriptor info",
+                                    "N/A: Either no connection to node or no cached result")));
+                } catch (IOException e) {
+                    Functions.printStackTrace(e, out);
+                } finally {
+                    out.flush();
                 }
             }
-        );
+        });
     }
 
     /**
@@ -114,8 +114,7 @@ public class FileDescriptorLimit extends Component {
      */
     private static final class GetUlimit extends MasterToSlaveCallable<String, RuntimeException> {
 
-        public GetUlimit() {
-        }
+        public GetUlimit() {}
 
         public String call() {
             StringWriter bos = new StringWriter();
@@ -152,7 +151,7 @@ public class FileDescriptorLimit extends Component {
             } else {
                 writer.println("Wrong bean: " + operatingSystemMXBean);
             }
-        } catch(LinkageError e) {
+        } catch (LinkageError e) {
             writer.println("Unable to get the total number of open file descriptors using OperatingSystemMXBean");
         }
     }
@@ -186,7 +185,8 @@ public class FileDescriptorLimit extends Component {
     @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
     private static void getUlimit(PrintWriter writer) throws IOException {
         // TODO should first check whether /bin/bash even exists
-        try (InputStream is = new ProcessBuilder("bash", "-c", "ulimit -a").start().getInputStream()) {
+        try (InputStream is =
+                new ProcessBuilder("bash", "-c", "ulimit -a").start().getInputStream()) {
             // this is reading from the process so platform encoding is correct
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
             String line;

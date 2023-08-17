@@ -24,12 +24,11 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.apache.commons.lang.StringUtils;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
@@ -57,19 +56,18 @@ public interface ContentFilter extends ExtensionPoint {
      * @param input input data to filter
      * @return the filtered input data
      */
-    @NonNull String filter(@NonNull String input);
+    @NonNull
+    String filter(@NonNull String input);
 
     /**
      * Ensure that the filter has been loaded at least once.
      */
-    default void ensureLoaded() {
-    }
+    default void ensureLoaded() {}
 
     /**
      * Reloads the state of this filter. This may be implemented to rescan for more items to filter.
      */
-    default void reload() {
-    }
+    default void reload() {}
 
     /**
      * An utility method to filter a text only when both, the filter and the text are not null and the text is not empty

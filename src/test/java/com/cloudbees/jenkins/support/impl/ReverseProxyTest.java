@@ -1,8 +1,15 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static com.cloudbees.jenkins.support.impl.ReverseProxy.FORWARDED_HEADERS;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.when;
+
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,17 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-
-import static com.cloudbees.jenkins.support.impl.ReverseProxy.FORWARDED_HEADERS;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.when;
-
 public class ReverseProxyTest {
 
     private static final String HEADER_VALUE = "value";
+
     private static String expectedMessage(String header, ReverseProxy.Trilean value) {
         return String.format("Detected `%s` header: %s", header, value);
     }
@@ -32,7 +32,7 @@ public class ReverseProxyTest {
 
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
-    
+
     @Mock
     private StaplerRequest staplerRequest;
 

@@ -103,6 +103,6 @@ public class FileContent extends PrefilteredContent {
                 return new ByteArrayInputStream(Functions.printThrowable(e).getBytes(StandardCharsets.UTF_8));
             }
         };
-        return  new BaseFileContent(file, supplier, maxSize, this::getSimpleValueOrRedactedPassword);
+        return new BaseFileContent(file, supplier, maxSize, this::getSimpleValueOrRedactedPassword);
     }
 }

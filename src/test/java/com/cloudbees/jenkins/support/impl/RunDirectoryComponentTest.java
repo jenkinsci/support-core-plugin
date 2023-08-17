@@ -1,8 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import java.util.Map;
+import java.util.Optional;
 import junit.framework.AssertionFailedError;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -11,13 +17,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Map;
-import java.util.Optional;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class RunDirectoryComponentTest {
 
@@ -30,10 +29,11 @@ public class RunDirectoryComponentTest {
     public void addContentsFromFreestyle() throws Exception {
         FreeStyleProject p = j.jenkins.createProject(FreeStyleProject.class, JOB_NAME);
         FreeStyleBuild fBuild = j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
-        
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
+
         j.waitUntilNoActivity();
-        
+
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new RunDirectoryComponent(), fBuild);
 
         String prefix = "items/" + JOB_NAME + "/builds/" + fBuild.number;
@@ -51,7 +51,7 @@ public class RunDirectoryComponentTest {
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
-        
+
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new RunDirectoryComponent(), workflowRun);
@@ -115,8 +115,8 @@ public class RunDirectoryComponentTest {
 
         j.waitUntilNoActivity();
 
-        Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new RunDirectoryComponent("", "", true, 1), workflowRun);
+        Map<String, String> output =
+                SupportTestUtils.invokeComponentToMap(new RunDirectoryComponent("", "", true, 1), workflowRun);
 
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertTrue(output.containsKey(prefix + "/build.xml"));

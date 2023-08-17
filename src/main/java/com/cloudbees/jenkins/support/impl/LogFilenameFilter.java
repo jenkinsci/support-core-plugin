@@ -11,5 +11,6 @@ class LogFilenameFilter implements FilenameFilter, Serializable {
     public boolean accept(File dir, String name) {
         return name.endsWith(".log");
     }
+
     private static final long serialVersionUID = 1L;
 }

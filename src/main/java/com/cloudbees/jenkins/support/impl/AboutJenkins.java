@@ -11,12 +11,13 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.api.SupportProvider;
-import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.jenkins.support.util.Markdown;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Snapshot;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -34,16 +35,6 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import hudson.slaves.JNLPLauncher;
 import hudson.util.IOUtils;
-import jenkins.model.Jenkins;
-import jenkins.model.JenkinsLocationConfiguration;
-import jenkins.model.identity.IdentityRootAction;
-import jenkins.security.MasterToSlaveCallable;
-import jenkins.slaves.RemotingVersionInfo;
-import org.apache.commons.io.FileUtils;
-import org.kohsuke.stapler.Stapler;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -75,6 +66,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.servlet.ServletContext;
+import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.model.identity.IdentityRootAction;
+import jenkins.security.MasterToSlaveCallable;
+import jenkins.slaves.RemotingVersionInfo;
+import org.apache.commons.io.FileUtils;
+import org.kohsuke.stapler.Stapler;
 
 /**
  * Contributes basic information about Jenkins.
@@ -86,11 +85,11 @@ public class AboutJenkins extends Component {
 
     private static final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
 
-    private final WeakHashMap<Node,String> agentVersionCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> agentVersionCache = new WeakHashMap<Node, String>();
 
-    private final WeakHashMap<Node,String> javaInfoCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> javaInfoCache = new WeakHashMap<Node, String>();
 
-    private final WeakHashMap<Node,String> agentDigestCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> agentDigestCache = new WeakHashMap<Node, String>();
 
     @NonNull
     @Override
@@ -168,9 +167,10 @@ public class AboutJenkins extends Component {
             for (File file : FileUtils.listFiles(rootPath, null, false)) {
                 if (file.isFile()) {
                     try {
-                        result.append(Util.getDigestOf(new FileInputStream(file))) //FIPS OK: Not security related.
+                        result.append(Util.getDigestOf(new FileInputStream(file))) // FIPS OK: Not security related.
                                 .append("  ")
-                                .append(file.getName()).append('\n');
+                                .append(file.getName())
+                                .append('\n');
                     } catch (IOException e) {
                         // ignore
                     }
@@ -184,11 +184,16 @@ public class AboutJenkins extends Component {
         private static final long serialVersionUID = 1L;
 
         @SuppressFBWarnings(
-                value = {"NP_LOAD_OF_KNOWN_NULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"},
-                justification = "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}"
-        )
+                value = {
+                    "NP_LOAD_OF_KNOWN_NULL_VALUE",
+                    "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                    "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"
+                },
+                justification =
+                        "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}")
         public String call() throws RuntimeException {
-            try (InputStream is = hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
+            try (InputStream is =
+                    hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
                 if (is == null) {
                     return "N/A";
                 }
@@ -234,31 +239,54 @@ public class AboutJenkins extends Component {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
-            result.append(min).append(" Home:           `").append(
-                    Markdown.escapeBacktick(System.getProperty("java.home"))).append("`\n");
-            result.append(min).append(" Vendor:           ").append(
-                    Markdown.escapeUnderscore(System.getProperty("java.vendor"))).append("\n");
-            result.append(min).append(" Version:          ").append(
-                    Markdown.escapeUnderscore(System.getProperty("java.version"))).append("\n");
+            result.append(min)
+                    .append(" Home:           `")
+                    .append(Markdown.escapeBacktick(System.getProperty("java.home")))
+                    .append("`\n");
+            result.append(min)
+                    .append(" Vendor:           ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("java.vendor")))
+                    .append("\n");
+            result.append(min)
+                    .append(" Version:          ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("java.version")))
+                    .append("\n");
             long maxMem = runtime.maxMemory();
             long allocMem = runtime.totalMemory();
             long freeMem = runtime.freeMemory();
-            result.append(min).append(" Maximum memory:   ").append(humanReadableSize(maxMem)).append("\n");
-            result.append(min).append(" Allocated memory: ").append(humanReadableSize(allocMem))
+            result.append(min)
+                    .append(" Maximum memory:   ")
+                    .append(humanReadableSize(maxMem))
                     .append("\n");
-            result.append(min).append(" Free memory:      ").append(humanReadableSize(freeMem)).append("\n");
-            result.append(min).append(" In-use memory:    ").append(humanReadableSize(allocMem - freeMem)).append("\n");
+            result.append(min)
+                    .append(" Allocated memory: ")
+                    .append(humanReadableSize(allocMem))
+                    .append("\n");
+            result.append(min)
+                    .append(" Free memory:      ")
+                    .append(humanReadableSize(freeMem))
+                    .append("\n");
+            result.append(min)
+                    .append(" In-use memory:    ")
+                    .append(humanReadableSize(allocMem - freeMem))
+                    .append("\n");
 
-            for(MemoryPoolMXBean bean : ManagementFactory.getMemoryPoolMXBeans()) {
+            for (MemoryPoolMXBean bean : ManagementFactory.getMemoryPoolMXBeans()) {
                 if (bean.getName().toLowerCase().contains("perm gen")) {
                     MemoryUsage currentUsage = bean.getUsage();
-                    result.append(min).append(" PermGen used:     ").append(humanReadableSize(currentUsage.getUsed())).append("\n");
-                    result.append(min).append(" PermGen max:      ").append(humanReadableSize(currentUsage.getMax())).append("\n");
+                    result.append(min)
+                            .append(" PermGen used:     ")
+                            .append(humanReadableSize(currentUsage.getUsed()))
+                            .append("\n");
+                    result.append(min)
+                            .append(" PermGen max:      ")
+                            .append(humanReadableSize(currentUsage.getMax()))
+                            .append("\n");
                     break;
                 }
             }
 
-            for(MemoryManagerMXBean bean : ManagementFactory.getMemoryManagerMXBeans()) {
+            for (MemoryManagerMXBean bean : ManagementFactory.getMemoryManagerMXBeans()) {
                 if (bean.getName().contains("MarkSweepCompact")) {
                     result.append(min).append(" GC strategy:      SerialGC\n");
                     break;
@@ -276,51 +304,87 @@ public class AboutJenkins extends Component {
                     break;
                 }
             }
-            result.append(min).append(" Available CPUs:   ").append(runtime.availableProcessors()).append("\n");
+            result.append(min)
+                    .append(" Available CPUs:   ")
+                    .append(runtime.availableProcessors())
+                    .append("\n");
 
             result.append(maj).append(" Java Runtime Specification\n");
-            result.append(min).append(" Name:    ").append(System.getProperty("java.specification.name")).append("\n");
-            result.append(min).append(" Vendor:  ").append(System.getProperty("java.specification.vendor"))
+            result.append(min)
+                    .append(" Name:    ")
+                    .append(System.getProperty("java.specification.name"))
                     .append("\n");
-            result.append(min).append(" Version: ").append(System.getProperty("java.specification.version"))
+            result.append(min)
+                    .append(" Vendor:  ")
+                    .append(System.getProperty("java.specification.vendor"))
+                    .append("\n");
+            result.append(min)
+                    .append(" Version: ")
+                    .append(System.getProperty("java.specification.version"))
                     .append("\n");
             result.append(maj).append(" JVM Specification\n");
-            result.append(min).append(" Name:    ").append(System.getProperty("java.vm.specification.name"))
+            result.append(min)
+                    .append(" Name:    ")
+                    .append(System.getProperty("java.vm.specification.name"))
                     .append("\n");
-            result.append(min).append(" Vendor:  ").append(System.getProperty("java.vm.specification.vendor"))
+            result.append(min)
+                    .append(" Vendor:  ")
+                    .append(System.getProperty("java.vm.specification.vendor"))
                     .append("\n");
-            result.append(min).append(" Version: ").append(System.getProperty("java.vm.specification.version"))
+            result.append(min)
+                    .append(" Version: ")
+                    .append(System.getProperty("java.vm.specification.version"))
                     .append("\n");
             result.append(maj).append(" JVM Implementation\n");
-            result.append(min).append(" Name:    ").append(
-                    Markdown.escapeUnderscore(System.getProperty("java.vm.name"))).append("\n");
-            result.append(min).append(" Vendor:  ").append(
-                    Markdown.escapeUnderscore(System.getProperty("java.vm.vendor"))).append("\n");
-            result.append(min).append(" Version: ").append(
-                    Markdown.escapeUnderscore(System.getProperty("java.vm.version"))).append("\n");
+            result.append(min)
+                    .append(" Name:    ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("java.vm.name")))
+                    .append("\n");
+            result.append(min)
+                    .append(" Vendor:  ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("java.vm.vendor")))
+                    .append("\n");
+            result.append(min)
+                    .append(" Version: ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("java.vm.version")))
+                    .append("\n");
             result.append(maj).append(" Operating system\n");
-            result.append(min).append(" Name:         ").append(
-                    Markdown.escapeUnderscore(System.getProperty("os.name"))).append("\n");
-            result.append(min).append(" Architecture: ").append(
-                    Markdown.escapeUnderscore(System.getProperty("os.arch"))).append("\n");
-            result.append(min).append(" Version:      ").append(
-                    Markdown.escapeUnderscore(System.getProperty("os.version"))).append("\n");
+            result.append(min)
+                    .append(" Name:         ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("os.name")))
+                    .append("\n");
+            result.append(min)
+                    .append(" Architecture: ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("os.arch")))
+                    .append("\n");
+            result.append(min)
+                    .append(" Version:      ")
+                    .append(Markdown.escapeUnderscore(System.getProperty("os.version")))
+                    .append("\n");
             File lsb_release = new File("/usr/bin/lsb_release");
             if (lsb_release.canExecute()) {
                 try {
-                    Process proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--description", "--short").start();
+                    Process proc = new ProcessBuilder()
+                            .command(lsb_release.getAbsolutePath(), "--description", "--short")
+                            .start();
                     String distro = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0) {
-                        result.append(min).append(" Distribution: ").append(
-                                Markdown.escapeUnderscore(distro)).append("\n");
+                        result.append(min)
+                                .append(" Distribution: ")
+                                .append(Markdown.escapeUnderscore(distro))
+                                .append("\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
-                    proc = new ProcessBuilder().command(lsb_release.getAbsolutePath(), "--version", "--short").start();
+                    proc = new ProcessBuilder()
+                            .command(lsb_release.getAbsolutePath(), "--version", "--short")
+                            .start();
                     String modules = IOUtils.readFirstLine(proc.getInputStream(), "UTF-8");
                     if (proc.waitFor() == 0 && modules != null) {
-                        result.append(min).append(" LSB Modules:  `").append(
-                                Markdown.escapeUnderscore(modules)).append("`\n");
+                        result.append(min)
+                                .append(" LSB Modules:  `")
+                                .append(Markdown.escapeUnderscore(modules))
+                                .append("`\n");
                     } else {
                         logger.fine("lsb_release had a nonzero exit status");
                     }
@@ -335,35 +399,51 @@ public class AboutJenkins extends Component {
             Matcher processMatcher = Pattern.compile("^(-?[0-9]+)@.*$").matcher(process);
             if (processMatcher.matches()) {
                 int processId = Integer.parseInt(processMatcher.group(1));
-                result.append(maj).append(" Process ID: ").append(processId).append(" (0x")
-                        .append(Integer.toHexString(processId)).append(")\n");
+                result.append(maj)
+                        .append(" Process ID: ")
+                        .append(processId)
+                        .append(" (0x")
+                        .append(Integer.toHexString(processId))
+                        .append(")\n");
             }
             SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
             f.setTimeZone(TimeZone.getTimeZone("UTC"));
-            result.append(maj).append(" Process started: ")
+            result.append(maj)
+                    .append(" Process started: ")
                     .append(f.format(new Date(mBean.getStartTime())))
                     .append('\n');
-            result.append(maj).append(" Process uptime: ")
-                    .append(Util.getTimeSpanString(mBean.getUptime())).append('\n');
+            result.append(maj)
+                    .append(" Process uptime: ")
+                    .append(Util.getTimeSpanString(mBean.getUptime()))
+                    .append('\n');
             result.append(maj).append(" JVM startup parameters:\n");
             if (mBean.isBootClassPathSupported()) {
-                result.append(min).append(" Boot classpath: `")
-                        .append(Markdown.escapeBacktick(mBean.getBootClassPath())).append("`\n");
+                result.append(min)
+                        .append(" Boot classpath: `")
+                        .append(Markdown.escapeBacktick(mBean.getBootClassPath()))
+                        .append("`\n");
             }
-            result.append(min).append(" Classpath: `").append(Markdown.escapeBacktick(mBean.getClassPath()))
+            result.append(min)
+                    .append(" Classpath: `")
+                    .append(Markdown.escapeBacktick(mBean.getClassPath()))
                     .append("`\n");
-            result.append(min).append(" Library path: `").append(Markdown.escapeBacktick(mBean.getLibraryPath()))
+            result.append(min)
+                    .append(" Library path: `")
+                    .append(Markdown.escapeBacktick(mBean.getLibraryPath()))
                     .append("`\n");
             int count = 0;
             for (String arg : mBean.getInputArguments()) {
                 // The controller endpoint may be in the args
                 arg = passwordRedactor.redact(arg);
-                result.append(min).append(" arg[").append(count++).append("]: `").append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
+                result.append(min)
+                        .append(" arg[")
+                        .append(count++)
+                        .append("]: `")
+                        .append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
             return result.toString();
         }
-
     }
 
     private static String humanReadableSize(long size) {
@@ -395,8 +475,11 @@ public class AboutJenkins extends Component {
             super("about.md");
             this.plugins = plugins;
         }
+
         @Override
-        @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
+        @SuppressFBWarnings(
+                value = "DCN_NULLPOINTER_EXCEPTION",
+                justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
         protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
@@ -406,7 +489,9 @@ public class AboutJenkins extends Component {
             out.println("---------------");
             out.println();
             out.println("  * Version: `" + Markdown.escapeBacktick(Jenkins.VERSION) + "`");
-            out.println("  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId()) + "`"); //FIPS OK: Not security related.
+            out.println(
+                    "  * Instance ID: `" + Markdown.escapeBacktick(Jenkins.get().getLegacyInstanceId())
+                            + "`"); // FIPS OK: Not security related.
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar == null) {
                 out.println("  * Mode:    Webapp Directory");
@@ -419,10 +504,9 @@ public class AboutJenkins extends Component {
             try {
                 final ServletContext servletContext = Stapler.getCurrent().getServletContext();
                 out.println("  * Servlet container");
-                out.println("      - Specification: " + servletContext.getMajorVersion() + "." + servletContext
-                        .getMinorVersion());
-                out.println(
-                        "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
+                out.println("      - Specification: " + servletContext.getMajorVersion() + "."
+                        + servletContext.getMinorVersion());
+                out.println("      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
             } catch (NullPointerException e) {
                 // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
@@ -431,17 +515,22 @@ public class AboutJenkins extends Component {
             out.println("Remoting details");
             out.println("---------------");
             out.println();
-            out.println("  * Embedded Version: `" + Markdown.escapeBacktick(RemotingVersionInfo.getEmbeddedVersion().toString()) + "`");
-            out.println("  * Minimum Supported Version: `" + Markdown.escapeBacktick(RemotingVersionInfo.getMinimumSupportedVersion().toString()) + "`");
+            out.println("  * Embedded Version: `"
+                    + Markdown.escapeBacktick(
+                            RemotingVersionInfo.getEmbeddedVersion().toString()) + "`");
+            out.println("  * Minimum Supported Version: `"
+                    + Markdown.escapeBacktick(
+                            RemotingVersionInfo.getMinimumSupportedVersion().toString()) + "`");
             out.println();
             out.println("Important configuration");
             out.println("---------------");
             out.println();
             out.println("  * Security realm: " + getDescriptorName(jenkins.getSecurityRealm()));
             out.println("  * Authorization strategy: " + getDescriptorName(jenkins.getAuthorizationStrategy()));
-            out.println("  * CSRF Protection: "  + jenkins.isUseCrumbs());
+            out.println("  * CSRF Protection: " + jenkins.isUseCrumbs());
             out.println("  * Initialization Milestone: " + jenkins.getInitLevel());
-            out.println("  * Support bundle anonymization: " + ContentFilters.get().isEnabled());
+            out.println(
+                    "  * Support bundle anonymization: " + ContentFilters.get().isEnabled());
             out.println();
             out.println("Active Plugins");
             out.println("--------------");
@@ -449,9 +538,8 @@ public class AboutJenkins extends Component {
 
             for (PluginWrapper w : plugins) {
                 if (w.isActive()) {
-                    out.println("  * " + w.getShortName() + ":" + w.getVersion() + (w.hasUpdate()
-                            ? " *(update available)*"
-                            : "") + " '" + w.getDisplayName() + "'");
+                    out.println("  * " + w.getShortName() + ":" + w.getVersion()
+                            + (w.hasUpdate() ? " *(update available)*" : "") + " '" + w.getDisplayName() + "'");
                 }
             }
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
@@ -468,7 +556,7 @@ public class AboutJenkins extends Component {
             }
         }
     }
-    
+
     private static class IdentityContent extends PrintedContent {
 
         public IdentityContent() {
@@ -484,7 +572,7 @@ public class AboutJenkins extends Component {
             out.println();
             out.println("Fingerprint");
             out.println("---------------");
-            out.println(idRootAction.getFingerprint()); //FIPS OK: Reading ID.
+            out.println(idRootAction.getFingerprint()); // FIPS OK: Reading ID.
         }
     }
 
@@ -492,7 +580,8 @@ public class AboutJenkins extends Component {
         private final Iterable<PluginWrapper> plugins;
         private final Function<? super PluginWrapper, String> stringify;
 
-        public Plugins(Iterable<PluginWrapper> plugins, String name, Function<? super PluginWrapper, String> stringify) {
+        public Plugins(
+                Iterable<PluginWrapper> plugins, String name, Function<? super PluginWrapper, String> stringify) {
             super(name);
             this.plugins = plugins;
             this.stringify = stringify;
@@ -580,8 +669,9 @@ public class AboutJenkins extends Component {
             Iterator<PluginWrapper> activatedIT = activated.iterator();
             while (activatedIT.hasNext()) {
                 PluginWrapper w = activatedIT.next();
-                out.print("\t-L $JENKINS_UC/download/plugins/" + w.getShortName() + "/" + w.getVersion() + "/" + w.getShortName() + ".hpi"
-                        + " -o /usr/share/jenkins/ref/plugins/" + w.getShortName() + ".jpi");
+                out.print("\t-L $JENKINS_UC/download/plugins/" + w.getShortName() + "/" + w.getVersion() + "/"
+                        + w.getShortName() + ".hpi" + " -o /usr/share/jenkins/ref/plugins/" + w.getShortName()
+                        + ".jpi");
                 if (activatedIT.hasNext()) {
                     out.println(" \\");
                 }
@@ -607,7 +697,6 @@ public class AboutJenkins extends Component {
             }
 
             out.println();
-
         }
 
         @Override
@@ -620,10 +709,13 @@ public class AboutJenkins extends Component {
         NodesContent() {
             super("nodes.md");
         }
+
         private String getLabelString(Node n) {
             return Markdown.prettyNone(n.getLabelString());
         }
-        @Override protected void printTo(PrintWriter out,  ContentFilter filter) throws IOException {
+
+        @Override
+        protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             SupportPlugin supportPlugin = SupportPlugin.getInstance();
             if (supportPlugin != null) {
@@ -644,16 +736,19 @@ public class AboutJenkins extends Component {
             out.println("===========");
             out.println();
             out.println("  * master (Jenkins)");
-            out.println("      - Description:    _" +
-                    Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, jenkins.getNodeDescription()))) + "_");
+            out.println("      - Description:    _"
+                    + Markdown.escapeUnderscore(
+                            Util.fixNull(ContentFilter.filter(filter, jenkins.getNodeDescription())))
+                    + "_");
             out.println("      - Executors:      " + jenkins.getNumExecutors());
-            out.println("      - FS root:        `" +
-                    Markdown.escapeBacktick(ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
+            out.println("      - FS root:        `"
+                    + Markdown.escapeBacktick(
+                            ContentFilter.filter(filter, jenkins.getRootDir().getAbsolutePath())) + "`");
             out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
-            Optional.ofNullable(jenkins.toComputer()).ifPresent(computer ->
-                out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
-            if(jenkins.getChannel() == null) {
+            Optional.ofNullable(jenkins.toComputer())
+                    .ifPresent(computer -> out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
+            if (jenkins.getChannel() == null) {
                 out.println("      - Status:         offline");
             } else {
                 out.println("      - Status:         on-line");
@@ -662,19 +757,25 @@ public class AboutJenkins extends Component {
             out.print(new GetJavaInfo("      -", "          +").getInfo(filter));
             out.println();
             for (Node node : jenkins.getNodes()) {
-                out.println("  * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, node.getNodeName())) + "` (" +getDescriptorName(node) +
-                        ")");
-                out.println("      - Description:    _" +
-                        Markdown.escapeUnderscore(Util.fixNull(ContentFilter.filter(filter, node.getNodeDescription()))) + "_");
+                out.println("  * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, node.getNodeName())) + "` ("
+                        + getDescriptorName(node) + ")");
+                out.println("      - Description:    _"
+                        + Markdown.escapeUnderscore(
+                                Util.fixNull(ContentFilter.filter(filter, node.getNodeDescription())))
+                        + "_");
                 out.println("      - Executors:      " + node.getNumExecutors());
                 FilePath rootPath = node.getRootPath();
                 if (rootPath != null) {
-                    out.println("      - Remote FS root: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, rootPath.getRemote())) + "`");
+                    out.println("      - Remote FS root: `"
+                            + Markdown.escapeBacktick(ContentFilter.filter(filter, rootPath.getRemote())) + "`");
                 } else if (node instanceof Slave) {
-                    out.println("      - Remote FS root: `" +
-                            Markdown.escapeBacktick(ContentFilter.filter(filter, Slave.class.cast(node).getRemoteFS())) + "`");
+                    out.println("      - Remote FS root: `"
+                            + Markdown.escapeBacktick(ContentFilter.filter(
+                                    filter, Slave.class.cast(node).getRemoteFS()))
+                            + "`");
                 }
-                out.println("      - Labels:         " + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
+                out.println("      - Labels:         "
+                        + Markdown.escapeUnderscore(ContentFilter.filter(filter, getLabelString(node))));
                 out.println("      - Usage:          `" + node.getMode() + "`");
                 if (node instanceof Slave) {
                     Slave agent = (Slave) node;
@@ -684,26 +785,31 @@ public class AboutJenkins extends Component {
                     }
                     out.println("      - Availability:   " + getDescriptorName(agent.getRetentionStrategy()));
                 }
-                Optional.ofNullable(node.toComputer()).ifPresent(computer ->
-                    out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
+                Optional.ofNullable(node.toComputer())
+                        .ifPresent(
+                                computer -> out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
                 VirtualChannel channel = node.getChannel();
                 if (channel == null) {
                     out.println("      - Status:         off-line");
                 } else {
                     out.println("      - Status:         on-line");
                     try {
-                        out.println("      - Version:        " +
-                                AsyncResultCache.get(node, agentVersionCache, new GetAgentVersion(),
-                                        "agent.jar version", "(timeout with no cache available)"));
+                        out.println("      - Version:        "
+                                + AsyncResultCache.get(
+                                        node,
+                                        agentVersionCache,
+                                        new GetAgentVersion(),
+                                        "agent.jar version",
+                                        "(timeout with no cache available)"));
                     } catch (IOException e) {
-                        logger.log(Level.WARNING,
-                                "Could not get agent.jar version for " + node.getNodeName(), e);
+                        logger.log(Level.WARNING, "Could not get agent.jar version for " + node.getNodeName(), e);
                     }
                     try {
-                        final String javaInfo = AsyncResultCache.get(node, javaInfoCache,
-                                new GetJavaInfo("      -", "          +"), "Java info");
+                        final String javaInfo = AsyncResultCache.get(
+                                node, javaInfoCache, new GetJavaInfo("      -", "          +"), "Java info");
                         if (javaInfo == null) {
-                            logger.log(Level.FINE,
+                            logger.log(
+                                    Level.FINE,
                                     "Could not get Java info for {0} and no cached value available",
                                     node.getNodeName());
                         } else {
@@ -726,8 +832,11 @@ public class AboutJenkins extends Component {
         ControllerChecksumsContent() {
             super("nodes/master/checksums.md5");
         }
+
         @Override
-        @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
+        @SuppressFBWarnings(
+                value = "DCN_NULLPOINTER_EXCEPTION",
+                justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
         protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             if (jenkins == null) {
@@ -738,7 +847,8 @@ public class AboutJenkins extends Component {
             File jenkinsWar = Lifecycle.get().getHudsonWar();
             if (jenkinsWar != null) {
                 try {
-                    out.println(Util.getDigestOf(new FileInputStream(jenkinsWar)) + "  jenkins.war"); //FIPS OK: Not security related.
+                    out.println(Util.getDigestOf(new FileInputStream(jenkinsWar))
+                            + "  jenkins.war"); // FIPS OK: Not security related.
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "Could not compute MD5 of jenkins.war", e);
                 }
@@ -754,24 +864,21 @@ public class AboutJenkins extends Component {
                 Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
                 for (String resourcePath : new TreeSet<String>(resourcePaths)) {
                     try {
-                        out.println(
-                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war" //FIPS OK: Not security related.
-                                        + resourcePath);
+                        out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
+                                + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
                 }
-                for (String resourcePath : Arrays.asList(
-                        "/WEB-INF/jenkins-cli.jar",
-                        "/WEB-INF/web.xml")) {
+                for (String resourcePath : Arrays.asList("/WEB-INF/jenkins-cli.jar", "/WEB-INF/web.xml")) {
                     try {
                         InputStream resourceAsStream = servletContext.getResourceAsStream(resourcePath);
                         if (resourceAsStream == null) {
                             continue;
                         }
-                        out.println(
-                                Util.getDigestOf(resourceAsStream) + "  war" //FIPS OK: Not security related.
-                                        + resourcePath);
+                        out.println(Util.getDigestOf(resourceAsStream) + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
@@ -779,21 +886,23 @@ public class AboutJenkins extends Component {
                 resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs");
                 for (String resourcePath : new TreeSet<String>(resourcePaths)) {
                     try {
-                        out.println(
-                                Util.getDigestOf(servletContext.getResourceAsStream(resourcePath)) + "  war" //FIPS OK: Not security related.
-                                        + resourcePath);
+                        out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
+                                + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
                 }
             }
 
-            final Collection<File> pluginFiles = FileUtils.listFiles(new File(jenkins.getRootDir(), "plugins"), null, false);
+            final Collection<File> pluginFiles =
+                    FileUtils.listFiles(new File(jenkins.getRootDir(), "plugins"), null, false);
             for (File file : pluginFiles) {
                 if (file.isFile()) {
                     try {
-                        out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/" + file //FIPS OK: Not security related.
-                                .getName());
+                        out.println(Util.getDigestOf(new FileInputStream(file)) + "  plugins/"
+                                + file // FIPS OK: Not security related.
+                                        .getName());
                     } catch (IOException e) {
                         logger.log(Level.WARNING, "Could not compute MD5 of war/" + file, e);
                     }
@@ -810,20 +919,23 @@ public class AboutJenkins extends Component {
 
     private class NodeChecksumsContent extends PrintedContent {
         private final Node node;
+
         NodeChecksumsContent(Node node) {
             super("nodes/slave/{0}/checksums.md5", node.getNodeName());
             this.node = node;
         }
-        @Override protected void printTo(PrintWriter out) throws IOException {
+
+        @Override
+        protected void printTo(PrintWriter out) throws IOException {
             try {
                 final FilePath rootPath = node.getRootPath();
-                String agentDigest = rootPath == null ? "N/A" :
-                        AsyncResultCache.get(node, agentDigestCache, new GetAgentDigest(rootPath),
-                                "checksums", "N/A");
+                String agentDigest = rootPath == null
+                        ? "N/A"
+                        : AsyncResultCache.get(
+                                node, agentDigestCache, new GetAgentDigest(rootPath), "checksums", "N/A");
                 out.println(agentDigest);
             } catch (IOException e) {
-                logger.log(Level.WARNING,
-                        "Could not compute checksums on agent " + node.getNodeName(), e);
+                logger.log(Level.WARNING, "Could not compute checksums on agent " + node.getNodeName(), e);
             }
         }
 
@@ -854,9 +966,10 @@ public class AboutJenkins extends Component {
         return sorted;
     }
 
-    private static void populatePluginsLists(List<PluginWrapper> activePlugins, List<PluginWrapper> disabledPlugins, List<PluginWrapper> backupPlugins) {
-        for(PluginWrapper plugin : getPluginsSorted()){
-            if(plugin.isActive()) {
+    private static void populatePluginsLists(
+            List<PluginWrapper> activePlugins, List<PluginWrapper> disabledPlugins, List<PluginWrapper> backupPlugins) {
+        for (PluginWrapper plugin : getPluginsSorted()) {
+            if (plugin.isActive()) {
                 activePlugins.add(plugin);
             } else {
                 disabledPlugins.add(plugin);

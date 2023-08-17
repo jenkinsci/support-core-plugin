@@ -1,11 +1,10 @@
 package com.cloudbees.jenkins.support.impl;
 
-import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.google.common.collect.Lists;
-
+import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -61,7 +60,7 @@ public abstract class LogRecordContent extends PrefilteredContent {
     protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
         for (LogRecord logRecord : getLogRecords()) {
             String filtered = LOG_FORMATTER.format(logRecord);
-            filtered = ContentFilter.filter(filter,filtered);
+            filtered = ContentFilter.filter(filter, filtered);
             out.print(filtered);
         }
 

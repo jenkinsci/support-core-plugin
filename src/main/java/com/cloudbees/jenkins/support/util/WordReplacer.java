@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.util;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -83,17 +82,22 @@ public class WordReplacer {
 
     // To avoid repeat this code above
     private static void replaceWords(StringBuilder input, String[] words, String[] replaces, boolean ignoreCase) {
-        if (input == null || input.length()==0 || words == null ||
-                words.length == 0 || replaces == null || replaces.length == 0) {
+        if (input == null
+                || input.length() == 0
+                || words == null
+                || words.length == 0
+                || replaces == null
+                || replaces.length == 0) {
             return;
         }
 
         // the same number of word to replace and replaces to use
         if (words.length != replaces.length) {
-            throw new IllegalArgumentException(String.format("Words (%d) and replaces (%d) lengths should be equals", words.length, replaces.length));
+            throw new IllegalArgumentException(String.format(
+                    "Words (%d) and replaces (%d) lengths should be equals", words.length, replaces.length));
         }
 
-        for(int i = 0; i < words.length; i++) {
+        for (int i = 0; i < words.length; i++) {
             replaceWord(input, words[i], replaces[i], ignoreCase);
         }
     }
@@ -138,8 +142,7 @@ public class WordReplacer {
         replaceWord(input, word, replace, false);
     }
 
-
-    public static void replaceWordIgnoreCase(StringBuilder input, String word, String replace ) {
+    public static void replaceWordIgnoreCase(StringBuilder input, String word, String replace) {
         replaceWord(input, word, replace, true);
     }
 

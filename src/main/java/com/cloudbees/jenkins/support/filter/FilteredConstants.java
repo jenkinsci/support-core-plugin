@@ -31,6 +31,5 @@ final class FilteredConstants {
     static final Pattern EOL = Pattern.compile("\r?\n|" + '\0');
     static final int DEFAULT_DECODER_CAPACITY = 1024;
 
-    private FilteredConstants() {
-    }
+    private FilteredConstants() {}
 }

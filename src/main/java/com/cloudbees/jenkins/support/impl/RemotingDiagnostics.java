@@ -7,13 +7,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import hudson.remoting.Channel;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Set;
+import jenkins.model.Jenkins;
 
 /**
  * Captures diagnostics information from remoting channels.
@@ -42,7 +41,7 @@ public class RemotingDiagnostics extends Component {
                 // this method is new in remoting. see JENKINS-39150 change in remoting
                 try {
                     Method m = Channel.class.getMethod("dumpDiagnosticsForAll", PrintWriter.class);
-                    m.invoke(null,out);
+                    m.invoke(null, out);
                 } catch (Exception e) {
                     Functions.printStackTrace(e, out);
                 }

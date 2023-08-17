@@ -24,16 +24,15 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.randname.RandomNameGenerator;
 
 /**
@@ -59,7 +58,9 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
      */
     @Override
     public Supplier<String> apply(@NonNull Function<String, String> nameTransformer) {
-        return () -> nameTransformer.apply(generator.next()).toLowerCase(Locale.ENGLISH).replace(' ', '_');
+        return () -> nameTransformer
+                .apply(generator.next())
+                .toLowerCase(Locale.ENGLISH)
+                .replace(' ', '_');
     }
-
 }

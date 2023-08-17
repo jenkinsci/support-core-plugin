@@ -35,10 +35,6 @@ import hudson.model.LoadStatistics;
 import hudson.model.MultiStageTimeSeries;
 import hudson.model.TimeSeries;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -58,6 +54,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import javax.imageio.ImageIO;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * This component captures the Jenkins {@link LoadStatistics} for overall load, jobs not tied to a label and each
@@ -116,10 +115,11 @@ public class LoadStats extends Component {
         for (MultiStageTimeSeries.TimeScale scale : MultiStageTimeSeries.TimeScale.values()) {
             String scaleName = scale.name().toLowerCase(Locale.ENGLISH);
             if (!headless) {
-                BufferedImage image = stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
-                container.add(new ImageContent("load-stats/{0}/{1}.png", new String[]{name, scaleName}, image));
+                BufferedImage image =
+                        stats.createTrendChart(scale).createChart().createBufferedImage(500, 400);
+                container.add(new ImageContent("load-stats/{0}/{1}.png", new String[] {name, scaleName}, image));
             }
-            container.add(new CsvContent("load-stats/{0}/{1}.csv", new String[]{name, scaleName}, stats, scale));
+            container.add(new CsvContent("load-stats/{0}/{1}.csv", new String[] {name, scaleName}, stats, scale));
         }
         // on the other hand, if headless we should give an easy way to generate the graphs
         if (headless) {
@@ -166,7 +166,8 @@ public class LoadStats extends Component {
     private static List<Field> findFields() {
         List<Field> result = new ArrayList<Field>();
         for (Field f : LoadStatistics.class.getFields()) {
-            if (Modifier.isPublic(f.getModifiers()) && MultiStageTimeSeries.class.isAssignableFrom(f.getType())
+            if (Modifier.isPublic(f.getModifiers())
+                    && MultiStageTimeSeries.class.isAssignableFrom(f.getType())
                     && f.getAnnotation(Deprecated.class) == null) {
                 result.add(f);
             }
@@ -180,7 +181,11 @@ public class LoadStats extends Component {
         private final long time;
         private final long clock;
 
-        public CsvContent(String name, String[] filterableParameters, LoadStatistics stats, MultiStageTimeSeries.TimeScale scale) {
+        public CsvContent(
+                String name,
+                String[] filterableParameters,
+                LoadStatistics stats,
+                MultiStageTimeSeries.TimeScale scale) {
             super(name, filterableParameters);
 
             time = System.currentTimeMillis();
@@ -201,8 +206,7 @@ public class LoadStats extends Component {
             }
         }
 
-        public CsvContent(String name, LoadStatistics stats,
-                          MultiStageTimeSeries.TimeScale scale) {
+        public CsvContent(String name, LoadStatistics stats, MultiStageTimeSeries.TimeScale scale) {
             super(name);
 
             time = System.currentTimeMillis();
@@ -295,8 +299,9 @@ public class LoadStats extends Component {
                 }
                 Collections.sort(names);
                 for (String name : names) {
-                    out.printf("%s \"%s.csv\" using 1:%d with lines title \"%s\"", col == 2 ? "plot" : ",", scaleName,
-                            col, name);
+                    out.printf(
+                            "%s \"%s.csv\" using 1:%d with lines title \"%s\"",
+                            col == 2 ? "plot" : ",", scaleName, col, name);
                     col++;
                 }
                 out.println(";");
@@ -318,7 +323,7 @@ public class LoadStats extends Component {
      */
     private static String camelCaseToSentenceCase(String camelCase) {
         String name = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(camelCase), " ");
-        return name.substring(0, 1).toUpperCase(Locale.ENGLISH) + name.substring(1)
-                .toLowerCase(Locale.ENGLISH);
+        return name.substring(0, 1).toUpperCase(Locale.ENGLISH)
+                + name.substring(1).toLowerCase(Locale.ENGLISH);
     }
 }

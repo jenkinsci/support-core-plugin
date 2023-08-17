@@ -1,16 +1,15 @@
 package com.cloudbees.jenkins.support;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.TestExtension;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringStartsWith.startsWith;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 
 public class BundleNamePrefixTest {
 

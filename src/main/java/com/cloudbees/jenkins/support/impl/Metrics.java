@@ -5,10 +5,9 @@ import com.cloudbees.jenkins.support.api.Container;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.util.Collections;
 import java.util.Set;
+import jenkins.model.Jenkins;
 
 /**
  * Metrics from the different nodes.

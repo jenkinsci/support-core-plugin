@@ -1,17 +1,16 @@
 package com.cloudbees.jenkins.support.actions;
 
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Run;
+import java.util.Collection;
+import java.util.Collections;
 import jenkins.model.TransientActionFactory;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * A {@link SupportObjectAction} applicable to {@link Run}.

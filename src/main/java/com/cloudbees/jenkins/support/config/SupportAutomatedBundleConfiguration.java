@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.config;
 
+import static java.util.logging.Level.WARNING;
+
 import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
@@ -10,6 +12,12 @@ import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import jenkins.model.Jenkins;
@@ -22,18 +30,9 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import static java.util.logging.Level.WARNING;
-
 /**
  * Global Configuration for the Automated Support Bundle Generation, see {@link SupportPlugin.PeriodicWorkImpl}.
- * 
+ *
  * @author Allan Burdajewicz
  */
 @Extension
@@ -48,8 +47,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
      *
      * @return Singleton instance
      */
-    public static @NonNull
-    SupportAutomatedBundleConfiguration get() {
+    public static @NonNull SupportAutomatedBundleConfiguration get() {
         return ExtensionList.lookupSingleton(SupportAutomatedBundleConfiguration.class);
     }
 
@@ -74,9 +72,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     }
 
     public List<String> getComponentIds() {
-        return componentIds == null
-            ? getDefaultComponentIds()
-            : componentIds;
+        return componentIds == null ? getDefaultComponentIds() : componentIds;
     }
 
     /**
@@ -85,11 +81,10 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
      * @return a list of {@link String}
      */
     public static List<String> getDefaultComponentIds() {
-        return getApplicableComponents()
-            .stream()
-            .filter(Component::isEnabled)
-            .map(Component::getId)
-            .collect(Collectors.toList());
+        return getApplicableComponents().stream()
+                .filter(Component::isEnabled)
+                .map(Component::getId)
+                .collect(Collectors.toList());
     }
 
     public boolean isEnabled() {
@@ -97,8 +92,9 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     }
 
     public int getPeriod() {
-        return isEnforcedDisabled() ? 0
-            : Math.max(Math.min(24, isEnforcedPeriod() ? SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS : period), 1);
+        return isEnforcedDisabled()
+                ? 0
+                : Math.max(Math.min(24, isEnforcedPeriod() ? SupportPlugin.AUTO_BUNDLE_PERIOD_HOURS : period), 1);
     }
 
     /**
@@ -149,12 +145,12 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
      */
     public List<Component> getComponents() {
         return componentIds == null
-            ? getApplicableComponents().stream()
-            .filter(component -> getDefaultComponentIds().contains(component.getId()))
-            .collect(Collectors.toList())
-            : getApplicableComponents().stream()
-            .filter(component -> componentIds.contains(component.getId()))
-            .collect(Collectors.toList());
+                ? getApplicableComponents().stream()
+                        .filter(component -> getDefaultComponentIds().contains(component.getId()))
+                        .collect(Collectors.toList())
+                : getApplicableComponents().stream()
+                        .filter(component -> componentIds.contains(component.getId()))
+                        .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unused") // used by Jelly
@@ -176,15 +172,15 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
-        if(isEnforcedDisabled()) {
+        if (isEnforcedDisabled()) {
             return true;
         }
 
         boolean isEnabled = isEnforcedPeriod() || json.getBoolean("enabled");
 
         if (isEnabled && !json.has("components")) {
-            throw new Descriptor.FormException(Messages.SupportAutomatedBundleConfiguration_enabled_noComponents(),
-                "components");
+            throw new Descriptor.FormException(
+                    Messages.SupportAutomatedBundleConfiguration_enabled_noComponents(), "components");
         }
         try (BulkChange bc = new BulkChange(this)) {
             setComponentIds(parseRequest(req, json));
@@ -213,14 +209,13 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
             }
         }
         return getApplicableComponents().stream()
-            .filter(component -> !remove.contains(component.getId()) && component.isEnabled())
-            .map(Component::getId)
-            .collect(Collectors.toList());
+                .filter(component -> !remove.contains(component.getId()) && component.isEnabled())
+                .map(Component::getId)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public @NonNull
-    GlobalConfigurationCategory getCategory() {
+    public @NonNull GlobalConfigurationCategory getCategory() {
         return GlobalConfigurationCategory.get(SupportPluginConfigurationCategory.class);
     }
 

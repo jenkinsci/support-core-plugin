@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support.impl;
 
+import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
+
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.LaunchLogsFileContent;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
@@ -36,18 +38,15 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import hudson.slaves.Cloud;
-import jenkins.model.Jenkins;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Adds agent launch logs, which captures the current and past running connections to the agent.
@@ -96,7 +95,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
             }
         }
     }
-    
+
     /**
      * <p>
      * In the presence of {@link Cloud} plugins like EC2, we want to find past agents, not just current ones.
@@ -112,16 +111,15 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
         List<Agent> all = new ArrayList<>();
 
-        {// find all the agent launch log files and sort them newer ones first
-
+        { // find all the agent launch log files and sort them newer ones first
             File agentLogsDir = new File(Jenkins.get().getRootDir(), "logs/slaves");
             File[] logs = agentLogsDir.listFiles();
-            if (logs!=null) {
+            if (logs != null) {
                 for (File dir : logs) {
                     File lastLog = new File(dir, "slave.log");
                     if (lastLog.exists()) {
                         Agent s = new Agent(dir, lastLog);
-                        if (s.isTooOld()) continue;   // we don't care
+                        if (s.isTooOld()) continue; // we don't care
                         all.add(s);
                     }
                 }
@@ -129,32 +127,33 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
             Collections.sort(all);
         }
-        {// this might be still too many, so try to cap them.
+        { // this might be still too many, so try to cap them.
             int acceptableSize = Math.max(256, Jenkins.get().getNodes().size() * 5);
 
-            if (all.size() > acceptableSize)
-                all = all.subList(0, acceptableSize);
+            if (all.size() > acceptableSize) all = all.subList(0, acceptableSize);
         }
 
         // now add them all
         all.forEach(it -> addAgentLaunchLogs(result, it));
     }
-    
+
     private void addAgentLaunchLogs(Container container, Agent agent) {
         File[] files = agent.dir.listFiles(ROTATED_LOGFILE_FILTER);
-        if (files!=null) {
+        if (files != null) {
             for (File f : files) {
-                container.add(new LaunchLogsFileContent("nodes/slave/{0}/launchLogs/{1}",
-                    new String[]{agent.getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
+                container.add(new LaunchLogsFileContent(
+                        "nodes/slave/{0}/launchLogs/{1}",
+                        new String[] {agent.getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
             }
         }
     }
-    
+
     static class Agent implements Comparable<Agent> {
         /**
          * Launch log directory of the agent: logs/slaves/NAME
          */
         final File dir;
+
         final long time;
 
         Agent(File dir, File lastLog) {
@@ -163,7 +162,9 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         }
 
         /** Agent name */
-        String getName() { return dir.getName(); }
+        String getName() {
+            return dir.getName();
+        }
 
         /**
          * Use the primary log file's timestamp to compare newer agents from older agents.
@@ -193,10 +194,10 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
          * If the file is more than 7 days old, it is considered too old.
          */
         public boolean isTooOld() {
-            return time < System.currentTimeMillis()- TimeUnit.DAYS.toMillis(7);
+            return time < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
         }
     }
-    
+
     @Override
     public boolean isSelectedByDefault() {
         return false;
@@ -234,6 +235,5 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         public String getDisplayName() {
             return "Agent Launch Logs";
         }
-
     }
 }

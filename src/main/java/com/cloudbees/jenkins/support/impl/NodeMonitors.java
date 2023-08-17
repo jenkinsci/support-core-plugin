@@ -10,17 +10,16 @@ import hudson.model.Computer;
 import hudson.node_monitors.AbstractDiskSpaceMonitor;
 import hudson.node_monitors.NodeMonitor;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Set;
+import jenkins.model.Jenkins;
 
 /**
  * Created by schristou88 on 11/4/16.
  */
 @Extension
-public class NodeMonitors extends Component{
+public class NodeMonitors extends Component {
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -51,7 +50,8 @@ public class NodeMonitors extends Component{
                         if (!monitor.isIgnored()) {
                             out.println(" - Computers:");
                             for (Computer c : Jenkins.get().getComputers()) {
-                                out.println("   * " + ContentFilter.filter(filter, c.getDisplayName()) + ": " + monitor.data(c));
+                                out.println("   * " + ContentFilter.filter(filter, c.getDisplayName()) + ": "
+                                        + monitor.data(c));
                             }
                         }
                     }

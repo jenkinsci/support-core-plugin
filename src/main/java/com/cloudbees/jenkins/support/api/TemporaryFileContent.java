@@ -25,7 +25,6 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import hudson.Util;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;

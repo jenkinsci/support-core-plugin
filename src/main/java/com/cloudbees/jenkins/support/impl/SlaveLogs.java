@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support.impl;
 
+import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
+
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -38,8 +40,6 @@ import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -55,10 +55,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-
-import static com.cloudbees.jenkins.support.SupportPlugin.SUPPORT_DIRECTORY_NAME;
 
 /**
  * Adds the agent logs from all of the machines
@@ -88,29 +86,28 @@ public class SlaveLogs extends Component {
     public void addContents(@NonNull Container container) {
         // expensive remote computation are pooled together and executed later concurrently across all the agents
         List<java.util.concurrent.Callable<List<FileContent>>> tasks = Lists.newArrayList();
-        SmartLogFetcher logFetcher = new SmartLogFetcher("cache", new LogFilenameAgentFilter()); // id is awkward because of backward compatibility
+        SmartLogFetcher logFetcher = new SmartLogFetcher(
+                "cache", new LogFilenameAgentFilter()); // id is awkward because of backward compatibility
         SmartLogFetcher winswLogFetcher = new SmartLogFetcher("winsw", new WinswLogfileFilter());
 
         List<Node> nodes = Jenkins.get().getNodes();
         for (final Node node : nodes) {
             if (node.toComputer() instanceof SlaveComputer) {
-                container.add(
-                        new LogRecordContent("nodes/slave/{0}/jenkins.log", node.getNodeName()) {
-                            @Override
-                            public Iterable<LogRecord> getLogRecords() throws IOException {
-                                Computer computer = node.toComputer();
-                                if (computer == null) {
-                                    return Collections.emptyList();
-                                } else {
-                                    try {
-                                        return Lists.reverse(new ArrayList<>(computer.getLogRecords()));
-                                    } catch (InterruptedException e) {
-                                        throw new IOException(e);
-                                    }
-                                }
+                container.add(new LogRecordContent("nodes/slave/{0}/jenkins.log", node.getNodeName()) {
+                    @Override
+                    public Iterable<LogRecord> getLogRecords() throws IOException {
+                        Computer computer = node.toComputer();
+                        if (computer == null) {
+                            return Collections.emptyList();
+                        } else {
+                            try {
+                                return Lists.reverse(new ArrayList<>(computer.getLogRecords()));
+                            } catch (InterruptedException e) {
+                                throw new IOException(e);
                             }
                         }
-                );
+                    }
+                });
             }
 
             addAgentJulLogRecords(container, tasks, node, logFetcher);
@@ -126,12 +123,11 @@ public class SlaveLogs extends Component {
             try {
                 long expiresNanoTime =
                         System.nanoTime() + TimeUnit.SECONDS.toNanos(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC);
-                for (java.util.concurrent.Future<List<FileContent>> r : Computer.threadPoolForRemoting
-                        .invokeAll(tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC,
-                                TimeUnit.SECONDS)) {
+                for (java.util.concurrent.Future<List<FileContent>> r : Computer.threadPoolForRemoting.invokeAll(
+                        tasks, SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS)) {
                     try {
-                        for (FileContent c : r
-                                .get(Math.max(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
+                        for (FileContent c :
+                                r.get(Math.max(1, expiresNanoTime - System.nanoTime()), TimeUnit.NANOSECONDS)) {
                             container.add(c);
                         }
                     } catch (ExecutionException e) {
@@ -145,7 +141,6 @@ public class SlaveLogs extends Component {
                 LOGGER.log(Level.WARNING, "Could not retrieve some of the remote node extra logs", e);
             }
         }
-
     }
 
     @NonNull
@@ -159,21 +154,25 @@ public class SlaveLogs extends Component {
      *
      * @see JenkinsLogs#addControllerJulLogRecords(Container)
      */
-    private void addAgentJulLogRecords(Container result, List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+    private void addAgentJulLogRecords(
+            Container result,
+            List<java.util.concurrent.Callable<List<FileContent>>> tasks,
+            final Node node,
+            final SmartLogFetcher logFetcher) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
+            tasks.add(new java.util.concurrent.Callable<List<FileContent>>() {
                 public List<FileContent> call() throws Exception {
                     List<FileContent> result = new ArrayList<FileContent>();
                     FilePath supportPath = rootPath.child(SUPPORT_DIRECTORY_NAME);
                     if (supportPath.isDirectory()) {
-                        final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(supportPath);
+                        final Map<String, File> logFiles =
+                                logFetcher.forNode(node).getLogFiles(supportPath);
                         for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                             result.add(new FileContent(
-                                    "nodes/slave/{0}/logs/{1}", new String[]{node.getNodeName(), entry.getKey()},
-                                    entry.getValue())
-                            );
+                                    "nodes/slave/{0}/logs/{1}",
+                                    new String[] {node.getNodeName(), entry.getKey()}, entry.getValue()));
                         }
                     }
                     return result;
@@ -192,7 +191,7 @@ public class SlaveLogs extends Component {
                 try {
                     return SupportPlugin.getInstance().getAllLogRecords(node);
                 } catch (InterruptedException e) {
-                    throw (IOException)new InterruptedIOException().initCause(e);
+                    throw (IOException) new InterruptedIOException().initCause(e);
                 }
             }
         });
@@ -201,19 +200,23 @@ public class SlaveLogs extends Component {
     /**
      * Captures stdout/stderr log files produced by winsw.
      */
-    private void addWinsStdoutStderrLog(List<java.util.concurrent.Callable<List<FileContent>>> tasks, final Node node, final SmartLogFetcher logFetcher) {
+    private void addWinsStdoutStderrLog(
+            List<java.util.concurrent.Callable<List<FileContent>>> tasks,
+            final Node node,
+            final SmartLogFetcher logFetcher) {
         final FilePath rootPath = node.getRootPath();
         if (rootPath != null) {
             // rotated log files stored on the disk
-            tasks.add(new java.util.concurrent.Callable<List<FileContent>>(){
+            tasks.add(new java.util.concurrent.Callable<List<FileContent>>() {
                 public List<FileContent> call() throws Exception {
                     List<FileContent> result = new ArrayList<FileContent>();
                     final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
-                                "nodes/slave/{0}/logs/winsw/{1}", new String[] {node.getNodeName(), entry.getKey()},
-                                entry.getValue(), FileListCapComponent.MAX_FILE_SIZE)
-                        );
+                                "nodes/slave/{0}/logs/winsw/{1}",
+                                new String[] {node.getNodeName(), entry.getKey()},
+                                entry.getValue(),
+                                FileListCapComponent.MAX_FILE_SIZE));
                     }
                     return result;
                 }
@@ -228,7 +231,8 @@ public class SlaveLogs extends Component {
         Set<String> cacheKeys = new HashSet<>(nodes.size());
         for (Node node : nodes) {
             // can't use node.getRootPath() cause won't work with disconnected agents.
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + ((hudson.model.Slave)node).getRemoteFS()); //FIPS OK: Not security related.
+            String cacheKey = Util.getDigestOf(node.getNodeName() + ":"
+                    + ((hudson.model.Slave) node).getRemoteFS()); // FIPS OK: Not security related.
             LOGGER.log(Level.FINEST, "cacheKey {0} is active", cacheKey);
             cacheKeys.add(StringUtils.right(cacheKey, 8));
         }

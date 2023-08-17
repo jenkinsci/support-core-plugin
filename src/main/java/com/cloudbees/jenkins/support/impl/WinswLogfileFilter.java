@@ -16,5 +16,6 @@ class WinswLogfileFilter implements FilenameFilter, Serializable {
         // we use the contains() method.
         return name.contains(".out.log") || name.contains(".err.log");
     }
+
     private static final long serialVersionUID = 1L;
 }

@@ -49,5 +49,4 @@ public abstract class SupportProviderDescriptor extends Descriptor<SupportProvid
             throw new RuntimeException("Failed to instantiate " + clazz, e);
         }
     }
-
 }

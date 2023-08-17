@@ -30,14 +30,13 @@ import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
 import hudson.security.ACL;
 import hudson.security.Permission;
+import java.util.Collections;
+import java.util.Set;
 import jenkins.model.Jenkins;
-import org.springframework.security.core.Authentication;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import java.util.Collections;
-import java.util.Set;
+import org.springframework.security.core.Authentication;
 
 /**
  * Represents a component of a support bundle.
@@ -50,7 +49,7 @@ import java.util.Set;
  */
 @ExportedBean
 public abstract class Component implements ExtensionPoint {
-    
+
     /**
      * Returns the (possibly empty, never null) list of permissions that are required for the user to include this
      * in a bundle. An empty list indicates that any user can include this bundle.
@@ -115,7 +114,7 @@ public abstract class Component implements ExtensionPoint {
      * @return {@code true} if applicable to this class
      */
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
-        return Jenkins.class.isAssignableFrom(clazz); 
+        return Jenkins.class.isAssignableFrom(clazz);
     }
 
     @NonNull
@@ -134,13 +133,13 @@ public abstract class Component implements ExtensionPoint {
      * @return by default, the {@link Class#getSimpleName} of the component implementation.
      */
     @Exported
-    @NonNull public String getId() {
+    @NonNull
+    public String getId() {
         return getClass().getSimpleName();
     }
 
     @Deprecated
-    public void start(@NonNull SupportContext context) {
-    }
+    public void start(@NonNull SupportContext context) {}
 
     /**
      * Specify in which {@link ComponentCategory} the current component is related.

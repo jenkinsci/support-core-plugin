@@ -1,7 +1,14 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleProject;
+import java.util.Map;
+import java.util.Optional;
 import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -10,14 +17,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
-
-import java.util.Map;
-import java.util.Optional;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class AbstractItemComponentTest {
 
@@ -37,7 +36,8 @@ public class AbstractItemComponentTest {
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AbstractItemDirectoryComponent(), f);
@@ -59,7 +59,8 @@ public class AbstractItemComponentTest {
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
@@ -83,7 +84,8 @@ public class AbstractItemComponentTest {
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
@@ -107,7 +109,8 @@ public class AbstractItemComponentTest {
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
@@ -130,7 +133,8 @@ public class AbstractItemComponentTest {
         MockFolder f = j.createFolder(FOLDER_NAME);
         FreeStyleProject p = f.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new).waitForStart());
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart());
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AbstractItemDirectoryComponent(), p);
@@ -233,8 +237,8 @@ public class AbstractItemComponentTest {
 
         j.waitUntilNoActivity();
 
-        Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new AbstractItemDirectoryComponent("", "", true, 3), p);
+        Map<String, String> output =
+                SupportTestUtils.invokeComponentToMap(new AbstractItemDirectoryComponent("", "", true, 3), p);
 
         String prefix = "items/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));

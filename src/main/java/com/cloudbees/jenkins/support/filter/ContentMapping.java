@@ -25,15 +25,14 @@
 package com.cloudbees.jenkins.support.filter;
 
 import com.cloudbees.jenkins.support.util.WordReplacer;
-import hudson.Functions;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-import net.jcip.annotations.Immutable;
+import hudson.Functions;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import net.jcip.annotations.Immutable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Represents a mapping from some original string to a replacement. Useful both as an individual ContentFilter as well
@@ -69,7 +68,7 @@ public class ContentMapping implements ContentFilter {
 
         // create the replacement array with the same length as the resulting originals
         replacements = new String[originals.length];
-        for(int i = 0; i < replacements.length; i++) {
+        for (int i = 0; i < replacements.length; i++) {
             replacements[i] = replacement;
         }
 

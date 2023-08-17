@@ -23,17 +23,16 @@
  */
 package com.cloudbees.jenkins.support.filter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
+import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.IOException;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class SensitiveContentFilterTest {
 

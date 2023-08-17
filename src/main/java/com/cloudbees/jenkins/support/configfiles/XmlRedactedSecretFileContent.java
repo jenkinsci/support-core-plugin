@@ -2,13 +2,12 @@ package com.cloudbees.jenkins.support.configfiles;
 
 import com.cloudbees.jenkins.support.api.FileContent;
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
-import org.xml.sax.SAXException;
-
-import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import javax.xml.transform.TransformerException;
+import org.xml.sax.SAXException;
 
 class XmlRedactedSecretFileContent extends FileContent {
 
@@ -44,9 +43,13 @@ class XmlRedactedSecretFileContent extends FileContent {
 
     private String redactStringTagIfNeeded(String value) {
         if (previousStringTagValue != null) {
-            if (previousStringTagValue.contains(STRING_TAG) && PasswordRedactor.get().match(previousStringTagValue)) {
+            if (previousStringTagValue.contains(STRING_TAG)
+                    && PasswordRedactor.get().match(previousStringTagValue)) {
                 previousStringTagValue = null;
-                return value.substring(0, value.indexOf(STRING_TAG)) + STRING_TAG + PasswordRedactor.REDACTED + CLOSE_STRING_TAG;
+                return value.substring(0, value.indexOf(STRING_TAG))
+                        + STRING_TAG
+                        + PasswordRedactor.REDACTED
+                        + CLOSE_STRING_TAG;
             }
             previousStringTagValue = null;
             return value;

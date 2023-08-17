@@ -26,10 +26,9 @@ package com.cloudbees.jenkins.support.api;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
-import org.jvnet.localizer.Localizable;
-
 import java.io.IOException;
 import java.io.PrintWriter;
+import org.jvnet.localizer.Localizable;
 
 /**
  * The provider of support.

@@ -7,7 +7,6 @@ import com.codahale.metrics.json.HealthCheckModule;
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +31,7 @@ public class MetricsContent extends Content {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public MetricsContent(String name, String[] filterableParameters,  MetricRegistry metricsRegistry) {
+    public MetricsContent(String name, String[] filterableParameters, MetricRegistry metricsRegistry) {
         super(name, filterableParameters);
 
         this.registry = metricsRegistry;

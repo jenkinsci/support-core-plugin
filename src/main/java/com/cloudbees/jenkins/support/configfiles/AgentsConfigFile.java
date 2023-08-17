@@ -31,15 +31,14 @@ import hudson.Extension;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Adds nodes config.xml files to the bundle.
@@ -95,8 +94,8 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
         }
         File agentDir = new File(Jenkins.get().getRootDir(), MessageFormat.format("nodes/{0}", item.getName()));
         File config = new File(agentDir, "config.xml");
-        container.add(new XmlRedactedSecretFileContent("nodes/slave/{0}/config.xml", 
-            new String[]{agentDir.getName()}, config));
+        container.add(new XmlRedactedSecretFileContent(
+                "nodes/slave/{0}/config.xml", new String[] {agentDir.getName()}, config));
     }
 
     @Override
@@ -126,6 +125,5 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
         public String getDisplayName() {
             return "Agent Configuration File";
         }
-
     }
 }

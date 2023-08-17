@@ -1,5 +1,10 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+
 import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
@@ -10,6 +15,12 @@ import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.slaves.SlaveComputer;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.zip.ZipFile;
 import junit.framework.AssertionFailedError;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
@@ -18,18 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.zip.ZipFile;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import org.jvnet.hudson.test.LoggerRule;
 
 public class FileDescriptorLimitTest {
@@ -73,7 +72,7 @@ public class FileDescriptorLimitTest {
         String output;
         // Hold an open File Descriptor
         try (FileInputStream ignored = new FileInputStream(p.getConfigFile().getFile())) {
-             output = SupportTestUtils.invokeComponentToString(new FileDescriptorLimit(), filter);
+            output = SupportTestUtils.invokeComponentToString(new FileDescriptorLimit(), filter);
         }
         MatcherAssert.assertThat(output, containsString("core file size"));
         MatcherAssert.assertThat(output, containsString("Open File Descriptor Count:"));
@@ -94,17 +93,25 @@ public class FileDescriptorLimitTest {
             SupportPlugin.writeBundle(os, List.of(new FileDescriptorLimit()));
         }
         try (var zf = new ZipFile(bundle)) {
-            try (var is = zf.getInputStream(zf.stream().filter(n -> n.getName().matches("nodes/master/file-descriptors[.]txt")).findFirst().get())) {
-                assertThat("worked on controller", IOUtils.toString(is, (String) null), containsString("All open files"));
+            try (var is = zf.getInputStream(zf.stream()
+                    .filter(n -> n.getName().matches("nodes/master/file-descriptors[.]txt"))
+                    .findFirst()
+                    .get())) {
+                assertThat(
+                        "worked on controller", IOUtils.toString(is, (String) null), containsString("All open files"));
             }
-            try (var is = zf.getInputStream(zf.stream().filter(n -> n.getName().matches("nodes/slave/.+/file-descriptors[.]txt")).findFirst().get())) {
-                assertThat("worked on agent\n" + agent.getLog(), IOUtils.toString(is, (String) null),
-                    anyOf(
-                        containsString("All open files"),
-                        // TODO occasional flake in PCT (not known how to reproduce):
-                        containsString("Either no connection to node or no cached result")));
+            try (var is = zf.getInputStream(zf.stream()
+                    .filter(n -> n.getName().matches("nodes/slave/.+/file-descriptors[.]txt"))
+                    .findFirst()
+                    .get())) {
+                assertThat(
+                        "worked on agent\n" + agent.getLog(),
+                        IOUtils.toString(is, (String) null),
+                        anyOf(
+                                containsString("All open files"),
+                                // TODO occasional flake in PCT (not known how to reproduce):
+                                containsString("Either no connection to node or no cached result")));
             }
         }
     }
-
 }

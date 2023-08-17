@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2015 schristou88
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,8 +32,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Node;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
@@ -47,6 +45,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
+import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 
 /**
@@ -70,24 +69,20 @@ public class NetworkInterfaces extends Component {
 
     @Override
     public void addContents(@NonNull Container result) {
-        result.add(
-                new Content("nodes/master/networkInterface.md") {
-                    @Override
-                    public void writeTo(OutputStream os) throws IOException {
-                        os.write(getNetworkInterface(Jenkins.get()).getBytes(StandardCharsets.UTF_8));
-                    }
-                }
-        );
+        result.add(new Content("nodes/master/networkInterface.md") {
+            @Override
+            public void writeTo(OutputStream os) throws IOException {
+                os.write(getNetworkInterface(Jenkins.get()).getBytes(StandardCharsets.UTF_8));
+            }
+        });
 
         for (final Node node : Jenkins.get().getNodes()) {
-            result.add(
-                    new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
-                        @Override
-                        public void writeTo(OutputStream os) throws IOException {
-                            os.write(getNetworkInterface(node).getBytes(StandardCharsets.UTF_8));
-                        }
-                    }
-            );
+            result.add(new Content("nodes/slave/{0}/networkInterface.md", node.getNodeName()) {
+                @Override
+                public void writeTo(OutputStream os) throws IOException {
+                    os.write(getNetworkInterface(node).getBytes(StandardCharsets.UTF_8));
+                }
+            });
         }
     }
 
@@ -98,7 +93,8 @@ public class NetworkInterfaces extends Component {
     }
 
     public String getNetworkInterface(Node node) throws IOException {
-        return AsyncResultCache.get(node,
+        return AsyncResultCache.get(
+                node,
                 networkInterfaceCache,
                 new GetNetworkInterfaces(),
                 "network interfaces",
@@ -109,7 +105,8 @@ public class NetworkInterfaces extends Component {
 
         public String call() {
             try {
-                // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take about 10ms and on windows we can easily have 60)
+                // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take
+                // about 10ms and on windows we can easily have 60)
                 List<NetworkInterface> nics = new ArrayList<>();
                 {
                     Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -117,7 +114,7 @@ public class NetworkInterfaces extends Component {
                         nics.add(networkInterfaces.nextElement());
                     }
                 }
-                
+
                 return nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
             } catch (SocketException e) {
                 return e.getMessage();
@@ -133,30 +130,36 @@ public class NetworkInterfaces extends Component {
 
                 // Do not have permissions or address does not exist
                 if (hardwareAddress != null && hardwareAddress.length != 0) {
-                    sb.append(" ** Hardware Address - ").append(Util.toHexString(hardwareAddress)).append("\n");
+                    sb.append(" ** Hardware Address - ")
+                            .append(Util.toHexString(hardwareAddress))
+                            .append("\n");
                 }
                 sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
                 Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                 while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress =  inetAddresses.nextElement();
+                    InetAddress inetAddress = inetAddresses.nextElement();
                     sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
                 }
                 sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
                 sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
                 sb.append(" ** Is Virtual - ").append(ni.isVirtual()).append('\n');
                 sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
-                sb.append(" ** Is Point to Point - ").append(ni.isPointToPoint()).append('\n');
-                sb.append(" ** Supports multicast - ").append(ni.supportsMulticast()).append('\n');
+                sb.append(" ** Is Point to Point - ")
+                        .append(ni.isPointToPoint())
+                        .append('\n');
+                sb.append(" ** Supports multicast - ")
+                        .append(ni.supportsMulticast())
+                        .append('\n');
 
                 if (ni.getParent() != null) {
-                    sb.append(" ** Child of - ").append(ni.getParent().getDisplayName()).append('\n');
+                    sb.append(" ** Child of - ")
+                            .append(ni.getParent().getDisplayName())
+                            .append('\n');
                 }
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
             }
             return sb.toString();
         }
-
     }
-
 }

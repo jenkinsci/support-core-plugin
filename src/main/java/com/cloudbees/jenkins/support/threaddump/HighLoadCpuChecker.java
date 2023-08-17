@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support.threaddump;
 
+import static java.util.logging.Level.WARNING;
+
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.codahale.metrics.Gauge;
@@ -32,9 +34,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.PeriodicWork;
-import jenkins.metrics.impl.VMMetricProviderImpl;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
@@ -42,8 +41,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import static java.util.logging.Level.WARNING;
+import jenkins.metrics.impl.VMMetricProviderImpl;
+import jenkins.model.Jenkins;
 
 /**
  * PeriodicWork to check when there is a high load in the instance.
@@ -58,13 +57,13 @@ public class HighLoadCpuChecker extends PeriodicWork {
      * in the RECURRENCE_PERIOD_SEC
      */
     public static final int RECURRENCE_PERIOD_SEC =
-            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".RECURRENCE_PERIOD_SEC", 600);
+            Integer.getInteger(HighLoadCpuChecker.class.getName() + ".RECURRENCE_PERIOD_SEC", 600);
 
     /**
      * Consecutive high CPUs to take a thread dump
      */
     public static final int HIGH_CPU_CONSECUTIVE_TIMES =
-            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_CONSECUTIVE_TIMES", 3);
+            Integer.getInteger(HighLoadCpuChecker.class.getName() + ".HIGH_CPU_CONSECUTIVE_TIMES", 3);
 
     /**
      * This is the CPU usage threshold. Determinate de percentage of the total CPU used across all the
@@ -77,14 +76,16 @@ public class HighLoadCpuChecker extends PeriodicWork {
      * Limit the number of thread dumps to retain on high cpu
      */
     public static final int HIGH_CPU_THREAD_DUMPS_TO_RETAIN =
-            Integer.getInteger(HighLoadCpuChecker.class.getName()+ ".HIGH_CPU_THREAD_DUMPS_TO_RETAIN", 5);
+            Integer.getInteger(HighLoadCpuChecker.class.getName() + ".HIGH_CPU_THREAD_DUMPS_TO_RETAIN", 5);
 
     /**
      * Thread dumps generated on high CPU load are stored in $JENKINS_HOME/high-load/cpu
      **/
-    protected final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"high-load/cpu"), HIGH_CPU_THREAD_DUMPS_TO_RETAIN);
+    protected final FileListCap logs =
+            new FileListCap(new File(Jenkins.get().getRootDir(), "high-load/cpu"), HIGH_CPU_THREAD_DUMPS_TO_RETAIN);
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
+
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
@@ -119,7 +120,10 @@ public class HighLoadCpuChecker extends PeriodicWork {
                 countConsecutivePositives = 0;
             }
         } catch (IllegalStateException ise) {
-            LOGGER.log(WARNING, "Support Core plugin can't generate automatically thread dumps on high cpu load. Metrics plugin does not seem to be available", ise);
+            LOGGER.log(
+                    WARNING,
+                    "Support Core plugin can't generate automatically thread dumps on high cpu load. Metrics plugin does not seem to be available",
+                    ise);
         }
     }
 

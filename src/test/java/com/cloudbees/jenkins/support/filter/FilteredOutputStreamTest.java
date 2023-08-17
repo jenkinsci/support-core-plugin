@@ -23,10 +23,10 @@
  */
 package com.cloudbees.jenkins.support.filter;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.CharSequenceInputStream;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,21 +37,20 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.joining;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CharSequenceInputStream;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 public class FilteredOutputStreamTest {
 
     public static final String FAKE_TEXT =
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor " +
-            "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud " +
-            "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute " +
-            "irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla " +
-            "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia " +
-            "deserunt mollit anim id est laborum.";
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
+                    + "incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud "
+                    + "exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute "
+                    + "irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
+                    + "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia "
+                    + "deserunt mollit anim id est laborum.";
 
     private final ByteArrayOutputStream testOutput = new ByteArrayOutputStream();
 
@@ -59,9 +58,8 @@ public class FilteredOutputStreamTest {
     @Test
     public void shouldModifyStream() throws IOException {
         int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
-        String inputContents = IntStream.range(0, nrLines)
-                .mapToObj(i -> "Line " + i)
-                .collect(joining(System.lineSeparator()));
+        String inputContents =
+                IntStream.range(0, nrLines).mapToObj(i -> "Line " + i).collect(joining(System.lineSeparator()));
         CharSequenceInputStream input = new CharSequenceInputStream(inputContents, UTF_8);
         ContentFilter filter = s -> s.replace("Line", "Network");
         FilteredOutputStream output = new FilteredOutputStream(testOutput, filter);
@@ -96,29 +94,20 @@ public class FilteredOutputStreamTest {
         out.flush();
         contents = new String(testOutput.toByteArray(), UTF_8);
 
-        assertThat(contents)
-                .isNotEmpty()
-                .matches("^a+$");
+        assertThat(contents).isNotEmpty().matches("^a+$");
     }
 
     @Test
     public void shouldNotAllowOperationsAfterClose() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
         out.close();
-        assertThatIllegalStateException()
-                .isThrownBy(() -> out.write(0));
-        assertThatIllegalStateException()
-                .isThrownBy(() -> out.write(new byte[0]));
-        assertThatIllegalStateException()
-                .isThrownBy(() -> out.write(new byte[]{1, 2, 3, 4}, 0, 4));
-        assertThatIllegalStateException()
-                .isThrownBy(out::flush);
-        assertThatIllegalStateException()
-                .isThrownBy(out::close);
-        assertThatIllegalStateException()
-                .isThrownBy(out::reset);
-        assertThatIllegalStateException()
-                .isThrownBy(out::asWriter);
+        assertThatIllegalStateException().isThrownBy(() -> out.write(0));
+        assertThatIllegalStateException().isThrownBy(() -> out.write(new byte[0]));
+        assertThatIllegalStateException().isThrownBy(() -> out.write(new byte[] {1, 2, 3, 4}, 0, 4));
+        assertThatIllegalStateException().isThrownBy(out::flush);
+        assertThatIllegalStateException().isThrownBy(out::close);
+        assertThatIllegalStateException().isThrownBy(out::reset);
+        assertThatIllegalStateException().isThrownBy(out::asWriter);
     }
 
     @Test
@@ -133,9 +122,7 @@ public class FilteredOutputStreamTest {
             out.reset();
         }
         String expected = b.toString();
-        assertThat(new String(testOutput.toByteArray(), UTF_8))
-                .isNotEmpty()
-                .isEqualTo(expected);
+        assertThat(new String(testOutput.toByteArray(), UTF_8)).isNotEmpty().isEqualTo(expected);
     }
 
     @Test

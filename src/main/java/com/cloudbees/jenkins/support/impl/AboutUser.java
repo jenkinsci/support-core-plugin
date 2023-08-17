@@ -8,14 +8,13 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 /**
  * Basic information about the user's authentication.
@@ -54,9 +53,10 @@ public class AboutUser extends Component {
                     if (authorities != null) {
                         out.println("  * Authorities ");
                         for (GrantedAuthority authority : authorities) {
-                            out.println(
-                                    "      - " + (authority == null ? "null" : "`" + authority.toString().replaceAll(
-                                            "`", "&#96;") + "`"));
+                            out.println("      - "
+                                    + (authority == null
+                                            ? "null"
+                                            : "`" + authority.toString().replaceAll("`", "&#96;") + "`"));
                         }
                     }
                     out.println();

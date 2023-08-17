@@ -30,8 +30,6 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +37,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
  * Support component for adding xml files to the support bundle.
@@ -52,8 +51,7 @@ public class OtherConfigFilesComponent extends Component {
             // credentials.xml contains rather sensitive data
             "credentials.xml",
             // config.xml is handled by ConfigFileComponent
-            "config.xml"
-    );
+            "config.xml");
 
     @NonNull
     @Override
@@ -72,15 +70,19 @@ public class OtherConfigFilesComponent extends Component {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
-            File[] files = dir.listFiles((dir1, name) -> name.toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(name));
+            File[] files = dir.listFiles(
+                    (dir1, name) -> name.toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(name));
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
-                        container.add(new XmlRedactedSecretFileContent("jenkins-root-configuration-files/{0}", new String[] {configFile.getName()}, configFile));
+                        container.add(new XmlRedactedSecretFileContent(
+                                "jenkins-root-configuration-files/{0}",
+                                new String[] {configFile.getName()}, configFile));
                     }
                 }
             } else {
-                LOGGER.log(Level.WARNING, "Cannot list files in Jenkins root, probably something is wrong with the path");
+                LOGGER.log(
+                        Level.WARNING, "Cannot list files in Jenkins root, probably something is wrong with the path");
             }
         }
     }
@@ -97,5 +99,4 @@ public class OtherConfigFilesComponent extends Component {
     }
 
     private static final Logger LOGGER = Logger.getLogger(OtherConfigFilesComponent.class.getName());
-
 }

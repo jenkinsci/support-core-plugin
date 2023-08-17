@@ -28,11 +28,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
 import hudson.model.Describable;
-import jenkins.model.Jenkins;
-
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.stream.Collectors;
+import jenkins.model.Jenkins;
 
 /**
  * Represents a component of a support bundle for a specific model object.
@@ -83,9 +82,7 @@ public abstract class ObjectComponent<T extends AbstractModelObject> extends Com
      * All applicable {@link ObjectComponentDescriptor}s for the class.
      */
     public static <T extends AbstractModelObject> List<ObjectComponentDescriptor<T>> for_(T item) {
-        return allInstances(item).stream()
-                .map(ObjectComponent::getDescriptor)
-                .collect(Collectors.toList());
+        return allInstances(item).stream().map(ObjectComponent::getDescriptor).collect(Collectors.toList());
     }
 
     /**
@@ -117,4 +114,3 @@ public abstract class ObjectComponent<T extends AbstractModelObject> extends Com
         return true;
     }
 }
-

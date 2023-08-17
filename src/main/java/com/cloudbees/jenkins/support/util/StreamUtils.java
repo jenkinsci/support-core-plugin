@@ -25,13 +25,11 @@
 package com.cloudbees.jenkins.support.util;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Utility methods for handling files.
@@ -80,7 +78,7 @@ public final class StreamUtils {
 
     /**
      * Close resources quietly.
-     * 
+     *
      * @param closeable the {@link Closeable}
      */
     public static void closeQuietly(Closeable closeable) {

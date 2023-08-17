@@ -23,6 +23,10 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItems;
+
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -30,21 +34,16 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItems;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * @author schristou88
@@ -54,8 +53,8 @@ public class BuildQueueTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    @Ignore("Unit test fails when performing a release. The queue has a race condition" +
-            "which is resolved in 1.607+ (TODO).")
+    @Ignore("Unit test fails when performing a release. The queue has a race condition"
+            + "which is resolved in 1.607+ (TODO).")
     @Test
     public void verifyMinimumBuildQueue() throws Exception {
         // Given

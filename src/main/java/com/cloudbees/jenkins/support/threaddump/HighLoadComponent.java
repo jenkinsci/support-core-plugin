@@ -42,8 +42,9 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
 
     @Override
     public void addContents(@NonNull Container container) {
-        HighLoadCpuChecker checker = ExtensionList.lookup(HighLoadCpuChecker.class).get(HighLoadCpuChecker.class);
-        if (checker!= null && checker.logs.getSize() > 0) {
+        HighLoadCpuChecker checker =
+                ExtensionList.lookup(HighLoadCpuChecker.class).get(HighLoadCpuChecker.class);
+        if (checker != null && checker.logs.getSize() > 0) {
             super.addContents(container, checker.logs);
         }
     }

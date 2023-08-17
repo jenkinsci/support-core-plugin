@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
@@ -8,14 +10,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.security.Permission;
 import hudson.triggers.SafeTimerTask;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
-
-import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
+import jenkins.model.Jenkins;
 
 /**
  * Task Log files from the controller node.
@@ -75,5 +74,4 @@ public class TaskLogs extends Component {
             }
         }
     }
-
 }

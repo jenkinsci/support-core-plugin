@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import jenkins.model.GlobalConfiguration;
@@ -32,8 +33,6 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Configures content filters for anonymization.
@@ -73,7 +72,7 @@ public class ContentFilters extends GlobalConfiguration {
     }
 
     /**
-     * 
+     *
      * @return the global configuration category for CasC where this config lands
      */
     @Override

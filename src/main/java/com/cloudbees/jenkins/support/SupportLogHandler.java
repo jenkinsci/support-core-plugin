@@ -27,8 +27,6 @@ package com.cloudbees.jenkins.support;
 import com.cloudbees.jenkins.support.util.StreamUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
-import net.jcip.annotations.GuardedBy;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,6 +46,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+import net.jcip.annotations.GuardedBy;
 
 /**
  * A log handler that rotates files.
@@ -58,14 +57,19 @@ public class SupportLogHandler extends Handler {
 
     private final Lock outputLock = new ReentrantLock();
     private final int fileSize;
+
     @GuardedBy("outputLock")
     private final LogRecord[] records;
+
     @GuardedBy("outputLock")
     private int position, count, fileCount;
+
     @GuardedBy("outputLock")
     private Writer writer;
+
     @GuardedBy("outputLock")
     private File logDirectry;
+
     private String logFilePrefix;
     private final SimpleDateFormat dateFormat;
     private final int maxFiles;
@@ -125,10 +129,7 @@ public class SupportLogHandler extends Handler {
         }
     }
 
-    @SuppressFBWarnings(
-            value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
-            justification = "Best effort"
-    )
+    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification = "Best effort")
     private void rollOver() {
         outputLock.lock();
         try {
@@ -220,8 +221,7 @@ public class SupportLogHandler extends Handler {
 
     @SuppressFBWarnings(
             value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
-            justification = "Best effort"
-    )
+            justification = "Best effort")
     private void setFile(File file) throws FileNotFoundException {
         outputLock.lock();
         try {
@@ -233,7 +233,7 @@ public class SupportLogHandler extends Handler {
             if (parentFile != null) {
                 parentFile.mkdirs();
             }
-            
+
             boolean success = false;
             FileOutputStream fos = null;
             BufferedOutputStream bos = null;

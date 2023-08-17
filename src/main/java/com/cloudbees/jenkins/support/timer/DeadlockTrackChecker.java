@@ -5,8 +5,6 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import hudson.Extension;
 import hudson.model.PeriodicWork;
-import jenkins.model.Jenkins;
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
@@ -14,9 +12,9 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import jenkins.model.Jenkins;
 
 /**
  * @author Steven Chrisou
@@ -25,10 +23,12 @@ import java.util.concurrent.TimeUnit;
 public class DeadlockTrackChecker extends PeriodicWork {
 
     final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
+
     {
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
-    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(),"deadlocks"), 50);
+
+    final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(), "deadlocks"), 50);
 
     @Override
     public long getRecurrencePeriod() {
@@ -48,7 +48,7 @@ public class DeadlockTrackChecker extends PeriodicWork {
         if (deadLocks != null && deadLocks.length != 0) {
             File file = logs.file("DeadlockDetected-" + format.format(new Date()) + ".txt");
             logs.add(file);
-            PrintWriter builder = new PrintWriter(file,"UTF-8");
+            PrintWriter builder = new PrintWriter(file, "UTF-8");
             try {
                 builder.println("==============");
                 builder.println("Deadlock Found");
@@ -69,4 +69,3 @@ public class DeadlockTrackChecker extends PeriodicWork {
         }
     }
 }
-

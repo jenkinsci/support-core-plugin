@@ -1,23 +1,22 @@
 package com.cloudbees.jenkins.support.actions;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.model.Computer;
 import hudson.model.Item;
-import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
-
-import static org.junit.Assert.assertNotNull;
+import jenkins.model.Jenkins;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * @author Allan Burdajewicz
@@ -27,21 +26,26 @@ public class SupportComputerActionTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-
     @Test
     public void onlyAdminCanSeeAction() throws Exception {
 
         Computer c = j.createSlave("slave1", "test", null).getComputer();
-        
+
         SupportComputerAction pAction = new SupportComputerAction(j.jenkins.getComputer("slave1"));
 
-        SupportTestUtils.testPermissionToSeeAction(j, Objects.requireNonNull(c).getUrl(), pAction,
-            Stream.of(Jenkins.ADMINISTER).collect(Collectors.toSet()),
-            Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
+        SupportTestUtils.testPermissionToSeeAction(
+                j,
+                Objects.requireNonNull(c).getUrl(),
+                pAction,
+                Stream.of(Jenkins.ADMINISTER).collect(Collectors.toSet()),
+                Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
 
-        SupportTestUtils.testPermissionToDisplayAction(j, c.getUrl(), pAction,
-            Stream.of(Jenkins.ADMINISTER).collect(Collectors.toSet()),
-            Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
+        SupportTestUtils.testPermissionToDisplayAction(
+                j,
+                c.getUrl(),
+                pAction,
+                Stream.of(Jenkins.ADMINISTER).collect(Collectors.toSet()),
+                Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
     }
 
     /*
@@ -82,8 +86,7 @@ public class SupportComputerActionTest {
                     "dmi.txt");
 
             for (String file : files) {
-                assertNotNull(file + " was not found in the bundle",
-                        z.getEntry("nodes/slave/agent1/" + file));
+                assertNotNull(file + " was not found in the bundle", z.getEntry("nodes/slave/agent1/" + file));
             }
         }
     }

@@ -1,5 +1,9 @@
 package com.cloudbees.jenkins.support;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -9,13 +13,6 @@ import com.cloudbees.jenkins.support.impl.SystemProperties;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,10 +24,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import jenkins.model.Jenkins;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class SupportPluginTest {
 
@@ -39,52 +38,55 @@ public class SupportPluginTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-    
+
     @Test
     @Issue("JENKINS-63722")
     public void testComponentIdsAreUnique() {
         // If component IDs have duplicate, the Set size should be different because it only add an item if it is unique
-        assertEquals("Components ids should be unique", 
-            SupportPlugin.getComponents().stream().map(Component::getId).collect(Collectors.toSet()).size(),
-            SupportPlugin.getComponents().stream().map(Component::getId).count()
-            );
+        assertEquals(
+                "Components ids should be unique",
+                SupportPlugin.getComponents().stream()
+                        .map(Component::getId)
+                        .collect(Collectors.toSet())
+                        .size(),
+                SupportPlugin.getComponents().stream().map(Component::getId).count());
     }
 
     @Test
     @Issue("JENKINS-58393")
     public void testGenerateBundleExceptionHandler() throws Exception {
-        List<Component> componentsToCreate = Arrays.asList(new Component() {
-            @NonNull
-            @Override
-            public Set<Permission> getRequiredPermissions() {
-                return Collections.singleton(Jenkins.ADMINISTER);
-            }
-
-            @NonNull
-            @Override
-            public String getDisplayName() {
-                return "JENKINS-58393 Test";
-            }
-
-            @Override
-            public void addContents(@NonNull Container container) {
-                container.add(new Content("test/testGenerateBundleExceptionHandler.md") {
+        List<Component> componentsToCreate = Arrays.asList(
+                new Component() {
+                    @NonNull
                     @Override
-                    public void writeTo(OutputStream os) throws IOException {
-                        os.write("test".getBytes(StandardCharsets.UTF_8));
+                    public Set<Permission> getRequiredPermissions() {
+                        return Collections.singleton(Jenkins.ADMINISTER);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getDisplayName() {
+                        return "JENKINS-58393 Test";
                     }
 
                     @Override
-                    public long getTime() throws IOException {
-                        throw new IOException("JENKINS-58393: Exception should not fail the generation");
+                    public void addContents(@NonNull Container container) {
+                        container.add(new Content("test/testGenerateBundleExceptionHandler.md") {
+                            @Override
+                            public void writeTo(OutputStream os) throws IOException {
+                                os.write("test".getBytes(StandardCharsets.UTF_8));
+                            }
+
+                            @Override
+                            public long getTime() throws IOException {
+                                throw new IOException("JENKINS-58393: Exception should not fail the generation");
+                            }
+                        });
                     }
-                });
-            }
-        },
+                },
                 ExtensionList.lookup(Component.class).get(AboutJenkins.class),
                 ExtensionList.lookup(Component.class).get(BuildQueue.class),
-                ExtensionList.lookup(Component.class).get(SystemProperties.class)
-        );
+                ExtensionList.lookup(Component.class).get(SystemProperties.class));
 
         File bundleFile = temp.newFile();
 

@@ -3,22 +3,6 @@ package com.cloudbees.jenkins.support.configfiles;
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,7 +12,21 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import javax.xml.XMLConstants;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLFilterImpl;
 import org.xml.sax.helpers.XMLReaderFactory;
 
@@ -42,6 +40,7 @@ class SecretHandler {
      * our placeholder
      */
     protected static final String SECRET_MARKER = "#secret#";
+
     protected static final String XXE_MARKER = "#XXE#";
     public static final String OUTPUT_ENCODING = "UTF-8";
     public static final Pattern SECRET_PATTERN = Pattern.compile(">\\{(.*)\\}<|>(.*)\\=<");
@@ -51,7 +50,8 @@ class SecretHandler {
      * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
      * Otherwise will be enabled.
      */
-    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
+    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(
+            System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
 
     /**
      * find the secret in the xml file and replace it with the place holder
@@ -68,8 +68,7 @@ class SecretHandler {
             private String previousStringTagValue;
 
             @Override
-            public void startElement(String uri, String localName, String qName, Attributes atts)
-                    throws SAXException {
+            public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
                 tagName = qName;
                 super.startElement(uri, localName, qName, atts);
             }
@@ -83,7 +82,7 @@ class SecretHandler {
             public void characters(char[] ch, int start, int length) throws SAXException {
                 if (!"".equals(tagName)) {
                     String value = new String(ch, start, length).trim();
-                    //if it's a secret, then use a place holder
+                    // if it's a secret, then use a place holder
                     // convenience check !"{}".equals(value) because of JENKINS-47500
                     if (!"".equals(value) && !"{}".equals(value)) {
                         if ((Secret.decrypt(value)) != null || SecretBytes.isSecretBytes(value)) {
@@ -118,7 +117,7 @@ class SecretHandler {
         TransformerFactory factory = TransformerFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         Transformer transformer = factory.newTransformer();
-        //omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
+        // omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, OUTPUT_ENCODING);
 
@@ -134,13 +133,11 @@ class SecretHandler {
         }
     }
 
-
     private static String findSecretFallback(String xml) {
         Matcher matcher = SECRET_PATTERN.matcher(xml);
-        while(matcher.find()) {
+        while (matcher.find()) {
             String secret = matcher.group();
-            if(secret.length() > 1)
-                secret = secret.substring(1,secret.length()-1);
+            if (secret.length() > 1) secret = secret.substring(1, secret.length() - 1);
             if ((Secret.decrypt(secret)) != null || SecretBytes.isSecretBytes(secret)) {
                 xml = StringUtils.replace(xml, secret, SECRET_MARKER);
             }
@@ -164,7 +161,7 @@ class SecretHandler {
         } catch (SAXException ignored) {
             /* Fallback entity resolver will be used */
         }
-         // Fallback in case the above features are not supported by the underlying XML library.
+        // Fallback in case the above features are not supported by the underlying XML library.
         reader.setEntityResolver((publicId, systemId) -> {
             return new InputSource(new ByteArrayInputStream(XXE_MARKER.getBytes(StandardCharsets.US_ASCII)));
         });
@@ -172,7 +169,7 @@ class SecretHandler {
     }
 
     private static boolean isJvmArgsWithSecrets(String tagName, String value) {
-        return ("jvmOptions".equals(tagName) || "vmargs".equals(tagName) || "cmd".equals(tagName)) && PasswordRedactor.get().match(value);
+        return ("jvmOptions".equals(tagName) || "vmargs".equals(tagName) || "cmd".equals(tagName))
+                && PasswordRedactor.get().match(value);
     }
-
 }

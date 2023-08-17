@@ -24,21 +24,20 @@
 
 package com.cloudbees.jenkins.support.filter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Label;
 import hudson.model.User;
-import jenkins.model.Jenkins;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import jenkins.model.Jenkins;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Strategy for providing a stream of names to anonymize along with an accompanying name generator.
@@ -93,8 +92,7 @@ public class NameProvider implements ExtensionPoint {
      * Provides the names of items.
      */
     public static final @Extension NameProvider ITEMS = new NameProvider(
-            () -> stream(Jenkins.get().allItems())
-                    .flatMap(item -> Stream.of(item.getName(), item.getDisplayName())),
+            () -> stream(Jenkins.get().allItems()).flatMap(item -> Stream.of(item.getName(), item.getDisplayName())),
             DataFaker.get().apply(name -> "item_" + name));
 
     /**
@@ -134,7 +132,6 @@ public class NameProvider implements ExtensionPoint {
      * naming conflicts between labels and nodes/computers.
      */
     public static final @Extension(ordinal = -100) NameProvider LABELS = new NameProvider(
-            () -> stream(Jenkins.get().getLabels())
-                    .map(Label::getDisplayName),
+            () -> stream(Jenkins.get().getLabels()).map(Label::getDisplayName),
             DataFaker.get().apply(name -> "label_" + name));
 }

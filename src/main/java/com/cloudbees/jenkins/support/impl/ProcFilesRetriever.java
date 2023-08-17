@@ -1,9 +1,9 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FilePathContent;
+import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
@@ -11,8 +11,6 @@ import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +22,7 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
  * Base class for gathering specified /proc files
@@ -47,7 +46,7 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
      *
      * @return the map of files that should be retrieved and put in the support bundle.
      */
-    abstract public Map<String, String> getFilesToRetrieve();
+    public abstract Map<String, String> getFilesToRetrieve();
 
     protected List<Node> getNodes() {
         final Jenkins jenkins = Jenkins.get();
@@ -103,7 +102,9 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
         }
 
         for (Map.Entry<String, String> procDescriptor : getFilesToRetrieve().entrySet()) {
-            container.add(new FilePathContent("nodes/{0}/proc/{1}", new String[]{name, procDescriptor.getValue()},
+            container.add(new FilePathContent(
+                    "nodes/{0}/proc/{1}",
+                    new String[] {name, procDescriptor.getValue()},
                     new FilePath(c.getChannel(), procDescriptor.getKey())));
         }
 
@@ -117,16 +118,19 @@ public abstract class ProcFilesRetriever extends ObjectComponent<Computer> {
      * @param node the node for which the method is called.
      * @param name the node name, <em>"master"</em> if Controller, and <em>slave/${nodeName}</em> if an agent.
      */
-    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {
-    }
+    protected void afterAddUnixContents(@NonNull Container container, final @NonNull Node node, String name) {}
 
     public SystemPlatform getSystemPlatform(Node node) {
         try {
-            return AsyncResultCache.get(node, systemPlatformCache, new SystemPlatform.GetCurrentPlatform(), "platform",
-                                        SystemPlatform.UNKNOWN);
+            return AsyncResultCache.get(
+                    node,
+                    systemPlatformCache,
+                    new SystemPlatform.GetCurrentPlatform(),
+                    "platform",
+                    SystemPlatform.UNKNOWN);
         } catch (IOException e) {
             final LogRecord record = new LogRecord(Level.FINE, "Could not retrieve system platform type from {0}");
-            record.setParameters(new Object[]{getNodeName(node)});
+            record.setParameters(new Object[] {getNodeName(node)});
             record.setThrown(e);
             LOGGER.log(record);
         }

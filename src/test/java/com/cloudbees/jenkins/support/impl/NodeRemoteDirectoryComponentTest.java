@@ -1,16 +1,15 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Map;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for the {@link NodeRemoteDirectoryComponent}
@@ -27,7 +26,8 @@ public class NodeRemoteDirectoryComponentTest {
     public void addContents() throws Exception {
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
 
-        Map<String, String> output = SupportTestUtils.invokeComponentToMap(new NodeRemoteDirectoryComponent(), agent.toComputer());
+        Map<String, String> output =
+                SupportTestUtils.invokeComponentToMap(new NodeRemoteDirectoryComponent(), agent.toComputer());
 
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
         assertTrue(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));

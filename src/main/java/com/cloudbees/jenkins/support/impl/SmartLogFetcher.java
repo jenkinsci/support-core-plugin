@@ -6,10 +6,6 @@ import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Node;
 import hudson.remoting.VirtualChannel;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -24,6 +20,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.MasterToSlaveFileCallable;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Efficient incremental retrieval of log files from {@link Node}, by taking advantages of
@@ -69,7 +68,8 @@ class SmartLogFetcher {
         ForNode(Node node) throws IOException {
             this.node = node;
 
-            String cacheKey = Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath()); //FIPS OK: Not security related.
+            String cacheKey =
+                    Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath()); // FIPS OK: Not security related.
             this.cacheDir = new File(rootCacheDir, StringUtils.right(cacheKey, 8));
 
             if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {
@@ -81,8 +81,7 @@ class SmartLogFetcher {
          * Retrieves all the log files in the given remote directory into local directory,
          * then return them as a map keyed by relative file names from {@code remoteDir}.
          */
-        public Map<String,File> getLogFiles(FilePath remoteDir)
-                throws InterruptedException, IOException {
+        public Map<String, File> getLogFiles(FilePath remoteDir) throws InterruptedException, IOException {
             File localCache = cacheDir;
 
             // build an inventory of what we already have locally
@@ -95,12 +94,12 @@ class SmartLogFetcher {
             }
 
             // figure out what we need to read
-            Map<String,Long> offsets = remoteDir.act(new LogFileHashSlurper(hashes, filter));
+            Map<String, Long> offsets = remoteDir.act(new LogFileHashSlurper(hashes, filter));
 
             evictDeadCache(hashes, offsets);
 
             // then read those
-            Map<String,File> result = new LinkedHashMap<String, File>();
+            Map<String, File> result = new LinkedHashMap<String, File>();
             for (Map.Entry<String, Long> entry : offsets.entrySet()) {
                 File local = new File(localCache, entry.getKey());
                 if (entry.getValue() > 0 && local.isFile()) {
@@ -108,14 +107,14 @@ class SmartLogFetcher {
                     if (entry.getValue() < Long.MAX_VALUE) {
                         // only copy the new content
                         try (FileOutputStream fos = new FileOutputStream(local, true);
-                             InputStream is = remoteDir.child(entry.getKey()).readFromOffset(localLength)) {
+                                InputStream is = remoteDir.child(entry.getKey()).readFromOffset(localLength)) {
                             IOUtils.copy(is, fos);
                         }
                     }
                     result.put(entry.getKey(), local);
                 } else {
                     try (FileOutputStream fos = new FileOutputStream(local, false);
-                         InputStream is = remoteDir.child(entry.getKey()).read()) {
+                            InputStream is = remoteDir.child(entry.getKey()).read()) {
                         IOUtils.copy(is, fos);
                     }
                     result.put(entry.getKey(), local);
@@ -125,9 +124,8 @@ class SmartLogFetcher {
         }
 
         private void evictDeadCache(Map<String, FileHash> hashes, Map<String, Long> offsets) {
-            for (String key: hashes.keySet()) {
-                if (offsets.containsKey(key))
-                    continue;   // still exists on the agent
+            for (String key : hashes.keySet()) {
+                if (offsets.containsKey(key)) continue; // still exists on the agent
 
                 final File deadCacheFile = new File(cacheDir, key);
                 if (!deadCacheFile.delete()) {
@@ -180,7 +178,8 @@ class SmartLogFetcher {
         /**
          * Computes the checksum of a stream upto the specified length.
          */
-        public static String getDigestOf(InputStream stream, long length) throws IOException { //FIPS OK: Not security related.
+        public static String getDigestOf(InputStream stream, long length)
+                throws IOException { // FIPS OK: Not security related.
             try {
                 if (length == 0 || stream == null) return ZERO_LENGTH_MD5;
                 int bufferSize;
@@ -190,10 +189,10 @@ class SmartLogFetcher {
                 byte[] buffer = new byte[bufferSize];
                 MessageDigest digest = null;
                 try {
-                    digest = MessageDigest.getInstance("md5"); //FIPS OK: Not security related.
+                    digest = MessageDigest.getInstance("md5"); // FIPS OK: Not security related.
                 } catch (NoSuchAlgorithmException e) {
-                    throw new IllegalStateException("Java Language Specification mandates MD5 as a supported digest",
-                            e);
+                    throw new IllegalStateException(
+                            "Java Language Specification mandates MD5 as a supported digest", e);
                 }
                 int read;
                 while (length > 0 && (read = stream.read(buffer, 0, (int) Math.min(bufferSize, length))) != -1) {
@@ -213,11 +212,11 @@ class SmartLogFetcher {
      * <p>
      * Returns the information as a tuple of (relative file name from the directory, offset that needs to be read)
      */
-    public static final class LogFileHashSlurper extends MasterToSlaveFileCallable<Map<String,Long>> {
+    public static final class LogFileHashSlurper extends MasterToSlaveFileCallable<Map<String, Long>> {
         /**
          * What we already cached on the controller side.
          */
-        private final Map<String,FileHash> cached;
+        private final Map<String, FileHash> cached;
 
         private final FilenameFilter filter;
 
@@ -247,7 +246,6 @@ class SmartLogFetcher {
             }
             return result;
         }
-
     }
 
     private static final Logger LOGGER = Logger.getLogger(SmartLogFetcher.class.getName());

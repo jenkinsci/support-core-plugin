@@ -1,18 +1,17 @@
 package com.cloudbees.jenkins.support.config;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+
 import com.cloudbees.jenkins.support.api.Component;
+import java.util.stream.Collectors;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.stream.Collectors;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
 /**
  * Test for the {@link SupportAutomatedBundleConfiguration}
@@ -25,16 +24,19 @@ public class SupportAutomatedBundleConfigurationTest {
 
     @Test
     public void testDefaults() {
-        assertThat("by default, support bundle generation should be enabled",
-            SupportAutomatedBundleConfiguration.get().isEnabled(),
-            is(true));
-        assertThat("by default, period should be 1",
-            SupportAutomatedBundleConfiguration.get().getPeriod(),
-            is(1));
-        assertThat("by default, default components should be added",
-            SupportAutomatedBundleConfiguration.get().getComponentIds(),
-            containsInAnyOrder(SupportAutomatedBundleConfiguration.getDefaultComponentIds().toArray())
-        );
+        assertThat(
+                "by default, support bundle generation should be enabled",
+                SupportAutomatedBundleConfiguration.get().isEnabled(),
+                is(true));
+        assertThat(
+                "by default, period should be 1",
+                SupportAutomatedBundleConfiguration.get().getPeriod(),
+                is(1));
+        assertThat(
+                "by default, default components should be added",
+                SupportAutomatedBundleConfiguration.get().getComponentIds(),
+                containsInAnyOrder(SupportAutomatedBundleConfiguration.getDefaultComponentIds()
+                        .toArray()));
     }
 
     @Test
@@ -47,29 +49,32 @@ public class SupportAutomatedBundleConfigurationTest {
         }
         j.submit(cfg);
 
-        assertThat("should be enabled",
-            SupportAutomatedBundleConfiguration.get().isEnabled(),
-            is(true));
-        assertThat("period should be 1",
-            SupportAutomatedBundleConfiguration.get().getPeriod(),
-            is(2));
-        assertThat("all applicable components should be saved",
-            SupportAutomatedBundleConfiguration.get().getComponentIds(),
-            containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
-                .map(Component::getId).toArray())
-        );
-        assertThat("all applicable components should be saved",
-            SupportAutomatedBundleConfiguration.get().getComponents().stream()
-                .map(Component::getId).collect(Collectors.toList()),
-            containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
-                .map(Component::getId).toArray())
-        );
-        assertThat("all saved components should be retrievable",
-            SupportAutomatedBundleConfiguration.get().getComponents().stream()
-                .map(Component::getId).collect(Collectors.toList()),
-            containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
-                .map(Component::getId).toArray())
-        );
+        assertThat(
+                "should be enabled", SupportAutomatedBundleConfiguration.get().isEnabled(), is(true));
+        assertThat(
+                "period should be 1", SupportAutomatedBundleConfiguration.get().getPeriod(), is(2));
+        assertThat(
+                "all applicable components should be saved",
+                SupportAutomatedBundleConfiguration.get().getComponentIds(),
+                containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
+                        .map(Component::getId)
+                        .toArray()));
+        assertThat(
+                "all applicable components should be saved",
+                SupportAutomatedBundleConfiguration.get().getComponents().stream()
+                        .map(Component::getId)
+                        .collect(Collectors.toList()),
+                containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
+                        .map(Component::getId)
+                        .toArray()));
+        assertThat(
+                "all saved components should be retrievable",
+                SupportAutomatedBundleConfiguration.get().getComponents().stream()
+                        .map(Component::getId)
+                        .collect(Collectors.toList()),
+                containsInAnyOrder(SupportAutomatedBundleConfiguration.getApplicableComponents().stream()
+                        .map(Component::getId)
+                        .toArray()));
     }
 
     @Test

@@ -25,30 +25,29 @@ public class FileListCap {
     private int size;
 
     public FileListCap(File folder, int size) {
-        this(folder,null,size);
+        this(folder, null, size);
     }
 
     public FileListCap(File folder, FilenameFilter filter, int size) {
         this.folder = folder;
         this.size = size;
 
-        if (!folder.exists() && !folder.mkdirs())
-            throw new Error("Failed to create "+folder);
+        if (!folder.exists() && !folder.mkdirs()) throw new Error("Failed to create " + folder);
 
         File[] sortedFiles = folder.listFiles(filter);
-        if (sortedFiles==null)  return;
+        if (sortedFiles == null) return;
 
         // Sorting in ascending order.
         Arrays.sort(sortedFiles, new Comparator<File>() {
             public int compare(File o1, File o2) {
                 long l = o1.lastModified() - o2.lastModified();
-                if (l<0)    return -1;
-                if (l>0)    return 1;
+                if (l < 0) return -1;
+                if (l > 0) return 1;
                 return 0;
             }
         });
 
-        //TODO: first time files may have more entries than allowed (size)
+        // TODO: first time files may have more entries than allowed (size)
         files.addAll(Arrays.asList(sortedFiles));
     }
 
@@ -78,7 +77,7 @@ public class FileListCap {
         files.add(f);
     }
 
-    public synchronized void touch(File f){
+    public synchronized void touch(File f) {
         files.remove(f);
         add(f);
     }
@@ -90,6 +89,6 @@ public class FileListCap {
      * @return the created file object.
      */
     public File file(String path) {
-        return new File(folder,path);
+        return new File(folder, path);
     }
 }

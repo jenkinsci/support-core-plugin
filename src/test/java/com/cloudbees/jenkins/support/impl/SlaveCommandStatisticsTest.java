@@ -23,6 +23,12 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.ExtensionList;
 import hudson.Launcher;
@@ -32,6 +38,9 @@ import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.SlaveComputer;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,16 +48,6 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 
 public class SlaveCommandStatisticsTest {
 
@@ -65,14 +64,16 @@ public class SlaveCommandStatisticsTest {
         p.setAssignedNode(s);
         p.getBuildersList().add(new TestBuilder() {
             @Override
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                    throws InterruptedException, IOException {
                 build.getWorkspace().act(new SampleCallable());
                 return true;
             }
         });
         j.buildAndAssertSuccess(p);
 
-        String dump = SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveCommandStatistics.class));
+        String dump =
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveCommandStatistics.class));
 
         assertThat(dump, containsString(SampleCallable.class.getName()));
     }
@@ -84,7 +85,8 @@ public class SlaveCommandStatisticsTest {
         }
     }
 
-    @Test @Issue("JENKINS-58528")
+    @Test
+    @Issue("JENKINS-58528")
     public void statisticsAreRotatedWithComputers() throws Exception {
         SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
 
@@ -122,8 +124,9 @@ public class SlaveCommandStatisticsTest {
         assertThat(scs.getStatistics().size(), equalTo(4));
         j.jenkins.removeNode(s3);
         assertThat(scs.getStatistics().size(), equalTo(3));
-        assertThat("Latest preserved", scs.getStatistics().keySet(), containsInAnyOrder(
-                s3.getNodeName(), s2.getNodeName(), s1.getNodeName()
-        ));
+        assertThat(
+                "Latest preserved",
+                scs.getStatistics().keySet(),
+                containsInAnyOrder(s3.getNodeName(), s2.getNodeName(), s1.getNodeName()));
     }
 }

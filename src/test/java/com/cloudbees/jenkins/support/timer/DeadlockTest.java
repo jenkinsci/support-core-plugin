@@ -23,18 +23,17 @@
  */
 package com.cloudbees.jenkins.support.timer;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.File;
-import java.nio.charset.Charset;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertNotNull;
+
+import java.io.File;
+import java.nio.charset.Charset;
+import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * @author schristou88
@@ -74,7 +73,8 @@ public class DeadlockTest {
                 if (x > 0) {
                     secondMethod(x - 1);
                 } else {
-                    synchronized (object2) {}
+                    synchronized (object2) {
+                    }
                 }
             }
         });
@@ -83,7 +83,8 @@ public class DeadlockTest {
             public void run() {
                 synchronized (object2) {
                     sleep();
-                    synchronized (object1) { }
+                    synchronized (object1) {
+                    }
                 }
             }
         });
@@ -99,12 +100,16 @@ public class DeadlockTest {
                 DeadlockTrackChecker dtc = new DeadlockTrackChecker();
                 dtc.doRun();
 
-                // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread could be
+                // Reason for >= 1 is because depending on where the test unit is executed the deadlock detection thread
+                // could be
 
                 // invoked twice.
                 files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
                 assertNotNull("There should be at least one deadlock file", files);
-                assertThat("A deadlock was detected and a new deadlock file created", files.length, greaterThan(initialCount));
+                assertThat(
+                        "A deadlock was detected and a new deadlock file created",
+                        files.length,
+                        greaterThan(initialCount));
                 String text = FileUtils.readFileToString(files[initialCount], Charset.defaultCharset());
                 assertThat(text, containsString("secondMethod"));
                 assertThat(text, containsString("firstMethod"));

@@ -34,26 +34,6 @@ import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.Permission;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-
-import org.apache.commons.io.FileUtils;
-import org.jvnet.localizer.Localizable;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerProxy;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.WebMethod;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -73,6 +53,24 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
+import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerProxy;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.WebMethod;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Main root action for generating support.
@@ -97,7 +95,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         return this;
     }
-    
+
     public String getIconFileName() {
         return "/plugin/support-core/images/support.svg";
     }
@@ -146,20 +144,19 @@ public class SupportAction implements RootAction, StaplerProxy {
     // for Jelly
     @Restricted(NoExternalUse.class)
     public Map<Component.ComponentCategory, List<Component>> getCategorizedComponents() {
-        return Jenkins.get().getExtensionList(Component.class)
-              .stream()
-              .filter(component -> component.isApplicable(Jenkins.class))
-              .collect(Collectors.groupingBy(Component::getCategory, Collectors.toList()))
-              .entrySet().stream()
-              .sorted(Map.Entry.comparingByKey(Comparator.comparing(Component.ComponentCategory::getLabel)))
-              .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> entry.getValue().stream()
-                          .sorted(Comparator.comparing(Component::getDisplayName))
-                          .collect(Collectors.toCollection(LinkedList::new)),
-                    (e1, e2) -> e2,
-                    LinkedHashMap::new
-              ));
+        return Jenkins.get().getExtensionList(Component.class).stream()
+                .filter(component -> component.isApplicable(Jenkins.class))
+                .collect(Collectors.groupingBy(Component::getCategory, Collectors.toList()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(Component.ComponentCategory::getLabel)))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .sorted(Comparator.comparing(Component::getDisplayName))
+                                .collect(Collectors.toCollection(LinkedList::new)),
+                        (e1, e2) -> e2,
+                        LinkedHashMap::new));
     }
 
     public List<String> getBundles() {
@@ -195,9 +192,9 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
         Set<String> bundlesToDelete = getSelectedBundles(req, json);
         File rootDirectory = SupportPlugin.getRootDirectory();
-        for(String bundleToDelete : bundlesToDelete) {
+        for (String bundleToDelete : bundlesToDelete) {
             File fileToDelete = new File(rootDirectory, bundleToDelete);
-            logger.fine("Trying to delete bundle file "+ fileToDelete.getAbsolutePath());
+            logger.fine("Trying to delete bundle file " + fileToDelete.getAbsolutePath());
             try {
                 if (fileToDelete.delete()) {
                     logger.info("Bundle " + fileToDelete.getAbsolutePath() + " successfully deleted.");
@@ -205,7 +202,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                     logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath());
                 }
             } catch (RuntimeException e) {
-                    logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
+                logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
             }
         }
         rsp.sendRedirect("");
@@ -227,9 +224,11 @@ public class SupportAction implements RootAction, StaplerProxy {
         } else if (bundlesToDownload.isEmpty()) {
             throw new Failure("No matching bundles");
         } else {
-            fileToDownload = new File(SupportPlugin.getRootDirectory(), bundlesToDownload.iterator().next());
+            fileToDownload = new File(
+                    SupportPlugin.getRootDirectory(),
+                    bundlesToDownload.iterator().next());
         }
-        logger.fine("Trying to download file "+ fileToDownload.getAbsolutePath());
+        logger.fine("Trying to download file " + fileToDownload.getAbsolutePath());
         try {
             rsp.setContentType("application/zip");
             rsp.addHeader("Content-Disposition", "inline; filename=" + fileToDownload.getName() + ";");
@@ -242,7 +241,9 @@ public class SupportAction implements RootAction, StaplerProxy {
                 if (fileToDownload.delete()) {
                     logger.log(Level.FINE, "Temporary multiBundle file deleted: " + fileToDownload.getAbsolutePath());
                 } else {
-                    logger.log(Level.SEVERE, "Unable to delete temporary multiBundle file: " + fileToDownload.getAbsolutePath());
+                    logger.log(
+                            Level.SEVERE,
+                            "Unable to delete temporary multiBundle file: " + fileToDownload.getAbsolutePath());
                 }
             }
         }
@@ -256,7 +257,10 @@ public class SupportAction implements RootAction, StaplerProxy {
                 if (existingBundles.contains(s.getName())) {
                     bundles.add(s.getName());
                 } else {
-                    logger.log(Level.FINE, "The bundle selected {0} does not exist, so it will not be processed", s.getName());
+                    logger.log(
+                            Level.FINE,
+                            "The bundle selected {0} does not exist, so it will not be processed",
+                            s.getName());
                 }
             }
         }
@@ -265,15 +269,14 @@ public class SupportAction implements RootAction, StaplerProxy {
 
     private File createZipFile(Set<String> bundles) throws IOException {
         File rootDirectory = SupportPlugin.getRootDirectory();
-        File zipFile = File.createTempFile(
-            String.format("multiBundle(%s)-", bundles.size()), ".zip");
+        File zipFile = File.createTempFile(String.format("multiBundle(%s)-", bundles.size()), ".zip");
         zipFile.deleteOnExit();
-        try(FileOutputStream fos = new FileOutputStream(zipFile);
-            ZipOutputStream zos = new ZipOutputStream(fos)) {
-            byte[] buffer = new byte[1024]; 
-            for (String bundle: bundles) {
+        try (FileOutputStream fos = new FileOutputStream(zipFile);
+                ZipOutputStream zos = new ZipOutputStream(fos)) {
+            byte[] buffer = new byte[1024];
+            for (String bundle : bundles) {
                 File file = new File(rootDirectory, bundle);
-                try(FileInputStream fis = new FileInputStream(file)) {
+                try (FileInputStream fis = new FileInputStream(file)) {
                     zos.putNextEntry(new ZipEntry(file.getName()));
                     int length;
                     while ((length = fis.read(buffer)) > 0) {
@@ -319,12 +322,15 @@ public class SupportAction implements RootAction, StaplerProxy {
             if (!s.isSelected()) {
                 logger.log(Level.FINER, "Excluding ''{0}'' from list of components to include", s.getName());
                 remove.add(s.getName());
-                // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the new names for 
+                // JENKINS-63722: If "Master" or "Agents" are unselected, show a warning and add the new names for
                 // those components to the list of unselected components for backward compatibility
-                if("Master".equals(s.getName()) || "Agents".equals(s.getName())) {
-                    logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids(s.getName()).toString());
-                    remove.add(s.getName()+ "JVMProcessSystemMetricsContents");
-                    remove.add(s.getName()+ "SystemConfiguration");
+                if ("Master".equals(s.getName()) || "Agents".equals(s.getName())) {
+                    logger.log(
+                            Level.WARNING,
+                            Messages._SupportCommand_jenkins_63722_deprecated_ids(s.getName())
+                                    .toString());
+                    remove.add(s.getName() + "JVMProcessSystemMetricsContents");
+                    remove.add(s.getName() + "SystemConfiguration");
                 }
             }
         }
@@ -345,36 +351,43 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp) throws IOException {
+    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp)
+            throws IOException {
         if (components == null) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
             return;
         }
-        Set<String> componentNames = Arrays
-            .stream(components.split(","))
-            .collect(Collectors.toSet());
-        
+        Set<String> componentNames = Arrays.stream(components.split(",")).collect(Collectors.toSet());
+
         // JENKINS-63722: If "Master" or "Agents" are used, show a warning and add the new names for those components
         // to the selection for backward compatibility
-        if(componentNames.contains("Master")) {
-            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids("Master").toString());
+        if (componentNames.contains("Master")) {
+            logger.log(
+                    Level.WARNING,
+                    Messages._SupportCommand_jenkins_63722_deprecated_ids("Master")
+                            .toString());
             componentNames.add("MasterJVMProcessSystemMetricsContents");
             componentNames.add("MasterSystemConfiguration");
         }
-        if(componentNames.contains("Agents")) {
-            logger.log(Level.WARNING, Messages._SupportCommand_jenkins_63722_deprecated_ids("Agents").toString());
+        if (componentNames.contains("Agents")) {
+            logger.log(
+                    Level.WARNING,
+                    Messages._SupportCommand_jenkins_63722_deprecated_ids("Agents")
+                            .toString());
             componentNames.add("AgentsJVMProcessSystemMetricsContents");
             componentNames.add("AgentsSystemConfiguration");
         }
-        
+
         logger.fine("Selecting components...");
-        List<Component> selectedComponents = getComponents().stream().filter(c -> componentNames.contains(c.getId())).collect(Collectors.toList());
+        List<Component> selectedComponents = getComponents().stream()
+                .filter(c -> componentNames.contains(c.getId()))
+                .collect(Collectors.toList());
         if (selectedComponents.isEmpty()) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "selected component list is empty");
             return;
         }
         prepareBundle(rsp, selectedComponents);
-     }
+    }
 
     private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
         logger.fine("Preparing response...");
@@ -385,7 +398,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
             try {
                 try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                     SupportPlugin.writeBundle(servletOutputStream, components);
+                    SupportPlugin.writeBundle(servletOutputStream, components);
                 } catch (IOException e) {
                     logger.log(Level.FINE, e.getMessage(), e);
                 }
@@ -399,12 +412,15 @@ public class SupportAction implements RootAction, StaplerProxy {
 
     public boolean selectedByDefault(Component c) {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
-        return c.isSelectedByDefault() && (supportPlugin == null || !supportPlugin.getExcludedComponents().contains(c.getId()));
+        return c.isSelectedByDefault()
+                && (supportPlugin == null
+                        || !supportPlugin.getExcludedComponents().contains(c.getId()));
     }
 
     public static class Selection {
         /** @see Component#getId */
         private final String name;
+
         private final boolean selected;
 
         @DataBoundConstructor
