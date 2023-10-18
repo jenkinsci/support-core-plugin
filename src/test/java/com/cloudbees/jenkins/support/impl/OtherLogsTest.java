@@ -53,7 +53,7 @@ public class OtherLogsTest {
         Files.write(
                 testFile.toPath(), Collections.singletonList("This is a test from root dir"), Charset.defaultCharset());
 
-        File tmpFile = File.createTempFile("gclogs", ".log", j.getInstance().getRootDir());
+        File tmpFile = Files.createTempFile(j.getInstance().getRootDir().toPath(), "gclogs", ".log").toFile();
         Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
 
         mockFinderAndGcLogs(finder -> {

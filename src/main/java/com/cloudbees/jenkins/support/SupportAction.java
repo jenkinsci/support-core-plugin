@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -269,7 +270,7 @@ public class SupportAction implements RootAction, StaplerProxy {
 
     private File createZipFile(Set<String> bundles) throws IOException {
         File rootDirectory = SupportPlugin.getRootDirectory();
-        File zipFile = File.createTempFile(String.format("multiBundle(%s)-", bundles.size()), ".zip");
+        File zipFile = Files.createTempFile(String.format("multiBundle(%s)-", bundles.size()), ".zip").toFile();
         zipFile.deleteOnExit();
         try (FileOutputStream fos = new FileOutputStream(zipFile);
                 ZipOutputStream zos = new ZipOutputStream(fos)) {

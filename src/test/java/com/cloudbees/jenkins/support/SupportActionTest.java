@@ -312,7 +312,7 @@ public class SupportActionTest {
 
     private ZipFile downloadBundle(String s) throws IOException, SAXException {
         JenkinsRule.JSONWebResponse jsonWebResponse = j.postJSON(root.getUrlName() + s, "");
-        File zipFile = File.createTempFile("test", "zip");
+        File zipFile = Files.createTempFile("test", "zip").toFile();
         IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
         return new ZipFile(zipFile);
         // Zip file is valid
@@ -372,7 +372,7 @@ public class SupportActionTest {
             HtmlForm form = p.getFormByName("bundle-contents");
             HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
             Page zip = submit.click();
-            File zipFile = File.createTempFile("test", "zip");
+            File zipFile = Files.createTempFile("test", "zip").toFile();
             IOUtils.copy(zip.getWebResponse().getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
 
             ZipFile z = new ZipFile(zipFile);

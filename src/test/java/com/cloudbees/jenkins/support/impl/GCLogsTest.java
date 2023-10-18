@@ -10,6 +10,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.google.common.io.Files;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,7 +25,7 @@ public class GCLogsTest {
 
     @Test
     public void simpleFile() throws Exception {
-        File tmpFile = File.createTempFile("gclogs", "");
+        File tmpFile = Files.createTempFile("gclogs", "").toFile();
         Files.touch(tmpFile);
 
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class, Mockito.CALLS_REAL_METHODS);

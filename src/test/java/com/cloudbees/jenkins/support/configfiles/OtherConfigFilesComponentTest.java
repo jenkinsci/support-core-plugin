@@ -109,7 +109,7 @@ public class OtherConfigFilesComponentTest {
 
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
-        File file = File.createTempFile("test", ".xml");
+        File file = Files.createTempFile("test", ".xml").toFile();
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
         assertThat(patchedXml, equalToCompressingWhiteSpace(expectedXml));

@@ -166,7 +166,7 @@ public class SupportTestUtils {
         HtmlForm form = p.getFormByName("bundle-contents");
         HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
         Page zip = submit.click();
-        File zipFile = File.createTempFile("test", "zip");
+        File zipFile = Files.createTempFile("test", "zip").toFile();
         IOUtils.copy(zip.getWebResponse().getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
         return new ZipFile(zipFile);
     }

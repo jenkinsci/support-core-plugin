@@ -9,6 +9,7 @@ import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import java.io.File;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +64,7 @@ public class SecretHandlerTest {
     @Issue("JENKINS-41653")
     @Test
     public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
-        File file = File.createTempFile("test", ".xml");
+        File file = Files.createTempFile("test", ".xml").toFile();
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
         String expectedXml =
@@ -104,7 +105,7 @@ public class SecretHandlerTest {
                 + "    <!ENTITY xxeattack SYSTEM \"file:///\"> \n"
                 + "]>\n"
                 + "<xxx>&xxeattack;</xxx>";
-        File file = File.createTempFile("test", ".xml");
+        File file = Files.createTempFile("test", ".xml").toFile();
         FileUtils.writeStringToFile(file, xxeXml, Charset.defaultCharset());
         String redactedXxeXml = SecretHandler.findSecrets(file);
         // Either the XML library understands the XXE disabling features, and removes XXEs completely,

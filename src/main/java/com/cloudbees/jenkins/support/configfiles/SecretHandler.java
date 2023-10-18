@@ -115,6 +115,8 @@ class SecretHandler {
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
         Result res = new StreamResult(result);
         TransformerFactory factory = TransformerFactory.newInstance();
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         Transformer transformer = factory.newTransformer();
         // omit xml declaration because of https://bugs.openjdk.java.net/browse/JDK-8035437
