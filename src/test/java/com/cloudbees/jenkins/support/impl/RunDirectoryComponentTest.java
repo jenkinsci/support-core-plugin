@@ -1,6 +1,9 @@
 package com.cloudbees.jenkins.support.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -59,7 +62,7 @@ public class RunDirectoryComponentTest {
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertTrue(output.containsKey(prefix + "/build.xml"));
         assertTrue(output.containsKey(prefix + "/log"));
-        assertTrue(output.containsKey(prefix + "/workflow/2.xml"));
+        assertThat(output.keySet(), hasItem(startsWith(prefix + "/workflow")));
         assertThat(output.get(prefix + "/build.xml"), Matchers.containsString("<flow-build"));
         assertThat(output.get(prefix + "/log"), Matchers.containsString("[Pipeline] node"));
     }
@@ -76,12 +79,12 @@ public class RunDirectoryComponentTest {
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new RunDirectoryComponent("", "workflow/**, */log", true, 10), workflowRun);
+                new RunDirectoryComponent("", "workflow*/**, */log", true, 10), workflowRun);
 
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertTrue(output.containsKey(prefix + "/build.xml"));
         assertTrue(output.containsKey(prefix + "/log"));
-        assertFalse(output.containsKey(prefix + "/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/workflow"))));
     }
 
     @Test
@@ -96,12 +99,12 @@ public class RunDirectoryComponentTest {
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new RunDirectoryComponent("workflow/**", "", true, 10), workflowRun);
+                new RunDirectoryComponent("workflow*/**", "", true, 10), workflowRun);
 
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertFalse(output.containsKey(prefix + "/build.xml"));
         assertFalse(output.containsKey(prefix + "/log"));
-        assertTrue(output.containsKey(prefix + "/workflow/2.xml"));
+        assertThat(output.keySet(), hasItem(startsWith(prefix + "/workflow")));
     }
 
     @Test
@@ -121,7 +124,7 @@ public class RunDirectoryComponentTest {
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertTrue(output.containsKey(prefix + "/build.xml"));
         assertTrue(output.containsKey(prefix + "/log"));
-        assertFalse(output.containsKey(prefix + "/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/workflow"))));
     }
 
     @Test
@@ -136,11 +139,11 @@ public class RunDirectoryComponentTest {
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new RunDirectoryComponent("**/*.xml", "workflow/**", true, 10), workflowRun);
+                new RunDirectoryComponent("**/*.xml", "workflow*/**", true, 10), workflowRun);
 
         String prefix = "items/" + JOB_NAME + "/builds/" + workflowRun.number;
         assertTrue(output.containsKey(prefix + "/build.xml"));
         assertFalse(output.containsKey(prefix + "/log"));
-        assertFalse(output.containsKey(prefix + "/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/workflow"))));
     }
 }

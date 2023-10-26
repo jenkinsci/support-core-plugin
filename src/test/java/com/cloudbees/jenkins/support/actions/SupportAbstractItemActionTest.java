@@ -1,5 +1,8 @@
 package com.cloudbees.jenkins.support.actions;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -10,9 +13,11 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.model.queue.QueueTaskFuture;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
 import junit.framework.AssertionFailedError;
@@ -127,6 +132,8 @@ public class SupportAbstractItemActionTest {
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/config.xml"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/builds/1/build.xml"));
-        assertNotNull(z.getEntry(itemEntryPrefix + "/builds/1/workflow/2.xml"));
+        assertThat(
+                Collections.list(z.entries()).stream().map(ZipEntry::getName).collect(Collectors.toList()),
+                hasItem(startsWith(itemEntryPrefix + "/builds/1/workflow")));
     }
 }
