@@ -2,6 +2,9 @@ package com.cloudbees.jenkins.support.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -168,7 +171,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/nextBuildNumber"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
-        assertTrue(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertThat(output.keySet(), hasItem(startsWith(prefix + "/builds/1/workflow")));
         assertThat(output.get(prefix + "/config.xml"), containsString("<flow-definition"));
         assertThat(output.get(prefix + "/nextBuildNumber"), containsString("2"));
     }
@@ -196,7 +199,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertFalse(output.containsKey(prefix + "/builds/1/build.xml"));
         assertFalse(output.containsKey(prefix + "/builds/1/log"));
-        assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/builds/1/workflow"))));
     }
 
     /*
@@ -220,7 +223,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertFalse(output.containsKey(prefix + "/builds/1/log"));
-        assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/builds/1/workflow"))));
     }
 
     /*
@@ -244,7 +247,7 @@ public class AbstractItemComponentTest {
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/log"));
-        assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/builds/1/workflow"))));
     }
 
     /*
@@ -262,12 +265,12 @@ public class AbstractItemComponentTest {
         j.waitUntilNoActivity();
 
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(
-                new AbstractItemDirectoryComponent("**/*.xml", "**/workflow/**", true, 10), p);
+                new AbstractItemDirectoryComponent("**/*.xml", "**/workflow*/**", true, 10), p);
 
         String prefix = "items/" + JOB_NAME;
         assertTrue(output.containsKey(prefix + "/config.xml"));
         assertTrue(output.containsKey(prefix + "/builds/1/build.xml"));
         assertFalse(output.containsKey(prefix + "/builds/1/log"));
-        assertFalse(output.containsKey(prefix + "/builds/1/workflow/2.xml"));
+        assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/builds/1/workflow"))));
     }
 }
