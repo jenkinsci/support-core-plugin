@@ -50,6 +50,6 @@ public class RunningBuilds extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.CONTROLLER;
+        return ComponentCategory.BUILDS;
     }
 }

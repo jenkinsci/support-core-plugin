@@ -164,6 +164,10 @@ public abstract class Component implements ExtensionPoint {
          */
         AGENT(Messages._SupportPlugin_Category_Agent()),
         /**
+         * For components related to queued, running, or historical builds.
+         */
+        BUILDS(Messages._SupportPlugin_Category_Builds()),
+        /**
          * For components related to the controller, its configuration and other bits.
          */
         CONTROLLER(Messages._SupportPlugin_Category_Controller()),
