@@ -65,6 +65,6 @@ public class NodeMonitors extends Component {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.CONTROLLER;
+        return ComponentCategory.AGENT;
     }
 }

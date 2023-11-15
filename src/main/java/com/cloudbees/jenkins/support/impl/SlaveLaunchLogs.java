@@ -79,7 +79,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.AGENT;
+        return ComponentCategory.AGENT; // TODO or LOGS?
     }
 
     @Override
