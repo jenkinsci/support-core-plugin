@@ -146,7 +146,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.CONTROLLER;
+        return ComponentCategory.AGENT;
     }
 
     @Override
