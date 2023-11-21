@@ -98,7 +98,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.PLATFORM;
+        return ComponentCategory.BUILDS;
     }
 
     @NonNull
