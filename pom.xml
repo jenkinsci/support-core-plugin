@@ -101,6 +101,13 @@
       <groupId>net.sf.uadetector</groupId>
       <artifactId>uadetector-resources</artifactId>
       <version>2014.10</version>
+      <exclusions>
+        <!-- Provided by core -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Managed by BOM -->
     <dependency>
