@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.util.IgnoreCloseWriter;
 import com.cloudbees.jenkins.support.util.WrapperOutputStream;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -52,11 +53,11 @@ public abstract class PrefilteredPrintedContent extends PrefilteredContent {
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        writeTo(os, null);
+        writeTo(os, ContentFilter.NONE);
     }
 
     @Override
-    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+    public void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
         final PrintWriter writer = getWriter(os);
         try {
             printTo(writer, filter);
@@ -83,8 +84,8 @@ public abstract class PrefilteredPrintedContent extends PrefilteredContent {
     }
 
     protected void printTo(PrintWriter out) throws IOException {
-        printTo(out, null);
+        printTo(out, ContentFilter.NONE);
     }
 
-    protected abstract void printTo(PrintWriter out, ContentFilter filter) throws IOException;
+    protected abstract void printTo(PrintWriter out, @NonNull ContentFilter filter) throws IOException;
 }

@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support.filter;
 
 import com.cloudbees.jenkins.support.api.Content;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -47,7 +48,7 @@ public abstract class PrefilteredContent extends Content {
      * @param filter ContentFilter to apply
      * @throws IOException If an input or output exception occurs
      */
-    public abstract void writeTo(OutputStream os, ContentFilter filter) throws IOException;
+    public abstract void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException;
 
     @Override
     public final boolean shouldBeFiltered() {

@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -73,7 +74,7 @@ public class FileContent extends PrefilteredContent {
     }
 
     @Override
-    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+    public void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
         baseFileContent.writeTo(os, filter);
     }
 

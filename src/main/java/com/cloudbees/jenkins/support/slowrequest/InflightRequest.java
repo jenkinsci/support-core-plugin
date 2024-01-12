@@ -4,7 +4,6 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Date;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import jenkins.model.Jenkins;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -70,22 +69,15 @@ final class InflightRequest {
         locale = req.getLocale().toString();
     }
 
-    void writeHeader(PrintWriter w) {
-        writeHeader(w, Optional.empty());
-    }
-
-    void writeHeader(PrintWriter w, Optional<ContentFilter> filter) {
-        w.println("Username: "
-                + filter.map(contentFilter -> contentFilter.filter(userName)).orElse(userName));
-        w.println("Referer: "
-                + filter.map(contentFilter -> contentFilter.filter(referer)).orElse(referer));
+    void writeHeader(PrintWriter w, ContentFilter filter) {
+        w.println("Username: " + filter.filter(userName));
+        w.println("Referer: " + filter.filter(referer));
         w.println("User Agent: "
                 + (userAgent != null
                         ? UADetectorServiceFactory.getResourceModuleParser().parse(userAgent)
                         : null));
         w.println("Date: " + new Date());
-        w.println(
-                "URL: " + filter.map(contentFilter -> contentFilter.filter(url)).orElse(url));
+        w.println("URL: " + filter.filter(url));
         w.println("Locale: " + locale);
         w.println();
     }

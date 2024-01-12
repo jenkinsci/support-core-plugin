@@ -368,7 +368,7 @@ public class CheckFilterTest {
          * After creating all the contents and
          */
         private void generateFilteredWords() {
-            ContentFilter filter = SupportPlugin.getContentFilter().orElse(null);
+            ContentFilter filter = SupportPlugin.getDefaultContentFilter();
             for (FileToCheck file : fileSet) {
                 file.wordFiltered = file.fileIsFiltered ? ContentFilter.filter(filter, file.word) : file.word;
             }

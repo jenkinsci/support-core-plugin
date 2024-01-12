@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.zip.ZipFile;
-import junit.framework.AssertionFailedError;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
 import org.junit.Assume;
@@ -67,7 +66,7 @@ public class FileDescriptorLimitTest {
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        ContentFilter filter = SupportPlugin.getDefaultContentFilter();
         String filtered = ContentMappings.get().getMappings().get(SENSITIVE_JOB_NAME);
         String output;
         // Hold an open File Descriptor

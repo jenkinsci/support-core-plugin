@@ -381,26 +381,20 @@ public class SupportPlugin extends Plugin {
                     CountingOutputStream countingOs = new CountingOutputStream(outputStream);
                     ZipArchiveOutputStream binaryOut =
                             new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
-                // Get the filter to be used
-                Optional<ContentFilter> maybeFilter = getContentFilter(false);
-                // Recalculate the mappings and stop words and save it to disk
-                maybeFilter.ifPresent(SupportPlugin::reloadAndSaveMappings);
+                ContentFilter filter = getDefaultContentFilter(true);
 
-                // Generate the content of the manifest.md going trough all the components which will be included. It
-                // also returns the contents to include. We pass maybeFilter to filter the names written in the manifest
+                // Generate the content of the manifest.md going through all the components which will be included. It
+                // also returns the contents to include. We pass a filter to filter the names written in the manifest
                 appendManifestHeader(manifest);
                 long startTime = System.currentTimeMillis();
                 List<Content> contents =
-                        appendManifestContents(manifest, errorWriter, components, componentConsumer, maybeFilter);
+                        appendManifestContents(manifest, errorWriter, components, componentConsumer, filter);
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms to process all components");
                 contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
 
-                Optional<FilteredOutputStream> maybeFilteredOut =
-                        maybeFilter.map(filter -> new FilteredOutputStream(binaryOut, filter));
-                OutputStream textOut =
-                        maybeFilteredOut.map(OutputStream.class::cast).orElse(binaryOut);
+                FilteredOutputStream textOut = new FilteredOutputStream(binaryOut, filter);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
                 IgnoreCloseOutputStream unfilteredOut = new IgnoreCloseOutputStream(binaryOut);
                 IgnoreCloseOutputStream filteredOut = new IgnoreCloseOutputStream(selector);
@@ -414,8 +408,7 @@ public class SupportPlugin extends Plugin {
                     LOGGER.log(Level.FINE, "Start writing support content " + content.getClass());
                     long contentStartTime = System.currentTimeMillis();
                     long contentStartSize = countingOs.getByteCount();
-                    final String name =
-                            getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
+                    final String name = getNameFiltered(filter, content.getName(), content.getFilterableParameters());
 
                     try {
                         final ZipArchiveEntry entry = new ZipArchiveEntry(name);
@@ -424,8 +417,8 @@ public class SupportPlugin extends Plugin {
                         entryCreated = true;
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
-                        if (content instanceof PrefilteredContent && maybeFilter.isPresent()) {
-                            ((PrefilteredContent) content).writeTo(out, maybeFilter.get());
+                        if (content instanceof PrefilteredContent) {
+                            ((PrefilteredContent) content).writeTo(out, filter);
                         } else {
                             content.writeTo(out);
                         }
@@ -439,7 +432,7 @@ public class SupportPlugin extends Plugin {
                         Functions.printStackTrace(e, errorWriter);
                         errorWriter.println();
                     } finally {
-                        maybeFilteredOut.ifPresent(FilteredOutputStream::reset);
+                        textOut.reset();
                         selector.reset();
                         if (entryCreated) {
                             binaryOut.closeArchiveEntry();
@@ -483,20 +476,18 @@ public class SupportPlugin extends Plugin {
 
     /**
      * Filter the name of a content depending on the filterableParameters in the name that need to be replaced.
-     * @param maybeFilter an Optional with a {@link ContentFilter} or not
+     * @param contentFilter an Optional with a {@link ContentFilter} or not
      * @param name the name of the content to be filtered
      * @param filterableParameters filterableParameters in the name to be filtered. If null, no filter takes place to avoid corruption
      * @return the name filtered
      */
-    static String getNameFiltered(Optional<ContentFilter> maybeFilter, String name, String[] filterableParameters) {
+    static String getNameFiltered(ContentFilter contentFilter, String name, String[] filterableParameters) {
         String filteredName;
 
         if (filterableParameters != null) {
             // Filter each token or return the token depending on whether the filter is active or not
-            String[] replacedParameters = Arrays.stream(filterableParameters)
-                    .map(filterableParameter -> maybeFilter
-                            .map(filter -> filter.filter(filterableParameter))
-                            .orElse(filterableParameter))
+            Object[] replacedParameters = Arrays.stream(filterableParameters)
+                    .map(contentFilter::filter)
                     .toArray(String[]::new);
 
             // Replace each placeholder {0}, {1} in the name, with the replaced token
@@ -504,7 +495,7 @@ public class SupportPlugin extends Plugin {
         } else {
             // Previous behavior was filter all the name, but it could end up in having a corrupted bundle. So we expect
             // implementors to use the appropriate constructor of Content.
-            // filteredName = maybeFilter.map(filter -> filter.filter(name)).orElse(name);
+            // filteredName = contentFilter.filter(name);
             filteredName = name;
         }
 
@@ -514,9 +505,13 @@ public class SupportPlugin extends Plugin {
     /**
      * Get the filter to be used in an {@link Optional} just in case.
      * @return the filter.
+     *
+     * @deprecated use getDefaultContentFilter()
      */
+    @NonNull
+    @Deprecated
     public static Optional<ContentFilter> getContentFilter() {
-        return getContentFilter(true);
+        return Optional.of(getDefaultContentFilter(true));
     }
 
     /**
@@ -524,32 +519,51 @@ public class SupportPlugin extends Plugin {
      * @param ensureLoaded true to ensure that the filter is loaded. Not necessary if {@link ContentFilter#reload()} is
      *                     done explicitly by the caller.
      * @return the filter.
+     * @deprecated use getDefaultContentFilter(ensureLoaded)
      */
+    @Deprecated
     public static Optional<ContentFilter> getContentFilter(boolean ensureLoaded) {
         ContentFilters filters = ContentFilters.get();
         if (filters.isEnabled()) {
-            ContentFilter filter = ContentFilter.ALL;
-            if (ensureLoaded) {
-                filter.ensureLoaded();
-            }
-            return Optional.of(filter);
+            return Optional.of(getDefaultContentFilter(ensureLoaded));
         }
         return Optional.empty();
     }
 
     /**
-     * Reload mappings and filters and save it to disk.
-     * @param filter filter to reload.
+     * Get the current {@link ContentFilter}.
+     *
+     * @return the {@link ContentFilter} or a pass-through filter if anonymization is off
      */
-    private static void reloadAndSaveMappings(ContentFilter filter) {
-        ContentMappings mappings = ContentMappings.get();
-        try (BulkChange change = new BulkChange(mappings)) {
-            mappings.reload();
-            filter.reload();
-            change.commit();
-        } catch (IOException e) {
-            e.printStackTrace();
+    @NonNull
+    public static ContentFilter getDefaultContentFilter() {
+        return getDefaultContentFilter(true);
+    }
+
+    /**
+     * Get the filter to be used.
+     * @param ensureLoaded true to ensure that the filter is loaded. Not necessary if {@link ContentFilter#reload()} is
+     *                     done explicitly by the caller.
+     * @return the filter.
+     */
+    @NonNull
+    public static ContentFilter getDefaultContentFilter(boolean ensureLoaded) {
+        ContentFilters filters = ContentFilters.get();
+        if (filters.isEnabled()) {
+            ContentFilter filter = ContentFilter.ALL;
+            if (ensureLoaded) {
+                ContentMappings mappings = ContentMappings.get();
+                try (BulkChange change = new BulkChange(mappings)) {
+                    mappings.reload();
+                    filter.reload();
+                    change.commit();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Failed reloading mappings", e);
+                }
+            }
+            return filter;
         }
+        return ContentFilter.NONE;
     }
 
     private static void appendManifestHeader(StringBuilder manifest) {
@@ -574,7 +588,7 @@ public class SupportPlugin extends Plugin {
      * @param errors where to print error messages
      * @param components components to add their contents to the bundle
      * @param componentVisitor visitor to be used when walking through components
-     * @param maybeFilter filter to be used when writing the content names
+     * @param contentFilter filter to be used when writing the content names
      * @return the list of contents whose names has been added to the manifest and their content will be added to the
      * bundle.
      */
@@ -583,10 +597,10 @@ public class SupportPlugin extends Plugin {
             PrintWriter errors,
             List<? extends Component> components,
             ComponentVisitor componentVisitor,
-            Optional<ContentFilter> maybeFilter) {
+            ContentFilter contentFilter) {
 
         manifest.append("Requested components:\n\n");
-        ContentContainer contentsContainer = new ContentContainer(maybeFilter);
+        ContentContainer contentsContainer = new ContentContainer(contentFilter);
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
@@ -626,20 +640,20 @@ public class SupportPlugin extends Plugin {
         private final Set<String> names = new HashSet<>();
 
         // The filter to return the names filtered
-        private final Optional<ContentFilter> maybeFilter;
+        private final ContentFilter contentFilter;
 
         /**
          * We need the filter to be able to filter the contents written to the manifest
-         * @param maybeFilter filter to use when writing the name of the contents
+         * @param contentFilter filter to use when writing the name of the contents
          */
-        ContentContainer(Optional<ContentFilter> maybeFilter) {
-            this.maybeFilter = maybeFilter;
+        ContentContainer(ContentFilter contentFilter) {
+            this.contentFilter = contentFilter;
         }
 
         @Override
         public void add(Content content) {
             if (content != null) {
-                String name = getNameFiltered(maybeFilter, content.getName(), content.getFilterableParameters());
+                String name = getNameFiltered(contentFilter, content.getName(), content.getFilterableParameters());
                 synchronized (this) {
                     contents.add(content);
                     names.add(name);

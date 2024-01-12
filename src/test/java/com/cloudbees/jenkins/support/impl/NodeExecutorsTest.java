@@ -170,7 +170,7 @@ public class NodeExecutorsTest {
                 .waitForStart();
         j.waitForMessage("Running on", workflowRun);
 
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        ContentFilter filter = SupportPlugin.getDefaultContentFilter();
 
         String filteredNodeName = ContentMappings.get().getMappings().get(agent.getNodeName());
         String filteredNodeDisplayName = ContentMappings.get().getMappings().get(agent.getDisplayName());

@@ -57,7 +57,7 @@ public class RunningBuildsTest {
     public void addContentsFiltered() throws Exception {
         ContentFilters.get().setEnabled(true);
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
-        ContentFilter filter = SupportPlugin.getContentFilter().orElseThrow(AssertionFailedError::new);
+        ContentFilter filter = SupportPlugin.getDefaultContentFilter();
         String filtered = ContentMappings.get().getMappings().get(SENSITIVE_JOB_NAME);
         SemaphoreBuilder semaphore = new SemaphoreBuilder();
         p.getBuildersList().add(semaphore);
