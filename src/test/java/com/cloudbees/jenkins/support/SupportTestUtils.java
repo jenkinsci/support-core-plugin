@@ -103,7 +103,7 @@ public class SupportTestUtils {
                     Objects.requireNonNull(content).writeTo(baos);
                     contents.put(
                             SupportPlugin.getNameFiltered(
-                                    SupportPlugin.getContentFilter(),
+                                    SupportPlugin.getDefaultContentFilter(),
                                     content.getName(),
                                     content.getFilterableParameters()),
                             baos.toString());
@@ -135,7 +135,7 @@ public class SupportTestUtils {
                             Objects.requireNonNull(content).writeTo(baos);
                             contents.put(
                                     SupportPlugin.getNameFiltered(
-                                            SupportPlugin.getContentFilter(),
+                                            SupportPlugin.getDefaultContentFilter(),
                                             content.getName(),
                                             content.getFilterableParameters()),
                                     baos.toString());

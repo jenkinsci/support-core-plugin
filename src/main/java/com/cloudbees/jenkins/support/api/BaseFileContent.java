@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.util.StreamUtils;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import java.io.BufferedReader;
 import java.io.File;
@@ -122,8 +123,8 @@ class BaseFileContent {
         }
     }
 
-    protected void writeTo(OutputStream os, ContentFilter filter) throws IOException {
-        if (isBinary || filter == null) {
+    protected void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
+        if (isBinary) {
             writeTo(os);
         }
 

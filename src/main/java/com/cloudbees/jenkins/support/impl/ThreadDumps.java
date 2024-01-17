@@ -8,7 +8,6 @@ import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
@@ -21,9 +20,11 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import java.io.*;
 import java.lang.management.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +77,8 @@ public class ThreadDumps extends ObjectComponent<Computer> {
         result.add(new Content("nodes/master/thread-dump.txt") {
             @Override
             public void writeTo(OutputStream os) throws IOException {
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                PrintWriter out =
+                        new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
                 try {
                     out.println("Master");
                     out.println("======");
@@ -86,11 +88,8 @@ public class ThreadDumps extends ObjectComponent<Computer> {
                 }
                 try {
                     Timer.get()
-                            .submit(new Runnable() {
-                                @Override
-                                public void run() {
-                                    /* OK */
-                                }
+                            .submit(() -> {
+                                /* OK */
                             })
                             .get(10, TimeUnit.SECONDS);
                 } catch (ExecutionException | InterruptedException x) {
@@ -106,8 +105,8 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             }
         });
         Jenkins.get().getNodes().stream()
-                .filter(node -> node.toComputer() != null)
                 .map(Node::toComputer)
+                .filter(Objects::nonNull)
                 .forEach(computer -> addContents(result, computer));
     }
 
@@ -143,7 +142,8 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             container.add(new Content("nodes/slave/{0}/thread-dump.txt", node.getNodeName()) {
                 @Override
                 public void writeTo(OutputStream os) throws IOException {
-                    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf-8")));
+                    PrintWriter out =
+                            new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
                     try {
                         out.println(node.getNodeName());
                         out.println("======");
@@ -154,14 +154,11 @@ public class ThreadDumps extends ObjectComponent<Computer> {
                             // as we will not fall back to a cache
                             content = threadDump.get(
                                     Math.min(
-                                            SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS * 8,
+                                            SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS * 8L,
                                             TimeUnit.SECONDS.toMillis(
                                                     SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)),
                                     TimeUnit.MILLISECONDS);
-                        } catch (InterruptedException e) {
-                            logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
-                            Functions.printStackTrace(e, out);
-                        } catch (ExecutionException e) {
+                        } catch (InterruptedException | ExecutionException e) {
                             logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
                             Functions.printStackTrace(e, out);
                         } catch (TimeoutException e) {
@@ -210,7 +207,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
                 threadDump(bos);
-                return bos.toString("utf-8");
+                return bos.toString(StandardCharsets.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 return bos.toString();
             }
@@ -227,7 +224,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We don't want platform specific")
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
-        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "utf-8"), true);
+        final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
 
         ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] threads;
@@ -238,12 +235,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             threads = new ThreadInfo[0];
         }
 
-        Arrays.sort(threads, new Comparator<ThreadInfo>() {
-            @Override
-            public int compare(ThreadInfo t1, ThreadInfo t2) {
-                return t1.getThreadName().compareTo(t2.getThreadName());
-            }
-        });
+        Arrays.sort(threads, Comparator.comparing(ThreadInfo::getThreadName));
         for (ThreadInfo t : threads) {
             printThreadInfo(writer, t, mbean);
         }
@@ -272,7 +264,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     }
 
     public static void printThreadInfo(PrintWriter writer, ThreadInfo t, ThreadMXBean mbean) {
-        printThreadInfo(writer, t, mbean, null);
+        printThreadInfo(writer, t, mbean, ContentFilter.NONE);
     }
 
     /**
@@ -286,7 +278,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      * @param filter the {@link ContentFilter} to use for filtering the thread name.
      */
     public static void printThreadInfo(
-            PrintWriter writer, ThreadInfo t, ThreadMXBean mbean, @CheckForNull ContentFilter filter) {
+            PrintWriter writer, ThreadInfo t, ThreadMXBean mbean, @NonNull ContentFilter filter) {
         long cpuPercentage;
         try {
             long cpuTime = mbean.getThreadCpuTime(t.getThreadId());

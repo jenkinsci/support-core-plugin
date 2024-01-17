@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.api.Content;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.google.common.collect.Lists;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import io.jenkins.lib.support_log_formatter.SupportLogFormatter;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -40,11 +41,11 @@ public abstract class LogRecordContent extends PrefilteredContent {
 
     @Override
     public final void writeTo(OutputStream os) throws IOException {
-        writeTo(os, null);
+        writeTo(os, ContentFilter.NONE);
     }
 
     @Override
-    public final void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+    public final void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
         final PrintWriter writer = getWriter(os);
         try {
             printTo(writer, filter);
@@ -54,10 +55,10 @@ public abstract class LogRecordContent extends PrefilteredContent {
     }
 
     protected void printTo(PrintWriter out) throws IOException {
-        printTo(out, null);
+        printTo(out, ContentFilter.NONE);
     }
 
-    protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
+    protected void printTo(PrintWriter out, @NonNull ContentFilter filter) throws IOException {
         for (LogRecord logRecord : getLogRecords()) {
             String filtered = LOG_FORMATTER.format(logRecord);
             filtered = ContentFilter.filter(filter, filtered);

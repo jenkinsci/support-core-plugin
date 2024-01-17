@@ -26,8 +26,10 @@ package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Content that is a string.
@@ -50,12 +52,12 @@ public class StringContent extends PrefilteredContent {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        writeTo(os, null);
+        writeTo(os, ContentFilter.NONE);
     }
 
     @Override
-    public void writeTo(OutputStream os, ContentFilter filter) throws IOException {
+    public void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
         String filtered = ContentFilter.filter(filter, value);
-        os.write(filtered.getBytes("UTF-8"));
+        os.write(filtered.getBytes(StandardCharsets.UTF_8));
     }
 }

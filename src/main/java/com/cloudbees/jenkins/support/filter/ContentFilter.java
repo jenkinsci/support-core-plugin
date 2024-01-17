@@ -51,6 +51,11 @@ public interface ContentFilter extends ExtensionPoint {
     ContentFilter ALL = new AllContentFilters();
 
     /**
+     * Provides a noop ContentFilter that pass through the value.
+     */
+    ContentFilter NONE = new NoneFilter();
+
+    /**
      * Filters a line or snippet of text.
      *
      * @param input input data to filter
@@ -61,7 +66,9 @@ public interface ContentFilter extends ExtensionPoint {
 
     /**
      * Ensure that the filter has been loaded at least once.
+     * @deprecated use reload() instead
      */
+    @Deprecated
     default void ensureLoaded() {}
 
     /**
@@ -76,8 +83,8 @@ public interface ContentFilter extends ExtensionPoint {
      * @param text the text to filter
      * @return the text filtered if it is not empty and the filter is not null
      */
-    static String filter(@CheckForNull ContentFilter filter, @CheckForNull String text) {
-        if (filter != null && StringUtils.isNotEmpty(text)) {
+    static String filter(@NonNull ContentFilter filter, @CheckForNull String text) {
+        if (StringUtils.isNotEmpty(text)) {
             return filter.filter(text);
         } else {
             return text;
