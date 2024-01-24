@@ -43,7 +43,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
-import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.htmlunit.HttpMethod;
@@ -78,12 +77,11 @@ public class SupportActionTest {
     @Rule
     public LoggerRule logger = new LoggerRule();
 
-    @Inject
-    SupportAction root;
+    private SupportAction root;
 
     @Before
     public void setUp() {
-        j.jenkins.getInjector().injectMembers(this);
+        root = ExtensionList.lookupSingleton(SupportAction.class);
     }
 
     @Test
