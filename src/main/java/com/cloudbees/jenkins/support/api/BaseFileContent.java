@@ -124,8 +124,9 @@ class BaseFileContent {
     }
 
     protected void writeTo(OutputStream os, @NonNull ContentFilter filter) throws IOException {
-        if (isBinary) {
+        if (isBinary || filter == ContentFilter.NONE) {
             writeTo(os);
+            return;
         }
 
         try {

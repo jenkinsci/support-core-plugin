@@ -26,9 +26,12 @@ package com.cloudbees.jenkins.support.api;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,5 +71,25 @@ public class FileContentTest {
         baos.reset();
         new FileContent("-", f).writeTo(baos, input -> input);
         assertTrue(baos.toString().contains("Checking folder"));
+    }
+
+    @Test
+    public void normalizesLineEndingsWhenFiltering() throws IOException {
+        File f = tmp.newFile();
+        FileUtils.writeStringToFile(f, "Before\r\nlines\n", StandardCharsets.UTF_8);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new FileContent("-", f).writeTo(baos, s -> s.replace("Before", "After"));
+        // Note that besides the filtering, \r has been dropped!
+        assertEquals("After\nlines\n", baos.toString());
+    }
+
+    @Test
+    public void preservesLineEndingsWithContentFilterNone() throws IOException {
+        File f = tmp.newFile();
+        FileUtils.writeStringToFile(f, "Cool\r\nlines\n", StandardCharsets.UTF_8);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new FileContent("-", f).writeTo(baos, ContentFilter.NONE);
+        String x = baos.toString();
+        assertEquals("Cool\r\nlines\n", baos.toString());
     }
 }
