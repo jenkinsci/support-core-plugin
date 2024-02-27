@@ -27,7 +27,6 @@ package com.cloudbees.jenkins.support.filter;
 import static java.util.stream.Collectors.toConcurrentMap;
 import static java.util.stream.Collectors.toMap;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.util.Persistence;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -35,13 +34,8 @@ import hudson.ExtensionList;
 import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -55,8 +49,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -67,17 +61,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  */
 @Restricted(NoExternalUse.class)
 public class ContentMappings extends ManagementLink implements Saveable, Iterable<ContentMapping> {
-
-    /**
-     * Name of the file containing additional user-provided stop words.
-     */
-    private static final String ADDITIONAL_STOP_WORDS_FILENAME = "additional-stop-words.txt";
-
-    /**
-     * Property to set to add <b>additional</b> stop words.
-     * The location should point to a line separated file containing words. Each line is treated as a word.
-     */
-    static final String ADDITIONAL_STOP_WORDS_PROPERTY = ContentMappings.class.getName() + ".additionalStopWordsFile";
 
     /**
      * @return the singleton instance
@@ -106,21 +89,11 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     private final Map<String, ContentMapping> mappings;
 
     private ContentMappings(@NonNull XmlProxy proxy) {
-        if (proxy.stopWords == null) {
-            stopWords = getDefaultStopWords();
-        } else {
-            stopWords = proxy.stopWords;
-            stopWords.add(Jenkins.VERSION);
-        }
-
-        // JENKINS-54688
-        stopWords.addAll(getAllowedOSName());
-
-        // Add single character words
-        stopWords.addAll(getAllAsciiCharacters());
-
-        // Add additional stop words
-        stopWords.addAll(getAdditionalStopWords());
+        stopWords = proxy.stopWords != null ? proxy.stopWords : new HashSet<>();
+        stopWords.addAll(StopWords.all().stream()
+                .map(StopWords::getWords)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()));
 
         mappings = proxy.mappings == null
                 ? new ConcurrentSkipListMap<>(COMPARATOR)
@@ -134,103 +107,6 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
                                     throw new IllegalArgumentException();
                                 },
                                 () -> new ConcurrentSkipListMap<>(COMPARATOR)));
-    }
-
-    /**
-     * Get the stop words by default
-     * @return the stop words to avoid being replaced.
-     */
-    private static Set<String> getDefaultStopWords() {
-        return new HashSet<>(Arrays.asList(
-                "agent",
-                "jenkins",
-                "node",
-                "master",
-                "computer",
-                "item",
-                "label",
-                "view",
-                "all",
-                "unknown",
-                "user",
-                "anonymous",
-                "authenticated",
-                "everyone",
-                "system",
-                "admin",
-                Jenkins.VERSION));
-    }
-
-    /**
-     * To avoid corrupting the content of the files in the bundle just in case we have an object name as 'a' or '.', we
-     * avoid replacing one single character (ascii codes actually). A one single character in other languages could
-     * have a meaning, so we remain replacing them. Example: 日 (Sun)
-     * @return Set of characters in ascii code chart
-     */
-    private static Set<String> getAllAsciiCharacters() {
-        final int SPACE = ' '; // 20
-        final int TILDE = '~'; // 126
-        Set<String> singleChars = new HashSet<>(TILDE - SPACE + 1);
-
-        for (char i = SPACE; i <= TILDE; i++) {
-            singleChars.add(Character.toString(i));
-        }
-
-        return singleChars;
-    }
-
-    private static Set<String> getAdditionalStopWords() {
-        Set<String> words = new HashSet<>();
-        String fileLocationFromProperty = System.getProperty(ADDITIONAL_STOP_WORDS_PROPERTY);
-        String fileLocation = fileLocationFromProperty == null
-                ? SupportPlugin.getRootDirectory() + "/" + ADDITIONAL_STOP_WORDS_FILENAME
-                : fileLocationFromProperty;
-        LOGGER.log(Level.FINE, "Attempting to load user provided stop words from ''{0}''.", fileLocation);
-        File f = new File(fileLocation);
-        if (f.exists()) {
-            if (!f.canRead()) {
-                LOGGER.log(
-                        Level.WARNING,
-                        "Could not load user provided stop words as " + fileLocation + " is not readable.");
-            } else {
-                try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
-                    for (String line = br.readLine(); line != null; line = br.readLine()) {
-                        if (StringUtils.isNotEmpty(line)) {
-                            words.add(line);
-                        }
-                    }
-                    return words;
-                } catch (IOException ex) {
-                    LOGGER.log(
-                            Level.WARNING,
-                            "Could not load user provided stop words. there was an error reading " + fileLocation,
-                            ex);
-                }
-            }
-        } else if (fileLocationFromProperty != null) {
-            LOGGER.log(
-                    Level.WARNING,
-                    "Could not load user provided stop words as " + fileLocationFromProperty + " does not exists.");
-        }
-        return words;
-    }
-
-    private static Set<String> getAllowedOSName() {
-        return new HashSet<>(Arrays.asList(
-                "linux",
-                "windows",
-                "win",
-                "mac",
-                "macos",
-                "macosx",
-                "mac os x",
-                "ubuntu",
-                "debian",
-                "fedora",
-                "red hat",
-                "sunos",
-                "freebsd"));
     }
 
     /**
@@ -273,7 +149,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     protected void clear() {
         stopWords.clear();
-        stopWords.addAll(getDefaultStopWords());
+        stopWords.addAll(ExtensionList.lookupSingleton(DefaultStopWords.class).getWords());
         mappings.clear();
     }
 
@@ -283,6 +159,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
     }
 
     @Override
+    @NonNull
     public Iterator<ContentMapping> iterator() {
         return mappings.values().iterator();
     }
