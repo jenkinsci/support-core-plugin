@@ -2,11 +2,10 @@ package com.cloudbees.jenkins.support.filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.Set;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import java.util.Set;
 
 @Extension
 @Restricted(NoExternalUse.class)

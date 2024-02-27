@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.filter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-
 import java.util.Set;
 
 /**

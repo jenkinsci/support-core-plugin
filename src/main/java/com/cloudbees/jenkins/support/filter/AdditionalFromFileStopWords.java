@@ -3,7 +3,6 @@ package com.cloudbees.jenkins.support.filter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
