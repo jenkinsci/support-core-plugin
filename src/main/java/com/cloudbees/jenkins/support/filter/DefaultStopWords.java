@@ -2,12 +2,11 @@ package com.cloudbees.jenkins.support.filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import java.util.Set;
 
 @Extension
 @Restricted(NoExternalUse.class)
@@ -16,7 +15,7 @@ public class DefaultStopWords implements StopWords {
     @NonNull
     @Override
     public Set<String> getWords() {
-        return new HashSet<>(Arrays.asList(
+        return Set.of(
                 "agent",
                 "jenkins",
                 "node",
@@ -33,6 +32,6 @@ public class DefaultStopWords implements StopWords {
                 "everyone",
                 "system",
                 "admin",
-                Jenkins.VERSION));
+                Jenkins.VERSION);
     }
 }
