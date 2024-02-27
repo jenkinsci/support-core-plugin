@@ -3,17 +3,16 @@ package com.cloudbees.jenkins.support.filter;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import java.io.BufferedReader;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
 
 @Extension
 public class AdditionalFromFileStopWords implements StopWords {
@@ -47,14 +46,8 @@ public class AdditionalFromFileStopWords implements StopWords {
                         Level.WARNING,
                         "Could not load user provided stop words as " + fileLocation + " is not readable.");
             } else {
-                try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
-                    for (String line = br.readLine(); line != null; line = br.readLine()) {
-                        if (StringUtils.isNotEmpty(line)) {
-                            words.add(line);
-                        }
-                    }
-                    return words;
+                try {
+                    words.addAll(Files.readAllLines(Path.of(fileLocation), Charset.defaultCharset()));
                 } catch (IOException ex) {
                     LOGGER.log(
                             Level.WARNING,
