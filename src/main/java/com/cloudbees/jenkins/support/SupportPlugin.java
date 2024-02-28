@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
-import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
@@ -377,7 +376,7 @@ public class SupportPlugin extends Plugin {
         PrintWriter errorWriter = new PrintWriter(errors);
 
         try {
-            try (BulkChange change = new BulkChange(ContentMappings.get());
+            try (BulkChange change = new BulkChange(ContentFilter.bulkChangeTarget());
                     CountingOutputStream countingOs = new CountingOutputStream(outputStream);
                     ZipArchiveOutputStream binaryOut =
                             new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
@@ -552,13 +551,10 @@ public class SupportPlugin extends Plugin {
         if (filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;
             if (ensureLoaded) {
-                ContentMappings mappings = ContentMappings.get();
-                try (BulkChange change = new BulkChange(mappings)) {
-                    mappings.reload();
-                    filter.reload();
-                    change.commit();
+                try {
+                    ContentFilter.reloadAndSaveMappings(filter);
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed reloading mappings", e);
+                    LOGGER.log(Level.WARNING, "Failed to reload filter and save mappings", e);
                 }
             }
             return filter;
