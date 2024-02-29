@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * @see SlaveLaunchLogs
+ */
 public class LaunchLogsFileContent extends FileContent {
 
     public LaunchLogsFileContent(String name, String[] filterableParameters, File file, long maxSize) {
