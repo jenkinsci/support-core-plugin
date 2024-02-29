@@ -188,5 +188,8 @@ public class NodeExecutorsTest {
         assertTrue(executorMd.contains(filteredNodeDisplayName));
         assertTrue(executorMd.contains(filteredJobName));
         assertTrue(executorMd.contains(filteredJobDisplayName));
+
+        SemaphoreStep.success("wait/1", null);
+        j.waitForCompletion(workflowRun);
     }
 }
