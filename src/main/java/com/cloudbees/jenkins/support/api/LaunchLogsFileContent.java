@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
+import com.cloudbees.jenkins.support.impl.SlaveLaunchLogs;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
