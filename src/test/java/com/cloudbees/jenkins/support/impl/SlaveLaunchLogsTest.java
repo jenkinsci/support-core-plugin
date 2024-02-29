@@ -56,7 +56,18 @@ public class SlaveLaunchLogsTest {
                 hasKey("nodes/slave/" + s.getNodeName() + "/launchLogs/slave.log"));
     }
 
-    // TODO logs from offline agent
+    @Test
+    public void offlineAgent() throws Exception {
+        var s = j.createOnlineSlave();
+        var name = s.getNodeName();
+        s.toComputer().disconnect(null).get();
+        assertThat(
+                "still includes something",
+                SupportTestUtils.invokeComponentToMap(ExtensionList.lookupSingleton(SlaveLaunchLogs.class))
+                        .get("nodes/slave/" + name + "/launchLogs/slave.log"),
+                allOf(notNullValue(), containsString("Remoting version: ")));
+    }
+
     // TODO logs from a deleted agent
     // TODO logs from multiple launch attempts of same agent
     // TODO honor SafeTimerTask.getLogsRoot (if applicable)
