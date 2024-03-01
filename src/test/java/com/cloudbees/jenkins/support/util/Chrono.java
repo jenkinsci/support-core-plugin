@@ -60,7 +60,7 @@ public class Chrono {
      * @param time time when this point happens.
      */
     public void mark(String pointName, Long time) {
-        mark(pointName, time, null);
+        mark(pointName, time, (String[]) null);
     }
 
     /**
