@@ -210,3 +210,13 @@ will be changed to:
 -username.net.passwd=REDACTED
 ````
 To disable this feature, delete all of the security stop words from the security-stop-words.txt file (but not the file itself, because it will be automatically regenerated with a default values). Any changes made to the security-stop-words.txt file are applied after a Jenkins instance restart.
+
+## Changelog
+
+### Version 2.71 and newer
+
+See [GitHub releases](https://github.com/jenkinsci/support-core-plugin/releases).
+
+### Version 2.70 (2020 Aug 13) and older
+
+See the [historical changelog](https://github.com/jenkinsci/support-core-plugin/blob/c7ad7403086db6929627fcfd4287b2c7ea3026a3/CHANGELOG.md).
