@@ -85,6 +85,7 @@ public class SlaveLaunchLogsTest {
     public void deletedAgent() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
+        Thread.sleep(1000); // TODO otherwise log is not flushed?
         j.jenkins.removeNode(s);
         assertThat(
                 "still includes something",
@@ -96,7 +97,7 @@ public class SlaveLaunchLogsTest {
     public void multipleLaunchLogs() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
-        Thread.sleep(1000); // TODO otherwise log is not flushed?
+        Thread.sleep(1000); // TODO as above
         s.toComputer().connect(false).get();
         assertThat(
                 "notes both launch logs",
