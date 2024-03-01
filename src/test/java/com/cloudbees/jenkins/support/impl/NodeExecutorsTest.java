@@ -21,8 +21,10 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
@@ -32,6 +34,9 @@ public class NodeExecutorsTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @ClassRule
+    public static BuildWatcher bw = new BuildWatcher();
 
     @Test
     public void addContents() throws Exception {
@@ -91,7 +96,7 @@ public class NodeExecutorsTest {
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        j.waitForMessage("Running on", workflowRun);
+        SemaphoreStep.waitForStart("wait/1", workflowRun);
 
         String executorMd = SupportTestUtils.invokeComponentToMap(new NodeExecutors(), agent.toComputer())
                 .get("executors.md");
