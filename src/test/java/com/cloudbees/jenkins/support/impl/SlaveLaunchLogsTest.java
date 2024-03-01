@@ -10,12 +10,13 @@ import static org.hamcrest.Matchers.notNullValue;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.ExtensionList;
+import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.model.Label;
 import hudson.model.TaskListener;
+import hudson.remoting.Channel;
 import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
-import java.io.IOException;
 import java.util.TreeMap;
 import jenkins.slaves.StandardOutputSwapper;
 import org.junit.Ignore;
@@ -114,7 +115,7 @@ public class SlaveLaunchLogsTest {
         int count;
 
         @Override
-        public void onOnline(Computer c, TaskListener listener) throws IOException, InterruptedException {
+        public void onOnline(Computer c, TaskListener listener) {
             if (c instanceof SlaveComputer) {
                 listener.getLogger().println("Launch attempt #" + ++count);
             }
@@ -130,6 +131,27 @@ public class SlaveLaunchLogsTest {
                                 ExtensionList.lookupSingleton(SlaveLaunchLogs.class)))
                         .toString(),
                 allOf(containsString("Remoting version: "), not(containsString("super_secret_node"))));
+    }
+
+    @Test
+    public void passwords() throws Exception {
+        var s = j.createOnlineSlave();
+        assertThat(
+                new TreeMap<>(SupportTestUtils.invokeComponentToMap(
+                                ExtensionList.lookupSingleton(SlaveLaunchLogs.class)))
+                        .toString(),
+                allOf(
+                        containsString("Remoting version: "),
+                        not(containsString("s3cr3t")),
+                        containsString("password=REDACTED")));
+    }
+
+    @TestExtension("passwords")
+    public static final class PrintsPasswords extends ComputerListener {
+        @Override
+        public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) {
+            listener.getLogger().println("password=s3cr3t");
+        }
     }
 
     // TODO honor SafeTimerTask.getLogsRoot (if applicable)
