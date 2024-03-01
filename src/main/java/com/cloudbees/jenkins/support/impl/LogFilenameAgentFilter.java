@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Matches agent log files in an interval of time
- * @see SlaveLogs
  */
 class LogFilenameAgentFilter implements FilenameFilter, Serializable {
 

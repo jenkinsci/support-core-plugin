@@ -1,4 +1,3 @@
-// TODO delete? (9aeca363ce4812f5f6c084d673e8d8bcdb266498)
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.SupportPlugin;

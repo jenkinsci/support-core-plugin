@@ -7,8 +7,7 @@ import java.io.Serializable;
 /**
  * Matches log files from winsw.
  *
- * @see <a href="https://github.com/winsw/winsw/blob/e4cf507bae5981363a9cdc0f7301c1aa892af401/src/WinSW.Core/LogAppenders.cs#L169-L170">LogAppenders.cs</a>
- * @see SlaveLogs
+ * @see <a href="https://github.com/kohsuke/winsw/blob/master/LogAppenders.cs">LogAppenders.cs</a>
  * @author Kohsuke Kawaguchi
  */
 class WinswLogfileFilter implements FilenameFilter, Serializable {
