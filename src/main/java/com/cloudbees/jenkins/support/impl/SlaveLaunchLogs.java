@@ -33,18 +33,25 @@ import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.console.ConsoleLogFilter;
+import hudson.console.LineTransformationOutputStream;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
-import hudson.model.Node;
+import hudson.model.Run;
 import hudson.security.Permission;
-import hudson.slaves.Cloud;
+import hudson.slaves.SlaveComputer;
+import hudson.triggers.SafeTimerTask;
+import hudson.util.io.RewindableRotatingFileOutputStream;
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -53,6 +60,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 @Extension
 public class SlaveLaunchLogs extends ObjectComponent<Computer> {
+
+    private static final int MAX_ROTATE_LOGS =
+            Integer.getInteger(SlaveLaunchLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
 
     @DataBoundConstructor
     public SlaveLaunchLogs() {
@@ -73,7 +83,11 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
     @Override
     public void addContents(@NonNull Container container) {
-        addAgentsLaunchLogs(container);
+        File log = ExtensionList.lookupSingleton(LogArchiver.class).log;
+        if (log.isFile()) {
+            container.add(new LaunchLogsFileContent(
+                    "nodes/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
+        }
     }
 
     @NonNull
@@ -84,117 +98,61 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
     @Override
     public void addContents(@NonNull Container container, Computer item) {
-        if (item.getNode() == null) {
-            return;
-        }
-        File lastLog = item.getLogFile();
-        if (lastLog.exists()) {
-            Agent agent = new Agent(new File(Jenkins.get().getRootDir(), "logs/slaves/" + item.getName()), lastLog);
-            if (!agent.isTooOld()) {
-                addAgentLaunchLogs(container, agent);
-            }
-        }
-    }
-
-    /**
-     * <p>
-     * In the presence of {@link Cloud} plugins like EC2, we want to find past agents, not just current ones.
-     * So we don't try to loop through {@link Node} here but just try to look at the file systems to find them
-     * all.
-     *
-     * <p>
-     * Generally these cloud plugins do not clean up old logs, so if run for a long time, the log directory
-     * will be full of old files that are not very interesting. Use some heuristics to cut off logs
-     * that are old.
-     */
-    private void addAgentsLaunchLogs(Container result) {
-
-        List<Agent> all = new ArrayList<>();
-
-        { // find all the agent launch log files and sort them newer ones first
-            File agentLogsDir = new File(Jenkins.get().getRootDir(), "logs/slaves");
-            File[] logs = agentLogsDir.listFiles();
-            if (logs != null) {
-                for (File dir : logs) {
-                    File lastLog = new File(dir, "slave.log");
-                    if (lastLog.exists()) {
-                        Agent s = new Agent(dir, lastLog);
-                        if (s.isTooOld()) continue; // we don't care
-                        all.add(s);
-                    }
+        if (item.getNode() != null
+                && item.getLogFile().lastModified() >= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7)) {
+            File dir = new File(Jenkins.get().getRootDir(), "logs/slaves/" + item.getName());
+            File[] files = dir.listFiles(ROTATED_LOGFILE_FILTER);
+            if (files != null) {
+                for (File f : files) {
+                    container.add(new LaunchLogsFileContent(
+                            "nodes/slave/{0}/launchLogs/{1}",
+                            new String[] {dir.getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
                 }
             }
-
-            Collections.sort(all);
         }
-        { // this might be still too many, so try to cap them.
-            int acceptableSize = Math.max(256, Jenkins.get().getNodes().size() * 5);
-
-            if (all.size() > acceptableSize) all = all.subList(0, acceptableSize);
-        }
-
-        // now add them all
-        all.forEach(it -> addAgentLaunchLogs(result, it));
     }
 
-    private void addAgentLaunchLogs(Container container, Agent agent) {
-        File[] files = agent.dir.listFiles(ROTATED_LOGFILE_FILTER);
-        if (files != null) {
-            for (File f : files) {
-                container.add(new LaunchLogsFileContent(
-                        "nodes/slave/{0}/launchLogs/{1}",
-                        new String[] {agent.getName(), f.getName()}, f, FileListCapComponent.MAX_FILE_SIZE));
+    @Extension
+    public static final class LogArchiver extends ConsoleLogFilter {
+
+        final File log = new File(SafeTimerTask.getLogsRoot(), "nodeLaunchLogs.txt");
+        private final RewindableRotatingFileOutputStream stream =
+                new RewindableRotatingFileOutputStream(log, MAX_ROTATE_LOGS);
+
+        @Override
+        public OutputStream decorateLogger(Computer computer, OutputStream logger) {
+            if (computer instanceof SlaveComputer) {
+                return new TeeOutputStream(logger, new PrefixedStream(stream, computer.getName()));
+            } else {
+                return logger;
             }
         }
+
+        @SuppressWarnings("rawtypes")
+        @Override
+        public OutputStream decorateLogger(Run build, OutputStream logger) throws IOException, InterruptedException {
+            return logger;
+        }
     }
 
-    static class Agent implements Comparable<Agent> {
-        /**
-         * Launch log directory of the agent: logs/slaves/NAME
-         */
-        final File dir;
+    static class PrefixedStream extends LineTransformationOutputStream.Delegating {
+        private final String name;
 
-        final long time;
-
-        Agent(File dir, File lastLog) {
-            this.dir = dir;
-            this.time = lastLog.lastModified();
-        }
-
-        /** Agent name */
-        String getName() {
-            return dir.getName();
-        }
-
-        /**
-         * Use the primary log file's timestamp to compare newer agents from older agents.
-         *
-         * sort in descending order; newer ones first.
-         */
-        public int compareTo(Agent that) {
-            return Long.compare(that.time, this.time);
+        PrefixedStream(OutputStream out, String name) {
+            super(out);
+            this.name = name;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Agent agent = (Agent) o;
-
-            return time == agent.time;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int) (time ^ (time >>> 32));
-        }
-
-        /**
-         * If the file is more than 7 days old, it is considered too old.
-         */
-        public boolean isTooOld() {
-            return time < System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+        protected void eol(byte[] b, int len) throws IOException {
+            synchronized (out) {
+                // TODO include a timestamp
+                out.write('[');
+                out.write(name.getBytes(StandardCharsets.UTF_8));
+                out.write(']');
+                out.write(' ');
+                out.write(b, 0, len);
+            }
         }
     }
 

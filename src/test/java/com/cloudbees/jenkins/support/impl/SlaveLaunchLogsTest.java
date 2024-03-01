@@ -19,7 +19,6 @@ import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
 import java.util.TreeMap;
 import jenkins.slaves.StandardOutputSwapper;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
@@ -82,7 +81,6 @@ public class SlaveLaunchLogsTest {
                 allOf(notNullValue(), containsString("Remoting version: "), containsString("Connection terminated")));
     }
 
-    @Ignore("TODO not sure how to archive the logs before deletion from SlaveComputer.kill")
     @Test
     public void deletedAgent() throws Exception {
         var s = j.createOnlineSlave();
@@ -153,8 +151,4 @@ public class SlaveLaunchLogsTest {
             listener.getLogger().println("password=s3cr3t");
         }
     }
-
-    // TODO honor SafeTimerTask.getLogsRoot (if applicable)
-    // TODO rotation of old or excessively long logs
-
 }
