@@ -47,6 +47,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -85,6 +88,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     public void addContents(@NonNull Container container) {
         File log = ExtensionList.lookupSingleton(LogArchiver.class).log;
         if (log.isFile()) {
+            // TODO perhaps include rotated files as well
             container.add(new LaunchLogsFileContent(
                     "nodes/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
         }
@@ -93,7 +97,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     @NonNull
     @Override
     public ComponentCategory getCategory() {
-        return ComponentCategory.AGENT; // TODO or LOGS?
+        return ComponentCategory.LOGS;
     }
 
     @Override
@@ -146,8 +150,11 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         @Override
         protected void eol(byte[] b, int len) throws IOException {
             synchronized (out) {
-                // TODO include a timestamp
                 out.write('[');
+                out.write(DateTimeFormatter.ISO_INSTANT
+                        .format(Instant.now().truncatedTo(ChronoUnit.MILLIS))
+                        .getBytes(StandardCharsets.US_ASCII));
+                out.write(' ');
                 out.write(name.getBytes(StandardCharsets.UTF_8));
                 out.write(']');
                 out.write(' ');
