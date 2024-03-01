@@ -4,15 +4,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.ExtensionList;
 import hudson.model.Computer;
+import hudson.model.Label;
 import hudson.model.TaskListener;
 import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
 import java.io.IOException;
+import java.util.TreeMap;
 import jenkins.slaves.StandardOutputSwapper;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -39,8 +43,7 @@ public class SlaveLaunchLogsTest {
         var s = j.createOnlineSlave();
         assertThat(
                 "reflects JenkinsRule.createComputerLauncher command & SlaveComputer.setChannel",
-                SupportTestUtils.invokeComponentToMap(ExtensionList.lookupSingleton(SlaveLaunchLogs.class))
-                        .get("nodes/slave/" + s.getNodeName() + "/launchLogs/slave.log"),
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
                 allOf(
                         notNullValue(),
                         containsString("-XX:+PrintCommandLineFlags"),
@@ -52,8 +55,7 @@ public class SlaveLaunchLogsTest {
         inboundAgents.createAgent(j, "remote");
         assertThat(
                 "reflects DefaultJnlpSlaveReceiver.beforeChannel & SlaveComputer.setChannel",
-                SupportTestUtils.invokeComponentToMap(ExtensionList.lookupSingleton(SlaveLaunchLogs.class))
-                        .get("nodes/slave/remote/launchLogs/slave.log"),
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
                 allOf(
                         notNullValue(),
                         containsString("Inbound agent connected from"),
@@ -72,12 +74,10 @@ public class SlaveLaunchLogsTest {
     @Test
     public void offlineAgent() throws Exception {
         var s = j.createOnlineSlave();
-        var name = s.getNodeName();
         s.toComputer().disconnect(null).get();
         assertThat(
                 "still includes something",
-                SupportTestUtils.invokeComponentToMap(ExtensionList.lookupSingleton(SlaveLaunchLogs.class))
-                        .get("nodes/slave/" + name + "/launchLogs/slave.log"),
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
                 allOf(notNullValue(), containsString("Remoting version: "), containsString("Connection terminated")));
     }
 
@@ -85,7 +85,6 @@ public class SlaveLaunchLogsTest {
     @Test
     public void deletedAgent() throws Exception {
         var s = j.createOnlineSlave();
-        var name = s.getNodeName();
         s.toComputer().disconnect(null).get();
         j.jenkins.removeNode(s);
         assertThat(
@@ -97,7 +96,6 @@ public class SlaveLaunchLogsTest {
     @Test
     public void multipleLaunchLogs() throws Exception {
         var s = j.createOnlineSlave();
-        var name = s.getNodeName();
         s.toComputer().disconnect(null).get();
         Thread.sleep(1000); // TODO otherwise log is not flushed?
         s.toComputer().connect(false).get();
@@ -121,6 +119,17 @@ public class SlaveLaunchLogsTest {
                 listener.getLogger().println("Launch attempt #" + ++count);
             }
         }
+    }
+
+    @Test
+    public void anonymization() throws Exception {
+        var s = j.createOnlineSlave(Label.get("super_secret_node"));
+        ContentFilters.get().setEnabled(true);
+        assertThat(
+                new TreeMap<>(SupportTestUtils.invokeComponentToMap(
+                                ExtensionList.lookupSingleton(SlaveLaunchLogs.class)))
+                        .toString(),
+                allOf(containsString("Remoting version: "), not(containsString("super_secret_node"))));
     }
 
     // TODO honor SafeTimerTask.getLogsRoot (if applicable)
