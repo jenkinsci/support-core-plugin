@@ -45,6 +45,9 @@ public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> i
             return;
         }
 
+        // TODO this is not necessarily the right root for workDir.
+        // Engine.workDir says that the workDir “should” be the agent root but this is not enforced.
+        // Safer to use Engine.current().internalDir.
         FilePath rootPath = node.getRootPath();
         if (rootPath == null) {
             LOGGER.log(Level.WARNING, "Node " + node.getDisplayName() + " seems to be offline");
