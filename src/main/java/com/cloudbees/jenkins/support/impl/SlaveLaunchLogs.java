@@ -26,6 +26,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.LaunchLogsFileContent;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
@@ -42,7 +43,6 @@ import hudson.model.Computer;
 import hudson.model.Run;
 import hudson.security.Permission;
 import hudson.slaves.SlaveComputer;
-import hudson.triggers.SafeTimerTask;
 import hudson.util.io.RewindableRotatingFileOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -91,11 +91,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
     @Override
     public void addContents(@NonNull Container container) {
-        File log = ExtensionList.lookupSingleton(LogArchiver.class).log;
-        if (log.isFile()) {
-            container.add(new LaunchLogsFileContent(
-                    "nodes/slave/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
-        }
+        ExtensionList.lookupSingleton(LogArchiver.class).addContents(container);
     }
 
     @NonNull
@@ -123,9 +119,14 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     @Extension
     public static final class LogArchiver extends ConsoleLogFilter {
 
-        final File log = new File(SafeTimerTask.getLogsRoot(), "nodeLaunchLogs.txt");
-        private final RewindableRotatingFileOutputStream stream =
-                new RewindableRotatingFileOutputStream(log, MAX_ROTATE_LOGS);
+        private final File logDir;
+        private final RewindableRotatingFileOutputStream stream;
+
+        public LogArchiver() throws IOException {
+            logDir = new File(SupportPlugin.getLogsDirectory(), "agent-launches");
+            stream = new RewindableRotatingFileOutputStream(new File(logDir, "all.log"), MAX_ROTATE_LOGS);
+            stream.rewind();
+        }
 
         @Override
         public OutputStream decorateLogger(Computer computer, OutputStream logger) {
@@ -140,6 +141,19 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         @Override
         public OutputStream decorateLogger(Run build, OutputStream logger) throws IOException, InterruptedException {
             return logger;
+        }
+
+        public void addContents(@NonNull Container container) {
+            File[] files = logDir.listFiles(ROTATED_LOGFILE_FILTER);
+            if (files != null) {
+                for (File f : files) {
+                    container.add(new LaunchLogsFileContent(
+                            "nodes/slave/launches/" + f.getName(),
+                            new String[0],
+                            f,
+                            FileListCapComponent.MAX_FILE_SIZE));
+                }
+            }
         }
 
         @Terminator
