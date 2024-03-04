@@ -147,4 +147,8 @@ public class SlaveLaunchLogsTest {
             listener.getLogger().println("password=s3cr3t");
         }
     }
+
+    // TODO JenkinsSessionRule test for behavior of logs from prior session
+    // (may need to rewind, and include rotated log files)
+
 }

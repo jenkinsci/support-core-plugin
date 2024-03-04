@@ -36,6 +36,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.console.ConsoleLogFilter;
 import hudson.console.LineTransformationOutputStream;
+import hudson.init.Terminator;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Run;
@@ -53,6 +54,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.jenkinsci.Symbol;
@@ -66,6 +69,8 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
     private static final int MAX_ROTATE_LOGS =
             Integer.getInteger(SlaveLaunchLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
+
+    private static final Logger LOGGER = Logger.getLogger(SlaveLaunchLogs.class.getName());
 
     @DataBoundConstructor
     public SlaveLaunchLogs() {
@@ -88,7 +93,6 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     public void addContents(@NonNull Container container) {
         File log = ExtensionList.lookupSingleton(LogArchiver.class).log;
         if (log.isFile()) {
-            // TODO perhaps include rotated files as well
             container.add(new LaunchLogsFileContent(
                     "nodes/slave/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
         }
@@ -136,6 +140,15 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         @Override
         public OutputStream decorateLogger(Run build, OutputStream logger) throws IOException, InterruptedException {
             return logger;
+        }
+
+        @Terminator
+        public static void close() {
+            try {
+                ExtensionList.lookupSingleton(LogArchiver.class).stream.close();
+            } catch (IOException x) {
+                LOGGER.log(Level.WARNING, null, x);
+            }
         }
     }
 
