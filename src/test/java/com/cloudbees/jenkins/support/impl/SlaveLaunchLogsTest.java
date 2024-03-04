@@ -71,10 +71,11 @@ public class SlaveLaunchLogsTest {
     public void offlineAgent() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
-        assertThat(
-                "still includes something",
-                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                allOf(containsString("Remoting version: "), containsString("Connection terminated")));
+        await("still includes something")
+                .until(
+                        () -> SupportTestUtils.invokeComponentToString(
+                                ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
+                        allOf(containsString("Remoting version: "), containsString("Connection terminated")));
     }
 
     @Test
