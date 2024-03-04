@@ -90,7 +90,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         if (log.isFile()) {
             // TODO perhaps include rotated files as well
             container.add(new LaunchLogsFileContent(
-                    "nodes/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
+                    "nodes/slave/launchLogs.log", new String[] {}, log, FileListCapComponent.MAX_FILE_SIZE));
         }
     }
 

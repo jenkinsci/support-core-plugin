@@ -75,8 +75,7 @@ public class Security2186Test {
         verifyFileIfContainsPassword(zip, "nodes/master/system.properties", "test2186.trustStorePassword");
         verifyFileIfContainsPassword(zip, "nodes/master/environment.txt", "test2186.trustStorePassword");
         verifyFileIfContainsPassword(zip, "nodes/slave/slave0/config.xml", "-Dtest2186.trustStoreAgentPassword");
-        verifyFileIfContainsPassword(
-                zip, "nodes/slave/slave0/launchLogs/slave.log", "-Dtest2186.trustStoreAgentPassword");
+        verifyFileIfContainsPassword(zip, "nodes/slave/launchLogs.log", "-Dtest2186.trustStoreAgentPassword");
     }
 
     private void verifyFileIfContainsPassword(ZipFile zip, String fileName, String expectedPasswordKey)
