@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
@@ -44,10 +43,7 @@ public class SlaveLaunchLogsTest {
         assertThat(
                 "reflects JenkinsRule.createComputerLauncher command & SlaveComputer.setChannel",
                 SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                allOf(
-                        notNullValue(),
-                        containsString("-XX:+PrintCommandLineFlags"),
-                        containsString("Remoting version: ")));
+                allOf(containsString("-XX:+PrintCommandLineFlags"), containsString("Remoting version: ")));
     }
 
     @Test
@@ -57,7 +53,6 @@ public class SlaveLaunchLogsTest {
                 "reflects DefaultJnlpSlaveReceiver.beforeChannel & SlaveComputer.setChannel",
                 SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
                 allOf(
-                        notNullValue(),
                         containsString("Inbound agent connected from"),
                         containsString("Communication Protocol: JNLP4-connect")));
     }
@@ -78,7 +73,7 @@ public class SlaveLaunchLogsTest {
         assertThat(
                 "still includes something",
                 SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                allOf(notNullValue(), containsString("Remoting version: "), containsString("Connection terminated")));
+                allOf(containsString("Remoting version: "), containsString("Connection terminated")));
     }
 
     @Test
@@ -90,7 +85,7 @@ public class SlaveLaunchLogsTest {
         assertThat(
                 "still includes something",
                 SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                allOf(notNullValue(), containsString("Remoting version: "), containsString("Connection terminated")));
+                allOf(containsString("Remoting version: "), containsString("Connection terminated")));
     }
 
     @Test
@@ -103,7 +98,6 @@ public class SlaveLaunchLogsTest {
                 "notes both launch logs",
                 SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
                 allOf(
-                        notNullValue(),
                         containsString("Launch attempt #1"),
                         containsString("Connection terminated"),
                         containsString("Launch attempt #2")));
@@ -126,6 +120,7 @@ public class SlaveLaunchLogsTest {
         var s = j.createOnlineSlave(Label.get("super_secret_node"));
         ContentFilters.get().setEnabled(true);
         assertThat(
+                // *Not* using invokeComponentToString here since that discards Content.name:
                 new TreeMap<>(SupportTestUtils.invokeComponentToMap(
                                 ExtensionList.lookupSingleton(SlaveLaunchLogs.class)))
                         .toString(),
