@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
@@ -80,7 +81,10 @@ public class SlaveLaunchLogsTest {
     public void deletedAgent() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
-        Thread.sleep(1000); // TODO otherwise log is not flushed?
+        await().until(
+                        () -> SupportTestUtils.invokeComponentToString(
+                                ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
+                        containsString("Connection terminated"));
         j.jenkins.removeNode(s);
         assertThat(
                 "still includes something",
@@ -92,7 +96,10 @@ public class SlaveLaunchLogsTest {
     public void multipleLaunchLogs() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
-        Thread.sleep(1000); // TODO as above
+        await().until(
+                        () -> SupportTestUtils.invokeComponentToString(
+                                ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
+                        containsString("Connection terminated"));
         s.toComputer().connect(false).get();
         assertThat(
                 "notes both launch logs",
