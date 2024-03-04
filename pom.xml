@@ -67,7 +67,8 @@
 
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <jenkins.version>2.361.4</jenkins.version>
+    <!-- TODO https://github.com/jenkinsci/jenkins/pull/9009 -->
+    <jenkins.version>2.448-rc34683.5cd5ff72b_b_89</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
