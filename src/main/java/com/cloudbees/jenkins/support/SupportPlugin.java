@@ -596,7 +596,7 @@ public class SupportPlugin extends Plugin {
             ContentFilter contentFilter) {
 
         manifest.append("Requested components:\n\n");
-        ContentContainer contentsContainer = new ContentContainer(contentFilter);
+        ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
@@ -638,12 +638,15 @@ public class SupportPlugin extends Plugin {
         // The filter to return the names filtered
         private final ContentFilter contentFilter;
 
+        private final List<? extends Component> components;
+
         /**
          * We need the filter to be able to filter the contents written to the manifest
          * @param contentFilter filter to use when writing the name of the contents
          */
-        ContentContainer(ContentFilter contentFilter) {
+        ContentContainer(ContentFilter contentFilter, List<? extends Component> components) {
             this.contentFilter = contentFilter;
+            this.components = components;
         }
 
         @Override
@@ -655,6 +658,11 @@ public class SupportPlugin extends Plugin {
                     names.add(name);
                 }
             }
+        }
+
+        @Override
+        public List<? extends Component> getComponents() {
+            return components;
         }
 
         synchronized Set<String> getLatestNames() {
