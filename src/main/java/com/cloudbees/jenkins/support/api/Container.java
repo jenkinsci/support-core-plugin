@@ -24,7 +24,10 @@
 
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import java.io.OutputStream;
+import java.util.List;
 
 /**
  * Represents something that can contain {@link Content}
@@ -33,4 +36,14 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
  */
 public abstract class Container {
     public abstract void add(@CheckForNull Content content);
+
+    /**
+     * The set of components which are being asked to contribute to this bundle, if known.
+     * @return the set of components, if known; null if not
+     * @see SupportPlugin#writeBundle(OutputStream, List)
+     */
+    @CheckForNull
+    public List<? extends Component> getComponents() {
+        return null;
+    }
 }
