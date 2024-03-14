@@ -235,7 +235,7 @@ public class AboutJenkins extends Component {
          * @return the Java information.
          */
         @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
-        private String getInfo(@CheckForNull ContentFilter filter) {
+        private String getInfo(ContentFilter filter) {
             StringBuilder result = new StringBuilder();
             Runtime runtime = Runtime.getRuntime();
             result.append(maj).append(" Java\n");
@@ -439,7 +439,7 @@ public class AboutJenkins extends Component {
                         .append(" arg[")
                         .append(count++)
                         .append("]: `")
-                        .append(Markdown.escapeBacktick(filter != null ? ContentFilter.filter(filter, arg) : arg))
+                        .append(Markdown.escapeBacktick(ContentFilter.filter(filter, arg)))
                         .append("`\n");
             }
             return result.toString();
