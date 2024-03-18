@@ -19,25 +19,18 @@ import com.cloudbees.jenkins.support.impl.SystemConfiguration;
 import com.cloudbees.jenkins.support.impl.SystemProperties;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.impl.UpdateCenter;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.ExtensionList;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.tasks.Builder;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -56,7 +49,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
-import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.Assert;
@@ -64,6 +56,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 
 public class CheckFilterTest {
     private static final Logger LOGGER = Logger.getLogger(CheckFilterTest.class.getName());
@@ -78,6 +71,9 @@ public class CheckFilterTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
 
     @Test
     public void checkFilterTest() throws Exception {
@@ -114,6 +110,7 @@ public class CheckFilterTest {
 
         // Cancel the job running
         build.cancel(true);
+        j.waitUntilNoActivity();
     }
 
     private QueueTaskFuture<FreeStyleBuild> createObjectsWithNames() throws Exception {
@@ -145,7 +142,6 @@ public class CheckFilterTest {
         FreeStyleProject project = j.createFreeStyleProject(JOB_NAME);
         project.setAssignedLabel(new LabelAtom("foo")); // it's mandatory
 
-        // project.getBuildersList().add(new SimpleBuilder());
         return project.scheduleBuild2(0);
     }
 
@@ -432,19 +428,6 @@ public class CheckFilterTest {
         private boolean match(String s) {
             String pattern = filePattern.replace(".", "\\.").replace("*", "[^/]+");
             return Pattern.matches(pattern, s);
-        }
-    }
-
-    private static class SimpleBuilder extends Builder implements SimpleBuildStep, Serializable {
-        @Override
-        public void perform(
-                @NonNull Run<?, ?> run,
-                @NonNull FilePath filePath,
-                @NonNull Launcher launcher,
-                @NonNull TaskListener taskListener)
-                throws InterruptedException, IOException {
-            taskListener.getLogger().println("Doing my job, sleeping...");
-            Thread.sleep(Long.MAX_VALUE);
         }
     }
 }
