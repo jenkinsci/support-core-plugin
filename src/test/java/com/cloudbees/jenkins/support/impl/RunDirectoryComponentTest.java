@@ -49,7 +49,8 @@ public class RunDirectoryComponentTest {
     @Test
     public void addContentsFromPipeline() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
+        p.setDefinition(
+                new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
@@ -65,6 +66,7 @@ public class RunDirectoryComponentTest {
         assertThat(output.keySet(), hasItem(startsWith(prefix + "/workflow")));
         assertThat(output.get(prefix + "/build.xml"), Matchers.containsString("<flow-build"));
         assertThat(output.get(prefix + "/log"), Matchers.containsString("[Pipeline] node"));
+        assertThat(output.keySet(), not(hasItem(Matchers.containsString("test.txt"))));
     }
 
     @Test
