@@ -18,11 +18,13 @@ import hudson.remoting.Channel;
 import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import jenkins.slaves.StandardOutputSwapper;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestExtension;
 
 public class SlaveLaunchLogsTest {
@@ -37,6 +39,9 @@ public class SlaveLaunchLogsTest {
 
     @Rule
     public InboundAgentRule inboundAgents = new InboundAgentRule();
+
+    @Rule
+    public LoggerRule logging = new LoggerRule().record(SlaveLaunchLogs.class, Level.FINE);
 
     @Test
     public void onlineOutboundAgent() throws Exception {

@@ -35,13 +35,18 @@ import com.cloudbees.jenkins.support.timer.FileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.FilePath;
 import hudson.console.ConsoleLogFilter;
 import hudson.console.LineTransformationOutputStream;
 import hudson.init.Terminator;
 import hudson.model.AbstractModelObject;
 import hudson.model.Computer;
 import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.remoting.Channel;
 import hudson.security.Permission;
+import hudson.slaves.ComputerListener;
+import hudson.slaves.JNLPLauncher;
 import hudson.slaves.SlaveComputer;
 import hudson.util.io.RewindableRotatingFileOutputStream;
 import java.io.File;
@@ -52,7 +57,9 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -166,6 +173,49 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
         }
     }
 
+    // TODO delete if updating to 2.440.3 and JENKINS-72799 is backported, else 2.448+
+    @Extension
+    public static final class Jenkins72799Hack extends ComputerListener {
+
+        /**
+         * Names of inbound agents which have recently gotten to {@link #preLaunch}
+         * but for which we did not receive typical output in {@link SlaveComputer#setChannel(Channel, OutputStream, Channel.Listener)}
+         * prior to {@link #preOnline}.
+         */
+        private final Map<String, Boolean> launching = new ConcurrentHashMap<>();
+
+        @Override
+        public void preLaunch(Computer c, TaskListener taskListener) {
+            if (c instanceof SlaveComputer && ((SlaveComputer) c).getLauncher() instanceof JNLPLauncher) {
+                String name = c.getName();
+                LOGGER.fine(() -> "preLaunch " + name);
+                launching.put(name, true);
+            }
+        }
+
+        @Override
+        public void preOnline(Computer c, Channel channel, FilePath root, TaskListener listener) throws IOException {
+            if (c instanceof SlaveComputer && ((SlaveComputer) c).getLauncher() instanceof JNLPLauncher) {
+                String name = c.getName();
+                if (launching.put(name, false)) {
+                    LOGGER.fine(() -> "preOnline " + name + " need to work around lack of JENKINS-72799");
+                    OutputStream stream = ExtensionList.lookupSingleton(LogArchiver.class).stream;
+                    synchronized (stream) {
+                        String nowish = DateTimeFormatter.ISO_INSTANT.format(
+                                Instant.now().truncatedTo(ChronoUnit.MILLIS));
+                        for (String line : c.getLog().trim().split("\n")) {
+                            LOGGER.fine(() -> "adding: " + line);
+                            stream.write(
+                                    ("[" + nowish + " " + name + "] " + line + "\n").getBytes(StandardCharsets.UTF_8));
+                        }
+                    }
+                } else {
+                    LOGGER.fine(() -> "preOnline " + name + " OK, have JENKINS-72799");
+                }
+            }
+        }
+    }
+
     static class PrefixedStream extends LineTransformationOutputStream.Delegating {
         private final String name;
 
@@ -176,6 +226,10 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
         @Override
         protected void eol(byte[] b, int len) throws IOException {
+            if (new String(b, 0, len).startsWith("Remoting version: ")) {
+                LOGGER.fine(() -> "receiving expected setChannel text on " + name);
+                ExtensionList.lookupSingleton(Jenkins72799Hack.class).launching.put(name, false);
+            }
             synchronized (out) {
                 out.write('[');
                 out.write(DateTimeFormatter.ISO_INSTANT
