@@ -226,7 +226,7 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
 
         @Override
         protected void eol(byte[] b, int len) throws IOException {
-            if (new String(b, 0, len).startsWith("Remoting version: ")) {
+            if (new String(b, 0, len, StandardCharsets.UTF_8).startsWith("Remoting version: ")) {
                 LOGGER.fine(() -> "receiving expected setChannel text on " + name);
                 ExtensionList.lookupSingleton(Jenkins72799Hack.class).launching.put(name, false);
             }
