@@ -173,7 +173,7 @@ public class NodeExecutorsTest {
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
-        j.waitForMessage("Running on", workflowRun);
+        SemaphoreStep.waitForStart("wait/1", workflowRun);
 
         ContentFilter filter = SupportPlugin.getDefaultContentFilter();
 
