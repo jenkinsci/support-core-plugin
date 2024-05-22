@@ -1,6 +1,7 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
+import com.cloudbees.jenkins.support.impl.SlaveLaunchLogs;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * @see SlaveLaunchLogs
+ */
 public class LaunchLogsFileContent extends FileContent {
 
     public LaunchLogsFileContent(String name, String[] filterableParameters, File file, long maxSize) {

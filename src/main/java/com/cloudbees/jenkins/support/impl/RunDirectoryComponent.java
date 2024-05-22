@@ -12,7 +12,9 @@ import hudson.util.FormValidation;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -118,8 +120,20 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
 
         static final int DEFAULT_MAX_DEPTH = 10;
 
+        static final List<String> EXCLUDES = List.of(
+                // https://github.com/jenkinsci/jenkins/blob/9f790a3142c76a33f1dbd8409715b867a53836c8/core/src/main/java/hudson/model/Run.java#L1143
+                "archive/",
+                // https://github.com/jenkinsci/workflow-api-plugin/blob/2e338a5c7a3c17be60e168faf80e7dbbdd47ceb5/src/main/java/org/jenkinsci/plugins/workflow/flow/StashManager.java#L254
+                "stashes/",
+                // https://github.com/jenkinsci/junit-attachments-plugin/blob/7e439b0efd070a5bf4ea50f51a3296e35ca5f814/src/main/java/hudson/plugins/junitattachments/AttachmentPublisher.java#L39
+                "junit-attachments/",
+                // https://github.com/jenkinsci/warnings-ng-plugin/blob/8c41827040ae8f8659a1c370b3efcb364c60cd29/plugin/src/main/java/io/jenkins/plugins/analysis/core/util/AffectedFilesResolver.java#L32
+                "files-with-issues/",
+                // https://github.com/jenkinsci/jacoco-plugin/blob/f5ea36e9aff4db394bb88944139bb7bb8f55187d/src/main/java/hudson/plugins/jacoco/JacocoReportDir.java#L20
+                "jacoco/");
+
         public DescriptorImpl() {
-            super("", "**/artifacts/**, **/stashes/**", true, DEFAULT_MAX_DEPTH);
+            super("", EXCLUDES.stream().collect(Collectors.joining(",")), true, DEFAULT_MAX_DEPTH);
         }
 
         /**

@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
-import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
@@ -377,7 +376,7 @@ public class SupportPlugin extends Plugin {
         PrintWriter errorWriter = new PrintWriter(errors);
 
         try {
-            try (BulkChange change = new BulkChange(ContentMappings.get());
+            try (BulkChange change = new BulkChange(ContentFilter.bulkChangeTarget());
                     CountingOutputStream countingOs = new CountingOutputStream(outputStream);
                     ZipArchiveOutputStream binaryOut =
                             new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
@@ -552,13 +551,10 @@ public class SupportPlugin extends Plugin {
         if (filters.isEnabled()) {
             ContentFilter filter = ContentFilter.ALL;
             if (ensureLoaded) {
-                ContentMappings mappings = ContentMappings.get();
-                try (BulkChange change = new BulkChange(mappings)) {
-                    mappings.reload();
-                    filter.reload();
-                    change.commit();
+                try {
+                    ContentFilter.reloadAndSaveMappings(filter);
                 } catch (IOException e) {
-                    logger.log(Level.WARNING, "Failed reloading mappings", e);
+                    LOGGER.log(Level.WARNING, "Failed to reload filter and save mappings", e);
                 }
             }
             return filter;
@@ -600,7 +596,7 @@ public class SupportPlugin extends Plugin {
             ContentFilter contentFilter) {
 
         manifest.append("Requested components:\n\n");
-        ContentContainer contentsContainer = new ContentContainer(contentFilter);
+        ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
         for (Component component : components) {
             try {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
@@ -642,12 +638,15 @@ public class SupportPlugin extends Plugin {
         // The filter to return the names filtered
         private final ContentFilter contentFilter;
 
+        private final List<? extends Component> components;
+
         /**
          * We need the filter to be able to filter the contents written to the manifest
          * @param contentFilter filter to use when writing the name of the contents
          */
-        ContentContainer(ContentFilter contentFilter) {
+        ContentContainer(ContentFilter contentFilter, List<? extends Component> components) {
             this.contentFilter = contentFilter;
+            this.components = components;
         }
 
         @Override
@@ -659,6 +658,11 @@ public class SupportPlugin extends Plugin {
                     names.add(name);
                 }
             }
+        }
+
+        @Override
+        public List<? extends Component> getComponents() {
+            return components;
         }
 
         synchronized Set<String> getLatestNames() {

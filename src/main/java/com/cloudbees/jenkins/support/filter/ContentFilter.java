@@ -26,13 +26,34 @@ package com.cloudbees.jenkins.support.filter;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.BulkChange;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.model.Saveable;
+import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 
 /**
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
  * to the bundle, though more complex filtering can be achieved.
+ * A {@link ContentFilter} may produce {@link ContentMappings} during {@link ContentFilter#reload()} and
+ * {@link ContentFilter#filter(String)} that are automatically persisted. It is therefore important to use
+ * {@link BulkChange} when reloading the filter as well as when launching a task that performs the filtering:
+ *
+ * <pre>
+ * {@code
+ *   ContentFilter filter = ContentFilter.ALL;
+ *   try {
+ *     ContentFilter.reloadAndSaveMappings(filter);
+ *   } catch (IOException e) {
+ *      ...
+ *   }
+ *   [...]
+ *   try (BulkChange change = new BulkChange(ContentFilter.bulkChangeTarget())) {
+ *     doSomething(filter);
+ *     change.commit();
+ *   }
+ * }</pre>
  *
  * @since TODO
  */
@@ -88,6 +109,35 @@ public interface ContentFilter extends ExtensionPoint {
             return filter.filter(text);
         } else {
             return text;
+        }
+    }
+
+    /**
+     * Return the target for {@link BulkChange}.
+     *
+     * @return a {@link Saveable}
+     */
+    static Saveable bulkChangeTarget() {
+        return ContentMappings.get();
+    }
+
+    /**
+     * Reloads the state of this filter and commit .
+     *
+     * @throws IOException if reload or saving failed
+     */
+    static void reloadAndSaveMappings(@NonNull ContentFilter filter) throws IOException {
+        ContentMappings mappings = ContentMappings.get();
+        // If already in a BulkChange transaction, just reload
+        if (BulkChange.contains(mappings)) {
+            mappings.reload();
+            filter.reload();
+        } else {
+            try (BulkChange change = new BulkChange(mappings)) {
+                mappings.reload();
+                filter.reload();
+                change.commit();
+            }
         }
     }
 }

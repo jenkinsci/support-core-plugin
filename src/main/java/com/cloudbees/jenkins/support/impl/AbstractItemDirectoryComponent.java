@@ -12,7 +12,10 @@ import hudson.util.FormValidation;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import jenkins.model.Jenkins;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -108,8 +111,23 @@ public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractI
 
         static final int DEFAULT_MAX_DEPTH = 5;
 
+        private static final List<String> EXCLUDES = List.of(
+                // https://github.com/jenkinsci/jenkins/blob/9f790a3142c76a33f1dbd8409715b867a53836c8/core/src/main/java/jenkins/model/Jenkins.java#L3158
+                // https://github.com/jenkinsci/cloudbees-folder-plugin/blob/7c780211d66eee480b1c1b62f61d67c426824714/src/main/java/com/cloudbees/hudson/plugins/folder/AbstractFolder.java#L529
+                "**/jobs/",
+                // https://github.com/jenkinsci/branch-api-plugin/blob/6f101e97dd77b3022e912b988358713967a7994e/src/main/java/jenkins/branch/MultiBranchProject.java#L862
+                "**/branches/");
+
         public DescriptorImpl() {
-            super("", "**/jobs/**, **/branches/**, **/artifacts/**, **/stashes/**", true, DEFAULT_MAX_DEPTH);
+            super(
+                    "",
+                    Stream.concat(
+                                    EXCLUDES.stream(),
+                                    RunDirectoryComponent.DescriptorImpl.EXCLUDES.stream()
+                                            .map(p -> "builds/*/" + p))
+                            .collect(Collectors.joining(",")),
+                    true,
+                    DEFAULT_MAX_DEPTH);
         }
 
         /**

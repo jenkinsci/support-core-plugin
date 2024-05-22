@@ -42,7 +42,7 @@ public abstract class Content {
     /**
      * Parts of the name to be filtered
      */
-    private String[] filterableParameters;
+    private final String[] filterableParameters;
 
     /**
      * Create a Content with this name. The name is not filtered so this constructor should be used exclusively when
@@ -51,7 +51,7 @@ public abstract class Content {
      * @param name name of the content.
      */
     protected Content(String name) {
-        this(name, null);
+        this(name, (String[]) null);
     }
 
     /**

@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
 
-public class AbstractItemComponentTest {
+public class AbstractItemDirectoryComponentTest {
 
     private static final String JOB_NAME = "job-name";
     private static final String FOLDER_NAME = "folder-name";
@@ -156,7 +156,8 @@ public class AbstractItemComponentTest {
     public void addContentsFromPipeline() throws Exception {
         MockFolder folder = j.createFolder(FOLDER_NAME);
         WorkflowJob p = folder.createProject(WorkflowJob.class, JOB_NAME);
-        p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
+        p.setDefinition(
+                new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
                 .waitForStart();
@@ -174,6 +175,7 @@ public class AbstractItemComponentTest {
         assertThat(output.keySet(), hasItem(startsWith(prefix + "/builds/1/workflow")));
         assertThat(output.get(prefix + "/config.xml"), containsString("<flow-definition"));
         assertThat(output.get(prefix + "/nextBuildNumber"), containsString("2"));
+        assertThat(output.keySet(), not(hasItem(containsString("test.txt"))));
     }
 
     /*
