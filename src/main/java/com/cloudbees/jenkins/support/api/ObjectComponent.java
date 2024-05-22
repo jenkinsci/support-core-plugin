@@ -35,10 +35,6 @@ import jenkins.model.Jenkins;
 
 /**
  * Represents a component of a support bundle for a specific model object.
- *
- * <p>
- * This is the unit of user consent; when creating a bundle for this object, the user would enable/disable
- * individual components.
  */
 public abstract class ObjectComponent<T extends AbstractModelObject> extends Component
         implements Describable<ObjectComponent<T>>, ExtensionPoint {
