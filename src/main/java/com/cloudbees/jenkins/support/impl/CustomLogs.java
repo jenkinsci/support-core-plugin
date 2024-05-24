@@ -69,7 +69,7 @@ public class CustomLogs extends Component {
     public ComponentCategory getCategory() {
         return ComponentCategory.LOGS;
     }
-    
+
     @Override
     public boolean isSelectedByDefault() {
         return false;
