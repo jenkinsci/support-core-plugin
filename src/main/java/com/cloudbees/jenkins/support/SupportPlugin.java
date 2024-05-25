@@ -102,13 +102,13 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.accmod.Restricted;
@@ -378,8 +378,7 @@ public class SupportPlugin extends Plugin {
         try {
             try (BulkChange change = new BulkChange(ContentFilter.bulkChangeTarget());
                     CountingOutputStream countingOs = new CountingOutputStream(outputStream);
-                    ZipArchiveOutputStream binaryOut =
-                            new ZipArchiveOutputStream(new BufferedOutputStream(countingOs, 16384))) {
+                    ZipOutputStream binaryOut = new ZipOutputStream(new BufferedOutputStream(countingOs, 16384))) {
                 ContentFilter filter = getDefaultContentFilter(true);
 
                 // Generate the content of the manifest.md going through all the components which will be included. It
@@ -410,9 +409,9 @@ public class SupportPlugin extends Plugin {
                     final String name = getNameFiltered(filter, content.getName(), content.getFilterableParameters());
 
                     try {
-                        final ZipArchiveEntry entry = new ZipArchiveEntry(name);
+                        final ZipEntry entry = new ZipEntry(name);
                         entry.setTime(content.getTime());
-                        binaryOut.putArchiveEntry(entry);
+                        binaryOut.putNextEntry(entry);
                         entryCreated = true;
                         binaryOut.flush();
                         OutputStream out = content.shouldBeFiltered() ? filteredOut : unfilteredOut;
@@ -434,7 +433,7 @@ public class SupportPlugin extends Plugin {
                         textOut.reset();
                         selector.reset();
                         if (entryCreated) {
-                            binaryOut.closeArchiveEntry();
+                            binaryOut.closeEntry();
                             entryCreated = false;
                         }
                         LOGGER.log(
@@ -453,7 +452,7 @@ public class SupportPlugin extends Plugin {
                 String errorContent = errors.toString();
                 if (StringUtils.isNotBlank(errorContent)) {
                     try {
-                        binaryOut.putArchiveEntry(new ZipArchiveEntry("manifest/errors.txt"));
+                        binaryOut.putNextEntry(new ZipEntry("manifest/errors.txt"));
                         entryCreated = true;
                         textOut.write(errorContent.getBytes(StandardCharsets.UTF_8));
                         textOut.flush();
@@ -461,7 +460,7 @@ public class SupportPlugin extends Plugin {
                         logger.log(Level.WARNING, "Could not write manifest/errors.txt to zip archive", e);
                     } finally {
                         if (entryCreated) {
-                            binaryOut.closeArchiveEntry();
+                            binaryOut.closeEntry();
                         }
                     }
                 }
