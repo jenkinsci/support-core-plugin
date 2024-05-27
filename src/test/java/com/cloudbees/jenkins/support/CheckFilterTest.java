@@ -48,9 +48,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,12 +157,12 @@ public class CheckFilterTest {
                     .collect(Collectors.toList());
             SupportPlugin.writeBundle(zipOutputStream, componentsRequested);
 
-            // ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(fileZip));
+            // ZipInputStream zip = new ZipInputStream(new FileInputStream(fileZip));
             try (ZipFile zip = new ZipFile(fileZip)) {
-                Enumeration<ZipArchiveEntry> zipFileEntries = zip.getEntries();
+                Enumeration<? extends ZipEntry> zipFileEntries = zip.entries();
 
                 while (zipFileEntries.hasMoreElements()) {
-                    ZipArchiveEntry entry = zipFileEntries.nextElement();
+                    ZipEntry entry = zipFileEntries.nextElement();
                     if (entry.isDirectory()) {
                         break;
                     }
@@ -181,7 +181,7 @@ public class CheckFilterTest {
         }
     }
 
-    private String getContentFromEntry(ZipFile zip, ZipArchiveEntry entry) throws IOException {
+    private String getContentFromEntry(ZipFile zip, ZipEntry entry) throws IOException {
         if (entry.getSize() == 0) {
             return "";
         }
