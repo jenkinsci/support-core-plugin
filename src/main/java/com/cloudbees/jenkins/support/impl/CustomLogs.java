@@ -133,7 +133,7 @@ public class CustomLogs extends Component {
         }
     }
 
-    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED, before = InitMilestone.SYSTEM_CONFIG_LOADED)
+    @Initializer(after = InitMilestone.SYSTEM_CONFIG_ADAPTED, before = InitMilestone.JOB_LOADED)
     @Restricted(NoExternalUse.class)
     public void startCustomHandler() {
         Logger.getLogger("").addHandler(new CustomHandler());
