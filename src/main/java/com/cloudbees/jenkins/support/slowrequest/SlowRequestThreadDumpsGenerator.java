@@ -52,8 +52,8 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
     /**
      * Time in seconds that we will wait between the ThreadDump generations (under the same slowRequest check)
      */
-    public static final int FREQUENTLY_SEC =
-            Integer.getInteger(SlowRequestThreadDumpsGenerator.class.getName() + ".FREQUENTLY_SEC", 5);
+    public static final int FREQUENCY_SEC =
+            Integer.getInteger(SlowRequestThreadDumpsGenerator.class.getName() + ".FREQUENCY_SEC", 5);
 
     /**
      * Limit the number of thread dumps to retain on slowRequest scenario
@@ -67,10 +67,8 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
     protected final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
 
     /**
-     * Provide a means to disable the slow request checker. This is a volatile non-final field as if you run into
+     * Provide a means to disable the slow request thread dump checker. This is a volatile non-final field as if you run into
      * issues in a running Jenkins you may need to disable without restarting Jenkins.
-     *
-     * @since 2.12
      */
     public static volatile boolean DISABLED =
             Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
@@ -104,7 +102,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
                         "Support Core plugin can't generate automatically thread dumps under SlowRequest scenario",
                         ioe);
             }finally {
-                fileNameDate+=FREQUENTLY_SEC * 1000;
+                fileNameDate+= FREQUENCY_SEC * 1000;
             }
         }
     }
