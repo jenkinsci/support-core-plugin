@@ -1,5 +1,8 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import static com.cloudbees.jenkins.support.slowrequest.SlowRequestThreadDumpsGenerator.MINIMAL_SLOW_REQUEST_COUNT;
+import static java.util.logging.Level.WARNING;
+
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.timer.FileListCap;
@@ -18,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
 import jenkins.model.Jenkins;
 
 /**
@@ -81,6 +86,8 @@ public class SlowRequestChecker extends PeriodicWork {
         // We filter the information written to the slow-requests files
         ContentFilter contentFilter = SupportPlugin.getDefaultContentFilter();
 
+        int slowRequestCount = 0;
+
         for (InflightRequest req : filter.tracker.values()) {
             long totalTime = now - req.startTime;
 
@@ -89,6 +96,9 @@ public class SlowRequestChecker extends PeriodicWork {
                 if (req.ended) continue;
 
                 boolean newRecord = req.record == null;
+
+                slowRequestCount++;
+
                 if (newRecord) {
                     req.record = logs.file(format.format(new Date(iota++)) + ".txt");
                     logs.add(req.record);
@@ -122,6 +132,22 @@ public class SlowRequestChecker extends PeriodicWork {
                 }
             }
         }
+
+        if (slowRequestCount >= MINIMAL_SLOW_REQUEST_COUNT) {
+            boolean newThreadDumps = SlowRequestThreadDumpsGenerator.checkThreadDumpsTrigger(iota);
+
+            if (newThreadDumps){
+                try {
+                    SlowRequestThreadDumpsGenerator slowRequestThreadDumpsGenerator = new SlowRequestThreadDumpsGenerator(iota);
+                    slowRequestThreadDumpsGenerator.start();
+                } catch(Exception e){
+                    LOGGER.log(WARNING,
+                            "Support Core plugin can't throw a new thread to collect thread dumps under SlowRequest scenario",
+                            e);
+                }
+            }
+        }
+
     }
 
     private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer, ContentFilter contentFilter) {
@@ -129,4 +155,6 @@ public class SlowRequestChecker extends PeriodicWork {
             writer.println("    " + contentFilter.filter(element.toString()));
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(SlowRequestChecker.class.getName());
 }
