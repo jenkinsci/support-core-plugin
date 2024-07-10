@@ -5,12 +5,11 @@ import static java.util.logging.Level.WARNING;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import hudson.Extension;
-import jenkins.model.Jenkins;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 /**
  * Thread in charge of generating the set of thread dumps during a slowRequest scenario.
@@ -18,7 +17,7 @@ import java.util.logging.Logger;
  * @author Ignacio Roncero
  */
 @Extension
-public class SlowRequestThreadDumpsGenerator extends Thread{
+public class SlowRequestThreadDumpsGenerator extends Thread {
 
     /**
      * When was the latest ThreadDumps generation in milliseconds
@@ -58,13 +57,14 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
     /**
      * Limit the number of thread dumps to retain on slowRequest scenario
      */
-    public static final int SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN =
-            Integer.getInteger(SlowRequestThreadDumpsGenerator.class.getName() + ".SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN", 40);
+    public static final int SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN = Integer.getInteger(
+            SlowRequestThreadDumpsGenerator.class.getName() + ".SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN", 40);
 
     /**
      * Thread dumps generated on slowRequest scenario are stored in $JENKINS_HOME/slow-request-threaddumps
      */
-    protected final FileListCap logs = new FileListCap(new File(Jenkins.get().getRootDir(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
+    protected final FileListCap logs = new FileListCap(
+            new File(Jenkins.get().getRootDir(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
 
     /**
      * Provide a means to disable the slow request thread dump checker. This is a volatile non-final field as if you run into
@@ -75,10 +75,9 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
-    private long iota= 0l;
+    private long iota = 0l;
 
-
-    public SlowRequestThreadDumpsGenerator(long iota){
+    public SlowRequestThreadDumpsGenerator(long iota) {
         this.iota = iota;
     }
 
@@ -86,36 +85,37 @@ public class SlowRequestThreadDumpsGenerator extends Thread{
 
     @Override
     public void run() {
-        if(DISABLED) {
+        if (DISABLED) {
             return;
         }
 
         long fileNameDate = this.iota;
 
-        for (int i = 0; i < TOTAL_ITERATIONS; i++){
+        for (int i = 0; i < TOTAL_ITERATIONS; i++) {
             File threadDumpFile = logs.file(format.format(new Date(fileNameDate)) + ".txt");
             try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
                 ThreadDumps.threadDump(fileOutputStream);
                 logs.add(threadDumpFile);
-            }catch(IOException ioe){
-                LOGGER.log(WARNING,
+            } catch (IOException ioe) {
+                LOGGER.log(
+                        WARNING,
                         "Support Core plugin can't generate automatically thread dumps under SlowRequest scenario",
                         ioe);
-            }finally {
-                fileNameDate+= FREQUENCY_SEC * 1000;
+            } finally {
+                fileNameDate += FREQUENCY_SEC * 1000;
             }
         }
     }
 
     public static synchronized boolean checkThreadDumpsTrigger(long iota) {
         boolean newThreadDumps = false;
-        if(latestGeneratedSlowRequestThreadDump == 0l || iota - latestGeneratedSlowRequestThreadDump > RECURRENCE_PERIOD_MILLIS){
+        if (latestGeneratedSlowRequestThreadDump == 0l
+                || iota - latestGeneratedSlowRequestThreadDump > RECURRENCE_PERIOD_MILLIS) {
             newThreadDumps = true;
             latestGeneratedSlowRequestThreadDump = iota;
-        } return newThreadDumps;
+        }
+        return newThreadDumps;
     }
-
-
 
     private static final Logger LOGGER = Logger.getLogger(SlowRequestThreadDumpsGenerator.class.getName());
 }

@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
 import jenkins.model.Jenkins;
 
 /**
@@ -136,18 +135,19 @@ public class SlowRequestChecker extends PeriodicWork {
         if (slowRequestCount >= MINIMAL_SLOW_REQUEST_COUNT) {
             boolean newThreadDumps = SlowRequestThreadDumpsGenerator.checkThreadDumpsTrigger(iota);
 
-            if (newThreadDumps){
+            if (newThreadDumps) {
                 try {
-                    SlowRequestThreadDumpsGenerator slowRequestThreadDumpsGenerator = new SlowRequestThreadDumpsGenerator(iota);
+                    SlowRequestThreadDumpsGenerator slowRequestThreadDumpsGenerator =
+                            new SlowRequestThreadDumpsGenerator(iota);
                     slowRequestThreadDumpsGenerator.start();
-                } catch(Exception e){
-                    LOGGER.log(WARNING,
+                } catch (Exception e) {
+                    LOGGER.log(
+                            WARNING,
                             "Support Core plugin can't throw a new thread to collect thread dumps under SlowRequest scenario",
                             e);
                 }
             }
         }
-
     }
 
     private void printThreadStackElements(ThreadInfo threadinfo, PrintWriter writer, ContentFilter contentFilter) {

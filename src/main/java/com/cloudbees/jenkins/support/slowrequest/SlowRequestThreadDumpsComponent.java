@@ -24,7 +24,7 @@ public class SlowRequestThreadDumpsComponent extends UnfilteredFileListCapCompon
     public void addContents(@NonNull Container container) {
         SlowRequestThreadDumpsGenerator generator =
                 ExtensionList.lookup(SlowRequestThreadDumpsGenerator.class).get(SlowRequestThreadDumpsGenerator.class);
-        if(generator != null && generator.logs.getSize() > 0) {
+        if (generator != null && generator.logs.getSize() > 0) {
             super.addContents(container, generator.logs);
         }
     }
