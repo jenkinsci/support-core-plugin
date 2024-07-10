@@ -22,7 +22,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     /**
      * When was the latest ThreadDumps generation in milliseconds
      */
-    public static long latestGeneratedSlowRequestThreadDump = 0l;
+    private static long latestGeneratedSlowRequestThreadDump = 0l;
 
     /**
      * How often (at minimum) we will capture the ThreadDump under a slowRequest scenario.
