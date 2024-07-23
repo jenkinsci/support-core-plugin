@@ -64,7 +64,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
      * Thread dumps generated on slowRequest scenario are stored in $JENKINS_HOME/slow-request-threaddumps
      */
     protected final FileListCap logs = new FileListCap(
-            new File(Jenkins.get().getRootDir(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
+            new File(SupportPlugin.getRootDirectory(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
 
     /**
      * Provide a means to disable the slow request thread dump checker. This is a volatile non-final field as if you run into
