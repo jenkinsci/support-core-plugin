@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.slowrequest;
 
 import static java.util.logging.Level.WARNING;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import hudson.Extension;
@@ -9,7 +10,6 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 
 /**
  * Thread in charge of generating the set of thread dumps during a slowRequest scenario.
@@ -64,14 +64,13 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
      * Thread dumps generated on slowRequest scenario are stored in $JENKINS_HOME/support/slow-request-threaddumps
      */
     protected final FileListCap logs = new FileListCap(
-            new File(SupportPlugin.getRootDirectory(), "slow-request-threaddumps"), SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
+            new File(SupportPlugin.getRootDirectory(), "slow-request-threaddumps"),
+            SLOW_REQUEST_THREAD_DUMPS_TO_RETAIN);
 
     /**
-     * Provide a means to disable the slow request thread dump checker. This is a volatile non-final field as if you run into
-     * issues in a running Jenkins you may need to disable without restarting Jenkins.
+     * Provide a means to disable the slow request thread dump checker.
      */
-    public static volatile boolean DISABLED =
-            Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
+    public static boolean DISABLED = Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
@@ -96,11 +95,17 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
             try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
                 ThreadDumps.threadDump(fileOutputStream);
                 logs.add(threadDumpFile);
+                sleep(FREQUENCY_SEC * 1000);
             } catch (IOException ioe) {
                 LOGGER.log(
                         WARNING,
                         "Support Core plugin can't generate automatically thread dumps under SlowRequest scenario",
                         ioe);
+            } catch (InterruptedException ie) {
+                LOGGER.log(
+                        WARNING,
+                        "The SlowRequestThreadDumpsGenerator thread was interrupted by unknown reasons. It may be a bug",
+                        ie);
             } finally {
                 fileNameDate += FREQUENCY_SEC * 1000;
             }
