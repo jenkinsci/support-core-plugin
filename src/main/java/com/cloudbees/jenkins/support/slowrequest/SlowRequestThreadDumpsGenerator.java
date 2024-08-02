@@ -25,6 +25,11 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     private static long latestGeneratedSlowRequestThreadDump = 0l;
 
     /**
+     * Semaphore to ensure that only one instance is collecting data at the same time.
+     */
+    private static boolean running = false;
+
+    /**
      * How often (at minimum) we will capture the ThreadDump under a slowRequest scenario.
      * For example, if we set this value to 30 minutes, we will not generate any threadDumps the next 30 minutes
      * after the last generated threadDumps even though we are finding slowRequest during those 30 minutes.
@@ -88,10 +93,12 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
             return;
         }
 
+        setRunningStatus(true);
+
         long fileNameDate = this.iota;
 
         for (int i = 0; i < TOTAL_ITERATIONS; i++) {
-            File threadDumpFile = logs.file(format.format(new Date(fileNameDate)) + ".txt");
+            File threadDumpFile = logs.file(format.format(new Date(fileNameDate)) + "-" + i + ".txt");
             try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
                 ThreadDumps.threadDump(fileOutputStream);
                 logs.add(threadDumpFile);
@@ -110,16 +117,34 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
                 fileNameDate += FREQUENCY_SEC * 1000;
             }
         }
+
+        setRunningStatus(false);
     }
 
     public static synchronized boolean checkThreadDumpsTrigger(long iota) {
         boolean newThreadDumps = false;
-        if (latestGeneratedSlowRequestThreadDump == 0l
-                || iota - latestGeneratedSlowRequestThreadDump > RECURRENCE_PERIOD_MILLIS) {
+
+        if (!isRunning()
+                && (latestGeneratedSlowRequestThreadDump == 0l
+                        || iota - latestGeneratedSlowRequestThreadDump > RECURRENCE_PERIOD_MILLIS)) {
             newThreadDumps = true;
             latestGeneratedSlowRequestThreadDump = iota;
         }
         return newThreadDumps;
+    }
+
+    private static boolean isRunning() {
+        boolean runningLocal;
+        synchronized (SlowRequestThreadDumpsGenerator.class) {
+            runningLocal = running;
+        }
+        return runningLocal;
+    }
+
+    private static void setRunningStatus(boolean runningLocal) {
+        synchronized (SlowRequestThreadDumpsGenerator.class) {
+            running = runningLocal;
+        }
     }
 
     private static final Logger LOGGER = Logger.getLogger(SlowRequestThreadDumpsGenerator.class.getName());
