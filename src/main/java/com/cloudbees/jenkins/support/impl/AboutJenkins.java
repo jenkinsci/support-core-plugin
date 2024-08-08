@@ -33,7 +33,6 @@ import hudson.model.Slave;
 import hudson.remoting.Launcher;
 import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
-import hudson.slaves.JNLPLauncher;
 import hudson.util.IOUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -782,9 +781,6 @@ public class AboutJenkins extends Component {
                 if (node instanceof Slave) {
                     Slave agent = (Slave) node;
                     out.println("      - Launch method:  " + getDescriptorName(agent.getLauncher()));
-                    if (agent.getLauncher() instanceof JNLPLauncher) {
-                        out.println("      - WebSocket:      " + ((JNLPLauncher) agent.getLauncher()).isWebSocket());
-                    }
                     out.println("      - Availability:   " + getDescriptorName(agent.getRetentionStrategy()));
                 }
                 Optional.ofNullable(node.toComputer())
