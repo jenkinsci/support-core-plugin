@@ -27,6 +27,7 @@ import hudson.PluginManager;
 import hudson.PluginWrapper;
 import hudson.Util;
 import hudson.lifecycle.Lifecycle;
+import hudson.model.Computer;
 import hudson.model.Describable;
 import hudson.model.Node;
 import hudson.model.Slave;
@@ -85,11 +86,11 @@ public class AboutJenkins extends Component {
 
     private static final Logger logger = Logger.getLogger(AboutJenkins.class.getName());
 
-    private final WeakHashMap<Node, String> agentVersionCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> agentVersionCache = new WeakHashMap<>();
 
-    private final WeakHashMap<Node, String> javaInfoCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> javaInfoCache = new WeakHashMap<>();
 
-    private final WeakHashMap<Node, String> agentDigestCache = new WeakHashMap<Node, String>();
+    private final WeakHashMap<Node, String> agentDigestCache = new WeakHashMap<>();
 
     @NonNull
     @Override
@@ -112,8 +113,8 @@ public class AboutJenkins extends Component {
 
     @Override
     public void addContents(@NonNull Container container) {
-        List<PluginWrapper> activePlugins = new ArrayList<PluginWrapper>();
-        List<PluginWrapper> disabledPlugins = new ArrayList<PluginWrapper>();
+        List<PluginWrapper> activePlugins = new ArrayList<>();
+        List<PluginWrapper> disabledPlugins = new ArrayList<>();
         List<PluginWrapper> backupPlugins = new ArrayList<>();
 
         populatePluginsLists(activePlugins, disabledPlugins, backupPlugins);
@@ -157,10 +158,11 @@ public class AboutJenkins extends Component {
         private static final long serialVersionUID = 1L;
         private final String rootPathName;
 
-        public GetAgentDigest(FilePath rootPath) {
+        GetAgentDigest(FilePath rootPath) {
             this.rootPathName = rootPath.getRemote();
         }
 
+        @Override
         public String call() {
             StringBuilder result = new StringBuilder();
             final File rootPath = new File(this.rootPathName);
@@ -191,6 +193,7 @@ public class AboutJenkins extends Component {
                 },
                 justification =
                         "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}")
+        @Override
         public String call() throws RuntimeException {
             try (InputStream is =
                     hudson.remoting.Channel.class.getResourceAsStream("/jenkins/remoting/jenkins-version.properties")) {
@@ -223,6 +226,7 @@ public class AboutJenkins extends Component {
             this.passwordRedactor = PasswordRedactor.get();
         }
 
+        @Override
         public String call() throws RuntimeException {
             return getInfo(null);
         }
@@ -561,7 +565,7 @@ public class AboutJenkins extends Component {
 
     private static class IdentityContent extends PrintedContent {
 
-        public IdentityContent() {
+        IdentityContent() {
             super("identity.md");
         }
 
@@ -582,8 +586,7 @@ public class AboutJenkins extends Component {
         private final Iterable<PluginWrapper> plugins;
         private final Function<? super PluginWrapper, String> stringify;
 
-        public Plugins(
-                Iterable<PluginWrapper> plugins, String name, Function<? super PluginWrapper, String> stringify) {
+        Plugins(Iterable<PluginWrapper> plugins, String name, Function<? super PluginWrapper, String> stringify) {
             super(name);
             this.plugins = plugins;
             this.stringify = stringify;
@@ -601,19 +604,19 @@ public class AboutJenkins extends Component {
     }
 
     private static class ActivePlugins extends Plugins {
-        public ActivePlugins(Iterable<PluginWrapper> plugins) {
+        ActivePlugins(Iterable<PluginWrapper> plugins) {
             super(plugins, "plugins/active.txt", w -> w.getShortName() + ":" + w.getVersion());
         }
     }
 
     private static class DisabledPlugins extends Plugins {
-        public DisabledPlugins(Iterable<PluginWrapper> plugins) {
+        DisabledPlugins(Iterable<PluginWrapper> plugins) {
             super(plugins, "plugins/disabled.txt", w -> w.getShortName() + ":" + w.getVersion());
         }
     }
 
     private static class FailedPlugins extends PrintedContent {
-        public FailedPlugins() {
+        FailedPlugins() {
             super("plugins/failed.txt");
         }
 
@@ -635,7 +638,7 @@ public class AboutJenkins extends Component {
 
     private static class BackupPlugins extends Plugins {
 
-        public BackupPlugins(Iterable<PluginWrapper> plugins) {
+        BackupPlugins(Iterable<PluginWrapper> plugins) {
             super(plugins, "plugins/backup.txt", w -> w.getShortName() + ":" + w.getBackupVersion());
         }
     }
@@ -644,7 +647,7 @@ public class AboutJenkins extends Component {
         private final List<PluginWrapper> activated;
         private final List<PluginWrapper> disabled;
 
-        public Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled) {
+        Dockerfile(List<PluginWrapper> activated, List<PluginWrapper> disabled) {
             super("docker/Dockerfile");
             this.activated = activated;
             this.disabled = disabled;
@@ -749,7 +752,7 @@ public class AboutJenkins extends Component {
             out.println("      - Labels:         " + ContentFilter.filter(filter, getLabelString(jenkins)));
             out.println("      - Usage:          `" + jenkins.getMode() + "`");
             Optional.ofNullable(jenkins.toComputer())
-                    .ifPresent(computer -> out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
+                    .ifPresent(computer -> out.println("      - Marked Offline: " + isTemporarilyOffline(computer)));
             if (jenkins.getChannel() == null) {
                 out.println("      - Status:         offline");
             } else {
@@ -789,7 +792,7 @@ public class AboutJenkins extends Component {
                 }
                 Optional.ofNullable(node.toComputer())
                         .ifPresent(
-                                computer -> out.println("      - Marked Offline: " + computer.isTemporarilyOffline()));
+                                computer -> out.println("      - Marked Offline: " + isTemporarilyOffline(computer)));
                 VirtualChannel channel = node.getChannel();
                 if (channel == null) {
                     out.println("      - Status:         off-line");
@@ -828,6 +831,11 @@ public class AboutJenkins extends Component {
                 out.println();
             }
         }
+
+        @SuppressWarnings("deprecation")
+        private boolean isTemporarilyOffline(Computer computer) {
+            return computer.isTemporarilyOffline();
+        }
     }
 
     private static class ControllerChecksumsContent extends PrintedContent {
@@ -864,8 +872,7 @@ public class AboutJenkins extends Component {
             if (stapler != null) {
                 try {
                     final ServletContext servletContext = stapler.getServletContext();
-                    Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
-                    for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    for (String resourcePath : new TreeSet<>(servletContext.getResourcePaths("/WEB-INF/lib"))) {
                         try {
                             out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
                                     + "  war" // FIPS OK: Not security related.
@@ -886,8 +893,8 @@ public class AboutJenkins extends Component {
                             logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                         }
                     }
-                    resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs");
-                    for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    for (String resourcePath :
+                            new TreeSet<>(servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs"))) {
                         try {
                             out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
                                     + "  war" // FIPS OK: Not security related.
@@ -967,7 +974,7 @@ public class AboutJenkins extends Component {
     }
 
     private static <T extends Comparable<T>> Iterable<T> listToSortedIterable(List<T> list) {
-        final List<T> sorted = new LinkedList<T>(list);
+        final List<T> sorted = new LinkedList<>(list);
         Collections.sort(sorted);
         return sorted;
     }
