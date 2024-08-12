@@ -73,7 +73,7 @@ public class UpdateCenter extends Component {
         out.println("=== Proxy ===");
         ProxyConfiguration proxy = Jenkins.get().getProxy();
         if (proxy != null) {
-            out.println(" - Host: " + ContentFilter.filter(filter, proxy.getName()));
+            out.println(" - Host: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, proxy.getName())) + "`");
             out.println(" - Port: " + proxy.getPort());
             out.println(" - No Proxy Hosts: ");
             String noProxyHostsString = proxy.getNoProxyHost();
