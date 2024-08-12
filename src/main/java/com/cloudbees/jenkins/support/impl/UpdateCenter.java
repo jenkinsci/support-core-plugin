@@ -79,7 +79,8 @@ public class UpdateCenter extends Component {
             String noProxyHostsString = proxy.getNoProxyHost();
             if (noProxyHostsString != null) {
                 Arrays.stream(noProxyHostsString.split("[ \t\n,|]+"))
-                        .forEach(noProxyHost -> out.println(" * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, noProxyHost)) + "`"));
+                        .forEach(noProxyHost -> out.println(
+                                " * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, noProxyHost)) + "`"));
             }
         }
     }
