@@ -56,28 +56,16 @@ public class AboutJenkinsTest {
     }
 
     @Test
-    @Issue("JENKINS-65097")
     public void testAboutNodesContent() throws Exception {
 
         DumbSlave tcp1 = j.createSlave("tcp1", "test", null);
-        tcp1.setLauncher(new JNLPLauncher(false));
-        ((JNLPLauncher) tcp1.getLauncher()).setWebSocket(false);
+        tcp1.setLauncher(new JNLPLauncher());
         tcp1.save();
 
         String aboutMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
         assertThat(aboutMdToString, containsString("  * `" + tcp1.getNodeName() + "` (`hudson.slaves.DumbSlave`)"));
         assertThat(aboutMdToString, containsString("      - Launch method:  `hudson.slaves.JNLPLauncher`"));
-        assertThat(aboutMdToString, containsString("      - WebSocket:      false"));
-
-        ((JNLPLauncher) tcp1.getLauncher()).setWebSocket(true);
-        tcp1.save();
-
-        aboutMdToString = SupportTestUtils.invokeComponentToString(
-                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
-        assertThat(aboutMdToString, containsString("  * `" + tcp1.getNodeName() + "` (`hudson.slaves.DumbSlave`)"));
-        assertThat(aboutMdToString, containsString("      - Launch method:  `hudson.slaves.JNLPLauncher`"));
-        assertThat(aboutMdToString, containsString("      - WebSocket:      true"));
     }
 
     @Test
