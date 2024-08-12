@@ -4,6 +4,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.util.Markdown;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ProxyConfiguration;
@@ -78,7 +79,7 @@ public class UpdateCenter extends Component {
             String noProxyHostsString = proxy.getNoProxyHost();
             if (noProxyHostsString != null) {
                 Arrays.stream(noProxyHostsString.split("[ \t\n,|]+"))
-                        .forEach(noProxyHost -> out.println(" * " + ContentFilter.filter(filter, noProxyHost)));
+                        .forEach(noProxyHost -> out.println(" * `" + Markdown.escapeBacktick(ContentFilter.filter(filter, noProxyHost)) + "`"));
             }
         }
     }

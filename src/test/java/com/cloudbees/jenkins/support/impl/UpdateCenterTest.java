@@ -43,7 +43,7 @@ public class UpdateCenterTest {
         assertThat(ucMdToString, not(containsString("proxyUser")));
         assertThat(ucMdToString, not(containsString("proxyPass")));
         for (String noProxyHost : noProxyHosts) {
-            assertThat(ucMdToString, containsString(" * " + noProxyHost));
+            assertThat(ucMdToString, containsString(" * `" + noProxyHost + "`"));
         }
     }
 }
