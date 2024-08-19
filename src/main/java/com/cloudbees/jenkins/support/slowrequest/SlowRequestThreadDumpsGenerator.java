@@ -76,7 +76,8 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     /**
      * Provide a means to disable the slow request thread dump checker.
      */
-    public static final boolean DISABLED = Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
+    public static final boolean DISABLED =
+            Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
