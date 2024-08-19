@@ -9,6 +9,7 @@ import hudson.Extension;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -27,7 +28,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     /**
      * Semaphore to ensure that only one instance is collecting data at the same time.
      */
-    private static boolean running = false;
+    private static AtomicBoolean running = new AtomicBoolean(false);
 
     /**
      * How often (at minimum) we will capture the ThreadDump under a slowRequest scenario.
@@ -134,17 +135,11 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     }
 
     private static boolean isRunning() {
-        boolean runningLocal;
-        synchronized (SlowRequestThreadDumpsGenerator.class) {
-            runningLocal = running;
-        }
-        return runningLocal;
+        return running.get();
     }
 
     private static void setRunningStatus(boolean runningLocal) {
-        synchronized (SlowRequestThreadDumpsGenerator.class) {
-            running = runningLocal;
-        }
+        running.set(runningLocal);
     }
 
     private static final Logger LOGGER = Logger.getLogger(SlowRequestThreadDumpsGenerator.class.getName());
