@@ -26,24 +26,22 @@ public class UpdateCenterTest {
     public void testUpdateCenterProxyContent() {
 
         List<String> noProxyHosts = Arrays.asList(".server.com", "*.example.com");
-        j.jenkins
-                .get()
-                .setProxy(new ProxyConfiguration(
-                        "proxy.server.com",
-                        1234,
-                        "proxyUser",
-                        "proxyPass",
-                        String.join("\n", noProxyHosts),
-                        "http://localhost:8080"));
+        j.jenkins.setProxy(new ProxyConfiguration(
+                "proxy.server.com",
+                1234,
+                "proxyUser",
+                "proxyPass",
+                String.join("\n", noProxyHosts),
+                "http://localhost:8080"));
 
         String ucMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(UpdateCenter.class)));
-        assertThat(ucMdToString, containsString(" - Host: proxy.server.com"));
+        assertThat(ucMdToString, containsString(" - Host: `proxy.server.com`"));
         assertThat(ucMdToString, containsString(" - Port: 1234"));
         assertThat(ucMdToString, not(containsString("proxyUser")));
         assertThat(ucMdToString, not(containsString("proxyPass")));
         for (String noProxyHost : noProxyHosts) {
-            assertThat(ucMdToString, containsString(" * " + noProxyHost));
+            assertThat(ucMdToString, containsString(" * `" + noProxyHost + "`"));
         }
     }
 }
