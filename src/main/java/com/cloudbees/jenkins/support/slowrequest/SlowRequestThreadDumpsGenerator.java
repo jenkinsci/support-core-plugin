@@ -5,6 +5,7 @@ import static java.util.logging.Level.WARNING;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -76,6 +77,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     /**
      * Provide a means to disable the slow request thread dump checker.
      */
+    @SuppressFBWarnings
     public static boolean DISABLED = Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
 
     private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
