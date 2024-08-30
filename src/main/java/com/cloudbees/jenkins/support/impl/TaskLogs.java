@@ -66,6 +66,9 @@ public class TaskLogs extends Component {
                     Arrays.sort(files);
                     long recently = System.currentTimeMillis() - FileListCapComponent.MAX_LOG_FILE_AGE_MS;
                     for (File f : files) {
+                        if (f.getName().startsWith("Periodic background build discarder.log")) {
+                            continue; // https://github.com/jenkinsci/jenkins/pull/9663
+                        }
                         if (f.lastModified() > recently) {
                             result.add(new FileContent("task-logs/{0}", new String[] {f.getName()}, f));
                         }
