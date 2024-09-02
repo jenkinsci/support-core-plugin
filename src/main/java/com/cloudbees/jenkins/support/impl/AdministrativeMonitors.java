@@ -26,7 +26,8 @@ package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
-import com.cloudbees.jenkins.support.api.PrintedContent;
+import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
@@ -34,6 +35,7 @@ import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
 import hudson.model.Saveable;
 import hudson.security.Permission;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,11 +50,13 @@ import org.apache.commons.lang.StringUtils;
 @Extension
 public final class AdministrativeMonitors extends Component {
 
+    @NonNull
     @Override
     public String getDisplayName() {
         return "Administrative monitors";
     }
 
+    @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
         return Collections.singleton(Jenkins.ADMINISTER);
@@ -60,9 +64,10 @@ public final class AdministrativeMonitors extends Component {
 
     @Override
     public void addContents(Container result) {
-        result.add(new PrintedContent("admin-monitors.md") {
+        result.add(new PrefilteredPrintedContent("admin-monitors.md") {
+
             @Override
-            protected void printTo(PrintWriter out) {
+            protected void printTo(PrintWriter out, @NonNull ContentFilter filter) throws IOException {
                 out.println("Monitors");
                 out.println("========");
                 AdministrativeMonitor.all().stream()
@@ -78,7 +83,8 @@ public final class AdministrativeMonitors extends Component {
                                 OldDataMonitor odm = (OldDataMonitor) monitor;
                                 for (Map.Entry<Saveable, OldDataMonitor.VersionRange> entry :
                                         odm.getData().entrySet()) {
-                                    out.println("  * Problematic object: `" + entry.getKey() + "`");
+                                    out.println("  * Problematic object: `"
+                                            + filter.filter(entry.getKey().toString()) + "`");
                                     OldDataMonitor.VersionRange value = entry.getValue();
                                     String range = value.toString();
                                     if (!range.isEmpty()) {
@@ -86,8 +92,9 @@ public final class AdministrativeMonitors extends Component {
                                     }
                                     String extra = value.extra;
                                     if (!StringUtils.isBlank(extra)) {
-                                        out.println(
-                                                "    - " + extra); // TODO could be a multiline stack trace, quote it
+                                        out.println("    - "
+                                                + filter.filter(
+                                                        extra)); // TODO could be a multiline stack trace, quote it
                                     }
                                 }
                             } else {
@@ -95,12 +102,6 @@ public final class AdministrativeMonitors extends Component {
                                 out.println("(active and enabled)");
                             }
                         });
-            }
-
-            @Override
-            public boolean shouldBeFiltered() {
-                // The information of this content is not sensible, so it doesn't need to be filtered.
-                return false;
             }
         });
     }

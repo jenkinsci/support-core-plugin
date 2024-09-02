@@ -4,12 +4,16 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
+import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.ExtensionList;
 import hudson.diagnosis.OldDataMonitor;
 import hudson.diagnosis.ReverseProxySetupMonitor;
 import hudson.model.AdministrativeMonitor;
+import hudson.model.FreeStyleProject;
 import java.io.IOException;
 import java.util.Objects;
 import org.junit.Rule;
@@ -47,5 +51,22 @@ public class AdministrativeMonitorsTest {
                         monitorsDisabledMdToString,
                         not(containsString("`" + monitor.id + "`" + System.getProperty("line.separator")
                                 + "--------------" + System.getProperty("line.separator") + "(active and enabled)"))));
+    }
+
+    @Test
+    public void testOldDataMonitorAnonymized() throws IOException {
+        ContentFilters.get().setEnabled(true);
+        FreeStyleProject p = j.createFreeStyleProject("sensitive-job-name");
+        ContentFilter filter = SupportPlugin.getDefaultContentFilter();
+        OldDataMonitor.report(p, "1.234");
+        String monitorsMdToString = SupportTestUtils.invokeComponentToString(
+                Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AdministrativeMonitors.class)),
+                SupportPlugin.getDefaultContentFilter());
+        // Assert that there is an output for OldDataMonitor
+        assertThat(
+                monitorsMdToString,
+                containsString(
+                        "`" + Objects.requireNonNull(AdministrativeMonitor.all().get(OldDataMonitor.class)).id + "`"));
+        assertThat(monitorsMdToString, not(containsString("sensitive-job-name")));
     }
 }
