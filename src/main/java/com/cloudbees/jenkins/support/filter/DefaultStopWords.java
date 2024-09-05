@@ -31,6 +31,8 @@ public class DefaultStopWords implements StopWords {
                 "everyone",
                 "system",
                 "admin",
+                "up",
+                "running",
                 Jenkins.VERSION);
     }
 }
