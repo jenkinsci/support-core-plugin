@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -17,8 +18,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -28,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 public class OtherConfigFilesComponentTest {
 
@@ -145,5 +149,40 @@ public class OtherConfigFilesComponentTest {
                 allOf(
                         anyOf(containsString("FileNotFoundException"), containsString("NoSuchFileException")),
                         containsString(file.getAbsolutePath())));
+    }
+
+    @Test
+    @LocalData
+    public void regexpFromFileFilter() throws Exception {
+        List<String> filesToExclude = List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml");
+        List<String> filesNotToExclude = List.of("test-bcd.xml");
+
+        for (String fileToExclude : filesToExclude) {
+            FileUtils.writeStringToFile(new File(j.jenkins.root, fileToExclude), xml, Charset.defaultCharset());
+        }
+        for (String fileNotToExclude : filesNotToExclude) {
+            FileUtils.writeStringToFile(new File(j.jenkins.root, fileNotToExclude), xml, Charset.defaultCharset());
+        }
+
+        Map<String, Content> contents = new HashMap<>();
+        new OtherConfigFilesComponent().addContents(new Container() {
+            @Override
+            public void add(Content content) {
+                contents.put(
+                        MessageFormat.format(content.getName(), (Object[]) content.getFilterableParameters()), content);
+            }
+        });
+        for (String fileToExclude : filesToExclude) {
+            Files.delete(Path.of(j.jenkins.root.getPath(), fileToExclude));
+        }
+        for (String fileNotToExclude : filesNotToExclude) {
+            Files.delete(Path.of(j.jenkins.root.getPath(), fileNotToExclude));
+        }
+        filesToExclude.forEach(s -> {
+            assertNull(contents.get("jenkins-root-configuration-files/" + s));
+        });
+        filesNotToExclude.forEach(s -> {
+            assertNotNull(contents.get("jenkins-root-configuration-files/" + s));
+        });
     }
 }
