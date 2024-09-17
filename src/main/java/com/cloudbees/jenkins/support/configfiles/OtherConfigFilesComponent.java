@@ -102,7 +102,8 @@ public class OtherConfigFilesComponent extends Component {
     private static final Logger LOGGER = Logger.getLogger(OtherConfigFilesComponent.class.getName());
 
     /**
-     * Extension to contribute to the list of configuration files to filter.
+     * Extension to contribute to the list of configuration files to filter. A file need to be accepted by all
+     * {@link ConfigFilesFilter} implementations to be included in the content.
      */
     public interface ConfigFilesFilter extends ExtensionPoint {
 
@@ -127,7 +128,7 @@ public class OtherConfigFilesComponent extends Component {
         }
 
         /**
-         * Return the a {@link java.io.FilenameFilter} of files to accept in the {@link OtherConfigFilesComponent}.
+         * Return a {@link java.io.FilenameFilter} to filter out files from {@link OtherConfigFilesComponent}.
          * @return a {@link java.io.FilenameFilter}
          */
         @NonNull
