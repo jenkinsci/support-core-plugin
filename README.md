@@ -211,25 +211,6 @@ will be changed to:
 ````
 To disable this feature, delete all of the security stop words from the security-stop-words.txt file (but not the file itself, because it will be automatically regenerated with a default values). Any changes made to the security-stop-words.txt file are applied after a Jenkins instance restart.
 
-### Support Bundle - Other Jenkins Configuration Files Filters
-
-The `Other Jenkins Configuration Files (Encrypted secrets are redacted)` option
-collects `$JENKINS_HOME/*.xml` with redacted secrets with some exceptions such as the
-`com.cloudbees.jenkins.support.filter.ContentMappings.xml` and `credentials.xml`.
-Additional filter can be provided in a text file located at
-`$JENKINS_HOME/support/other-config-files-filters.txt`. Each non-blank line of
-the file is treated as a regular expression filter. For example, the following 
-exclude files with `credentials` or `secrets` in their names and only includes 
-files that start with `org.jenkins`:
-
-```
-((?!(credentials|secrets)).)*
-^org\.jenkins.*
-```
-
-The system property `com.cloudbees.jenkins.support.configfiles.OtherConfigFilesComponent.otherConfigFilesFilterFile`
-can be used to override the file location.
-
 ## Changelog
 
 ### Version 2.71 and newer

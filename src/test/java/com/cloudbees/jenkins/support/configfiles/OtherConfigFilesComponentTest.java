@@ -12,6 +12,7 @@ import static org.junit.Assert.assertNull;
 
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import java.io.ByteArrayOutputStream;
@@ -26,11 +27,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 public class OtherConfigFilesComponentTest {
@@ -154,7 +157,12 @@ public class OtherConfigFilesComponentTest {
     @Test
     @LocalData
     public void regexpFromFileFilter() throws Exception {
-        List<String> filesToExclude = List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml");
+        List<String> filesToExclude = List.of(
+                "test-abc.xml",
+                "test-efgh.xml",
+                "toexclude.xml",
+                "credentials.xml",
+                ContentMappings.class.getName() + ".xml");
         List<String> filesNotToExclude = List.of("test-bcd.xml");
 
         for (String fileToExclude : filesToExclude) {
@@ -179,10 +187,20 @@ public class OtherConfigFilesComponentTest {
             Files.delete(Path.of(j.jenkins.root.getPath(), fileNotToExclude));
         }
         filesToExclude.forEach(s -> {
-            assertNull(contents.get("jenkins-root-configuration-files/" + s));
+            assertNull(s + " should not be included", contents.get("jenkins-root-configuration-files/" + s));
         });
         filesNotToExclude.forEach(s -> {
-            assertNotNull(contents.get("jenkins-root-configuration-files/" + s));
+            assertNotNull(s + " should be included", contents.get("jenkins-root-configuration-files/" + s));
         });
+    }
+
+    @TestExtension
+    public static class TestConfigFilesFilter implements OtherConfigFilesComponent.ConfigFilesFilter {
+
+        @NotNull
+        @Override
+        public List<String> getFilenames() {
+            return List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml");
+        }
     }
 }

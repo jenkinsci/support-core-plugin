@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.configfiles;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -35,11 +34,6 @@ import hudson.ExtensionPoint;
 import hudson.security.Permission;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -72,7 +66,8 @@ public class OtherConfigFilesComponent extends Component {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
-            File[] files = dir.listFiles(ConfigFilesFilter.getAllFileFilter());
+            File[] files = dir.listFiles((dir1, name) -> name.toLowerCase().endsWith(".xml")
+                    && ConfigFilesFilter.getAllFilter().accept(dir, name));
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
@@ -114,31 +109,27 @@ public class OtherConfigFilesComponent extends Component {
             return ExtensionList.lookup(ConfigFilesFilter.class);
         }
 
-        static FilenameFilter getAllFileFilter() {
-            final List<FilenameFilter> allFilters =
-                    all().stream().map(ConfigFilesFilter::getFilenameFilter).collect(Collectors.toList());
-            return (dir, name) -> {
-                for (FilenameFilter filenameFilter : allFilters) {
-                    if (!filenameFilter.accept(dir, name)) {
-                        return false;
-                    }
-                }
-                return true;
-            };
+        static FilenameFilter getAllFilter() {
+            final List<String> filenames = all().stream()
+                    .map(ConfigFilesFilter::getFilenames)
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+            final Pattern allPattern = Pattern.compile("(" + String.join("|", filenames) + ")");
+            return (dir, name) -> !allPattern.matcher(name).matches();
         }
 
         /**
-         * Return a {@link java.io.FilenameFilter} to filter out files from {@link OtherConfigFilesComponent}.
-         * @return a {@link java.io.FilenameFilter}
+         * Return a list of files names to exclude.
+         * @return list of file names to exclude
          */
         @NonNull
-        FilenameFilter getFilenameFilter();
+        List<String> getFilenames();
     }
 
     @Extension
     public static class DefaultConfigFilesFilter implements ConfigFilesFilter {
 
-        private static final List<String> BLACKLISTED_FILENAMES = Arrays.asList(
+        private static final List<String> BLACKLISTED_FILENAMES = List.of(
                 // contains anonymized content mappings
                 ContentMappings.class.getName() + ".xml",
                 // credentials.xml contains rather sensitive data
@@ -148,54 +139,8 @@ public class OtherConfigFilesComponent extends Component {
 
         @NonNull
         @Override
-        public FilenameFilter getFilenameFilter() {
-            return (dir, name) -> name.toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(name);
-        }
-    }
-
-    @Extension
-    public static class RegexpsFromFileConfigFilesFilter implements ConfigFilesFilter {
-
-        private static final String OTHER_CONFIG_FILES_FILTER_FILENAME = "other-config-files-filters.txt";
-        private static final String OTHER_CONFIG_FILES_FILTER_PROPERTY =
-                OtherConfigFilesComponent.class.getName() + ".otherConfigFilesFilterFile";
-
-        @NonNull
-        @Override
-        public FilenameFilter getFilenameFilter() {
-            String fileLocationFromProperty = System.getProperty(OTHER_CONFIG_FILES_FILTER_PROPERTY);
-            String fileLocation = fileLocationFromProperty == null
-                    ? SupportPlugin.getRootDirectory() + "/" + OTHER_CONFIG_FILES_FILTER_FILENAME
-                    : fileLocationFromProperty;
-            LOGGER.log(Level.FINE, "Attempting to load user provided regexp filters from ''{0}''.", fileLocation);
-            File f = new File(fileLocation);
-            if (f.exists()) {
-                if (!f.canRead()) {
-                    LOGGER.log(
-                            Level.WARNING,
-                            "Could not load user provided regexp filters as " + fileLocation + " is not readable.");
-                } else {
-                    try {
-                        final Pattern allPattern = Pattern.compile("("
-                                + Files.readAllLines(Path.of(fileLocation), Charset.defaultCharset()).stream()
-                                        .map(s -> "(?=" + s + ")")
-                                        .collect(Collectors.joining(""))
-                                + ".*)");
-                        return (dir, name) -> allPattern.matcher(name).matches();
-                    } catch (IOException ex) {
-                        LOGGER.log(
-                                Level.WARNING,
-                                "Could not load user provided regexps. there was an error reading " + fileLocation,
-                                ex);
-                    }
-                }
-            } else if (fileLocationFromProperty != null) {
-                LOGGER.log(
-                        Level.WARNING,
-                        "Could not load user provided stop regexps as " + fileLocationFromProperty
-                                + " does not exists.");
-            }
-            return (dir, name) -> true;
+        public List<String> getFilenames() {
+            return BLACKLISTED_FILENAMES;
         }
     }
 }
