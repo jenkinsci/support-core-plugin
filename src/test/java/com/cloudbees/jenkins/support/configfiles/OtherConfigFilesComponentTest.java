@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestExtension;
-import org.jvnet.hudson.test.recipes.LocalData;
 
 public class OtherConfigFilesComponentTest {
 
@@ -155,7 +154,6 @@ public class OtherConfigFilesComponentTest {
     }
 
     @Test
-    @LocalData
     public void regexpFromFileFilter() throws Exception {
         List<String> filesToExclude = List.of(
                 "test-abc.xml",
