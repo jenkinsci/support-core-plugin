@@ -33,14 +33,11 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.security.Permission;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 
 /**
@@ -66,8 +63,8 @@ public class OtherConfigFilesComponent extends Component {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
-            File[] files = dir.listFiles((dir1, name) -> name.toLowerCase().endsWith(".xml")
-                    && ConfigFilesFilter.getAllFilter().accept(dir, name));
+            File[] files = dir.listFiles((pathname) -> ConfigFilesFilter.all().stream()
+                    .allMatch(configFilesFilter -> configFilesFilter.include(pathname)));
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
@@ -109,21 +106,12 @@ public class OtherConfigFilesComponent extends Component {
             return ExtensionList.lookup(ConfigFilesFilter.class);
         }
 
-        static FilenameFilter getAllFilter() {
-            final List<String> filenames = all().stream()
-                    .map(ConfigFilesFilter::getFilenames)
-                    .flatMap(List::stream)
-                    .collect(Collectors.toList());
-            final Pattern allPattern = Pattern.compile("(" + String.join("|", filenames) + ")");
-            return (dir, name) -> !allPattern.matcher(name).matches();
-        }
-
         /**
-         * Return a list of files names to exclude.
-         * @return list of file names to exclude
+         * Return whether the {@link java.io.File} passed in should be included.
+         * @param file the {@link java.io.File}
+         * @return true to include or false to exclude
          */
-        @NonNull
-        List<String> getFilenames();
+        boolean include(@NonNull File file);
     }
 
     @Extension
@@ -137,10 +125,9 @@ public class OtherConfigFilesComponent extends Component {
                 // config.xml is handled by ConfigFileComponent
                 "config.xml");
 
-        @NonNull
         @Override
-        public List<String> getFilenames() {
-            return BLACKLISTED_FILENAMES;
+        public boolean include(@NonNull File f) {
+            return f.getName().toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(f.getName());
         }
     }
 }

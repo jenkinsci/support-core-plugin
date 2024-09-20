@@ -195,10 +195,9 @@ public class OtherConfigFilesComponentTest {
     @TestExtension
     public static class TestConfigFilesFilter implements OtherConfigFilesComponent.ConfigFilesFilter {
 
-        @NotNull
         @Override
-        public List<String> getFilenames() {
-            return List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml");
+        public boolean include(@NotNull File file) {
+            return !List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml").contains(file.getName());
         }
     }
 }
