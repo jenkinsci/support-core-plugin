@@ -8,26 +8,32 @@ import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.TestExtension;
 
 public class OtherConfigFilesComponentTest {
 
@@ -145,5 +151,53 @@ public class OtherConfigFilesComponentTest {
                 allOf(
                         anyOf(containsString("FileNotFoundException"), containsString("NoSuchFileException")),
                         containsString(file.getAbsolutePath())));
+    }
+
+    @Test
+    public void regexpFromFileFilter() throws Exception {
+        List<String> filesToExclude = List.of(
+                "test-abc.xml",
+                "test-efgh.xml",
+                "toexclude.xml",
+                "credentials.xml",
+                ContentMappings.class.getName() + ".xml");
+        List<String> filesNotToExclude = List.of("test-bcd.xml");
+
+        for (String fileToExclude : filesToExclude) {
+            FileUtils.writeStringToFile(new File(j.jenkins.root, fileToExclude), xml, Charset.defaultCharset());
+        }
+        for (String fileNotToExclude : filesNotToExclude) {
+            FileUtils.writeStringToFile(new File(j.jenkins.root, fileNotToExclude), xml, Charset.defaultCharset());
+        }
+
+        Map<String, Content> contents = new HashMap<>();
+        new OtherConfigFilesComponent().addContents(new Container() {
+            @Override
+            public void add(Content content) {
+                contents.put(
+                        MessageFormat.format(content.getName(), (Object[]) content.getFilterableParameters()), content);
+            }
+        });
+        for (String fileToExclude : filesToExclude) {
+            Files.delete(Path.of(j.jenkins.root.getPath(), fileToExclude));
+        }
+        for (String fileNotToExclude : filesNotToExclude) {
+            Files.delete(Path.of(j.jenkins.root.getPath(), fileNotToExclude));
+        }
+        filesToExclude.forEach(s -> {
+            assertNull(s + " should not be included", contents.get("jenkins-root-configuration-files/" + s));
+        });
+        filesNotToExclude.forEach(s -> {
+            assertNotNull(s + " should be included", contents.get("jenkins-root-configuration-files/" + s));
+        });
+    }
+
+    @TestExtension
+    public static class TestConfigFilesFilter implements OtherConfigFilesComponent.ConfigFilesFilter {
+
+        @Override
+        public boolean include(@NotNull File file) {
+            return !List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml").contains(file.getName());
+        }
     }
 }

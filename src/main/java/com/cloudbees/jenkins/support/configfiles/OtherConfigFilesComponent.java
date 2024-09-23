@@ -29,9 +29,10 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.ExtensionPoint;
 import hudson.security.Permission;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -44,14 +45,6 @@ import jenkins.model.Jenkins;
  */
 @Extension
 public class OtherConfigFilesComponent extends Component {
-
-    private static final List<String> BLACKLISTED_FILENAMES = Arrays.asList(
-            // contains anonymized content mappings
-            ContentMappings.class.getName() + ".xml",
-            // credentials.xml contains rather sensitive data
-            "credentials.xml",
-            // config.xml is handled by ConfigFileComponent
-            "config.xml");
 
     @NonNull
     @Override
@@ -70,8 +63,8 @@ public class OtherConfigFilesComponent extends Component {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             File dir = jenkins.getRootDir();
-            File[] files = dir.listFiles(
-                    (dir1, name) -> name.toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(name));
+            File[] files = dir.listFiles((pathname) -> ConfigFilesFilter.all().stream()
+                    .allMatch(configFilesFilter -> configFilesFilter.include(pathname)));
             if (files != null) {
                 for (File configFile : files) {
                     if (configFile.exists()) {
@@ -99,4 +92,42 @@ public class OtherConfigFilesComponent extends Component {
     }
 
     private static final Logger LOGGER = Logger.getLogger(OtherConfigFilesComponent.class.getName());
+
+    /**
+     * Extension to contribute to the list of configuration files to filter. A file need to be accepted by all
+     * {@link ConfigFilesFilter} implementations to be included in the content.
+     */
+    public interface ConfigFilesFilter extends ExtensionPoint {
+
+        /**
+         * @return all {@link ConfigFilesFilter} extensions
+         */
+        static ExtensionList<ConfigFilesFilter> all() {
+            return ExtensionList.lookup(ConfigFilesFilter.class);
+        }
+
+        /**
+         * Return whether the {@link java.io.File} passed in should be included.
+         * @param file the {@link java.io.File}
+         * @return true to include or false to exclude
+         */
+        boolean include(@NonNull File file);
+    }
+
+    @Extension
+    public static class DefaultConfigFilesFilter implements ConfigFilesFilter {
+
+        private static final List<String> BLACKLISTED_FILENAMES = List.of(
+                // contains anonymized content mappings
+                ContentMappings.class.getName() + ".xml",
+                // credentials.xml contains rather sensitive data
+                "credentials.xml",
+                // config.xml is handled by ConfigFileComponent
+                "config.xml");
+
+        @Override
+        public boolean include(@NonNull File f) {
+            return f.getName().toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(f.getName());
+        }
+    }
 }

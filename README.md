@@ -189,7 +189,7 @@ This version changes the configuration fields to be more intuitive. Please updat
 you update support-core to version 2.68 or later.
 
 
-## Support Bundle sensitive data auto redaction
+## Support Bundle - Sensitive data auto redaction
 Starting from version 2.72.2, Support Core plugin could automatically redact any passwords stored in the following files:
 * `nodes.md`
 * `about.md`
