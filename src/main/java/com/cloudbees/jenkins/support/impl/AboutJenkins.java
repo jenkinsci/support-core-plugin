@@ -501,18 +501,14 @@ public class AboutJenkins extends Component {
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
 
             out.println("  * Url:     " + (ContentFilter.filter(filter, jlc.getUrl())));
-            try {
-                var request = Stapler.getCurrentRequest();
-                if (request != null) {
-                    final ServletContext servletContext = request.getServletContext();
-                    out.println("  * Servlet container");
-                    out.println("      - Specification: " + servletContext.getMajorVersion() + "."
-                            + servletContext.getMinorVersion());
-                    out.println(
-                            "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
-                }
-            } catch (LinkageError e) {
-                // TODO switch javax import to jakarta after bumping core baseline, ignore for now
+            var request = Stapler.getCurrentRequest();
+            if (request != null) {
+                final ServletContext servletContext = request.getServletContext();
+                out.println("  * Servlet container");
+                out.println("      - Specification: " + servletContext.getMajorVersion() + "."
+                    + servletContext.getMinorVersion());
+                out.println(
+                    "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
             }
             out.print(new GetJavaInfo("  *", "      -").getInfo(filter));
             out.println();
@@ -865,41 +861,38 @@ public class AboutJenkins extends Component {
                 // the method is not always safe :-(
             }
             if (stapler != null) {
-                try {
-                    final ServletContext servletContext = stapler.getServletContext();
-                    for (String resourcePath : new TreeSet<>(servletContext.getResourcePaths("/WEB-INF/lib"))) {
-                        try {
-                            out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
-                                    + "  war" // FIPS OK: Not security related.
-                                    + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
-                        }
+                final ServletContext servletContext = stapler.getServletContext();
+                Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
+                for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    try {
+                        out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
+                                + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
-                    for (String resourcePath : Arrays.asList("/WEB-INF/jenkins-cli.jar", "/WEB-INF/web.xml")) {
-                        try {
-                            InputStream resourceAsStream = servletContext.getResourceAsStream(resourcePath);
-                            if (resourceAsStream == null) {
-                                continue;
-                            }
-                            out.println(Util.getDigestOf(resourceAsStream) + "  war" // FIPS OK: Not security related.
-                                    + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
+                }
+                for (String resourcePath : Arrays.asList("/WEB-INF/jenkins-cli.jar", "/WEB-INF/web.xml")) {
+                    try {
+                        InputStream resourceAsStream = servletContext.getResourceAsStream(resourcePath);
+                        if (resourceAsStream == null) {
+                            continue;
                         }
+                        out.println(Util.getDigestOf(resourceAsStream) + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
-                    for (String resourcePath :
-                            new TreeSet<>(servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs"))) {
-                        try {
-                            out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
-                                    + "  war" // FIPS OK: Not security related.
-                                    + resourcePath);
-                        } catch (IOException e) {
-                            logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
-                        }
+                }
+                resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/update-center-rootCAs");
+                for (String resourcePath : new TreeSet<String>(resourcePaths)) {
+                    try {
+                        out.println(Util.getDigestOf(servletContext.getResourceAsStream(resourcePath))
+                                + "  war" // FIPS OK: Not security related.
+                                + resourcePath);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Could not compute MD5 of war" + resourcePath, e);
                     }
-                } catch (LinkageError e) {
-                    // TODO switch javax import to jakarta after bumping core baseline, ignore for now
                 }
             }
 
