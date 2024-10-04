@@ -5,9 +5,9 @@ import static org.junit.Assert.assertNotNull;
 
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.net.URL;
-import javax.servlet.ServletException;
 import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,8 +15,8 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * @author schristou88
@@ -57,7 +57,7 @@ public class InflightRequestTest {
         public static int seconds;
         public static InflightRequest request;
 
-        public HttpResponse doSubmitReferer(StaplerRequest req, StaplerResponse rsp)
+        public HttpResponse doSubmitReferer(StaplerRequest2 req, StaplerResponse2 rsp)
                 throws ServletException, IOException {
             String literalHTML = "<html>" + "  <body>"
                     + "    <a href='"
@@ -66,7 +66,7 @@ public class InflightRequestTest {
             return HttpResponses.literalHtml(literalHTML);
         }
 
-        public HttpResponse doSubmit(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+        public HttpResponse doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
             request = new InflightRequest(req);
             return HttpResponses.redirectTo("..");
         }
