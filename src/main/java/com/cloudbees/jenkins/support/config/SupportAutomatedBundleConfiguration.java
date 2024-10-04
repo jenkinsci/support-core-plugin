@@ -27,7 +27,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.verb.POST;
 
 /**
@@ -169,7 +169,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
 
     @Override
     @POST
-    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+    public boolean configure(StaplerRequest2 req, JSONObject json) throws FormException {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         if (isEnforcedDisabled()) {
@@ -201,7 +201,7 @@ public class SupportAutomatedBundleConfiguration extends GlobalConfiguration {
      * @param req the request
      * @return the {@link DescribableList} of components
      */
-    protected final List<String> parseRequest(StaplerRequest req, JSONObject json) {
+    protected final List<String> parseRequest(StaplerRequest2 req, JSONObject json) {
         Set<String> remove = new HashSet<>();
         for (SupportAction.Selection s : req.bindJSONToList(SupportAction.Selection.class, json.get("components"))) {
             if (!s.isSelected()) {

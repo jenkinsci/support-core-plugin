@@ -1,10 +1,10 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Date;
-import javax.servlet.http.HttpServletRequest;
 import jenkins.model.Jenkins;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
