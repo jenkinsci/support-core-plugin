@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -34,7 +34,7 @@ public class ReverseProxyTest {
     public MockitoRule rule = MockitoJUnit.rule();
 
     @Mock
-    private StaplerRequest staplerRequest;
+    private StaplerRequest2 staplerRequest;
 
     private ReverseProxy subject;
 
@@ -42,7 +42,7 @@ public class ReverseProxyTest {
     public void setUp() {
         subject = new ReverseProxy() {
             @Override
-            protected StaplerRequest getCurrentRequest() {
+            protected StaplerRequest2 getCurrentRequest() {
                 return staplerRequest;
             }
         };
@@ -82,7 +82,7 @@ public class ReverseProxyTest {
     public void addContents_NoCurrentRequest() {
         subject = new ReverseProxy() {
             @Override
-            protected StaplerRequest getCurrentRequest() {
+            protected StaplerRequest2 getCurrentRequest() {
                 return null;
             }
         };

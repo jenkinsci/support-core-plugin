@@ -34,6 +34,9 @@ import hudson.model.RootAction;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.security.Permission;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -53,9 +56,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
@@ -65,8 +65,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -184,7 +184,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDeleteBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -209,7 +209,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDownloadBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -249,7 +249,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
     }
 
-    private Set<String> getSelectedBundles(StaplerRequest req, JSONObject json) throws ServletException, IOException {
+    private Set<String> getSelectedBundles(StaplerRequest2 req, JSONObject json) throws ServletException, IOException {
         Set<String> bundles = new HashSet<>();
         List<String> existingBundles = getBundles();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
@@ -298,7 +298,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDownload(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         doGenerateAllBundles(req, rsp);
     }
 
@@ -310,7 +310,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doGenerateAllBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -351,7 +351,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp)
+    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse2 rsp)
             throws IOException {
         if (components == null) {
             rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
@@ -389,7 +389,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         prepareBundle(rsp, selectedComponents);
     }
 
-    private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
+    private void prepareBundle(StaplerResponse2 rsp, List<Component> components) throws IOException {
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
