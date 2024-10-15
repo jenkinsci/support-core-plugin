@@ -6,6 +6,7 @@ import com.cloudbees.jenkins.support.api.PrintedContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
+import hudson.Util;
 import hudson.model.Run;
 import hudson.util.FileVisitor;
 import hudson.util.FormValidation;
@@ -13,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
@@ -44,16 +47,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     public void addContents(@NonNull Container container, @NonNull Run item) {
         try {
             File itemRootDir = item.getRootDir();
-            String relativeToRoot = Functions.isWindows()
-                    ? new File(Jenkins.get().getRootDir(), "jobs")
-                            .toPath()
-                            .relativize(itemRootDir.toPath())
-                            .toString()
-                            .replace('\\', '/')
-                    : new File(Jenkins.get().getRootDir(), "jobs")
-                            .toPath()
-                            .relativize(itemRootDir.toPath())
-                            .toString();
+            String relativeToRoot = getBuildRelativePath(item, itemRootDir);
             list(itemRootDir, new FileVisitor() {
 
                 @Override
@@ -95,6 +89,26 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
                             + item.getParent().getFullName() + "#" + item.getNumber(),
                     e);
         }
+    }
+
+    private static String getBuildRelativePath(@NonNull Run item, @NonNull File itemRootDir) {
+
+        // See Jenkins#isDefaultBuildDir that has restriction and cannot be used outside Jenkins core
+        File buildsRootDir = "${ITEM_ROOTDIR}/builds".equals(Jenkins.get().getRawBuildsDir())
+                ? new File(Jenkins.get().getRootDir(), "jobs")
+                // Not using the default buildsDir, find the custom root dir by keeping what's before the compulsory
+                // ${ITEM_FULL_NAME} placeholder
+                : new File(Objects.requireNonNull(Util.replaceMacro(
+                        Jenkins.get().getRawBuildsDir().replaceFirst("\\$\\{ITEM_FULL_NAME.*", ""),
+                        Map.of("JENKINS_HOME", Jenkins.get().getRootDir().getPath()))));
+
+        return Functions.isWindows()
+                ? buildsRootDir
+                        .toPath()
+                        .relativize(itemRootDir.toPath())
+                        .toString()
+                        .replace('\\', '/')
+                : buildsRootDir.toPath().relativize(itemRootDir.toPath()).toString();
     }
 
     @NonNull

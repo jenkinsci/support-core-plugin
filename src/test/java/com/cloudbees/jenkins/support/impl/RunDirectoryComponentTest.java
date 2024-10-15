@@ -148,4 +148,28 @@ public class RunDirectoryComponentTest {
         assertFalse(output.containsKey(prefix + "/log"));
         assertThat(output.keySet(), not(hasItem(startsWith(prefix + "/workflow"))));
     }
+
+    @Test
+    public void addContentsCustomBuildsDir() throws Exception {
+        j.jenkins.setRawBuildsDir("${JENKINS_HOME}/builds/${ITEM_FULL_NAME}");
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
+        p.setDefinition(
+                new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
+        WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
+                .orElseThrow(AssertionFailedError::new)
+                .waitForStart();
+        j.waitForCompletion(workflowRun);
+
+        j.waitUntilNoActivity();
+
+        Map<String, String> output = SupportTestUtils.invokeComponentToMap(new RunDirectoryComponent(), workflowRun);
+
+        String prefix = "items/" + JOB_NAME + "/" + workflowRun.number;
+        assertTrue(output.containsKey(prefix + "/build.xml"));
+        assertTrue(output.containsKey(prefix + "/log"));
+        assertThat(output.keySet(), hasItem(startsWith(prefix + "/workflow")));
+        assertThat(output.get(prefix + "/build.xml"), Matchers.containsString("<flow-build"));
+        assertThat(output.get(prefix + "/log"), Matchers.containsString("[Pipeline] node"));
+        assertThat(output.keySet(), not(hasItem(Matchers.containsString("test.txt"))));
+    }
 }
