@@ -502,7 +502,6 @@ public class AboutJenkins extends Component {
 
             out.println("  * Url:     " + (ContentFilter.filter(filter, jlc.getUrl())));
             try {
-                // TODO use Stapler.getCurrent after https://github.com/jenkinsci/stapler/pull/596
                 var request = Stapler.getCurrentRequest();
                 if (request != null) {
                     final ServletContext servletContext = request.getServletContext();
