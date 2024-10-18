@@ -102,13 +102,11 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
                         Jenkins.get().getRawBuildsDir().replaceFirst("\\$\\{ITEM_FULL_NAME.*", ""),
                         Map.of("JENKINS_HOME", Jenkins.get().getRootDir().getPath()))));
 
-        return Functions.isWindows()
-                ? buildsRootDir
+        return buildsRootDir
                         .toPath()
                         .relativize(itemRootDir.toPath())
                         .toString()
-                        .replace('\\', '/')
-                : buildsRootDir.toPath().relativize(itemRootDir.toPath()).toString();
+                        .replace(File.separatorChar, '/');
     }
 
     @NonNull
