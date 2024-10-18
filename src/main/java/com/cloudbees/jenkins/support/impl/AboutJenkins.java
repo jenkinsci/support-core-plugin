@@ -480,9 +480,6 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        @SuppressFBWarnings(
-                value = "DCN_NULLPOINTER_EXCEPTION",
-                justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
         protected void printTo(PrintWriter out, ContentFilter filter) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             out.println("Jenkins");
@@ -505,15 +502,17 @@ public class AboutJenkins extends Component {
 
             out.println("  * Url:     " + (ContentFilter.filter(filter, jlc.getUrl())));
             try {
-                final ServletContext servletContext = Stapler.getCurrent().getServletContext();
-                out.println("  * Servlet container");
-                out.println("      - Specification: " + servletContext.getMajorVersion() + "."
-                        + servletContext.getMinorVersion());
-                out.println("      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
+                var request = Stapler.getCurrentRequest();
+                if (request != null) {
+                    final ServletContext servletContext = request.getServletContext();
+                    out.println("  * Servlet container");
+                    out.println("      - Specification: " + servletContext.getMajorVersion() + "."
+                            + servletContext.getMinorVersion());
+                    out.println(
+                            "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
+                }
             } catch (LinkageError e) {
                 // TODO switch javax import to jakarta after bumping core baseline, ignore for now
-            } catch (NullPointerException e) {
-                // pity Stapler.getCurrent() throws an NPE when outside of a request
             }
             out.print(new GetJavaInfo("  *", "      -").getInfo(filter));
             out.println();
