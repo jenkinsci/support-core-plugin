@@ -21,7 +21,7 @@ public class LaunchLogsFileContent extends FileContent {
 
     @Override
     protected InputStream getInputStream() throws IOException {
-        Function<String, String> filter = line -> PasswordRedactor.get().redact(line);
+        Function<String, String> filter = PasswordRedactor.get()::redact;
         return new FilteredInputStream(new FileInputStream(file), Charset.defaultCharset(), filter);
     }
 
