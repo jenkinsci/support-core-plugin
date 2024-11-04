@@ -33,6 +33,11 @@ public class DefaultStopWords implements StopWords {
                 "admin",
                 "up",
                 "running",
-                Jenkins.VERSION);
+                Jenkins.VERSION,
+                "tmp",
+                "git",
+                "retry",
+                "vault",
+                "exists");
     }
 }
