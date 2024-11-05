@@ -14,20 +14,20 @@ import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
 import hudson.security.Permission;
 import hudson.util.FormApply;
+import jakarta.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
 /**
@@ -121,14 +121,14 @@ public class SupportPluginManagement extends ManagementLink implements Describab
     }
 
     @POST
-    public synchronized void doConfigure(StaplerRequest req, StaplerResponse rsp)
+    public synchronized void doConfigure(StaplerRequest2 req, StaplerResponse2 rsp)
             throws IOException, ServletException, Descriptor.FormException {
 
         configure(req, req.getSubmittedForm());
         FormApply.success(req.getContextPath() + "/manage").generateResponse(req, rsp, null);
     }
 
-    public boolean configure(StaplerRequest req, JSONObject json) throws Descriptor.FormException {
+    public boolean configure(StaplerRequest2 req, JSONObject json) throws Descriptor.FormException {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
         boolean result = true;
@@ -139,7 +139,7 @@ public class SupportPluginManagement extends ManagementLink implements Describab
         return result;
     }
 
-    private boolean configureDescriptor(StaplerRequest req, JSONObject json, Descriptor<?> d)
+    private boolean configureDescriptor(StaplerRequest2 req, JSONObject json, Descriptor<?> d)
             throws Descriptor.FormException {
         String name = d.getJsonSafeClassName();
         JSONObject js = json.has(name) ? json.getJSONObject(name) : new JSONObject();
