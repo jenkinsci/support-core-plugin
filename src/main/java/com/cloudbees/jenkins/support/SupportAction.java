@@ -187,7 +187,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public HttpResponse doDeleteBundles(StaplerRequest2 req) throws ServletException, IOException {
+    public HttpResponse doDeleteBundles(StaplerRequest2 req) throws ServletException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
             return HttpResponses.error(SC_BAD_REQUEST, "Missing bundles attribute");
@@ -251,7 +251,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
     }
 
-    private Set<String> getSelectedBundles(StaplerRequest2 req, JSONObject json) throws ServletException, IOException {
+    private Set<String> getSelectedBundles(StaplerRequest2 req, JSONObject json) {
         Set<String> bundles = new HashSet<>();
         List<String> existingBundles = getBundles();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
