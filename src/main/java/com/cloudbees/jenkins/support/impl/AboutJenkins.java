@@ -501,14 +501,13 @@ public class AboutJenkins extends Component {
             final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
 
             out.println("  * Url:     " + (ContentFilter.filter(filter, jlc.getUrl())));
-            var request = Stapler.getCurrentRequest();
+            var request = Stapler.getCurrentRequest2();
             if (request != null) {
                 final ServletContext servletContext = request.getServletContext();
                 out.println("  * Servlet container");
                 out.println("      - Specification: " + servletContext.getMajorVersion() + "."
-                    + servletContext.getMinorVersion());
-                out.println(
-                    "      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
+                        + servletContext.getMinorVersion());
+                out.println("      - Name:          `" + Markdown.escapeBacktick(servletContext.getServerInfo()) + "`");
             }
             out.print(new GetJavaInfo("  *", "      -").getInfo(filter));
             out.println();
@@ -854,14 +853,9 @@ public class AboutJenkins extends Component {
                     logger.log(Level.WARNING, "Could not compute MD5 of jenkins.war", e);
                 }
             }
-            Stapler stapler = null;
-            try {
-                stapler = Stapler.getCurrent();
-            } catch (NullPointerException e) {
-                // the method is not always safe :-(
-            }
-            if (stapler != null) {
-                final ServletContext servletContext = stapler.getServletContext();
+            var request = Stapler.getCurrentRequest2();
+            if (request != null) {
+                final ServletContext servletContext = request.getServletContext();
                 Set<String> resourcePaths = (Set<String>) servletContext.getResourcePaths("/WEB-INF/lib");
                 for (String resourcePath : new TreeSet<String>(resourcePaths)) {
                     try {
