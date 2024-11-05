@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support;
 
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
@@ -36,7 +38,6 @@ import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -63,6 +64,8 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -184,11 +187,10 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public void doDeleteBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
+    public HttpResponse doDeleteBundles(StaplerRequest2 req) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+            return HttpResponses.error(SC_BAD_REQUEST, "Missing bundles attribute");
         }
         Set<String> bundlesToDelete = getSelectedBundles(req, json);
         File rootDirectory = SupportPlugin.getRootDirectory();
@@ -205,14 +207,14 @@ public class SupportAction implements RootAction, StaplerProxy {
                 logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
             }
         }
-        rsp.sendRedirect("");
+        return HttpResponses.redirectToDot();
     }
 
     @RequirePOST
     public void doDownloadBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            rsp.sendError(SC_BAD_REQUEST);
             return;
         }
 
@@ -313,7 +315,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     public void doGenerateAllBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            rsp.sendError(SC_BAD_REQUEST);
             return;
         }
         logger.fine("Parsing request...");
@@ -354,7 +356,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse2 rsp)
             throws IOException {
         if (components == null) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
+            rsp.sendError(SC_BAD_REQUEST, "components parameter is mandatory");
             return;
         }
         Set<String> componentNames = Arrays.stream(components.split(",")).collect(Collectors.toSet());
@@ -383,7 +385,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 .filter(c -> componentNames.contains(c.getId()))
                 .collect(Collectors.toList());
         if (selectedComponents.isEmpty()) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "selected component list is empty");
+            rsp.sendError(SC_BAD_REQUEST, "selected component list is empty");
             return;
         }
         prepareBundle(rsp, selectedComponents);
