@@ -38,6 +38,9 @@ public class DefaultStopWords implements StopWords {
                 "git",
                 "retry",
                 "vault",
-                "exists");
+                "exists",
+                "log",
+                "info"
+        );
     }
 }
