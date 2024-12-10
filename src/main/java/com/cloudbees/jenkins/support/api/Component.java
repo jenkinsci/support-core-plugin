@@ -153,6 +153,10 @@ public abstract class Component implements ExtensionPoint {
         return ComponentCategory.UNCATEGORIZED;
     }
 
+    public Set<Class<? extends Component>> getSupersededComponents() {
+        return Collections.emptySet();
+    }
+
     /**
      * Categories supported by this version of support-core
      *

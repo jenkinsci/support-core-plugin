@@ -596,8 +596,13 @@ public class SupportPlugin extends Plugin {
 
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
+        Set<Class<? extends Component>> supersededComponents = new HashSet<>();
+        components.forEach(c -> supersededComponents.addAll(c.getSupersededComponents()));
         for (Component component : components) {
             try {
+                if (supersededComponents.contains(component.getClass())) {
+                    continue;
+                }
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
