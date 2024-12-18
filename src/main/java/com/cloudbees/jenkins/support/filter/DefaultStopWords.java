@@ -40,7 +40,6 @@ public class DefaultStopWords implements StopWords {
                 "vault",
                 "exists",
                 "log",
-                "info"
-        );
+                "info");
     }
 }
