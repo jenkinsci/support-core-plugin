@@ -86,20 +86,11 @@
           </f:entry>
         </j:forEach>
         <f:entry>
-          <span class="yui-button yui-submit-button submit-button primary">
-            <span class="first-child">
-              <button type="submit" formaction="downloadBundles">${%Download Bundle}</button>
-            </span>
-          </span>
-          <span class="yui-button yui-submit-button submit-button danger">
-            <span class="first-child">
-              <button type="submit" formaction="deleteBundles">${%Delete Bundle}</button>
-            </span>
-          </span>
+          <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
+          <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
         </f:entry>
       </f:form>
       </f:section>
-
     </l:main-panel>
   </l:layout>
 </j:jelly>
