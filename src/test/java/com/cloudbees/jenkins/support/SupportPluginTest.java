@@ -108,6 +108,7 @@ public class SupportPluginTest {
      * Test that a component can supersede another component.
      * This is similar to testGenerateBundleExceptionHandler() but we are superseding
      * AboutJenkins and BuildQueue components. even if is added to the list of components to create.
+     * I will not add its files to the bundle
      * @throws Exception
      */
     @Test
@@ -146,7 +147,6 @@ public class SupportPluginTest {
                 ExtensionList.lookup(Component.class).get(SystemProperties.class));
 
         File bundleFile = temp.newFile();
-
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             SupportPlugin.writeBundle(os, components);
         }
