@@ -40,6 +40,11 @@ public class SupportPluginTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
+    public void testSomething(){
+        j.getInstance();
+    }
+
+    @Test
     @Issue("JENKINS-63722")
     public void testComponentIdsAreUnique() {
         // If component IDs have duplicate, the Set size should be different because it only add an item if it is unique
@@ -102,5 +107,63 @@ public class SupportPluginTest {
         assertNotNull(zip.getEntry("nodes/master/system.properties"));
         assertNotNull(zip.getEntry("about.md"));
         assertNotNull(zip.getEntry("nodes.md"));
+    }
+
+    /**
+     * Test that a component can supersede another component.
+     * This is similar to testGenerateBundleExceptionHandler() but we are superseding
+     * AboutJenkins and BuildQueue components. even if is added to the list of components to create.
+     * @throws Exception
+     */
+    @Test
+    public void testSupersedesComponent() throws Exception {
+        List<Component> components = Arrays.asList(
+                new Component() {
+                    @NonNull
+                    @Override
+                    public Set<Permission> getRequiredPermissions() {
+                        return Collections.singleton(Jenkins.ADMINISTER);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getDisplayName() {
+                        return "Test Component";
+                    }
+
+                    @Override
+                    public boolean supersedes(Component component) {
+                        return Set.of(AboutJenkins.class, BuildQueue.class).contains(component.getClass());
+                    }
+
+                    @Override
+                    public void addContents(@NonNull Container container) {
+                        container.add(new Content("test/testWriteBundleWithJenkinsRule.md") {
+                            @Override
+                            public void writeTo(OutputStream os) throws IOException {
+                                os.write("test content".getBytes(StandardCharsets.UTF_8));
+                            }
+                        });
+                    }
+                },
+                ExtensionList.lookup(Component.class).get(AboutJenkins.class),
+                ExtensionList.lookup(Component.class).get(BuildQueue.class),
+                ExtensionList.lookup(Component.class).get(SystemProperties.class));
+
+        File bundleFile = temp.newFile();
+
+        try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
+            SupportPlugin.writeBundle(os, components);
+        }
+
+        ZipFile zip = new ZipFile(bundleFile);
+        assertNotNull(zip.getEntry("test/testWriteBundleWithJenkinsRule.md"));
+        assertNotNull(zip.getEntry("manifest.md"));
+        assertNotNull(zip.getEntry("nodes/master/system.properties"));
+
+        //Assert null for AboutJenkins.class, BuildQueue.class components
+        assertNull(zip.getEntry("buildqueue.md"));
+        assertNull(zip.getEntry("about.md"));
+        assertNull(zip.getEntry("nodes.md"));
     }
 }
