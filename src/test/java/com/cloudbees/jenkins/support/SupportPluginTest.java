@@ -106,9 +106,9 @@ public class SupportPluginTest {
 
     /**
      * Test that a component can supersede another component.
-     * This is similar to testGenerateBundleExceptionHandler() but we are superseding
-     * AboutJenkins and BuildQueue components. even if is added to the list of components to create.
-     * I will not add its files to the bundle
+     * We are superseding AboutJenkins and BuildQueue components.
+     * even if is added to the list of components to create.
+     * It will not add its files to the bundle
      * @throws Exception
      */
     @Test
