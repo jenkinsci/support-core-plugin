@@ -153,8 +153,13 @@ public abstract class Component implements ExtensionPoint {
         return ComponentCategory.UNCATEGORIZED;
     }
 
-    public Set<Class<? extends Component>> getSupersededComponents() {
-        return Set.of();
+    /**
+     * Returns true if a component is superseded by this component.
+     * useful if we write a component that makes another one obsolete.
+     * @return
+     */
+    public boolean supersedes(Component component) {
+        return false;
     }
 
     /**
