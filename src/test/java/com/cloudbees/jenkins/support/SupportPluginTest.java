@@ -109,7 +109,6 @@ public class SupportPluginTest {
      * We are superseding AboutJenkins and BuildQueue components.
      * even if is added to the list of components to create.
      * It will not add its files to the bundle
-     * @throws Exception
      */
     @Test
     public void testSupersedesComponent() throws Exception {
