@@ -155,7 +155,7 @@ public class SupportPluginTest {
         assertNotNull(zip.getEntry("manifest.md"));
         assertNotNull(zip.getEntry("nodes/master/system.properties"));
 
-        //Assert null for AboutJenkins.class, BuildQueue.class components
+        // Assert null for AboutJenkins.class, BuildQueue.class components
         assertNull(zip.getEntry("buildqueue.md"));
         assertNull(zip.getEntry("about.md"));
         assertNull(zip.getEntry("nodes.md"));
