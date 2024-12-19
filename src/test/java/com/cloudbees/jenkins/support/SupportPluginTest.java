@@ -40,11 +40,6 @@ public class SupportPluginTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void testSomething(){
-        j.getInstance();
-    }
-
-    @Test
     @Issue("JENKINS-63722")
     public void testComponentIdsAreUnique() {
         // If component IDs have duplicate, the Set size should be different because it only add an item if it is unique
