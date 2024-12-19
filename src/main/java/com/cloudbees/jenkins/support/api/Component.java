@@ -154,7 +154,7 @@ public abstract class Component implements ExtensionPoint {
     }
 
     public Set<Class<? extends Component>> getSupersededComponents() {
-        return Collections.emptySet();
+        return Set.of();
     }
 
     /**
