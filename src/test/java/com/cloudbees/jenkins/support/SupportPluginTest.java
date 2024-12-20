@@ -112,7 +112,7 @@ public class SupportPluginTest {
      */
     @Test
     public void testSupersedesComponent() throws Exception {
-        List<Component> components = Arrays.asList(
+        List<Component> components = List.of(
                 new Component() {
                     @NonNull
                     @Override
@@ -128,7 +128,7 @@ public class SupportPluginTest {
 
                     @Override
                     public boolean supersedes(Component component) {
-                        return Set.of(AboutJenkins.class, BuildQueue.class).contains(component.getClass());
+                        return component instanceof AboutJenkins || component instanceof BuildQueue;
                     }
 
                     @Override
@@ -141,9 +141,9 @@ public class SupportPluginTest {
                         });
                     }
                 },
-                ExtensionList.lookup(Component.class).get(AboutJenkins.class),
-                ExtensionList.lookup(Component.class).get(BuildQueue.class),
-                ExtensionList.lookup(Component.class).get(SystemProperties.class));
+                ExtensionList.lookupSingleton(AboutJenkins.class),
+                ExtensionList.lookupSingleton(BuildQueue.class),
+                ExtensionList.lookupSingleton(SystemProperties.class));
 
         File bundleFile = temp.newFile();
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
