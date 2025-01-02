@@ -154,6 +154,14 @@ public abstract class Component implements ExtensionPoint {
     }
 
     /**
+     * Returns true if a component is superseded by this component.
+     * useful if we write a component that makes another one obsolete.
+     */
+    public boolean supersedes(Component component) {
+        return false;
+    }
+
+    /**
      * Categories supported by this version of support-core
      *
      * @since TODO

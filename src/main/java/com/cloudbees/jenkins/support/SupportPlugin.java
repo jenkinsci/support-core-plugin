@@ -598,6 +598,10 @@ public class SupportPlugin extends Plugin {
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
         for (Component component : components) {
             try {
+                if (components.stream().anyMatch(c -> c.supersedes(component))) {
+                    continue;
+                }
+
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
