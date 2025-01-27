@@ -188,6 +188,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         return ContentFilters.get().isEnabled();
     }
 
+    @RequirePOST
     public HttpResponse doGenerateBundleAsync(StaplerRequest req, StaplerResponse rsp) {
         // Step 1
         // Generate a unique id for the support bundle request
@@ -203,6 +204,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
 
+    @RequirePOST
     public HttpResponse doCheckIfSupportBundleIsCreated(StaplerRequest req, StaplerResponse rsp) {
         // Step 1
         // Fetch the unique id from request that was generated in doGenerateBundleAsync()
