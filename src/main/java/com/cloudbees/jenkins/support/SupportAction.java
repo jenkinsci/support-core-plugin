@@ -191,7 +191,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     public HttpResponse doGenerateBundleAsync(StaplerRequest req, StaplerResponse rsp) {
         // Step 1
         // Generate a unique id for the support bundle request
-        // Create a mechanism such that only onw support bundle can be generated at a time by any user
+        // Create a mechanism such that only one support bundle can be generated at a time by any user
 
         // Step 2
         // Fetch the contents and generate support bundle in async
