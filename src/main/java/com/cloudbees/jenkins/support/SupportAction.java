@@ -68,7 +68,9 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.export.Exported;
@@ -184,6 +186,34 @@ public class SupportAction implements RootAction, StaplerProxy {
 
     public boolean isAnonymized() {
         return ContentFilters.get().isEnabled();
+    }
+
+    public HttpResponse doGenerateBundleAsync(StaplerRequest req, StaplerResponse rsp) {
+        // Step 1
+        // Generate a unique id for the support bundle request
+        // Create a mechanism such that only onw support bundle can be generated at a time by any user
+
+        // Step 2
+        // Fetch the contents and generate support bundle in async
+        // Create this support bundle in /support/user-generated-bundles/<unique-id>
+
+        // Step 3
+        // Return the unique id to the user
+        return HttpResponses.ok();
+    }
+
+
+    public HttpResponse doCheckIfSupportBundleIsCreated(StaplerRequest req, StaplerResponse rsp) {
+        // Step 1
+        // Fetch the unique id from request that was generated in doGenerateBundleAsync()
+
+        // Step 2
+        // Check if the support bundle is created in /support/user-generated-bundles/<unique-id>
+
+        // Step 3
+        // If not created return null , if it is created return the path of the support bundle
+        // show it in UI similar to "Existing support bundles" so that the use can download it
+        return HttpResponses.ok();
     }
 
     @RequirePOST

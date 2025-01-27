@@ -71,9 +71,63 @@
         </j:forEach>
         <f:entry>
           <f:submit value="${%Generate Bundle}"/>
+
+          <button type="button" onclick="doGenerateBundleAsync()">${%Generate Bundle Async}</button>
+          <script>
+            function getCrumb() {
+              return fetch(`${rootURL}/crumbIssuer/api/json`, {
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                },
+              })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Failed to fetch crumb');
+                }
+                return response.json(); // Parse the JSON response
+              })
+              .then(data => {
+                return data.crumb; // The crumb value to use in subsequent requests
+              });
+            }
+
+            function doGenerateBundleAsync() {
+              getCrumb().then(crumb => {
+                fetch(`${rootURL}/support/generateBundle2`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Jenkins-Crumb': crumb, // Add the crumb header here
+                  },
+                  body: JSON.stringify({
+                    // Include any JSON payload if required
+                  }),
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error('Request failed');
+                  }
+                  return response.json(); // Parse the JSON response
+                })
+                .then(data => {
+                  console.log('Success:', data);
+                  // Handle success (e.g., show a success message)
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  // Handle errors (e.g., alert the user)
+                });
+              }).catch(error => {
+                console.error('Failed to fetch CSRF crumb:', error);
+              });
+            }
+          </script>
         </f:entry>
       </f:form>
       <f:section title="${%Existing support bundles}">
+
 
       <f:form name="bundle-contents" method="POST">
         <j:forEach var="bundle" items="${it.bundles}">
