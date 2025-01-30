@@ -50,7 +50,7 @@
           <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
         </p>
       </j:if>
-      <f:form name="bundle-contents" method="POST" action="generateAllBundles">
+      <f:form name="bundle-contents" method="POST" action="generateAllBundles" id="bundle-contents-form">
         <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
           <section class="jenkins-section jenkins-section__bottom-padding">
             <h2 class="jenkins-section__title">${category.key.label}</h2>
@@ -70,80 +70,118 @@
           </section>
         </j:forEach>
         <f:entry>
-          <f:submit value="${%Generate Bundle}"/>
+          <f:submit value="${%Generate Bundle}" id="generate-support-bundle"/>
+          <div id="loading-animation" style="display:none;">Loading...</div>
 
-          <button type="button" onclick="doGenerateBundleAsync()">${%Generate Bundle Async}</button>
-          <script>
-            function getCrumb() {
-              return fetch(`${rootURL}/crumbIssuer/api/json`, {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json',
-                },
-              })
-              .then(response => {
-                if (!response.ok) {
-                  throw new Error('Failed to fetch crumb');
-                }
-                return response.json(); // Parse the JSON response
-              })
-              .then(data => {
-                return data.crumb; // The crumb value to use in subsequent requests
-              });
-            }
-
-            function doGenerateBundleAsync() {
-              getCrumb().then(crumb => {
-                fetch(`${rootURL}/support/generateBundle2`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Jenkins-Crumb': crumb, // Add the crumb header here
-                  },
-                  body: JSON.stringify({
-                    // Include any JSON payload if required
-                  }),
-                })
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error('Request failed');
-                  }
-                  return response.json(); // Parse the JSON response
-                })
-                .then(data => {
-                  console.log('Success:', data);
-                  // Handle success (e.g., show a success message)
-                })
-                .catch(error => {
-                  console.error('Error:', error);
-                  // Handle errors (e.g., alert the user)
-                });
-              }).catch(error => {
-                console.error('Failed to fetch CSRF crumb:', error);
-              });
-            }
-          </script>
         </f:entry>
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const form = document.querySelector('#bundle-contents-form');
+
+          // Intercept the form submission
+          form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission behavior
+            const submitButton = document.querySelector('#generate-support-bundle');
+            const loadingAnimation = document.querySelector('#loading-animation');
+
+            // Disable the submit button and show loading animation
+            submitButton.disabled = true;
+            loadingAnimation.style.display = 'block';
+
+            // Gather form data
+            const formData = new FormData(form);
+            const data = [];
+            const components = form.querySelectorAll('div[name="components"]'); // Select all components
+            components.forEach(component => {
+              const selectedInput = component.querySelector('input[name="selected"]');
+              const nameInput = component.querySelector('input[name="name"]');
+              if (nameInput) {
+                const componentData = {
+                  name: nameInput.value,
+                  selected: selectedInput.checked, // `true` if the checkbox is checked, `false` otherwise
+                };
+                data.push(componentData);
+              }
+            });
+
+            console.log("Collected Data:", data);
+
+            const payload = {
+              components: data
+            };
+
+            // Create an XMLHttpRequest object
+            const xhr = new XMLHttpRequest();
+
+            // Configure the AJAX request
+            xhr.open('POST', 'generateAllBundles?json='+ JSON.stringify(payload), true); // Use POST and target URL
+            xhr.setRequestHeader('Content-Type', 'application/json'); // Set JSON headers
+            xhr.setRequestHeader('Jenkins-Crumb', document.querySelector('input[name="Jenkins-Crumb"]').value);
+
+            xhr.timeout = 0; // 0 => infinite timeout
+
+            // Define the success response handler
+            xhr.onload = function () {
+              if (xhr.status === 200) {
+                // Handle response as Blob to download support bundle
+                const blob = new Blob([xhr.response], { type: 'application/zip' });
+                const downloadUrl = URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = 'support-bundle.zip'; // Specify file name
+                downloadLink.click();
+                URL.revokeObjectURL(downloadUrl); // Clean up the URL object
+              } else {
+                console.error(`Request failed with status ${xhr.status}: ${xhr.statusText}`);
+                alert('Failed to generate the support bundle.');
+              }
+            };
+
+            // Handle timeout
+            xhr.ontimeout = function () {
+              console.error('Request timed out.');
+              alert('The request took too long and was aborted.');
+            };
+
+            // Handle network errors
+            xhr.onerror = function () {
+              console.error('Network error occurred.');
+              alert('A network error occurred while generating the support bundle. Please try again.');
+            };
+
+            // Set the response type to Blob (important for file downloads)
+            xhr.responseType = 'blob';
+
+            // Send the AJAX request with payload
+            xhr.send(JSON.stringify(payload));
+
+            // Finally, clean up and re-enable the form functionality
+            xhr.onloadend = function () {
+              submitButton.disabled = false;
+              loadingAnimation.style.display = 'none';
+            };
+          });
+        });
+      </script>
       </f:form>
       <f:section title="${%Existing support bundles}">
 
 
-      <f:form name="bundle-contents" method="POST">
-        <j:forEach var="bundle" items="${it.bundles}">
-          <f:entry field="bundle">
-          <div name="bundles">
-          <f:checkbox name="selected" checked="false"
-                      title="${bundle}"/>
-            <input style="display:none" name="name" value="${bundle}"/>
-          </div>
+        <f:form name="bundle-contents" method="POST">
+          <j:forEach var="bundle" items="${it.bundles}">
+            <f:entry field="bundle">
+              <div name="bundles">
+                <f:checkbox name="selected" checked="false"
+                            title="${bundle}"/>
+                <input style="display:none" name="name" value="${bundle}"/>
+              </div>
+            </f:entry>
+          </j:forEach>
+          <f:entry>
+            <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
+            <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
           </f:entry>
-        </j:forEach>
-        <f:entry>
-          <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
-          <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
-        </f:entry>
-      </f:form>
+        </f:form>
       </f:section>
     </l:main-panel>
   </l:layout>
