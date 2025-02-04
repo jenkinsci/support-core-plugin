@@ -202,35 +202,6 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public HttpResponse doGenerateBundleAsync(StaplerRequest req, StaplerResponse rsp) {
-        // Step 1
-        // Generate a unique id for the support bundle request
-        // Create a mechanism such that only one support bundle can be generated at a time by any user
-
-        // Step 2
-        // Fetch the contents and generate support bundle in async
-        // Create this support bundle in /support/user-generated-bundles/<unique-id>
-
-        // Step 3
-        // Return the unique id to the user
-        return HttpResponses.ok();
-    }
-
-    @RequirePOST
-    public HttpResponse doCheckIfSupportBundleIsCreated(StaplerRequest req, StaplerResponse rsp) {
-        // Step 1
-        // Fetch the unique id from request that was generated in doGenerateBundleAsync()
-
-        // Step 2
-        // Check if the support bundle is created in /support/user-generated-bundles/<unique-id>
-
-        // Step 3
-        // If not created return null , if it is created return the path of the support bundle
-        // show it in UI similar to "Existing support bundles" so that the use can download it
-        return HttpResponses.ok();
-    }
-
-    @RequirePOST
     public HttpResponse doDeleteBundles(StaplerRequest2 req) throws ServletException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {

@@ -22,12 +22,10 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" 
-         xmlns:st="jelly:stapler" 
-         xmlns:l="/lib/layout"
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <l:layout title="${it.actionTitle}" norefresh="true" permission="${app.ADMINISTER}">
-        <st:include page="sidepanel.jelly" it="${it.object}"/>
+    <l:layout title="${it.actionTitleText}" norefresh="true" permission="${app.ADMINISTER}">
+        <st:include page="sidepanel.jelly" it="${app}"/>
         <l:main-panel>
             <h1>
                 <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
@@ -37,12 +35,12 @@
                 ${it.actionBlurb}
             </p>
             <p>
-                Click on Generate Bundle to download the Run information in a zip file
+                ${%detail}
             </p>
             <j:if test="${it.anonymized}">
                 <p>
                     Support bundle anonymization is enabled. View
-                    <a href="${rootURL}/anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
+                    <a href="../anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
                     <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
                 </p>
             </j:if>
@@ -52,14 +50,47 @@
                     <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
                 </p>
             </j:if>
-            <f:form name="bundle-contents" method="POST" action="generateAndDownload">
-                <f:descriptorList descriptors="${it.applicableComponentsDescriptors}"
-                                  field="components"
-                                  instances="${it.defaultComponentsDescriptors}"/>
+            <f:form name="bundle-contents" method="POST" action="generateAllBundles">
+                <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
+                    <section class="jenkins-section jenkins-section__bottom-padding">
+                        <h2 class="jenkins-section__title">${category.key.label}</h2>
+                        <div class="jenkins-section__items">
+                            <j:forEach var="component" items="${category.value}">
+                                <div name="components" class="jenkins-section__item">
+                                    <j:if test="${component.enabled}">
+                                        <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}"/>
+                                    </j:if>
+                                    <j:if test="${!component.enabled}">
+                                        <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" readOnlyMode="true"/>
+                                    </j:if>
+                                    <input type="hidden" name="name" value="${component.id}"/>
+                                </div>
+                            </j:forEach>
+                        </div>
+                    </section>
+                </j:forEach>
                 <f:entry>
                     <f:submit value="${%Generate Bundle}"/>
                 </f:entry>
             </f:form>
+            <f:section title="${%Existing support bundles}">
+
+                <f:form name="bundle-contents" method="POST">
+                    <j:forEach var="bundle" items="${it.bundles}">
+                        <f:entry field="bundle">
+                            <div name="bundles">
+                                <f:checkbox name="selected" checked="false"
+                                            title="${bundle}"/>
+                                <input style="display:none" name="name" value="${bundle}"/>
+                            </div>
+                        </f:entry>
+                    </j:forEach>
+                    <f:entry>
+                        <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
+                        <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
+                    </f:entry>
+                </f:form>
+            </f:section>
         </l:main-panel>
     </l:layout>
 </j:jelly>
