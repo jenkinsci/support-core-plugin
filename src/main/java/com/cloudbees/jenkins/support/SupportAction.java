@@ -450,11 +450,6 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         @Override
         protected void compute() throws Exception {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             logger.fine("Parsing request...");
             Set<String> remove = new HashSet<>();
             for (Selection s : selections) {
