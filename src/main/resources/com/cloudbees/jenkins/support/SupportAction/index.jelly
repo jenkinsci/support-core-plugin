@@ -75,21 +75,21 @@
       </f:form>
       <f:section title="${%Existing support bundles}">
 
-        <f:form name="bundle-contents" method="POST">
-          <j:forEach var="bundle" items="${it.bundles}">
-            <f:entry field="bundle">
-              <div name="bundles">
-                <f:checkbox name="selected" checked="false"
-                            title="${bundle}"/>
-                <input style="display:none" name="name" value="${bundle}"/>
-              </div>
-            </f:entry>
-          </j:forEach>
-          <f:entry>
-            <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
-            <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
+      <f:form name="bundle-contents" method="POST">
+        <j:forEach var="bundle" items="${it.bundles}">
+          <f:entry field="bundle">
+          <div name="bundles">
+          <f:checkbox name="selected" checked="false"
+                      title="${bundle}"/>
+            <input style="display:none" name="name" value="${bundle}"/>
+          </div>
           </f:entry>
-        </f:form>
+        </j:forEach>
+        <f:entry>
+          <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
+          <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
+        </f:entry>
+      </f:form>
       </f:section>
     </l:main-panel>
   </l:layout>
