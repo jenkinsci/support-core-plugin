@@ -3,8 +3,7 @@
          xmlns:st="jelly:stapler"
          xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}">
-        <st:include page="sidepanel.jelly" />
+    <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}" type="one-column">
         <l:main-panel>
             <l:app-bar title="${it.displayName}" />
             <div class="behavior-loading">${%LOADING}</div>
