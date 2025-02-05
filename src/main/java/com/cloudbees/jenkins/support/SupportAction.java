@@ -100,7 +100,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public String getIconFileName() {
-        return "/plugin/support-core/images/support.svg";
+        return "symbol-support plugin-support-core";
     }
 
     public String getDisplayName() {

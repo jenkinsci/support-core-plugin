@@ -6,11 +6,7 @@
     <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}">
         <st:include page="sidepanel.jelly" />
         <l:main-panel>
-            <h1>
-                <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
-                ${it.displayName}
-            </h1>
-            <p/>
+            <l:app-bar title="${it.displayName}" />
             <div class="behavior-loading">${%LOADING}</div>
             <f:form name="config" method="POST" action="configure">
                 <j:set var="instance" value="${it}"/>

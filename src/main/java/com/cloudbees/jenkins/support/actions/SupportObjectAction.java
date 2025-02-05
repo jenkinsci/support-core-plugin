@@ -64,7 +64,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
 
     @Override
     public String getIconFileName() {
-        return "/plugin/support-core/images/support.svg";
+        return "symbol-support plugin-support-core";
     }
 
     protected String getBundleNameQualifier() {
