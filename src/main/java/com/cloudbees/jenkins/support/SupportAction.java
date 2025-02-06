@@ -341,7 +341,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(SC_BAD_REQUEST);
-            return new HttpRedirect("support");
+            return HttpResponses.redirectTo("angry-jenkins");
         }
         logger.fine("Parsing request...");
         Set<String> remove = new HashSet<>();
@@ -390,7 +390,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             throws IOException {
         if (components == null) {
             rsp.sendError(SC_BAD_REQUEST, "components parameter is mandatory");
-            return new HttpRedirect("support");
+            return HttpResponses.redirectTo("angry-jenkins");
         }
         Set<String> componentNames = Arrays.stream(components.split(",")).collect(Collectors.toSet());
 
@@ -419,7 +419,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 .collect(Collectors.toList());
         if (selectedComponents.isEmpty()) {
             rsp.sendError(SC_BAD_REQUEST, "selected component list is empty");
-            return new HttpRedirect("support");
+            return HttpResponses.redirectTo("angry-jenkins");
         }
         initializeComponentRequestContext(selectedComponents);
 
@@ -504,7 +504,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     public ProgressiveRendering getGenerateSupportBundle(@QueryParameter String taskId) throws Exception {
         ProgressiveRendering progressiveRendering = generatorMap.get(UUID.fromString(taskId));
         if (progressiveRendering == null) {
-            throw new IllegalStateException("No task found for taskId: " + taskId);
+            throw new Failure("No task found for taskId: " + taskId);
         }
 
         if (Main.isUnitTest) {
