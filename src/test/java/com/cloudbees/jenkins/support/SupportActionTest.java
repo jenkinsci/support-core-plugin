@@ -32,6 +32,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,12 +47,12 @@ import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.htmlunit.HttpMethod;
-import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,6 +69,10 @@ import org.xml.sax.SAXException;
  * @author Kohsuke Kawaguchi
  */
 public class SupportActionTest {
+
+    private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
+            Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -309,11 +314,17 @@ public class SupportActionTest {
     }
 
     private ZipFile downloadBundle(String s) throws IOException, SAXException {
-        JenkinsRule.JSONWebResponse jsonWebResponse = j.postJSON(root.getUrlName() + s, "");
-        File zipFile = File.createTempFile("test", "zip");
-        IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
-        return new ZipFile(zipFile);
-        // Zip file is valid
+        j.postJSON(root.getUrlName() + s, "");
+        try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+            File zipFile = paths.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().equals("support-bundle.zip"))
+                    .map(Path::toFile)
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("No files found in the directory"));
+            return new ZipFile(zipFile);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Test
@@ -369,9 +380,18 @@ public class SupportActionTest {
 
             HtmlForm form = p.getFormByName("bundle-contents");
             HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
-            Page zip = submit.click();
+            submit.click();
+
             File zipFile = File.createTempFile("test", "zip");
-            IOUtils.copy(zip.getWebResponse().getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
+            try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+                zipFile = paths.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().equals("support-bundle.zip"))
+                        .map(Path::toFile)
+                        .findFirst()
+                        .orElseThrow(() -> new IOException("No files found in the directory"));
+            } catch (IOException e) {
+                zipFile = null;
+            }
 
             ZipFile z = new ZipFile(zipFile);
 
@@ -593,6 +613,25 @@ public class SupportActionTest {
     private void assertBundleNotContains(ZipFile zip, Collection<String> fileNames) {
         for (String file : fileNames) {
             assertNull(file + " was found in the bundle", zip.getEntry(file));
+        }
+    }
+
+    @After
+    public void cleanUp() {
+        try {
+            if (Files.exists(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+                try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+                    paths.filter(Files::isRegularFile).forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

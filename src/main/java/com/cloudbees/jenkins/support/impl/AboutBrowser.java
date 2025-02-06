@@ -37,9 +37,22 @@ public class AboutBrowser extends Component {
         return Collections.emptySet();
     }
 
+    private Area screenResolution;
+    private StaplerRequest2 currentRequest;
+
+    public void setScreenResolution(Area screenResolution) {
+        this.screenResolution = screenResolution;
+    }
+
+    public void setCurrentRequest(StaplerRequest2 currentRequest) {
+        this.currentRequest = currentRequest;
+    }
+
     @Override
     public void addContents(@NonNull Container result) {
-        final StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
+        if (currentRequest == null) {
+            currentRequest = Stapler.getCurrentRequest2();
+        }
         if (currentRequest != null) {
             result.add(new PrintedContent("browser.md") {
                 @Override
@@ -48,7 +61,10 @@ public class AboutBrowser extends Component {
                     out.println("=======");
                     out.println();
 
-                    Area screenResolution = Functions.getScreenResolution();
+                    if (screenResolution == null) {
+                        screenResolution = Functions.getScreenResolution();
+                    }
+
                     if (screenResolution != null) {
                         out.println("  * Screen size: " + screenResolution.toString());
                     }

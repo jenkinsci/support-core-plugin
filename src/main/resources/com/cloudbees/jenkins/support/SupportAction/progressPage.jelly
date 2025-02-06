@@ -8,7 +8,7 @@
         </style>
         <l:main-panel>
             <h2>Generating Support Bundle</h2>
-            <p>Generating a support bundle for this Jenkins instance. This may take a few minutes.</p>
+            <p id="progressMessage">Generating a support bundle for this Jenkins instance. This may take a few minutes.</p>
             <l:progressiveRendering handler="${it.getGenerateSupportBundle(request.getParameter('taskId'))}" callback="updateProgressUI">
 
             </l:progressiveRendering>
@@ -21,6 +21,7 @@
                 if (data.isCompleted === true) {
                     downloadButton.style.display = "block";
                     downloadButton.href = "downloadBundle?taskId=" + data.taskId; // Update this path accordingly
+                    document.getElementById("progressMessage").textContent = "Support bundle has been generated.";
                 }
             }
         </script>
