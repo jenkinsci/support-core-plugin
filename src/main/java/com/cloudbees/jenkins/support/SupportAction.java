@@ -412,7 +412,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             componentNames.add("AgentsJVMProcessSystemMetricsContents");
             componentNames.add("AgentsSystemConfiguration");
         }
-        
+
         logger.fine("Selecting components...");
         List<Component> selectedComponents = getComponents().stream()
                 .filter(c -> componentNames.contains(c.getId()))
