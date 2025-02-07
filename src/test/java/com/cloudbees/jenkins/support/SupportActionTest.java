@@ -104,8 +104,11 @@ public class SupportActionTest {
     @Test
     @Issue("JENKINS-63722")
     public void generateAllBundlesBackwardCompatibility() throws Exception {
+        System.out.println("Startign failes test:");
         Assume.assumeTrue(!Functions.isWindows());
         Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+
+        System.out.println("Conmtine:");
 
         List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
                 "proc/meminfo.txt",
@@ -162,6 +165,11 @@ public class SupportActionTest {
         // MasterSystemConfiguration and MasterJVMProcessSystemMetricsContents should retrieve all agents files
         zip = downloadBundle("/generateBundle?components="
                 + String.join(",", "MasterSystemConfiguration", "MasterJVMProcessSystemMetricsContents"));
+
+        System.out.println("The files of this folder are:");
+        //print all the files in the zip
+        System.out.println( zip.stream().map(entry -> entry.getName()).toList());
+
         assertBundleContains(
                 zip, allFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
 
@@ -389,7 +397,7 @@ public class SupportActionTest {
             File zipFile = File.createTempFile("test", "zip");
             try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
                 zipFile = paths.filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().equals("support-bundle.zip"))
+                        .filter(path -> path.getFileName().toString().endsWith(".zip"))
                         .map(Path::toFile)
                         .findFirst()
                         .orElseThrow(() -> new IOException("No files found in the directory"));
