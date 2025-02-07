@@ -110,7 +110,6 @@ public class SupportAction implements RootAction, StaplerProxy {
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
 
-    private static final String SUPPORT_BUNDLE_FILE_NAME = "support-bundle.zip";
     private static final String SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"))
             .resolve("support-bundle")
             .toString();
@@ -519,7 +518,8 @@ public class SupportAction implements RootAction, StaplerProxy {
         private UUID taskId;
         private boolean isCompleted;
         private String pathToBundle;
-        List<Component> components;
+        private List<Component> components;
+        private String supportBundleFileName;
 
         public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components) {
             this.taskId = taskId;
@@ -542,8 +542,10 @@ public class SupportAction implements RootAction, StaplerProxy {
 
             logger.fine("Generating support bundle...");
 
+            supportBundleFileName = BundleFileName.generate();
+
             try (FileOutputStream fileOutputStream =
-                    new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
+                    new FileOutputStream(new File(outputDir, supportBundleFileName))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
@@ -559,7 +561,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
 
             progress(1);
-            pathToBundle = outputDir.getAbsolutePath() + "/" + SUPPORT_BUNDLE_FILE_NAME;
+            pathToBundle = outputDir.getAbsolutePath() + "/" + supportBundleFileName;
             isCompleted = true;
         }
 
@@ -573,17 +575,23 @@ public class SupportAction implements RootAction, StaplerProxy {
             json.put("taskId", String.valueOf(taskId));
             return json;
         }
+
+        public String getSupportBundleFileName() {
+            return supportBundleFileName;
+        }
     }
 
     public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
-        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + SUPPORT_BUNDLE_FILE_NAME);
+        String supportBundleFileName = generatorMap.get(UUID.fromString(taskId)).getSupportBundleFileName();
+
+        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + supportBundleFileName);
         if (!bundleFile.exists()) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");
             return;
         }
 
         rsp.setContentType("application/zip");
-        rsp.addHeader("Content-Disposition", "attachment; filename=" + SUPPORT_BUNDLE_FILE_NAME);
+        rsp.addHeader("Content-Disposition", "attachment; filename=" + supportBundleFileName);
         try (ServletOutputStream outputStream = rsp.getOutputStream();
                 FileInputStream inputStream = new FileInputStream(bundleFile)) {
             IOUtils.copy(inputStream, outputStream);

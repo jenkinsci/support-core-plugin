@@ -70,6 +70,8 @@ import org.xml.sax.SAXException;
  */
 public class SupportActionTest {
 
+    private static final Logger LOGGER = Logger.getLogger(SupportActionTest.class.getName());
+
     private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
             Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
 
@@ -129,6 +131,9 @@ public class SupportActionTest {
 
         // Master should retrieve all files (backward compatibility)
         ZipFile zip = downloadBundle("/generateBundle?components=" + String.join(",", "Master"));
+
+        //print all the files in the zip
+        System.out.println( zip.stream().map(entry -> entry.getName()).toList());
         assertBundleContains(
                 zip, allFiles.stream().map(s -> "nodes/master/" + s).collect(Collectors.toList()));
 
@@ -317,8 +322,7 @@ public class SupportActionTest {
         j.postJSON(root.getUrlName() + s, "");
         try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
             File zipFile = paths.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().equals("support-bundle.zip"))
-                    .map(Path::toFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".zip"))                    .map(Path::toFile)
                     .findFirst()
                     .orElseThrow(() -> new IOException("No files found in the directory"));
             return new ZipFile(zipFile);
