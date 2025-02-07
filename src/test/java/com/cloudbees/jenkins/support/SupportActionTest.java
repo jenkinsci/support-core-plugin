@@ -98,7 +98,9 @@ public class SupportActionTest {
 
     @Test
     public void generateAllBundles() throws IOException, SAXException {
-        downloadBundle("/generateAllBundles?json={\"components\":1}");
+        ZipFile  supportBundle = downloadBundleAsync("/generateAllBundles?json={\"components\":1}");
+        assertNotNull(supportBundle.getEntry("manifest.md"));
+        cleanUp();
     }
 
     @Test
@@ -316,6 +318,14 @@ public class SupportActionTest {
     }
 
     private ZipFile downloadBundle(String s) throws IOException, SAXException {
+        JenkinsRule.JSONWebResponse jsonWebResponse = j.postJSON(root.getUrlName() + s, "");
+        File zipFile = File.createTempFile("test", "zip");
+        IOUtils.copy(jsonWebResponse.getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
+        return new ZipFile(zipFile);
+        // Zip file is valid
+    }
+
+    private ZipFile downloadBundleAsync(String s) throws IOException, SAXException {
         j.postJSON(root.getUrlName() + s, "");
         try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
             File zipFile = paths.filter(Files::isRegularFile)
@@ -383,7 +393,7 @@ public class SupportActionTest {
             HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
             submit.click();
 
-            File zipFile = File.createTempFile("test", "zip");
+            File zipFile;
             try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
                 zipFile = paths.filter(Files::isRegularFile)
                         .filter(path -> path.getFileName().toString().endsWith(".zip"))
@@ -435,6 +445,7 @@ public class SupportActionTest {
                     fail(r.getMessage());
                 }
             }
+            cleanUp();
         }
     }
 
@@ -617,7 +628,6 @@ public class SupportActionTest {
         }
     }
 
-    @After
     public void cleanUp() {
         try {
             if (Files.exists(SUPPORT_BUNDLE_CREATION_FOLDER)) {
