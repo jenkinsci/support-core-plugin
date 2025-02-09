@@ -345,7 +345,7 @@ public class SupportActionTest {
         int waitTime = 500;
         File zipFile;
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         while (retryCount < maxRetries) {
             try {
                 // Check if the download link is present
