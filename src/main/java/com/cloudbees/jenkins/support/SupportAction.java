@@ -34,7 +34,6 @@ import com.cloudbees.jenkins.support.impl.ReverseProxy;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Functions;
-import hudson.Main;
 import hudson.model.Api;
 import hudson.model.Failure;
 import hudson.model.RootAction;
@@ -43,6 +42,7 @@ import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -66,8 +66,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import jakarta.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import jenkins.util.ProgressiveRendering;
 import jenkins.util.Timer;
@@ -110,10 +108,11 @@ public class SupportAction implements RootAction, StaplerProxy {
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
 
     private static final String SUPPORT_BUNDLE_FILE_NAME = "support-bundle.zip";
-    private static final String SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle").toString();
+    private static final String SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"))
+            .resolve("support-bundle")
+            .toString();
 
     private static final Map<UUID, SupportBundleAsyncGenerator> generatorMap = new ConcurrentHashMap<>();
-
 
     @Override
     @Restricted(NoExternalUse.class)
@@ -345,7 +344,6 @@ public class SupportAction implements RootAction, StaplerProxy {
         prepareBundle(rsp, components);
     }
 
-
     /**
      * Generates a support bundle with selected components from the UI. in async
      * @param req The stapler request
@@ -354,7 +352,8 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public HttpRedirect doGenerateAllBundlesAsync(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
+    public HttpRedirect doGenerateAllBundlesAsync(StaplerRequest2 req, StaplerResponse2 rsp)
+            throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
             rsp.sendError(SC_BAD_REQUEST);
@@ -362,15 +361,15 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
         final List<Component> components = getComponents(req, json);
 
-        for(Component component:components ){
-            if(component instanceof AboutBrowser){
+        for (Component component : components) {
+            if (component instanceof AboutBrowser) {
                 AboutBrowser aboutBrowser = (AboutBrowser) component;
                 aboutBrowser.setScreenResolution(Functions.getScreenResolution());
                 aboutBrowser.setCurrentRequest(Stapler.getCurrentRequest2());
                 aboutBrowser.setGeneratedAsync(true);
             }
 
-            if(component instanceof ReverseProxy){
+            if (component instanceof ReverseProxy) {
                 ReverseProxy reverseProxy = (ReverseProxy) component;
                 reverseProxy.setCurrentRequest(Stapler.getCurrentRequest2());
             }
@@ -378,7 +377,7 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         UUID taskId = UUID.randomUUID();
         SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
-        supportBundleAsyncGenerator.init(taskId,components);
+        supportBundleAsyncGenerator.init(taskId, components);
         generatorMap.put(taskId, supportBundleAsyncGenerator);
 
         return new HttpRedirect("progressPage?taskId=" + taskId);
@@ -511,7 +510,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         return generatorMap.get(UUID.fromString(taskId));
     }
 
-    public static class SupportBundleAsyncGenerator extends ProgressiveRendering{
+    public static class SupportBundleAsyncGenerator extends ProgressiveRendering {
         private final Logger logger = Logger.getLogger(SupportBundleAsyncGenerator.class.getName());
         private UUID taskId;
         private boolean isCompleted;
@@ -519,7 +518,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         private List<Component> components;
         private boolean supportBundleGenerationInProgress = false;
 
-        public SupportBundleAsyncGenerator init( UUID taskId,List<Component> components) {
+        public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components) {
             this.taskId = taskId;
             this.components = components;
             return this;
@@ -527,15 +526,18 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         @Override
         protected void compute() throws Exception {
-            if(!supportBundleGenerationInProgress) {
+            if (!supportBundleGenerationInProgress) {
                 this.supportBundleGenerationInProgress = true;
-                logger.info("Generating support bundle... task id "+ taskId);
+                logger.info("Generating support bundle... task id " + taskId);
                 File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
                 if (!outputDir.exists()) {
-                    outputDir.mkdirs();
+                    if (!outputDir.mkdirs()) {
+                        throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
+                    }
                 }
 
-                try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
+                try (FileOutputStream fileOutputStream =
+                        new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
                     SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                     try {
                         try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
@@ -568,17 +570,17 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
     }
 
-
     public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
-        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/"+SUPPORT_BUNDLE_FILE_NAME);
+        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + SUPPORT_BUNDLE_FILE_NAME);
         if (!bundleFile.exists()) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");
             return;
         }
 
         rsp.setContentType("application/zip");
-        rsp.addHeader("Content-Disposition", "attachment; filename="+SUPPORT_BUNDLE_FILE_NAME);
-        try (ServletOutputStream outputStream = rsp.getOutputStream(); FileInputStream inputStream = new FileInputStream(bundleFile)) {
+        rsp.addHeader("Content-Disposition", "attachment; filename=" + SUPPORT_BUNDLE_FILE_NAME);
+        try (ServletOutputStream outputStream = rsp.getOutputStream();
+                FileInputStream inputStream = new FileInputStream(bundleFile)) {
             IOUtils.copy(inputStream, outputStream);
         }
 
@@ -586,7 +588,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         Timer.get()
                 .schedule(
                         () -> {
-                            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER+ "/"  + taskId);
+                            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
 
                             try {
                                 FileUtils.deleteDirectory(outputDir);

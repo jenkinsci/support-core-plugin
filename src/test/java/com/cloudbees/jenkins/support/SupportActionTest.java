@@ -97,7 +97,6 @@ public class SupportActionTest {
         downloadBundle("/download?json={\"components\":1}");
     }
 
-
     @Test
     public void generateAllBundles() throws IOException, SAXException {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
@@ -105,7 +104,7 @@ public class SupportActionTest {
 
     @Test
     public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
-        ZipFile  supportBundle = downloadSupportBundleByButtonClick();
+        ZipFile supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
         cleanUp();
     }
