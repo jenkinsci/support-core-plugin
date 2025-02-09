@@ -342,10 +342,9 @@ public class SupportActionTest {
         HtmlAnchor downloadLink = null;
         int maxRetries = 10;
         int retryCount = 0;
-        int waitTime = 500;
+        int waitTime = 1000;
         File zipFile;
 
-        Thread.sleep(5000);
         while (retryCount < maxRetries) {
             try {
                 // Check if the download link is present
@@ -355,8 +354,8 @@ public class SupportActionTest {
                 }
             } catch (ElementNotFoundException e) {
                 // If the link is not found, wait and retry
-                Thread.sleep(waitTime);
                 page = (HtmlPage) page.refresh();
+                Thread.sleep(waitTime);
                 retryCount++;
             }
         }

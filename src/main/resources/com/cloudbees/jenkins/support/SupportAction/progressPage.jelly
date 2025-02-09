@@ -15,7 +15,6 @@
 
         <script>
             function updateProgressUI(data) {
-                console.log(data.isCompleted);
                 if (data.isCompleted === true) {
                     downloadButton.style.display = "block";
                     downloadButton.href = "downloadBundle?taskId=" + data.taskId; // Update this path accordingly

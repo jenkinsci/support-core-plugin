@@ -516,7 +516,8 @@ public class SupportAction implements RootAction, StaplerProxy {
         private UUID taskId;
         private boolean isCompleted;
         private String pathToBundle;
-        List<Component> components;
+        private List<Component> components;
+        private boolean supportBundleGenerationInProgress = false;
 
         public SupportBundleAsyncGenerator init( UUID taskId,List<Component> components) {
             this.taskId = taskId;
@@ -526,31 +527,34 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         @Override
         protected void compute() throws Exception {
-            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER +"/" +taskId);
-            if (!outputDir.exists()) {
-                outputDir.mkdirs();
-            }
+            if(!supportBundleGenerationInProgress) {
+                this.supportBundleGenerationInProgress = true;
+                logger.info("Generating support bundle... task id "+ taskId);
+                Thread.sleep(5000);
+                File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
+                if (!outputDir.exists()) {
+                    outputDir.mkdirs();
+                }
 
-            logger.fine("Generating support bundle...");
-
-            try(FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
-                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-                try {
-                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                        SupportPlugin.writeBundle(fileOutputStream, components);
-                    } catch (IOException e) {
-                        logger.log(Level.FINE, e.getMessage(), e);
+                try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
+                    SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
+                    try {
+                        try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+                            SupportPlugin.writeBundle(fileOutputStream, components);
+                        } catch (IOException e) {
+                            logger.log(Level.FINE, e.getMessage(), e);
+                        }
+                    } finally {
+                        SupportPlugin.clearRequesterAuthentication();
                     }
                 } finally {
-                    SupportPlugin.clearRequesterAuthentication();
+                    logger.fine("Response completed");
                 }
-            } finally {
-                logger.fine("Response completed");
-            }
 
-            progress(1);
-            pathToBundle = outputDir.getAbsolutePath() + "/"+SUPPORT_BUNDLE_FILE_NAME;
-            isCompleted = true;
+                pathToBundle = outputDir.getAbsolutePath() + "/" + SUPPORT_BUNDLE_FILE_NAME;
+                isCompleted = true;
+                progress(1);
+            }
         }
 
         @NonNull
