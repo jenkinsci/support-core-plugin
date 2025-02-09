@@ -46,13 +46,14 @@ import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
+import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -96,9 +97,15 @@ public class SupportActionTest {
         downloadBundle("/download?json={\"components\":1}");
     }
 
+
     @Test
     public void generateAllBundles() throws IOException, SAXException {
-        ZipFile  supportBundle = downloadBundleAsync("/generateAllBundles?json={\"components\":1}");
+        downloadBundle("/generateAllBundles?json={\"components\":1}");
+    }
+
+    @Test
+    public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
+        ZipFile  supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
         cleanUp();
     }
@@ -325,17 +332,46 @@ public class SupportActionTest {
         // Zip file is valid
     }
 
-    private ZipFile downloadBundleAsync(String s) throws IOException, SAXException {
-        j.postJSON(root.getUrlName() + s, "");
-        try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-            File zipFile = paths.filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().endsWith(".zip"))                    .map(Path::toFile)
-                    .findFirst()
-                    .orElseThrow(() -> new IOException("No files found in the directory"));
-            return new ZipFile(zipFile);
-        } catch (IOException e) {
-            return null;
+    private ZipFile downloadSupportBundleByButtonClick() throws IOException, SAXException, InterruptedException {
+        WebClient wc = j.createWebClient();
+        HtmlPage p = wc.goTo(root.getUrlName());
+        HtmlForm form = p.getFormByName("bundle-contents");
+        HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
+        HtmlPage page = submit.click();
+
+        HtmlAnchor downloadLink = null;
+        int maxRetries = 10;
+        int retryCount = 0;
+        int waitTime = 500;
+        File zipFile;
+
+        Thread.sleep(1000);
+        while (retryCount < maxRetries) {
+            try {
+                // Check if the download link is present
+                downloadLink = page.getAnchorByText("Download Support Bundle");
+                if (downloadLink != null) {
+                    break;
+                }
+            } catch (ElementNotFoundException e) {
+                // If the link is not found, wait and retry
+                Thread.sleep(waitTime);
+                page = (HtmlPage) page.refresh();
+                retryCount++;
+            }
         }
+
+        if (downloadLink != null) {
+            // Download the zip file
+            WebResponse response = downloadLink.click().getWebResponse();
+            zipFile = File.createTempFile("downloaded", ".zip");
+            try (OutputStream os = Files.newOutputStream(zipFile.toPath())) {
+                IOUtils.copy(response.getContentAsStream(), os);
+            }
+        } else {
+            throw new IOException("Download link not found after " + maxRetries + " retries");
+        }
+        return new ZipFile(zipFile);
     }
 
     @Test
@@ -386,25 +422,7 @@ public class SupportActionTest {
         logger.addHandler(checker);
 
         try {
-            WebClient wc = j.createWebClient();
-            HtmlPage p = wc.goTo(root.getUrlName());
-
-            HtmlForm form = p.getFormByName("bundle-contents");
-            HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
-            submit.click();
-
-            File zipFile;
-            try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-                zipFile = paths.filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().endsWith(".zip"))
-                        .map(Path::toFile)
-                        .findFirst()
-                        .orElseThrow(() -> new IOException("No files found in the directory"));
-            } catch (IOException e) {
-                zipFile = null;
-            }
-
-            ZipFile z = new ZipFile(zipFile);
+            ZipFile z = downloadSupportBundleByButtonClick();
 
             // check the presence of files
             // TODO: emit some log entries and see if it gets captured here

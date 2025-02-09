@@ -367,6 +367,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 AboutBrowser aboutBrowser = (AboutBrowser) component;
                 aboutBrowser.setScreenResolution(Functions.getScreenResolution());
                 aboutBrowser.setCurrentRequest(Stapler.getCurrentRequest2());
+                aboutBrowser.setGeneratedAsync(true);
             }
 
             if(component instanceof ReverseProxy){
@@ -507,16 +508,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public ProgressiveRendering getGenerateSupportBundle(@QueryParameter String taskId) throws Exception {
-        ProgressiveRendering progressiveRendering = generatorMap.get(UUID.fromString(taskId));
-        if(progressiveRendering == null){
-            throw new IllegalStateException("No task found for taskId: " + taskId);
-        }
-
-        if(Main.isUnitTest){
-            ((SupportBundleAsyncGenerator) progressiveRendering).startForTest();
-        }
-
-        return progressiveRendering;
+        return generatorMap.get(UUID.fromString(taskId));
     }
 
     public static class SupportBundleAsyncGenerator extends ProgressiveRendering{
@@ -530,10 +522,6 @@ public class SupportAction implements RootAction, StaplerProxy {
             this.taskId = taskId;
             this.components = components;
             return this;
-        }
-
-        public void startForTest() throws Exception {
-            this.compute();
         }
 
         @Override

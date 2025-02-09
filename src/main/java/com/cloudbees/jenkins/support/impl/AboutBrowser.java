@@ -39,6 +39,7 @@ public class AboutBrowser extends Component {
 
     private Area screenResolution;
     private StaplerRequest2 currentRequest;
+    private boolean isGeneratedAsync;
 
     public void setScreenResolution(Area screenResolution) {
         this.screenResolution = screenResolution;
@@ -46,6 +47,10 @@ public class AboutBrowser extends Component {
 
     public void setCurrentRequest(StaplerRequest2 currentRequest) {
         this.currentRequest = currentRequest;
+    }
+
+    public void setGeneratedAsync(boolean isGeneratedAsync) {
+        this.isGeneratedAsync = isGeneratedAsync;
     }
 
     @Override
@@ -61,7 +66,7 @@ public class AboutBrowser extends Component {
                     out.println("=======");
                     out.println();
 
-                    if (screenResolution == null) {
+                    if (!isGeneratedAsync) {
                         screenResolution = Functions.getScreenResolution();
                     }
 
