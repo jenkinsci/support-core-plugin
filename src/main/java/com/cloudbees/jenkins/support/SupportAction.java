@@ -530,7 +530,6 @@ public class SupportAction implements RootAction, StaplerProxy {
             if(!supportBundleGenerationInProgress) {
                 this.supportBundleGenerationInProgress = true;
                 logger.info("Generating support bundle... task id "+ taskId);
-                Thread.sleep(5000);
                 File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
                 if (!outputDir.exists()) {
                     outputDir.mkdirs();
