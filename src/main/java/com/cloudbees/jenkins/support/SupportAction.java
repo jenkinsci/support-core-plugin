@@ -33,8 +33,6 @@ import hudson.Extension;
 import hudson.model.Api;
 import hudson.model.Failure;
 import hudson.model.RootAction;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
@@ -397,18 +395,10 @@ public class SupportAction implements RootAction, StaplerProxy {
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-            try {
-                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
-                } catch (IOException e) {
-                    logger.log(Level.FINE, e.getMessage(), e);
-                }
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
-            }
-        } finally {
+            SupportPlugin.writeBundle(servletOutputStream, components);
             logger.fine("Response completed");
+        } catch (IOException e) {
+            logger.log(Level.FINE, e.getMessage(), e);
         }
     }
 

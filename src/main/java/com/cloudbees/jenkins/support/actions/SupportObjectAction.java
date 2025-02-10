@@ -13,8 +13,6 @@ import hudson.model.AbstractModelObject;
 import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import hudson.util.DescribableList;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -139,21 +137,15 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                 "Content-Disposition", "inline; filename=" + BundleFileName.generate(getBundleNameQualifier()) + ";");
 
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-            try (ACLContext old = ACL.as2(ACL.SYSTEM2)) {
-                SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
-                    @Override
-                    public <C extends Component> void visit(Container container, C component) {
-                        ((ObjectComponent<T>) component).addContents(container, object);
-                    }
-                });
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
-            }
-        } finally {
+            SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
+                @Override
+                public <C extends Component> void visit(Container container, C component) {
+                    ((ObjectComponent<T>) component).addContents(container, object);
+                }
+            });
             LOGGER.fine("Response completed");
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
     }
 
