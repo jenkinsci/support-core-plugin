@@ -527,6 +527,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         @Override
         protected void compute() throws Exception {
             if (supportBundleGenerationInProgress) {
+                logger.fine("Support bundle generation already in progress, for task id " + taskId);
                 return;
             }
             this.supportBundleName = BundleFileName.generate();
@@ -539,8 +540,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 }
             }
 
-            try (FileOutputStream fileOutputStream =
-                    new FileOutputStream(new File(outputDir, supportBundleName))) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
@@ -558,7 +558,6 @@ public class SupportAction implements RootAction, StaplerProxy {
             pathToBundle = outputDir.getAbsolutePath() + "/" + supportBundleName;
             isCompleted = true;
             progress(1);
-
         }
 
         @NonNull
@@ -577,7 +576,8 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
-        String supportBundleName = generatorByTaskId.get(UUID.fromString(taskId)).getSupportBundleName();
+        String supportBundleName =
+                generatorByTaskId.get(UUID.fromString(taskId)).getSupportBundleName();
         File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + supportBundleName);
         if (!bundleFile.exists()) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");
