@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -38,6 +39,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -70,8 +73,6 @@ import org.xml.sax.SAXException;
  * @author Kohsuke Kawaguchi
  */
 public class SupportActionTest {
-
-    private static final Logger LOGGER = Logger.getLogger(SupportActionTest.class.getName());
 
     private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
             Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
@@ -106,7 +107,7 @@ public class SupportActionTest {
     public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
         ZipFile supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
-        cleanUp();
+        cleanUpSupportBundleInTempFolder();
     }
 
     @Test
@@ -340,25 +341,20 @@ public class SupportActionTest {
 
         HtmlAnchor downloadLink = null;
         int maxRetries = 10;
-        int retryCount = 0;
-        int waitTime = 1000;
         File zipFile;
+        AtomicReference<HtmlPage> pageRef = new AtomicReference<>(page);
 
-        while (retryCount < maxRetries) {
+        HtmlPage finalPage = page;
+        await().timeout(10, TimeUnit.SECONDS).until(() -> {
             try {
-                // Check if the download link is present
-                downloadLink = page.getAnchorByText("Download Support Bundle");
-                if (downloadLink != null) {
-                    break;
-                }
+                return pageRef.get().getAnchorByText("Download Support Bundle") != null;
             } catch (ElementNotFoundException e) {
-                // If the link is not found, wait and retry
-                page = (HtmlPage) page.refresh();
-                Thread.sleep(waitTime);
-                retryCount++;
+                pageRef.set((HtmlPage) pageRef.get().refresh());
+                return false;
             }
-        }
+        });
 
+        downloadLink = pageRef.get().getAnchorByText("Download Support Bundle");
         if (downloadLink != null) {
             // Download the zip file
             WebResponse response = downloadLink.click().getWebResponse();
@@ -461,7 +457,7 @@ public class SupportActionTest {
                     fail(r.getMessage());
                 }
             }
-            cleanUp();
+            cleanUpSupportBundleInTempFolder();
         }
     }
 
@@ -644,18 +640,19 @@ public class SupportActionTest {
         }
     }
 
-    public void cleanUp() {
+    public void cleanUpSupportBundleInTempFolder() {
         try {
-            if (Files.exists(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-                try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-                    paths.filter(Files::isRegularFile).forEach(path -> {
-                        try {
-                            Files.delete(path);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
+            if (!Files.exists(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+                return;
+            }
+            try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
+                paths.filter(Files::isRegularFile).forEach(path -> {
+                    try {
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

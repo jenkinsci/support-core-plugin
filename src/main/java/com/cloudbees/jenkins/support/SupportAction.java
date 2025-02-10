@@ -107,12 +107,11 @@ public class SupportAction implements RootAction, StaplerProxy {
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
 
-    private static final String SUPPORT_BUNDLE_FILE_NAME = "support-bundle.zip";
     private static final String SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"))
             .resolve("support-bundle")
             .toString();
 
-    private static final Map<UUID, SupportBundleAsyncGenerator> generatorMap = new ConcurrentHashMap<>();
+    private static final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
 
     @Override
     @Restricted(NoExternalUse.class)
@@ -378,7 +377,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         UUID taskId = UUID.randomUUID();
         SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
         supportBundleAsyncGenerator.init(taskId, components);
-        generatorMap.put(taskId, supportBundleAsyncGenerator);
+        generatorByTaskId.put(taskId, supportBundleAsyncGenerator);
 
         return new HttpRedirect("progressPage?taskId=" + taskId);
     }
@@ -506,8 +505,8 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
     }
 
-    public ProgressiveRendering getGenerateSupportBundle(@QueryParameter String taskId) throws Exception {
-        return generatorMap.get(UUID.fromString(taskId));
+    public ProgressiveRendering getGeneratorByTaskId(@QueryParameter String taskId) throws Exception {
+        return generatorByTaskId.get(UUID.fromString(taskId));
     }
 
     public static class SupportBundleAsyncGenerator extends ProgressiveRendering {
@@ -517,6 +516,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         private String pathToBundle;
         private List<Component> components;
         private boolean supportBundleGenerationInProgress = false;
+        private String supportBundleName;
 
         public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components) {
             this.taskId = taskId;
@@ -526,36 +526,40 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         @Override
         protected void compute() throws Exception {
-            if (!supportBundleGenerationInProgress) {
-                this.supportBundleGenerationInProgress = true;
-                logger.info("Generating support bundle... task id " + taskId);
-                File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
-                if (!outputDir.exists()) {
-                    if (!outputDir.mkdirs()) {
-                        throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
-                    }
+            if (supportBundleGenerationInProgress) {
+                return;
+            }
+            this.supportBundleName = BundleFileName.generate();
+            this.supportBundleGenerationInProgress = true;
+//            Thread.sleep(6000);
+            logger.fine("Generating support bundle... task id " + taskId);
+            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
+            if (!outputDir.exists()) {
+                if (!outputDir.mkdirs()) {
+                    throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
                 }
+            }
 
-                try (FileOutputStream fileOutputStream =
-                        new FileOutputStream(new File(outputDir, SUPPORT_BUNDLE_FILE_NAME))) {
-                    SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-                    try {
-                        try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                            SupportPlugin.writeBundle(fileOutputStream, components);
-                        } catch (IOException e) {
-                            logger.log(Level.FINE, e.getMessage(), e);
-                        }
-                    } finally {
-                        SupportPlugin.clearRequesterAuthentication();
+            try (FileOutputStream fileOutputStream =
+                    new FileOutputStream(new File(outputDir, supportBundleName))) {
+                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
+                try {
+                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+                        SupportPlugin.writeBundle(fileOutputStream, components);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, e.getMessage(), e);
                     }
                 } finally {
-                    logger.fine("Response completed");
+                    SupportPlugin.clearRequesterAuthentication();
                 }
-
-                pathToBundle = outputDir.getAbsolutePath() + "/" + SUPPORT_BUNDLE_FILE_NAME;
-                isCompleted = true;
-                progress(1);
+            } finally {
+                logger.fine("Response completed");
             }
+
+            pathToBundle = outputDir.getAbsolutePath() + "/" + supportBundleName;
+            isCompleted = true;
+            progress(1);
+
         }
 
         @NonNull
@@ -564,21 +568,25 @@ public class SupportAction implements RootAction, StaplerProxy {
             JSONObject json = new JSONObject();
             json.put("isCompleted", isCompleted);
             json.put("pathToBundle", pathToBundle);
-            json.put("status", 1);
             json.put("taskId", String.valueOf(taskId));
             return json;
+        }
+
+        public String getSupportBundleName() {
+            return supportBundleName;
         }
     }
 
     public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
-        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + SUPPORT_BUNDLE_FILE_NAME);
+        String supportBundleName = generatorByTaskId.get(UUID.fromString(taskId)).getSupportBundleName();
+        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + supportBundleName);
         if (!bundleFile.exists()) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");
             return;
         }
 
         rsp.setContentType("application/zip");
-        rsp.addHeader("Content-Disposition", "attachment; filename=" + SUPPORT_BUNDLE_FILE_NAME);
+        rsp.addHeader("Content-Disposition", "attachment; filename=" + supportBundleName);
         try (ServletOutputStream outputStream = rsp.getOutputStream();
                 FileInputStream inputStream = new FileInputStream(bundleFile)) {
             IOUtils.copy(inputStream, outputStream);
@@ -592,7 +600,7 @@ public class SupportAction implements RootAction, StaplerProxy {
 
                             try {
                                 FileUtils.deleteDirectory(outputDir);
-                                generatorMap.remove(taskId);
+                                generatorByTaskId.remove(taskId);
                                 logger.fine(() -> "Cleaned up temporary directory " + outputDir);
 
                             } catch (IOException e) {
