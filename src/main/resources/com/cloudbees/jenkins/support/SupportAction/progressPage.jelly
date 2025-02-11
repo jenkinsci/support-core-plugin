@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
-    <l:layout title="Progress Page">
+    <l:layout title="Support bundle generation">
         <style>
             .app-progress-bar--animate {
                 width: 100%;
