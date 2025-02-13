@@ -27,8 +27,6 @@ public class ReverseProxy extends Component {
         UNKNOWN
     }
 
-    private StaplerRequest2 currentRequest;
-
     // [RFC 7239, section 4: Forwarded](https://tools.ietf.org/html/rfc7239#section-4) standard header.
     private static final String FORWARDED_HEADER = "Forwarded";
     // Non-standard headers.
@@ -43,6 +41,11 @@ public class ReverseProxy extends Component {
             X_FORWARDED_PROTO_HEADER,
             X_FORWARDED_HOST_HEADER,
             X_FORWARDED_PORT_HEADER);
+
+    @Override
+    public boolean canBeGeneratedAsync(){
+        return false;
+    }
 
     @NonNull
     @Override
@@ -63,9 +66,7 @@ public class ReverseProxy extends Component {
             protected void printTo(PrintWriter out) {
                 out.println("Reverse Proxy");
                 out.println("=============");
-                if (currentRequest == null) {
-                    currentRequest = getCurrentRequest();
-                }
+                StaplerRequest2 currentRequest = getCurrentRequest();
                 for (String forwardedHeader : FORWARDED_HEADERS) {
                     out.println(String.format(
                             " * Detected `%s` header: %s",
@@ -96,9 +97,5 @@ public class ReverseProxy extends Component {
 
     protected StaplerRequest2 getCurrentRequest() {
         return Stapler.getCurrentRequest2();
-    }
-
-    public void setCurrentRequest(StaplerRequest2 currentRequest) {
-        this.currentRequest = currentRequest;
     }
 }

@@ -143,7 +143,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
             try (ACLContext old = ACL.as2(ACL.SYSTEM2)) {
                 SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
                     @Override
-                    public <C extends Component> void visit(Container container, C component) {
+                    public <C extends Component> void visit(Container container, C component,double progress) {
                         ((ObjectComponent<T>) component).addContents(container, object);
                     }
                 });

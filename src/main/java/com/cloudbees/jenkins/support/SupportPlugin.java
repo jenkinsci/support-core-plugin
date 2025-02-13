@@ -97,6 +97,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.DoubleConsumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -354,8 +355,28 @@ public class SupportPlugin extends Plugin {
             throws IOException {
         writeBundle(outputStream, components, new ComponentVisitor() {
             @Override
-            public <T extends Component> void visit(Container container, T component) {
+            public <T extends Component> void visit(Container container, T component,double progress) {
                 component.addContents(container);
+            }
+        });
+    }
+
+    /**
+     * Generate a bundle for all components that are selected in the Global Configuration.
+     *
+     * @param outputStream an {@link OutputStream}
+     * @param components a list of {@link Component} to include in the bundle
+     * @param progressCallback a {@link DoubleConsumer} to report progress back to the UI
+     * @throws IOException if an error occurs while generating the bundle.
+     */
+    public static void writeBundle(OutputStream outputStream
+            , final List<? extends Component> components, DoubleConsumer progressCallback)
+            throws IOException {
+        writeBundle(outputStream, components, new ComponentVisitor() {
+            @Override
+            public <T extends Component> void visit(Container container, T component,double progress) {
+                component.addContents(container);
+                progressCallback.accept(progress);
             }
         });
     }
@@ -596,6 +617,8 @@ public class SupportPlugin extends Plugin {
 
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
+        int totalComponents = components.size() + 1;
+        int curerrentItration = 0;
         for (Component component : components) {
             try {
                 if (components.stream().anyMatch(c -> c.supersedes(component))) {
@@ -605,7 +628,9 @@ public class SupportPlugin extends Plugin {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
-                componentVisitor.visit(contentsContainer, component);
+                // Calculate progress
+                double progress = (curerrentItration++) / (double) totalComponents;
+                componentVisitor.visit(contentsContainer, component,progress);
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms" + " to process component "

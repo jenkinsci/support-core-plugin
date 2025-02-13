@@ -29,11 +29,9 @@ import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
-import com.cloudbees.jenkins.support.impl.AboutBrowser;
-import com.cloudbees.jenkins.support.impl.ReverseProxy;
+import com.cloudbees.jenkins.support.util.MergeZipFileUtil;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.Functions;
 import hudson.model.Api;
 import hudson.model.Failure;
 import hudson.model.RootAction;
@@ -110,6 +108,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     private static final String SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"))
             .resolve("support-bundle")
             .toString();
+    public static final String SYNC = "sync_";
 
     private static final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
 
@@ -360,25 +359,30 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
         final List<Component> components = getComponents(req, json);
 
-        for (Component component : components) {
-            if (component instanceof AboutBrowser) {
-                AboutBrowser aboutBrowser = (AboutBrowser) component;
-                aboutBrowser.setScreenResolution(Functions.getScreenResolution());
-                aboutBrowser.setCurrentRequest(Stapler.getCurrentRequest2());
-                aboutBrowser.setGeneratedAsync(true);
-            }
+        List<Component> syncComponent = components.stream().filter(c -> !c.canBeGeneratedAsync()).toList();
+        UUID taskId = UUID.randomUUID();
+        String supportBundleName = BundleFileName.generate();
 
-            if (component instanceof ReverseProxy) {
-                ReverseProxy reverseProxy = (ReverseProxy) component;
-                reverseProxy.setCurrentRequest(Stapler.getCurrentRequest2());
+        if(!syncComponent.isEmpty()){
+            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
+            if (!outputDir.exists()) {
+                if (!outputDir.mkdirs()) {
+                    throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
+                }
+            }
+            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC+supportBundleName))) {
+                SupportPlugin.writeBundle(fileOutputStream, syncComponent);
+            } finally {
+                logger.fine("Response completed");
+
             }
         }
 
-        UUID taskId = UUID.randomUUID();
-        SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
-        supportBundleAsyncGenerator.init(taskId, components);
-        generatorByTaskId.put(taskId, supportBundleAsyncGenerator);
 
+        SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
+        supportBundleAsyncGenerator.init(taskId, components.stream().filter(Component::canBeGeneratedAsync).toList()
+                ,supportBundleName, !syncComponent.isEmpty());
+        generatorByTaskId.put(taskId, supportBundleAsyncGenerator);
         return new HttpRedirect("progressPage?taskId=" + taskId);
     }
 
@@ -517,10 +521,13 @@ public class SupportAction implements RootAction, StaplerProxy {
         private List<Component> components;
         private boolean supportBundleGenerationInProgress = false;
         private String supportBundleName;
+        private boolean mergeSyncComponents;
 
-        public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components) {
+        public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components,String supportBundleName,boolean mergeSyncComponents) {
             this.taskId = taskId;
             this.components = components;
+            this.supportBundleName = supportBundleName;
+            this.mergeSyncComponents = mergeSyncComponents;
             return this;
         }
 
@@ -530,7 +537,6 @@ public class SupportAction implements RootAction, StaplerProxy {
                 logger.fine("Support bundle generation already in progress, for task id " + taskId);
                 return;
             }
-            this.supportBundleName = BundleFileName.generate();
             this.supportBundleGenerationInProgress = true;
             logger.fine("Generating support bundle... task id " + taskId);
             File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
@@ -541,23 +547,21 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
-                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-                try {
-                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                        SupportPlugin.writeBundle(fileOutputStream, components);
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, e.getMessage(), e);
-                    }
-                } finally {
-                    SupportPlugin.clearRequesterAuthentication();
-                }
+                SupportPlugin.writeBundle(fileOutputStream, components,this::progress);
             } finally {
                 logger.fine("Response completed");
             }
 
             pathToBundle = outputDir.getAbsolutePath() + "/" + supportBundleName;
-            isCompleted = true;
+            if(mergeSyncComponents){
+                MergeZipFileUtil.mergeZipFiles(outputDir.getAbsolutePath() +"/"+supportBundleName
+                        ,outputDir.getAbsolutePath() +"/"+SYNC+supportBundleName
+                        ,outputDir.getAbsolutePath() +"/"+"final_"+supportBundleName);
+
+                pathToBundle = outputDir.getAbsolutePath() +"/"+"final_"+supportBundleName;
+            }
             progress(1);
+            isCompleted = true;
         }
 
         @NonNull
@@ -578,6 +582,10 @@ public class SupportAction implements RootAction, StaplerProxy {
     public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
         String supportBundleName =
                 generatorByTaskId.get(UUID.fromString(taskId)).getSupportBundleName();
+        if(generatorByTaskId.get(UUID.fromString(taskId)).mergeSyncComponents){
+            supportBundleName = "final_"+supportBundleName;
+        }
+
         File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + supportBundleName);
         if (!bundleFile.exists()) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");

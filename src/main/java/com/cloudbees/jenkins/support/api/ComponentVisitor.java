@@ -12,5 +12,5 @@ public interface ComponentVisitor {
      * @param component the {@link Component} being visited
      * @param <T> must be a subclass of {@link Component}
      */
-    <T extends Component> void visit(Container container, T component);
+    <T extends Component> void visit(Container container, T component,double progress);
 }
