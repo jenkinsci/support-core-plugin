@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +38,14 @@ public class NodeExecutorsTest {
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
+
+    @After
+    public void stopAgents() throws Exception {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+    }
 
     @Test
     public void addContents() throws Exception {

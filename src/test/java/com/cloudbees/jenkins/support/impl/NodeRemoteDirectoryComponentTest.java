@@ -7,6 +7,7 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -18,6 +19,14 @@ public class NodeRemoteDirectoryComponentTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void stopAgents() throws Exception {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+    }
 
     /*
      * Test adding agent remote directory content with the defaults.

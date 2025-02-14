@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipFile;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,6 +28,14 @@ public class SmartLogCleanerTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
+
+    @After
+    public void stopAgents() throws Exception {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+    }
 
     @Test
     public void cleanUp() throws Exception {

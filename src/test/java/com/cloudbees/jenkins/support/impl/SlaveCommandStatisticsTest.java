@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -56,6 +57,14 @@ public class SlaveCommandStatisticsTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveComputer.class, Level.FINEST);
+
+    @After
+    public void stopAgents() throws Exception {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+    }
 
     @Test
     public void smokes() throws Exception {

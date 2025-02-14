@@ -29,6 +29,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
 import java.io.IOException;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -38,6 +39,14 @@ public class SensitiveContentFilterTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void stopAgents() throws Exception {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+    }
 
     @Issue("JENKINS-21670")
     @Test
