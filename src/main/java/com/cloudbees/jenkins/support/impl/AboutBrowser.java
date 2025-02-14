@@ -38,7 +38,7 @@ public class AboutBrowser extends Component {
     }
 
     @Override
-    public boolean canBeGeneratedAsync(){
+    public boolean canBeGeneratedAsync() {
         return false;
     }
 

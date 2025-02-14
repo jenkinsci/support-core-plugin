@@ -104,8 +104,8 @@ public class SupportAction implements RootAction, StaplerProxy {
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
 
-    private static final Path SUPPORT_BUNDLE_CREATION_FOLDER = Paths.get(System.getProperty("java.io.tmpdir"))
-            .resolve("support-bundle");
+    private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
+            Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
     public static final String SYNC_SUPPORT_BUNDLE = "support-bundle.zip";
 
     private static final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
@@ -358,11 +358,12 @@ public class SupportAction implements RootAction, StaplerProxy {
         final List<Component> components = getComponents(req, json);
         UUID taskId = UUID.randomUUID();
 
-        //There are some components that need the request components to be processed
-        //these components cannot be processed async
-        //so process them first and then process the other components async
-        List<Component> syncComponent = components.stream().filter(c -> !c.canBeGeneratedAsync()).toList();
-        if(!syncComponent.isEmpty()){
+        // There are some components that need the request components to be processed
+        // these components cannot be processed async
+        // so process them first and then process the other components async
+        List<Component> syncComponent =
+                components.stream().filter(c -> !c.canBeGeneratedAsync()).toList();
+        if (!syncComponent.isEmpty()) {
             File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
             if (!outputDir.exists()) {
                 if (!outputDir.mkdirs()) {
@@ -373,11 +374,10 @@ public class SupportAction implements RootAction, StaplerProxy {
                 SupportPlugin.writeBundle(fileOutputStream, syncComponent);
             } finally {
                 logger.fine("Response completed");
-
             }
         }
 
-        //Process the remaining components that can be process async
+        // Process the remaining components that can be process async
         SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
         supportBundleAsyncGenerator.init(taskId, components);
         generatorByTaskId.put(taskId, supportBundleAsyncGenerator);
@@ -544,7 +544,8 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
-                SupportPlugin.writeBundle(fileOutputStream, components,this::progress, Path.of(outputDir.getAbsolutePath()));
+                SupportPlugin.writeBundle(
+                        fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
             } finally {
                 logger.fine("Response completed");
             }

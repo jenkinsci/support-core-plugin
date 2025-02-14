@@ -43,7 +43,7 @@ public class ReverseProxy extends Component {
             X_FORWARDED_PORT_HEADER);
 
     @Override
-    public boolean canBeGeneratedAsync(){
+    public boolean canBeGeneratedAsync() {
         return false;
     }
 

@@ -141,12 +141,16 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
         try {
             SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
             try (ACLContext old = ACL.as2(ACL.SYSTEM2)) {
-                SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
-                    @Override
-                    public <C extends Component> void visit(Container container, C component,double progress) {
-                        ((ObjectComponent<T>) component).addContents(container, object);
-                    }
-                },null);
+                SupportPlugin.writeBundle(
+                        rsp.getOutputStream(),
+                        components,
+                        new ComponentVisitor() {
+                            @Override
+                            public <C extends Component> void visit(Container container, C component, double progress) {
+                                ((ObjectComponent<T>) component).addContents(container, object);
+                            }
+                        },
+                        null);
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
             } finally {

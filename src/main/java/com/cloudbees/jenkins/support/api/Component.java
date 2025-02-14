@@ -112,7 +112,7 @@ public abstract class Component implements ExtensionPoint {
      * By default, it will return true.
      * @return
      */
-    public boolean canBeGeneratedAsync(){
+    public boolean canBeGeneratedAsync() {
         return true;
     }
 
