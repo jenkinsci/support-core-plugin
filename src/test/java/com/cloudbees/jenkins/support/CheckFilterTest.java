@@ -28,6 +28,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.User;
 import hudson.model.labels.LabelAtom;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.security.ACL;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -90,25 +91,28 @@ public class CheckFilterTest {
         // Generate the filtered words
         checker.generateFilteredWords();
 
-        // Check the components are filtered correctly
-        assertComponent(
-                Arrays.asList(
-                        AboutJenkins.class,
-                        AboutUser.class,
-                        AgentsConfigFile.class,
-                        BuildQueue.class,
-                        ConfigFileComponent.class,
-                        DumpExportTable.class,
-                        EnvironmentVariables.class,
-                        JVMProcessSystemMetricsContents.Agents.class,
-                        JVMProcessSystemMetricsContents.Master.class,
-                        SystemConfiguration.class,
-                        NetworkInterfaces.class,
-                        NodeMonitors.class,
-                        UpdateCenter.class,
-                        SystemProperties.class,
-                        ThreadDumps.class),
-                checker);
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        try (var ignored = ACL.as(User.getById("admin", true))) {
+            // Check the components are filtered correctly
+            assertComponent(
+                    Arrays.asList(
+                            AboutJenkins.class,
+                            AboutUser.class,
+                            AgentsConfigFile.class,
+                            BuildQueue.class,
+                            ConfigFileComponent.class,
+                            DumpExportTable.class,
+                            EnvironmentVariables.class,
+                            JVMProcessSystemMetricsContents.Agents.class,
+                            JVMProcessSystemMetricsContents.Master.class,
+                            SystemConfiguration.class,
+                            NetworkInterfaces.class,
+                            NodeMonitors.class,
+                            UpdateCenter.class,
+                            SystemProperties.class,
+                            ThreadDumps.class),
+                    checker);
+        }
         assertThat(checker.unchecked.stream().map(f -> f.filePattern).toList(), empty());
 
         // Cancel the job running
@@ -235,7 +239,7 @@ public class CheckFilterTest {
             // The agent node name should be filtered
             fileSet.add(of("nodes.md", AGENT_NAME, true));
             // AboutUser
-            fileSet.add(of("user.md", "SYSTEM", true));
+            fileSet.add(of("user.md", "admin", true));
 
             // fileSet.add(of("node-monitors.md", AGENT_NAME, true));
 
