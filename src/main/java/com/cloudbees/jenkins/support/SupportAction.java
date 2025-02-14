@@ -373,7 +373,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC_SUPPORT_BUNDLE))) {
                 SupportPlugin.writeBundle(fileOutputStream, syncComponent);
             } finally {
-                logger.fine("Response completed");
+                logger.fine("Processing support bundle sunc completed");
             }
         }
 
@@ -546,7 +546,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 SupportPlugin.writeBundle(
                         fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
             } finally {
-                logger.fine("Response completed");
+                logger.fine("Processing support bundle async completed");
             }
 
             isCompleted = true;

@@ -71,6 +71,7 @@ import hudson.slaves.ComputerListener;
 import hudson.triggers.SafeTimerTask;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -88,7 +89,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -108,6 +108,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
@@ -497,15 +498,23 @@ public class SupportPlugin extends Plugin {
                         && outputPath != null) {
                     try {
                         File zipFile = outputPath.resolve(SYNC_SUPPORT_BUNDLE).toFile();
-                        try (ZipFile zip = new ZipFile(zipFile)) {
-                            Enumeration<? extends ZipEntry> entries = zip.entries();
-                            while (entries.hasMoreElements()) {
-                                ZipEntry entry = entries.nextElement();
+                        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+                            ZipEntry entry;
+                            while ((entry = zis.getNextEntry()) != null) {
                                 if (entry.getName().equals("manifest.md")) {
                                     // no need to add the manifest.md as it will be created in the async flow
                                     continue;
                                 }
+
                                 binaryOut.putNextEntry(entry);
+
+                                // Copy the content
+                                byte[] buffer = new byte[4096];
+                                int bytesRead;
+                                while ((bytesRead = zis.read(buffer)) != -1) {
+                                    binaryOut.write(buffer, 0, bytesRead);
+                                }
+
                                 binaryOut.flush();
                             }
                         }
