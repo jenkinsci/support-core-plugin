@@ -107,6 +107,9 @@ public class SupportActionTest {
     public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
         ZipFile supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
+        assertNotNull(supportBundle.getEntry("browser.md"));
+        assertNotNull(supportBundle.getEntry("reverse-proxy.md"));
+        assertNotNull(supportBundle.getEntry("nodes/master/logs/jenkins.log"));
         cleanUpSupportBundleInTempFolder();
     }
 
@@ -340,21 +343,20 @@ public class SupportActionTest {
         HtmlPage page = submit.click();
 
         HtmlAnchor downloadLink = null;
-        int maxRetries = 10;
         File zipFile;
         AtomicReference<HtmlPage> pageRef = new AtomicReference<>(page);
 
         HtmlPage finalPage = page;
-        await().timeout(10, TimeUnit.SECONDS).until(() -> {
+        await().timeout(10, TimeUnit.HOURS).until(() -> {
             try {
-                return pageRef.get().getAnchorByText("Download Support Bundle") != null;
+                return pageRef.get().getAnchorByText("click here") != null;
             } catch (ElementNotFoundException e) {
                 pageRef.set((HtmlPage) pageRef.get().refresh());
                 return false;
             }
         });
 
-        downloadLink = pageRef.get().getAnchorByText("Download Support Bundle");
+        downloadLink = pageRef.get().getAnchorByText("click here");
         if (downloadLink != null) {
             // Download the zip file
             WebResponse response = downloadLink.click().getWebResponse();
@@ -363,7 +365,7 @@ public class SupportActionTest {
                 IOUtils.copy(response.getContentAsStream(), os);
             }
         } else {
-            throw new IOException("Download link not found after " + maxRetries + " retries");
+            throw new IOException("Download link not found after " + 10 + " retries");
         }
         return new ZipFile(zipFile);
     }

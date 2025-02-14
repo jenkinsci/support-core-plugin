@@ -1,33 +1,19 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler">
     <l:layout title="Support bundle generation">
         <style>
             .app-progress-bar--animate {
-                width: 100%;
+            width: 100%;
             }
         </style>
         <l:main-panel>
             <h2>Generating Support Bundle</h2>
             <p id="progressMessage">Generating a support bundle for this Jenkins instance. This may take a few minutes.</p>
             <l:progressiveRendering handler="${it.getGeneratorByTaskId(request.getParameter('taskId'))}" callback="updateProgressUI"/>
+            <p id="downloadMessage" style="display:none;">Your download should start automatically, if not <a href="downloadBundle?taskId=${request.getParameter('taskId')}">click here</a></p>
             <a id="downloadButton" style="display:none;" class="btn btn-primary" href="#">Download Support Bundle</a>
         </l:main-panel>
 
-        <script>
-            function updateProgressUI(data) {
-                if (data.isCompleted === true) {
-                    downloadButton.style.display = "block";
-                    downloadButton.href = "downloadBundle?taskId=" + data.taskId; // Update this path accordingly
-                    document.getElementById("progressMessage").textContent = "Support bundle has been generated.";
-
-                    // Show the back button
-                    var backButton = document.createElement("a");
-                    backButton.className = "btn btn-secondary";
-                    backButton.href = "${rootURL}/support";
-                    backButton.textContent = " Click here to go back";
-                    document.getElementById("progressMessage").appendChild(backButton);
-                }
-            }
-        </script>
+        <st:adjunct  includes="js/progressPage"/>
     </l:layout>
 </j:jelly>

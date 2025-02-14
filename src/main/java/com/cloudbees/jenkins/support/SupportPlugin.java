@@ -86,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -104,6 +105,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
@@ -116,6 +118,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.springframework.security.core.Authentication;
+
+import static com.cloudbees.jenkins.support.SupportAction.SYNC_SUPPORT_BUNDLE;
 
 /**
  * Main entry point for the support plugin.
@@ -358,7 +362,7 @@ public class SupportPlugin extends Plugin {
             public <T extends Component> void visit(Container container, T component,double progress) {
                 component.addContents(container);
             }
-        });
+        },null);
     }
 
     /**
@@ -370,16 +374,20 @@ public class SupportPlugin extends Plugin {
      * @throws IOException if an error occurs while generating the bundle.
      */
     public static void writeBundle(OutputStream outputStream
-            , final List<? extends Component> components, DoubleConsumer progressCallback)
+            , final List<? extends Component> components, DoubleConsumer progressCallback,Path path)
             throws IOException {
         writeBundle(outputStream, components, new ComponentVisitor() {
             @Override
             public <T extends Component> void visit(Container container, T component,double progress) {
-                component.addContents(container);
+                if(component.canBeGeneratedAsync()) {
+                    component.addContents(container);
+                }
                 progressCallback.accept(progress);
             }
-        });
+        },path);
     }
+
+
 
     /**
      * Generate a bundle for all components that are selected in the Global Configuration.
@@ -390,7 +398,7 @@ public class SupportPlugin extends Plugin {
      * @throws IOException if an error occurs while generating the bundle.
      */
     public static void writeBundle(
-            OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer)
+            OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer,Path outputPath)
             throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
@@ -465,6 +473,30 @@ public class SupportPlugin extends Plugin {
                                         + name);
                     }
                 }
+
+                //process for async components
+                if(!components.stream().filter(c -> !c.canBeGeneratedAsync()).toList().isEmpty() && outputPath != null){
+                    try {
+                        File zipFile = outputPath.resolve(SYNC_SUPPORT_BUNDLE).toFile();
+                        try (ZipFile zip = new ZipFile(zipFile)) {
+                            Enumeration<? extends ZipEntry> entries = zip.entries();
+                            while (entries.hasMoreElements()) {
+                                ZipEntry entry = entries.nextElement();
+                                if(entry.getName().equals("manifest.md")){
+                                    //no need to add the manifest.md as it will be created in the async flow
+                                    continue;
+                                }
+                                binaryOut.putNextEntry(entry);
+                                binaryOut.flush();
+                            }
+                        }
+                    }catch (Exception e){
+                        LOGGER.warning("Error while processing sync components in asyn mode: " + e.getMessage());
+                    }finally {
+                        binaryOut.closeEntry();
+                    }
+                }
+
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms" + " and generated "
@@ -1084,6 +1116,16 @@ public class SupportPlugin extends Plugin {
                 }
             }
             return true;
+        }
+    }
+
+    public static String getDirectoryPath(OutputStream outputStream) throws IOException {
+        if (outputStream instanceof FileOutputStream) {
+            FileOutputStream fos = (FileOutputStream) outputStream;
+            File file = new File(fos.getFD().toString());
+            return file.getParentFile().getAbsolutePath() + "/";
+        } else {
+            throw new IllegalArgumentException("Output stream is not a FileOutputStream");
         }
     }
 }

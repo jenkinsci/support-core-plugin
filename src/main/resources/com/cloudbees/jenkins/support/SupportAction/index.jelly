@@ -50,7 +50,7 @@
           <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
         </p>
       </j:if>
-      <f:form name="bundle-contents" method="POST" action="generateAllBundlesAsync">
+      <f:form name="bundle-contents" method="POST" action="generateAllBundleAsync">
         <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
           <section class="jenkins-section jenkins-section__bottom-padding">
             <h2 class="jenkins-section__title">${category.key.label}</h2>

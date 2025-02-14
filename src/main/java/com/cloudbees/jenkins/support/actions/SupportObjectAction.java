@@ -146,7 +146,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                     public <C extends Component> void visit(Container container, C component,double progress) {
                         ((ObjectComponent<T>) component).addContents(container, object);
                     }
-                });
+                },null);
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
             } finally {
