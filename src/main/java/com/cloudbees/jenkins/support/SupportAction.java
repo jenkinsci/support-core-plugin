@@ -515,7 +515,6 @@ public class SupportAction implements RootAction, StaplerProxy {
         private final Logger logger = Logger.getLogger(SupportBundleAsyncGenerator.class.getName());
         private UUID taskId;
         private boolean isCompleted;
-        private String pathToBundle;
         private List<Component> components;
         private boolean supportBundleGenerationInProgress = false;
         private String supportBundleName;
@@ -550,7 +549,6 @@ public class SupportAction implements RootAction, StaplerProxy {
                 logger.fine("Response completed");
             }
 
-            pathToBundle = outputDir.getAbsolutePath() + "/" + supportBundleName;
             isCompleted = true;
         }
 
@@ -559,7 +557,6 @@ public class SupportAction implements RootAction, StaplerProxy {
         protected JSON data() {
             JSONObject json = new JSONObject();
             json.put("isCompleted", isCompleted);
-            json.put("pathToBundle", pathToBundle);
             json.put("taskId", String.valueOf(taskId));
             return json;
         }
