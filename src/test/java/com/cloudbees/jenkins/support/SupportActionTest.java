@@ -110,7 +110,6 @@ public class SupportActionTest {
         assertNotNull(supportBundle.getEntry("browser.md"));
         assertNotNull(supportBundle.getEntry("reverse-proxy.md"));
         assertNotNull(supportBundle.getEntry("nodes/master/logs/jenkins.log"));
-        cleanUpSupportBundleInTempFolder();
     }
 
     @Test
@@ -459,7 +458,6 @@ public class SupportActionTest {
                     fail(r.getMessage());
                 }
             }
-            cleanUpSupportBundleInTempFolder();
         }
     }
 
@@ -639,25 +637,6 @@ public class SupportActionTest {
     private void assertBundleNotContains(ZipFile zip, Collection<String> fileNames) {
         for (String file : fileNames) {
             assertNull(file + " was found in the bundle", zip.getEntry(file));
-        }
-    }
-
-    public void cleanUpSupportBundleInTempFolder() {
-        try {
-            if (!Files.exists(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-                return;
-            }
-            try (Stream<Path> paths = Files.walk(SUPPORT_BUNDLE_CREATION_FOLDER)) {
-                paths.filter(Files::isRegularFile).forEach(path -> {
-                    try {
-                        Files.delete(path);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }
