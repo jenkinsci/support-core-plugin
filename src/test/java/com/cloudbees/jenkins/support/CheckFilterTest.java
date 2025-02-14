@@ -23,6 +23,7 @@ import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.impl.UpdateCenter;
 import hudson.EnvVars;
 import hudson.ExtensionList;
+import hudson.Functions;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.User;
@@ -113,7 +114,9 @@ public class CheckFilterTest {
                             ThreadDumps.class),
                     checker);
         }
-        assertThat(checker.unchecked.stream().map(f -> f.filePattern).toList(), empty());
+        if (!Functions.isWindows()) { // some entries for procfs skipped on Windows
+            assertThat(checker.unchecked.stream().map(f -> f.filePattern).toList(), empty());
+        }
 
         // Cancel the job running
         build.cancel(true);
