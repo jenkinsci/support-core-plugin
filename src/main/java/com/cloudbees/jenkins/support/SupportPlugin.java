@@ -676,7 +676,7 @@ public class SupportPlugin extends Plugin {
 
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
-        int totalComponents = components.size() + 1;
+        int totalComponents = components.size();
         int curerrentItration = 0;
         for (Component component : components) {
             try {
@@ -1143,16 +1143,6 @@ public class SupportPlugin extends Plugin {
                 }
             }
             return true;
-        }
-    }
-
-    public static String getDirectoryPath(OutputStream outputStream) throws IOException {
-        if (outputStream instanceof FileOutputStream) {
-            FileOutputStream fos = (FileOutputStream) outputStream;
-            File file = new File(fos.getFD().toString());
-            return file.getParentFile().getAbsolutePath() + "/";
-        } else {
-            throw new IllegalArgumentException("Output stream is not a FileOutputStream");
         }
     }
 }
