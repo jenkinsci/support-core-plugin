@@ -1,5 +1,7 @@
 package com.cloudbees.jenkins.support;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.fail;
 
 import com.cloudbees.jenkins.support.api.Component;
@@ -107,6 +109,7 @@ public class CheckFilterTest {
                         SystemProperties.class,
                         ThreadDumps.class),
                 checker);
+        assertThat(checker.unchecked.stream().map(f -> f.filePattern).toList(), empty());
 
         // Cancel the job running
         build.cancel(true);
@@ -219,24 +222,25 @@ public class CheckFilterTest {
 
     private static class FileChecker {
         private Set<FileToCheck> fileSet = new HashSet<>();
+        private Set<FileToCheck> unchecked = new HashSet<>();
         private Set<String> words = new HashSet<>();
 
         private FileChecker(Jenkins jenkins) throws UnknownHostException {
             fileSet.add(of("manifest.md", "about", false));
             fileSet.add(of("about.md", "b", false));
-            fileSet.add(of("items.md", "jobs", false));
+            // fileSet.add(of("items.md", "jobs", false));
             // checksum.md5 is not generated in tests
 
             // AboutJenkins -> nodes.md
             // The agent node name should be filtered
             fileSet.add(of("nodes.md", AGENT_NAME, true));
             // AboutUser
-            fileSet.add(of("user.md", "anonymous", true));
+            fileSet.add(of("user.md", "SYSTEM", true));
 
-            fileSet.add(of("node-monitors.md", AGENT_NAME, true));
+            // fileSet.add(of("node-monitors.md", AGENT_NAME, true));
 
-            fileSet.add(of("admin-monitors.md", "diagnostics", false));
-            fileSet.add(of("admin-monitors.md", "Family", false));
+            // fileSet.add(of("admin-monitors.md", "diagnostics", false));
+            // fileSet.add(of("admin-monitors.md", "Family", false));
 
             fileSet.add(of("nodes/slave/*/config.xml", AGENT_NAME, true));
 
@@ -293,23 +297,23 @@ public class CheckFilterTest {
             // system-uptime.txt
             // net/rpc/nfs.txt
             // net/rpc/nfsd.txt
-            fileSet.add(of("nodes/master/proc/swaps.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/swaps.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/swaps.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/swaps.txt", "cpu", false));
 
-            fileSet.add(of("nodes/master/proc/cpuinfo.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/cpuinfo.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/cpuinfo.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/cpuinfo.txt", "cpu", false));
 
-            fileSet.add(of("nodes/master/proc/mounts.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/mounts.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/mounts.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/mounts.txt", "cpu", false));
 
-            fileSet.add(of("nodes/master/proc/system-uptime.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/system-uptime.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/system-uptime.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/system-uptime.txt", "cpu", false));
 
-            fileSet.add(of("nodes/master/proc/net/rpc/nfs.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/net/rpc/nfs.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/net/rpc/nfs.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/net/rpc/nfs.txt", "cpu", false));
 
-            fileSet.add(of("nodes/master/proc/net/rpc/nfsd.txt", "cpu", false));
-            fileSet.add(of("nodes/slave/*/proc/net/rpc/nfsd.txt", "cpu", false));
+            // fileSet.add(of("nodes/master/proc/net/rpc/nfsd.txt", "cpu", false));
+            // fileSet.add(of("nodes/slave/*/proc/net/rpc/nfsd.txt", "cpu", false));
 
             // NetworkInterfaces --> nodes/master/networkInterface.md, nodes/slave/*/networkInterface.md
             String anIP = getInetAddress();
@@ -333,6 +337,7 @@ public class CheckFilterTest {
             // ThreadDumps --> nodes/slave/*/thread-dump.txt, nodes/master/thread-dump.txt
             fileSet.add(of("nodes/master/thread-dump.txt", "runnable", true));
             fileSet.add(of("nodes/slave/*/thread-dump.txt", "runnable", true));
+            unchecked.addAll(fileSet);
         }
 
         private String getUpdateCenterURL(Jenkins jenkins) {
@@ -393,6 +398,7 @@ public class CheckFilterTest {
             for (FileToCheck value : fileSet) {
                 // If there is a filePattern to check that matches this entry of the bundle, we check
                 if (value.match(file)) {
+                    unchecked.remove(value);
                     if (content == null) {
                         fail(String.format("Error checking the file %s because its content was null", file));
                     } else {
