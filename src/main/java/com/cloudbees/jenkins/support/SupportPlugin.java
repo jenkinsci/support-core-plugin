@@ -528,8 +528,6 @@ public class SupportPlugin extends Plugin {
                         }
                     } catch (Exception e) {
                         LOGGER.log(Level.WARNING, "Error while processing sync components in async mode", e);
-                    } finally {
-                        binaryOut.closeEntry();
                     }
                 }
 
