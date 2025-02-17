@@ -373,11 +373,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC_SUPPORT_BUNDLE))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
-                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                        SupportPlugin.writeBundle(fileOutputStream, syncComponent);
-                    } catch (IOException e) {
-                        logger.log(Level.WARNING, e.getMessage(), e);
-                    }
+                    SupportPlugin.writeBundle(fileOutputStream, syncComponent);
                 } finally {
                     SupportPlugin.clearRequesterAuthentication();
                 }
@@ -554,12 +550,8 @@ public class SupportAction implements RootAction, StaplerProxy {
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
-                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                        SupportPlugin.writeBundle(
-                                fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
-                    } catch (IOException e) {
-                        logger.log(Level.FINE, e.getMessage(), e);
-                    }
+                    SupportPlugin.writeBundle(
+                            fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
                 } finally {
                     SupportPlugin.clearRequesterAuthentication();
                 }

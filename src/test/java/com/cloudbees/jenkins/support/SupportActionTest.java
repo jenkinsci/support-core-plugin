@@ -108,6 +108,7 @@ public class SupportActionTest {
         ZipFile supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
         assertNotNull(supportBundle.getEntry("browser.md"));
+        assertNotNull(supportBundle.getEntry("user.md"));
         assertNotNull(supportBundle.getEntry("reverse-proxy.md"));
         assertNotNull(supportBundle.getEntry("nodes/master/logs/jenkins.log"));
     }
