@@ -507,12 +507,7 @@ public class SupportPlugin extends Plugin {
 
                                 binaryOut.putNextEntry(entry);
 
-                                // Copy the content
-                                byte[] buffer = new byte[4096];
-                                int bytesRead;
-                                while ((bytesRead = zis.read(buffer)) != -1) {
-                                    binaryOut.write(buffer, 0, bytesRead);
-                                }
+                                zis.transferTo(binaryOut);
 
                                 binaryOut.flush();
                             }
