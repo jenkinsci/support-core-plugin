@@ -362,7 +362,8 @@ public class SupportPlugin extends Plugin {
                 components,
                 new ComponentVisitor() {
                     @Override
-                    public <T extends Component> void visit(Container container, T component, double progress) {
+
+                    public <T extends Component> void visit(Container container, T component) {
                         component.addContents(container);
                     }
                 },
@@ -386,7 +387,7 @@ public class SupportPlugin extends Plugin {
                 components,
                 new ComponentVisitor() {
                     @Override
-                    public <T extends Component> void visit(Container container, T component, double progress) {
+                    public <T extends Component> void visit(Container container, T component) {
                         component.addContents(container);
                     }
                 },
@@ -412,12 +413,15 @@ public class SupportPlugin extends Plugin {
                 outputStream,
                 components,
                 new ComponentVisitor() {
+                    private final int totalComponents = components.size();
+                    private int currentIteration = 0;
+
                     @Override
-                    public <T extends Component> void visit(Container container, T component, double progress) {
+                    public <T extends Component> void visit(Container container, T component) {
                         if (component.canBeGeneratedAsync()) {
                             component.addContents(container);
                         }
-                        progressCallback.accept(progress);
+                        progressCallback.accept((currentIteration++) / (double) totalComponents);
                     }
                 },
                 outputPath,true);
@@ -683,8 +687,6 @@ public class SupportPlugin extends Plugin {
 
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
-        int totalComponents = components.size();
-        int currentIteration = 0;
         for (Component component : components) {
             try {
                 if (components.stream().anyMatch(c -> c.supersedes(component))) {
@@ -695,8 +697,7 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
                 // Calculate progress
-                double progress = (currentIteration++) / (double) totalComponents;
-                componentVisitor.visit(contentsContainer, component, progress);
+                componentVisitor.visit(contentsContainer, component);
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms" + " to process component "

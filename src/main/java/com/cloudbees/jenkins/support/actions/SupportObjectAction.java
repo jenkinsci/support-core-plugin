@@ -146,7 +146,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                         components,
                         new ComponentVisitor() {
                             @Override
-                            public <C extends Component> void visit(Container container, C component, double progress) {
+                            public <C extends Component> void visit(Container container, C component) {
                                 ((ObjectComponent<T>) component).addContents(container, object);
                             }
                         },
