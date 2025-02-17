@@ -361,6 +361,8 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
         Set<String> componentNames = Arrays.stream(components.split(",")).collect(Collectors.toSet());
 
+        //added some comments to commit something
+
         // JENKINS-63722: If "Master" or "Agents" are used, show a warning and add the new names for those components
         // to the selection for backward compatibility
         if (componentNames.contains("Master")) {
