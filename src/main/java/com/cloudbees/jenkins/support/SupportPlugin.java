@@ -366,7 +366,31 @@ public class SupportPlugin extends Plugin {
                         component.addContents(container);
                     }
                 },
-                null);
+                null,true);
+    }
+
+    /**
+     * Generate a bundle for all synchronous components.
+     * This is useful when generating a support bundle asynchronously. There are some components that can't be generated
+     * asynchronously as they need some context from the request. So these components must be first processed synchronously
+     * and then the remaining components can be processed asynchronously.
+     *
+     * @param outputStream an {@link OutputStream}
+     * @param components a list of {@link Component} to include in the bundle
+     * @throws IOException if an error occurs while generating the bundle.
+     */
+    public static void writeBundleForSyncComponents(OutputStream outputStream, final List<? extends Component> components)
+            throws IOException {
+        writeBundle(
+                outputStream,
+                components,
+                new ComponentVisitor() {
+                    @Override
+                    public <T extends Component> void visit(Container container, T component, double progress) {
+                        component.addContents(container);
+                    }
+                },
+                null,false);
     }
 
     /**
@@ -396,7 +420,7 @@ public class SupportPlugin extends Plugin {
                         progressCallback.accept(progress);
                     }
                 },
-                outputPath);
+                outputPath,true);
     }
 
     /**
@@ -413,7 +437,7 @@ public class SupportPlugin extends Plugin {
             OutputStream outputStream,
             final List<? extends Component> components,
             ComponentVisitor componentConsumer,
-            Path outputPath)
+            Path outputPath,boolean addManifest)
             throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
@@ -434,7 +458,9 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms to process all components");
-                contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
+                if(addManifest) {
+                    contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
+                }
 
                 FilteredOutputStream textOut = new FilteredOutputStream(binaryOut, filter);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
@@ -496,13 +522,7 @@ public class SupportPlugin extends Plugin {
                         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
                             ZipEntry entry;
                             while ((entry = zis.getNextEntry()) != null) {
-                                if (entry.getName().equals("manifest.md")) {
-                                    // no need to add the manifest.md as it will be created in the async flow
-                                    continue;
-                                }
-
                                 binaryOut.putNextEntry(entry);
-
                                 zis.transferTo(binaryOut);
                             }
                         }

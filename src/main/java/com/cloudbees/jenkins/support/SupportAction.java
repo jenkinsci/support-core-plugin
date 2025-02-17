@@ -373,7 +373,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC_SUPPORT_BUNDLE))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
-                    SupportPlugin.writeBundle(fileOutputStream, syncComponent);
+                    SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
                 } finally {
                     SupportPlugin.clearRequesterAuthentication();
                 }
