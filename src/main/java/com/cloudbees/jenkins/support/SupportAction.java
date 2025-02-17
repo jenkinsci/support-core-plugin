@@ -371,7 +371,16 @@ public class SupportAction implements RootAction, StaplerProxy {
                 }
             }
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC_SUPPORT_BUNDLE))) {
-                SupportPlugin.writeBundle(fileOutputStream, syncComponent);
+                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
+                try {
+                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+                        SupportPlugin.writeBundle(fileOutputStream, components);
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, e.getMessage(), e);
+                    }
+                } finally {
+                    SupportPlugin.clearRequesterAuthentication();
+                }
             } finally {
                 logger.fine("Processing support bundle sunc completed");
             }
