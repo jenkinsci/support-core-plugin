@@ -666,7 +666,7 @@ public class SupportPlugin extends Plugin {
         manifest.append("Requested components:\n\n");
         ContentContainer contentsContainer = new ContentContainer(contentFilter, components);
         int totalComponents = components.size();
-        int curerrentItration = 0;
+        int currentIteration = 0;
         for (Component component : components) {
             try {
                 if (components.stream().anyMatch(c -> c.supersedes(component))) {
@@ -677,7 +677,7 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
                 // Calculate progress
-                double progress = (curerrentItration++) / (double) totalComponents;
+                double progress = (currentIteration++) / (double) totalComponents;
                 componentVisitor.visit(contentsContainer, component, progress);
                 LOGGER.log(
                         Level.FINE,
