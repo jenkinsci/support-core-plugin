@@ -508,8 +508,6 @@ public class SupportPlugin extends Plugin {
                                 binaryOut.putNextEntry(entry);
 
                                 zis.transferTo(binaryOut);
-
-                                binaryOut.flush();
                             }
                         }
                     } catch (Exception e) {
