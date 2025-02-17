@@ -513,7 +513,7 @@ public class SupportPlugin extends Plugin {
                             }
                         }
                     } catch (Exception e) {
-                        LOGGER.warning("Error while processing sync components in asyn mode: " + e.getMessage());
+                        LOGGER.log(Level.WARNING, "Error while processing sync components in async mode", e);
                     } finally {
                         binaryOut.closeEntry();
                     }
