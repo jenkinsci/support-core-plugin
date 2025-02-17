@@ -490,11 +490,7 @@ public class SupportPlugin extends Plugin {
                 }
 
                 // process for async components
-                if (!components.stream()
-                                .filter(c -> !c.canBeGeneratedAsync())
-                                .toList()
-                                .isEmpty()
-                        && outputPath != null) {
+                if (outputPath != null) {
                     try {
                         File zipFile = outputPath.resolve(SYNC_SUPPORT_BUNDLE).toFile();
                         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {

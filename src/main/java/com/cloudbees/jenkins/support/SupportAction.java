@@ -348,7 +348,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public HttpRedirect doGenerateAllBundleAsync(StaplerRequest2 req, StaplerResponse2 rsp)
+    public HttpRedirect doGenerateBundleAsync(StaplerRequest2 req, StaplerResponse2 rsp)
             throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
@@ -374,7 +374,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                        SupportPlugin.writeBundle(fileOutputStream, components);
+                        SupportPlugin.writeBundle(fileOutputStream, syncComponent);
                     } catch (IOException e) {
                         logger.log(Level.WARNING, e.getMessage(), e);
                     }
@@ -552,8 +552,17 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
-                SupportPlugin.writeBundle(
-                        fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
+                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
+                try {
+                    try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+                        SupportPlugin.writeBundle(
+                                fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
+                    } catch (IOException e) {
+                        logger.log(Level.FINE, e.getMessage(), e);
+                    }
+                } finally {
+                    SupportPlugin.clearRequesterAuthentication();
+                }
             } finally {
                 logger.fine("Processing support bundle async completed");
             }
