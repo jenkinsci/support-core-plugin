@@ -1,5 +1,5 @@
 function updateProgressUI(data) {
-    if (data.isCompleted === true) {
+    if (data.isCompleted) {
         downloadMessage.style.display = "block";
         downloadButton.href = "downloadBundle?taskId=" + data.taskId; // Update this path accordingly
         document.getElementById("progressMessage").textContent = "Support bundle has been generated.";
