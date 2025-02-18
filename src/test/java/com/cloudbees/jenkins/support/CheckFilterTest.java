@@ -80,9 +80,10 @@ public class CheckFilterTest {
     @After
     public void after() throws InterruptedException, ExecutionException, IOException {
         LOGGER.info("Attempting to remove all logs : " + j.getInstance().getNodes());
+        System.err.println("Attempting to remove all logs STERR " + j.getInstance().getNodes());
         j.getInstance().getNodes().forEach(node -> {
             try {
-                LOGGER.info("Removed node " + node.getNodeName());
+                System.err.println("Removed node " + node.getNodeName());
                 j.jenkins.removeNode(node);
 
                 // Clean up the node's root directory
@@ -90,7 +91,7 @@ public class CheckFilterTest {
                     node.getRootPath().deleteRecursive();
                 }
             } catch (Exception e) {
-                LOGGER.warning("Error agent kill " + e.getMessage());
+                System.err.println("Error agent kill " + e.getMessage());
                 ;
             }
         });
