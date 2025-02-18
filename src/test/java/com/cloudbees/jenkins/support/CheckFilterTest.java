@@ -79,6 +79,7 @@ public class CheckFilterTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException, IOException {
+        LOGGER.info("Attempting to remove all logs : " + j.getInstance().getNodes());
         j.getInstance().getNodes().forEach(node -> {
             try {
                 LOGGER.info("Removed node " + node.getNodeName());
