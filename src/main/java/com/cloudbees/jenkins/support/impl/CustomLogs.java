@@ -100,7 +100,8 @@ public class CustomLogs extends Component {
             File[] rotatedLogFiles = customLogs.listFiles((dir, filename) -> filename.matches(name + "\\.log\\.\\d+"));
             if (rotatedLogFiles != null) {
                 for (File rotatedLogFile : rotatedLogFiles) {
-                    String rotatedEntryName = "nodes/master/logs/custom/{0}.log." + rotatedLogFile.getName().substring(name.length() + 5);
+                    String rotatedEntryName = "nodes/master/logs/custom/{0}.log."
+                            + rotatedLogFile.getName().substring(name.length() + 5);
                     result.add(new FileContent(rotatedEntryName, new String[] {name}, rotatedLogFile));
                 }
             }

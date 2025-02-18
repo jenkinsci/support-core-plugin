@@ -4,9 +4,9 @@
 package com.cloudbees.jenkins.support.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
@@ -15,7 +15,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.logging.LogRecorder;
 import hudson.security.Permission;
-
+import hudson.triggers.SafeTimerTask;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,8 +26,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import hudson.triggers.SafeTimerTask;
 import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -130,4 +128,3 @@ public class CustomLogsTest {
         assertEquals(expectedMap, resultMap);
     }
 }
-
