@@ -82,23 +82,23 @@ public class CheckFilterTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
+//        for (var agent : j.jenkins.getNodes()) {
+//            System.err.println("Stopping " + agent);
+//            agent.toComputer().disconnect(null).get();
+//        }
 
         Thread.sleep(1000);
-        System.out.println("slept for 1 seconds -----");
-
-        //        try {
-        //            j.after();
-        //        }catch (Exception e){
-        //            System.out.println("Tread dump -----");
-        //            printThreadDump();
-        //        }
-
-        System.out.println("Tread dump -----");
-        printThreadDump();
+//        System.out.println("slept for 1 seconds -----");
+//
+//        //        try {
+//        //            j.after();
+//        //        }catch (Exception e){
+//        //            System.out.println("Tread dump -----");
+//        //            printThreadDump();
+//        //        }
+//
+//        System.out.println("Tread dump -----");
+//        printThreadDump();
     }
 
     public static void printThreadDump() {
