@@ -31,9 +31,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -82,33 +79,7 @@ public class CheckFilterTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
-
-        Thread.sleep(200);
-        //        System.out.println("slept for 1 seconds -----");
-        //
-        //        //        try {
-        //        //            j.after();
-        //        //        }catch (Exception e){
-        //        //            System.out.println("Tread dump -----");
-        //        //            printThreadDump();
-        //        //        }
-        //
-        //        System.out.println("Tread dump -----");
-        //        printThreadDump();
-    }
-
-    public static void printThreadDump() {
-        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        long[] threadIds = threadMXBean.getAllThreadIds();
-        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
-
-        for (ThreadInfo threadInfo : threadInfos) {
-            System.out.println(threadInfo.toString());
-        }
+        Thread.sleep(500);
     }
 
     @Test

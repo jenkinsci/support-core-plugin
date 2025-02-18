@@ -47,13 +47,7 @@ public class SlaveLaunchLogsTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
-
-        Thread.sleep(200);
-        System.out.println("slept for 1 seconds -----");
+        Thread.sleep(500);
     }
 
     @Test

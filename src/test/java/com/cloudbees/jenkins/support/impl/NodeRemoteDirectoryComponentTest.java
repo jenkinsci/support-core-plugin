@@ -31,7 +31,7 @@ public class NodeRemoteDirectoryComponentTest {
             agent.toComputer().disconnect(null).get();
         }
 
-        Thread.sleep(200);
+        Thread.sleep(100);
         System.out.println("slept for 1 seconds -----");
 
         //        try {
