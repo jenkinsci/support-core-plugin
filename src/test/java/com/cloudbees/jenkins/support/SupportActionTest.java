@@ -37,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -53,7 +52,6 @@ import org.htmlunit.WebResponse;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -419,15 +417,15 @@ public class SupportActionTest {
         }
     }
 
-    @After
-    public void after() throws InterruptedException, ExecutionException {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
-
-        Thread.sleep(500);
-    }
+    //    @After
+    //    public void after() throws InterruptedException, ExecutionException {
+    //        for (var agent : j.jenkins.getNodes()) {
+    //            System.err.println("Stopping " + agent);
+    //            agent.toComputer().disconnect(null).get();
+    //        }
+    //
+    //        Thread.sleep(500);
+    //    }
 
     @Test
     public void anonymizationSmokes() throws Exception {

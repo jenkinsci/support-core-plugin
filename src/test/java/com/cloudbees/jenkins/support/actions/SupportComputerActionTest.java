@@ -10,12 +10,10 @@ import hudson.model.Item;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -50,15 +48,15 @@ public class SupportComputerActionTest {
                 Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
     }
 
-    @After
-    public void after() throws InterruptedException, ExecutionException {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
-
-        Thread.sleep(500);
-    }
+    //    @After
+    //    public void after() throws InterruptedException, ExecutionException {
+    //        for (var agent : j.jenkins.getNodes()) {
+    //            System.err.println("Stopping " + agent);
+    //            agent.toComputer().disconnect(null).get();
+    //        }
+    //
+    //        Thread.sleep(500);
+    //    }
 
     /*
      * Integration test that simulates the user action of clicking the button to generate the bundle.

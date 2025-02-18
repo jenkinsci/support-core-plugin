@@ -19,12 +19,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,10 +44,10 @@ public class FileDescriptorLimitTest {
     @Rule
     public LoggerRule logging = new LoggerRule();
 
-    @After
-    public void after() throws InterruptedException, ExecutionException {
-        Thread.sleep(500);
-    }
+    //    @After
+    //    public void after() throws InterruptedException, ExecutionException {
+    //        Thread.sleep(500);
+    //    }
 
     @Test
     public void addContents() throws Exception {

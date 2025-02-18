@@ -17,9 +17,7 @@ import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipFile;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,10 +31,10 @@ public class SmartLogCleanerTest {
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
-    @After
-    public void after() throws InterruptedException, ExecutionException {
-        Thread.sleep(500);
-    }
+    //    @After
+    //    public void after() throws InterruptedException, ExecutionException {
+    //        Thread.sleep(500);
+    //    }
 
     public static void printThreadDump() {
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();

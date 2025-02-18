@@ -78,8 +78,21 @@ public class CheckFilterTest {
     public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
 
     @After
-    public void after() throws InterruptedException, ExecutionException {
-        Thread.sleep(500);
+    public void after() throws InterruptedException, ExecutionException, IOException {
+        j.getInstance().getNodes().forEach(node -> {
+            try {
+                LOGGER.info("Removed node " + node.getNodeName());
+                j.jenkins.removeNode(node);
+
+                // Clean up the node's root directory
+                if (node.getRootPath() != null) {
+                    node.getRootPath().deleteRecursive();
+                }
+            } catch (Exception e) {
+                LOGGER.warning("Error agent kill " + e.getMessage());
+                ;
+            }
+        });
     }
 
     @Test
