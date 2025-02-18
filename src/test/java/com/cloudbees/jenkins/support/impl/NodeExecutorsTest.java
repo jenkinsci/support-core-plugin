@@ -50,7 +50,7 @@ public class NodeExecutorsTest {
             agent.toComputer().disconnect(null).get();
         }
 
-        Thread.sleep(1000);
+        Thread.sleep(200);
         System.out.println("slept for 1 seconds -----");
 
         //        try {

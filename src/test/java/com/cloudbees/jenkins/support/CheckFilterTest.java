@@ -82,12 +82,12 @@ public class CheckFilterTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
-//        for (var agent : j.jenkins.getNodes()) {
-//            System.err.println("Stopping " + agent);
-//            agent.toComputer().disconnect(null).get();
-//        }
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
 
-        Thread.sleep(1000);
+        Thread.sleep(200);
 //        System.out.println("slept for 1 seconds -----");
 //
 //        //        try {

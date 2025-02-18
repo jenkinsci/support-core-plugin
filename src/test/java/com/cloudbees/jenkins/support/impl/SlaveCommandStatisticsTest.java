@@ -69,7 +69,7 @@ public class SlaveCommandStatisticsTest {
             agent.toComputer().disconnect(null).get();
         }
 
-        Thread.sleep(1000);
+        Thread.sleep(200);
         System.out.println("slept for 1 seconds -----");
 
         System.out.println("Tread dump -----");
