@@ -20,10 +20,7 @@ import hudson.util.RingBufferLogHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -347,30 +344,6 @@ public class SupportTestUtils {
             LOGGER.info("stopping " + agent);
             agent.toComputer().disconnect(null).get();
         }
-        var dir = Jenkins.get().getRootDir().toPath().resolve("agent-work-dirs");
-        for (int i = 0; i < 60; i++) {
-            try {
-                delete(dir);
-                LOGGER.info("successfully deleted " + dir);
-                return;
-            } catch (IOException x) {
-                LOGGER.log(Level.WARNING, "failed to delete " + dir + " on attempt #" + i, x);
-                Thread.sleep(1000);
-            }
-        }
-        LOGGER.warning("never managed to delete " + dir);
-    }
-
-    private static void delete(Path p) throws IOException {
-        LOGGER.info(() -> "deleting " + p);
-        if (Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS)) {
-            try (DirectoryStream<Path> children = Files.newDirectoryStream(p)) {
-                for (Path child : children) {
-                    delete(child);
-                }
-            }
-        }
-        Files.deleteIfExists(p);
     }
 
     private SupportTestUtils() {}
