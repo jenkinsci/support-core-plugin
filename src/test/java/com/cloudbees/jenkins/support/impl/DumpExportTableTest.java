@@ -14,6 +14,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -22,6 +25,19 @@ public class DumpExportTableTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+
+    }
 
     @Test
     public void testAddContents() throws Exception {

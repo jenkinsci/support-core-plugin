@@ -39,6 +39,7 @@ public final class SlaveLaunchLogsRestartTest {
     @Rule
     public JenkinsSessionRule rr = new JenkinsSessionRule();
 
+
     @Test
     public void twoAgents() throws Throwable {
         rr.then(r -> {

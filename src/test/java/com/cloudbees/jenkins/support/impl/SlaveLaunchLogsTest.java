@@ -17,9 +17,13 @@ import hudson.model.TaskListener;
 import hudson.remoting.Channel;
 import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
+
+import java.lang.management.ThreadInfo;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import jenkins.slaves.StandardOutputSwapper;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
@@ -42,6 +46,22 @@ public class SlaveLaunchLogsTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveLaunchLogs.class, Level.FINE);
+
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+
+    }
+
+
 
     @Test
     public void onlineOutboundAgent() throws Exception {

@@ -11,10 +11,16 @@ import hudson.slaves.DumbSlave;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipFile;
+
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,6 +33,37 @@ public class SmartLogCleanerTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+        //        try {
+        //            j.after();
+        //        }catch (Exception e){
+        //            System.out.println("Tread dump -----");
+        //            printThreadDump();
+        //        }
+
+        System.out.println("Tread dump -----");
+        printThreadDump();
+    }
+
+    public static void printThreadDump() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadMXBean.getAllThreadIds();
+        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.out.println(threadInfo.toString());
+        }
+    }
 
     @Test
     public void cleanUp() throws Exception {
