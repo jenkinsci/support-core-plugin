@@ -82,7 +82,7 @@ public class CustomLogsTest {
         LogRecorder test1LogRecorder = new LogRecorder("test1");
         j.getInstance().getLog().getRecorders().add(test1LogRecorder);
 
-        LogRecorder test2LogRecorder = new LogRecorder("test2");
+        LogRecorder test2LogRecorder = new LogRecorder("secondTest2");
         j.getInstance().getLog().getRecorders().add(test2LogRecorder);
 
         // Create dummy log files
@@ -101,14 +101,14 @@ public class CustomLogsTest {
         }
 
         // Create dummy log for test2 log recorder
-        try (FileWriter writer = new FileWriter(new File(customLogsDir, "test2.log"))) {
-            writer.write("test2 one");
+        try (FileWriter writer = new FileWriter(new File(customLogsDir, "secondTest2.log"))) {
+            writer.write("secondTest2 one");
         }
-        try (FileWriter writer = new FileWriter(new File(customLogsDir, "test2.log.1"))) {
-            writer.write("test2 two");
+        try (FileWriter writer = new FileWriter(new File(customLogsDir, "secondTest2.log.1"))) {
+            writer.write("secondTest2 two");
         }
-        try (FileWriter writer = new FileWriter(new File(customLogsDir, "test2.log.2"))) {
-            writer.write("test2 three");
+        try (FileWriter writer = new FileWriter(new File(customLogsDir, "secondTest2.log.2"))) {
+            writer.write("secondTest2 three");
         }
 
         // Invoke the component and get the result map
@@ -120,9 +120,9 @@ public class CustomLogsTest {
         expectedMap.put("nodes/master/logs/custom/test1.log", "test1 one");
         expectedMap.put("nodes/master/logs/custom/test1.log.1", "test1 two");
         expectedMap.put("nodes/master/logs/custom/test1.log.2", "test1 three");
-        expectedMap.put("nodes/master/logs/custom/test2.log", "test2 one");
-        expectedMap.put("nodes/master/logs/custom/test2.log.1", "test2 two");
-        expectedMap.put("nodes/master/logs/custom/test2.log.2", "test2 three");
+        expectedMap.put("nodes/master/logs/custom/secondTest2.log", "secondTest2 one");
+        expectedMap.put("nodes/master/logs/custom/secondTest2.log.1", "secondTest2 two");
+        expectedMap.put("nodes/master/logs/custom/secondTest2.log.2", "secondTest2 three");
 
         // Assert the result map
         assertEquals(expectedMap, resultMap);
