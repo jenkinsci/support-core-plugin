@@ -32,9 +32,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -104,18 +101,19 @@ public class CustomLogs extends Component {
             if (rotatedLogFiles != null) {
                 for (File rotatedLogFile : rotatedLogFiles) {
 
-                    String rotatedEntryName = "nodes/master/logs/custom/{0}.log.";
+                    String rotatedEntryName = "nodes/master/logs/custom/{0}.log.{1}";
 
-                    //get the count of log rotation
-                    Pattern pattern = Pattern.compile("\\.log\\.(\\d+)$");
-                    Matcher matcher = pattern.matcher(rotatedLogFile.getName());
-                    if (matcher.find()) {
-                        rotatedEntryName  += matcher.group(1);
-                    }else {
-                        LOGGER.fine("Could not find the count of log rotation for " + rotatedLogFile.getName());
+                    try {
+                        // Fetch the rotations number of the log
+                        // eg. custom.log.2 , the rotation number is 2
+                        String[] logNameParts = rotatedLogFile.getName().split("\\.");
+                        String logRotationNumber = logNameParts[logNameParts.length - 1];
+
+                        result.add(new FileContent(
+                                rotatedEntryName, new String[] {name, logRotationNumber}, rotatedLogFile));
+                    } catch (Exception e) {
+                        LOGGER.warning("Error while adding rotated log files for '" + name);
                     }
-
-                    result.add(new FileContent(rotatedEntryName, new String[] {name}, rotatedLogFile));
                 }
             }
         }
