@@ -40,8 +40,13 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.SlaveComputer;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -56,6 +61,30 @@ public class SlaveCommandStatisticsTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveComputer.class, Level.FINEST);
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+        System.out.println("Tread dump -----");
+        printThreadDump();
+    }
+
+    public static void printThreadDump() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadMXBean.getAllThreadIds();
+        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.out.println(threadInfo.toString());
+        }
+    }
 
     @Test
     public void smokes() throws Exception {
