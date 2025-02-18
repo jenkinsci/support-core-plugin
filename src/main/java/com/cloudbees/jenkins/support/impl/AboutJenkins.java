@@ -167,13 +167,13 @@ public class AboutJenkins extends Component {
             final File rootPath = new File(this.rootPathName);
             for (File file : FileUtils.listFiles(rootPath, null, false)) {
                 if (file.isFile()) {
-                    try (FileInputStream fis = new FileInputStream(file)) {
-                        result.append(Util.getDigestOf(fis)) // FIPS OK: Not security related.
+                    try {
+                        result.append(Util.getDigestOf(new FileInputStream(file))) // FIPS OK: Not security related.
                                 .append("  ")
                                 .append(file.getName())
                                 .append('\n');
                     } catch (IOException e) {
-                        // handle the exception
+                        // ignore
                     }
                 }
             }
