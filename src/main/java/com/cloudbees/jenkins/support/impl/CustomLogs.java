@@ -98,23 +98,25 @@ public class CustomLogs extends Component {
 
             // Add rotated log files
             File[] rotatedLogFiles = customLogs.listFiles((dir, filename) -> filename.matches(name + "\\.log\\.\\d+"));
-            if (rotatedLogFiles != null) {
-                for (File rotatedLogFile : rotatedLogFiles) {
+            if (rotatedLogFiles == null) {
+                LOGGER.fine("No rotated logs found for" + name);
+                return;
+            }
 
-                    String rotatedEntryName = "nodes/master/logs/custom/{0}.log.{1}";
+            for (File rotatedLogFile : rotatedLogFiles) {
+                String rotatedEntryName = "nodes/master/logs/custom/{0}.log.{1}";
 
-                    try {
-                        // Fetch the rotations number of the log
-                        // eg. custom.log.2 , the rotation number is 2
-                        String[] logNameParts = rotatedLogFile.getName().split("\\.");
-                        String logRotationNumber = logNameParts[logNameParts.length - 1];
+                try {
+                    // Fetch the rotations number of the log
+                    // eg. custom.log.2 , the rotation number is 2
+                    String[] logNameParts = rotatedLogFile.getName().split("\\.");
+                    String logRotationNumber = logNameParts[logNameParts.length - 1];
 
-                        result.add(new FileContent(
-                                rotatedEntryName, new String[] {name, logRotationNumber}, rotatedLogFile));
-                    } catch (Exception e) {
-                        LOGGER.warning(String.format(
-                                "Error while adding rotated log files for '%s'. Error: %s", name, e.getMessage()));
-                    }
+                    result.add(
+                            new FileContent(rotatedEntryName, new String[] {name, logRotationNumber}, rotatedLogFile));
+                } catch (Exception e) {
+                    LOGGER.warning(String.format(
+                            "Error while adding rotated log files for '%s'. Error: %s", name, e.getMessage()));
                 }
             }
         }

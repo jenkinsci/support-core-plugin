@@ -85,6 +85,9 @@ public class CustomLogsTest {
         LogRecorder test2LogRecorder = new LogRecorder("secondTest2");
         j.getInstance().getLog().getRecorders().add(test2LogRecorder);
 
+        LogRecorder nonRotatedCustomLog = new LogRecorder("nonRotatedCustomLog");
+        j.getInstance().getLog().getRecorders().add(nonRotatedCustomLog);
+
         // Create dummy log files
         File customLogsDir = new File(SafeTimerTask.getLogsRoot(), "custom");
         customLogsDir.mkdirs();
@@ -111,6 +114,10 @@ public class CustomLogsTest {
             writer.write("secondTest2 three");
         }
 
+        try (FileWriter writer = new FileWriter(new File(customLogsDir, "nonRotatedCustomLog.log"))) {
+            writer.write("nonRotatedCustomLog one");
+        }
+
         // Invoke the component and get the result map
         Map<String, String> resultMap = SupportTestUtils.invokeComponentToMap(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(CustomLogs.class)));
@@ -123,6 +130,7 @@ public class CustomLogsTest {
         expectedMap.put("nodes/master/logs/custom/secondTest2.log", "secondTest2 one");
         expectedMap.put("nodes/master/logs/custom/secondTest2.log.1", "secondTest2 two");
         expectedMap.put("nodes/master/logs/custom/secondTest2.log.2", "secondTest2 three");
+        expectedMap.put("nodes/master/logs/custom/nonRotatedCustomLog.log", "nonRotatedCustomLog one");
 
         // Assert the result map
         assertEquals(expectedMap, resultMap);
