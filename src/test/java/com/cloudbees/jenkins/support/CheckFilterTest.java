@@ -31,6 +31,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -44,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -51,6 +55,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,6 +79,39 @@ public class CheckFilterTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
+
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+//        try {
+//            j.after();
+//        }catch (Exception e){
+//            System.out.println("Tread dump -----");
+//            printThreadDump();
+//        }
+
+        System.out.println("Tread dump -----");
+        printThreadDump();
+    }
+
+    public static void printThreadDump() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadMXBean.getAllThreadIds();
+        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.out.println(threadInfo.toString());
+        }
+    }
+
 
     @Test
     public void checkFilterTest() throws Exception {
