@@ -99,6 +99,8 @@ public class CheckFilterTest {
 
     @Test
     public void checkFilterTest() throws Exception {
+        LOGGER.info("Loggin something");
+        System.err.println("System.err someting");
         // Create the files to check
         FileChecker checker = new FileChecker(j.jenkins);
         // Create the objects needed for some contents to be included
