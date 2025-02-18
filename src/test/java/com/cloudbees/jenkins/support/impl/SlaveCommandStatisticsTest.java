@@ -61,7 +61,7 @@ public class SlaveCommandStatisticsTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
-        Thread.sleep(500);
+        Thread.sleep(1000);
     }
 
     @Test

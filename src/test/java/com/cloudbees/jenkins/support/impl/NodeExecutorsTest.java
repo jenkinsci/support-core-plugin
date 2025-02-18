@@ -47,7 +47,7 @@ public class NodeExecutorsTest {
             agent.toComputer().disconnect(null).get();
         }
 
-        Thread.sleep(500);
+        Thread.sleep(1000);
     }
 
     @Test
