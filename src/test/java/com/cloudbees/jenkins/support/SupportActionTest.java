@@ -421,6 +421,11 @@ public class SupportActionTest {
 
     @After
     public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
         Thread.sleep(500);
     }
 
