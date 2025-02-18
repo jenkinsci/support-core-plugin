@@ -12,7 +12,6 @@ import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -43,7 +42,6 @@ public class NodeExecutorsTest {
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
-
 
     @After
     public void after() throws InterruptedException, ExecutionException {

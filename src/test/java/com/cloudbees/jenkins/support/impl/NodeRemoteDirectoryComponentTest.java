@@ -6,13 +6,11 @@ import static org.junit.Assert.assertTrue;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;

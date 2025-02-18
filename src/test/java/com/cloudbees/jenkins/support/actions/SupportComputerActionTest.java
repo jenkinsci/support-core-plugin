@@ -7,7 +7,6 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.model.Computer;
 import hudson.model.Item;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
