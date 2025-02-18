@@ -99,7 +99,7 @@ public class CustomLogs extends Component {
             // Add rotated log files
             File[] rotatedLogFiles = customLogs.listFiles((dir, filename) -> filename.matches(name + "\\.log\\.\\d+"));
             if (rotatedLogFiles == null) {
-                LOGGER.fine("No rotated logs found for" + name);
+                LOGGER.fine("No rotated logs found for : " + name);
                 return;
             }
 
