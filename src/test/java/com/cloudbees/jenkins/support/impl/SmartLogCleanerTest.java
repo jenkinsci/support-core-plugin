@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.ExtensionList;
@@ -31,10 +32,7 @@ public class SmartLogCleanerTest {
 
     @After
     public void stopAgents() throws Exception {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
+        SupportTestUtils.stopAgents();
     }
 
     @Test

@@ -59,10 +59,7 @@ public final class SlaveLaunchLogsRestartTest {
                     allOf(
                             containsString("Z agent1] Remoting version: "),
                             containsString("Z agent2] Remoting version: ")));
-            for (var agent : r.jenkins.getNodes()) {
-                System.err.println("Stopping " + agent);
-                agent.toComputer().disconnect(null).get();
-            }
+            SupportTestUtils.stopAgents();
         });
     }
 }

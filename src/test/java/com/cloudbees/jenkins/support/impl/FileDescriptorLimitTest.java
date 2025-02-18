@@ -47,10 +47,7 @@ public class FileDescriptorLimitTest {
 
     @After
     public void stopAgents() throws Exception {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
+        SupportTestUtils.stopAgents();
     }
 
     @Test

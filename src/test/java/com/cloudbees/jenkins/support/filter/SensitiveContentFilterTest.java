@@ -25,6 +25,7 @@ package com.cloudbees.jenkins.support.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
@@ -42,10 +43,7 @@ public class SensitiveContentFilterTest {
 
     @After
     public void stopAgents() throws Exception {
-        for (var agent : j.jenkins.getNodes()) {
-            System.err.println("Stopping " + agent);
-            agent.toComputer().disconnect(null).get();
-        }
+        SupportTestUtils.stopAgents();
     }
 
     @Issue("JENKINS-21670")
