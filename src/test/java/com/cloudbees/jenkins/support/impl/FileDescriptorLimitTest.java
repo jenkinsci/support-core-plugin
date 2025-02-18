@@ -55,8 +55,6 @@ public class FileDescriptorLimitTest {
 
         Thread.sleep(1000);
         System.out.println("slept for 1 seconds -----");
-
-
     }
 
     @Test

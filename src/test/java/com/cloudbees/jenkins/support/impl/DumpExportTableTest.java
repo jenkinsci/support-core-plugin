@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,8 +34,6 @@ public class DumpExportTableTest {
 
         Thread.sleep(1000);
         System.out.println("slept for 1 seconds -----");
-
-
     }
 
     @Test

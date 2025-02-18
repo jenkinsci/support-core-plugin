@@ -17,8 +17,6 @@ import hudson.model.TaskListener;
 import hudson.remoting.Channel;
 import hudson.slaves.ComputerListener;
 import hudson.slaves.SlaveComputer;
-
-import java.lang.management.ThreadInfo;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -47,7 +45,6 @@ public class SlaveLaunchLogsTest {
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveLaunchLogs.class, Level.FINE);
 
-
     @After
     public void after() throws InterruptedException, ExecutionException {
         for (var agent : j.jenkins.getNodes()) {
@@ -57,11 +54,7 @@ public class SlaveLaunchLogsTest {
 
         Thread.sleep(1000);
         System.out.println("slept for 1 seconds -----");
-
-
     }
-
-
 
     @Test
     public void onlineOutboundAgent() throws Exception {

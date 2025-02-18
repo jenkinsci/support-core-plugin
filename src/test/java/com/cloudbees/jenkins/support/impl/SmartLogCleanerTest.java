@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipFile;
-
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
