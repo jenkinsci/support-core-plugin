@@ -80,7 +80,8 @@ public class CheckFilterTest {
     @After
     public void after() throws InterruptedException, ExecutionException, IOException {
         LOGGER.info("Attempting to remove all logs : " + j.getInstance().getNodes());
-        System.err.println("Attempting to remove all logs STERR " + j.getInstance().getNodes());
+        System.err.println(
+                "Attempting to remove all logs STERR " + j.getInstance().getNodes());
         j.getInstance().getNodes().forEach(node -> {
             try {
                 System.err.println("Removed node " + node.getNodeName());
