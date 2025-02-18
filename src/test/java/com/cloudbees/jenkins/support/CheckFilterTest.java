@@ -80,7 +80,6 @@ public class CheckFilterTest {
     @Rule
     public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
 
-
     @After
     public void after() throws InterruptedException, ExecutionException {
         for (var agent : j.jenkins.getNodes()) {
@@ -91,12 +90,12 @@ public class CheckFilterTest {
         Thread.sleep(1000);
         System.out.println("slept for 1 seconds -----");
 
-//        try {
-//            j.after();
-//        }catch (Exception e){
-//            System.out.println("Tread dump -----");
-//            printThreadDump();
-//        }
+        //        try {
+        //            j.after();
+        //        }catch (Exception e){
+        //            System.out.println("Tread dump -----");
+        //            printThreadDump();
+        //        }
 
         System.out.println("Tread dump -----");
         printThreadDump();
@@ -111,7 +110,6 @@ public class CheckFilterTest {
             System.out.println(threadInfo.toString());
         }
     }
-
 
     @Test
     public void checkFilterTest() throws Exception {
