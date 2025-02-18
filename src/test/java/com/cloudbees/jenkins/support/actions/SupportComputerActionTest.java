@@ -7,13 +7,19 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import hudson.model.Computer;
 import hudson.model.Item;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -46,6 +52,37 @@ public class SupportComputerActionTest {
                 pAction,
                 Stream.of(Jenkins.ADMINISTER).collect(Collectors.toSet()),
                 Stream.of(Jenkins.READ, Item.READ, SupportPlugin.CREATE_BUNDLE).collect(Collectors.toSet()));
+    }
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+        //        try {
+        //            j.after();
+        //        }catch (Exception e){
+        //            System.out.println("Tread dump -----");
+        //            printThreadDump();
+        //        }
+
+        System.out.println("Tread dump -----");
+        printThreadDump();
+    }
+
+    public static void printThreadDump() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadMXBean.getAllThreadIds();
+        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.out.println(threadInfo.toString());
+        }
     }
 
     /*

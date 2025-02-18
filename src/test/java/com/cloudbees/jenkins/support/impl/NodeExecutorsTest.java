@@ -12,15 +12,21 @@ import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +43,38 @@ public class NodeExecutorsTest {
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
+
+
+    @After
+    public void after() throws InterruptedException, ExecutionException {
+        for (var agent : j.jenkins.getNodes()) {
+            System.err.println("Stopping " + agent);
+            agent.toComputer().disconnect(null).get();
+        }
+
+        Thread.sleep(1000);
+        System.out.println("slept for 1 seconds -----");
+
+        //        try {
+        //            j.after();
+        //        }catch (Exception e){
+        //            System.out.println("Tread dump -----");
+        //            printThreadDump();
+        //        }
+
+        System.out.println("Tread dump -----");
+        printThreadDump();
+    }
+
+    public static void printThreadDump() {
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        long[] threadIds = threadMXBean.getAllThreadIds();
+        ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds, Integer.MAX_VALUE);
+
+        for (ThreadInfo threadInfo : threadInfos) {
+            System.out.println(threadInfo.toString());
+        }
+    }
 
     @Test
     public void addContents() throws Exception {
