@@ -3,10 +3,15 @@ package com.cloudbees.jenkins.support.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -18,6 +23,20 @@ public class NodeRemoteDirectoryComponentTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @BeforeClass
+    public static void clearLog() throws Exception {
+        try (var os = Files.newOutputStream(
+                SupportPlugin.safeLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {}
+        System.err.println("Cleared " + SupportPlugin.safeLogFile);
+    }
+
+    @AfterClass
+    public static void showLog() throws Exception {
+        System.err.println("---%<--- " + SupportPlugin.safeLogFile);
+        Files.copy(SupportPlugin.safeLogFile, System.err);
+        System.err.println("--->%--- ");
+    }
 
     /*
      * Test adding agent remote directory content with the defaults.

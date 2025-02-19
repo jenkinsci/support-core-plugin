@@ -80,8 +80,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -108,6 +110,7 @@ import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
+import jenkins.util.JenkinsJVM;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -859,11 +862,13 @@ public class SupportPlugin extends Plugin {
         }
 
         public Void call() {
+            safeLog("LogInitializer on " + rootPath);
             // avoid double installation of the handler. JNLP agents can reconnect to the controller multiple times
             // and each connection gets a different RemoteClassLoader, so we need to evict them by class name,
             // not by their identity.
             closeAll();
             Runtime.getRuntime().addShutdownHook(new Thread(LogInitializer::closeAll, "close log handlers"));
+            safeLog("initialized hook");
             LogHolder.AGENT_LOG_HANDLER.setLevel(level);
             LogHolder.AGENT_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
             ROOT_LOGGER.addHandler(LogHolder.AGENT_LOG_HANDLER);
@@ -871,6 +876,7 @@ public class SupportPlugin extends Plugin {
         }
 
         private static void closeAll() {
+            safeLog("closeAll");
             for (Handler h : ROOT_LOGGER.getHandlers()) {
                 if (h.getClass()
                         .getName()
@@ -878,11 +884,35 @@ public class SupportPlugin extends Plugin {
                     ROOT_LOGGER.removeHandler(h);
                     try {
                         h.close();
+                        safeLog("removed " + h);
                     } catch (Throwable t) {
-                        // ignore
+                        safeLog("close failure: " + t);
                     }
                 }
             }
+        }
+    }
+
+    public static final Path safeLogFile;
+
+    static {
+        // Cannot use System.getProperty("java.io.tmpdir") since this has different values
+        // for test/controller JVM vs. agent (due to override in plugin POM).
+        try {
+            var tmp = Files.createTempFile(null, null);
+            Files.delete(tmp);
+            safeLogFile = tmp.getParent().resolve("safe.log");
+        } catch (IOException x) {
+            throw new AssertionError(x);
+        }
+    }
+
+    static void safeLog(String message) {
+        // TODO FileChannel.open + .lock if necessary to synchronize access
+        try (var w = Files.newBufferedWriter(safeLogFile, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+            w.write(Instant.now() + " [" + (JenkinsJVM.isJenkinsJVM() ? "J" : "A") + "] " + message + "\n");
+        } catch (IOException x) {
+            x.printStackTrace();
         }
     }
 
@@ -923,7 +953,12 @@ public class SupportPlugin extends Plugin {
                 if (channel != null) {
                     final FilePath rootPath = node.getRootPath();
                     if (rootPath != null) {
+                        safeLog("will call on " + rootPath);
                         CallAsyncWrapper.callAsync(channel, new LogInitializer(rootPath, getLogLevel()));
+                        // Note that this may or may not run before the test completes; to force it to run:
+                        // Thread.sleep(3000);
+                        // alternately:
+                        // channel.call(new LogInitializer(rootPath, getLogLevel()));
                     }
                 }
             } catch (IOException e) {
