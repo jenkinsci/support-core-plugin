@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +33,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import jenkins.util.JenkinsJVM;
 
+@SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "shut the front door")
 public class SafeLog {
     public static final Path file;
 
