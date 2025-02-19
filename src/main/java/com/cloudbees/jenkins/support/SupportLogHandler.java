@@ -236,6 +236,7 @@ public class SupportLogHandler extends Handler {
                 parentFile.mkdirs();
             }
 
+            StreamUtils.closeQuietly(null); // ensure class is loaded so close() can succeed
             boolean success = false;
             FileOutputStream fos = null;
             BufferedOutputStream bos = null;
