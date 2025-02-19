@@ -10,6 +10,7 @@ import hudson.slaves.DumbSlave;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -31,8 +32,15 @@ public class NodeRemoteDirectoryComponentTest {
         System.err.println("Cleared " + SafeLog.file);
     }
 
+    @After
+    public void showLog() throws Exception {
+        System.err.println("---%<--- " + SafeLog.file);
+        Files.copy(SafeLog.file, System.err);
+        System.err.println("--->%--- ");
+    }
+
     @AfterClass
-    public static void showLog() throws Exception {
+    public static void showFinalLog() throws Exception {
         System.err.println("---%<--- " + SafeLog.file);
         Files.copy(SafeLog.file, System.err);
         System.err.println("--->%--- ");
