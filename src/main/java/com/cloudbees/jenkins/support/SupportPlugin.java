@@ -862,6 +862,15 @@ public class SupportPlugin extends Plugin {
             // avoid double installation of the handler. JNLP agents can reconnect to the controller multiple times
             // and each connection gets a different RemoteClassLoader, so we need to evict them by class name,
             // not by their identity.
+            closeAll();
+            Runtime.getRuntime().addShutdownHook(new Thread(LogInitializer::closeAll, "close log handlers"));
+            LogHolder.AGENT_LOG_HANDLER.setLevel(level);
+            LogHolder.AGENT_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
+            ROOT_LOGGER.addHandler(LogHolder.AGENT_LOG_HANDLER);
+            return null;
+        }
+
+        private static void closeAll() {
             for (Handler h : ROOT_LOGGER.getHandlers()) {
                 if (h.getClass()
                         .getName()
@@ -874,10 +883,6 @@ public class SupportPlugin extends Plugin {
                     }
                 }
             }
-            LogHolder.AGENT_LOG_HANDLER.setLevel(level);
-            LogHolder.AGENT_LOG_HANDLER.setDirectory(new File(rootPath.getRemote(), SUPPORT_DIRECTORY_NAME), "all");
-            ROOT_LOGGER.addHandler(LogHolder.AGENT_LOG_HANDLER);
-            return null;
         }
     }
 
