@@ -879,6 +879,7 @@ public class SupportPlugin extends Plugin {
                     try {
                         h.close();
                     } catch (Throwable t) {
+                        // ignore
                     }
                 }
             }
