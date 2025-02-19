@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
-import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import hudson.ExtensionList;
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipFile;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -29,11 +27,6 @@ public class SmartLogCleanerTest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void cleanUp() throws Exception {

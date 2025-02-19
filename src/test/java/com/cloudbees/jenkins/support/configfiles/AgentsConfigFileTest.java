@@ -33,7 +33,6 @@ import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.EnvVars;
 import java.util.Map;
 import org.hamcrest.MatcherAssert;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -45,11 +44,6 @@ public class AgentsConfigFileTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void agentsConfigFile() throws Exception {

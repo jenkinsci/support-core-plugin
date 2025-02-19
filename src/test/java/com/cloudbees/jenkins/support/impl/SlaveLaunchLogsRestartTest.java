@@ -59,7 +59,6 @@ public final class SlaveLaunchLogsRestartTest {
                     allOf(
                             containsString("Z agent1] Remoting version: "),
                             containsString("Z agent2] Remoting version: ")));
-            SupportTestUtils.stopAgents();
         });
     }
 }

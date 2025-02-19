@@ -18,7 +18,6 @@ import java.util.Objects;
 import jenkins.model.Jenkins;
 import jenkins.model.identity.IdentityRootAction;
 import jenkins.slaves.RemotingVersionInfo;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -31,11 +30,6 @@ public class AboutJenkinsTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     @Issue("JENKINS-56245")

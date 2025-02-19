@@ -14,7 +14,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -23,11 +22,6 @@ public class DumpExportTableTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void testAddContents() throws Exception {

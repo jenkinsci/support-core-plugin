@@ -20,7 +20,6 @@ import hudson.slaves.SlaveComputer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import jenkins.slaves.StandardOutputSwapper;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
@@ -43,11 +42,6 @@ public class SlaveLaunchLogsTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(SlaveLaunchLogs.class, Level.FINE);
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void onlineOutboundAgent() throws Exception {

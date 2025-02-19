@@ -51,7 +51,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,11 +74,6 @@ public class CheckFilterTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void checkFilterTest() throws Exception {

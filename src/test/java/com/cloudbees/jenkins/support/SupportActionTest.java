@@ -52,7 +52,6 @@ import org.htmlunit.WebResponse;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -83,11 +82,6 @@ public class SupportActionTest {
     @Before
     public void setUp() {
         root = ExtensionList.lookupSingleton(SupportAction.class);
-    }
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
     }
 
     @Test

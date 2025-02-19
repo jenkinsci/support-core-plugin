@@ -70,6 +70,8 @@
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+    <!-- TODO https://github.com/jenkinsci/jenkins-test-harness/pull/922 -->
+    <jenkins-test-harness.version>2397.v7a_7075012def</jenkins-test-harness.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>

@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,11 +49,6 @@ public class Security2186Test {
     public void setup() throws Exception {
         System.setProperty("password", "mySecret");
         setupAgent();
-    }
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
     }
 
     @Test

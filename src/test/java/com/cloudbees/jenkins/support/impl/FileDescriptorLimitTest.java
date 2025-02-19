@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,11 +43,6 @@ public class FileDescriptorLimitTest {
 
     @Rule
     public LoggerRule logging = new LoggerRule();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Test
     public void addContents() throws Exception {

@@ -25,12 +25,10 @@ package com.cloudbees.jenkins.support.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
 import java.io.IOException;
-import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -40,11 +38,6 @@ public class SensitiveContentFilterTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
-
-    @After
-    public void stopAgents() throws Exception {
-        SupportTestUtils.stopAgents();
-    }
 
     @Issue("JENKINS-21670")
     @Test
