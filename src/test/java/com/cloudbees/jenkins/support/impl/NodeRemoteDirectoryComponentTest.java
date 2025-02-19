@@ -3,7 +3,7 @@ package com.cloudbees.jenkins.support.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.cloudbees.jenkins.support.SupportPlugin;
+import com.cloudbees.jenkins.support.SafeLog;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
@@ -26,15 +26,15 @@ public class NodeRemoteDirectoryComponentTest {
 
     @BeforeClass
     public static void clearLog() throws Exception {
-        try (var os = Files.newOutputStream(
-                SupportPlugin.safeLogFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {}
-        System.err.println("Cleared " + SupportPlugin.safeLogFile);
+        try (var os =
+                Files.newOutputStream(SafeLog.file, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {}
+        System.err.println("Cleared " + SafeLog.file);
     }
 
     @AfterClass
     public static void showLog() throws Exception {
-        System.err.println("---%<--- " + SupportPlugin.safeLogFile);
-        Files.copy(SupportPlugin.safeLogFile, System.err);
+        System.err.println("---%<--- " + SafeLog.file);
+        Files.copy(SafeLog.file, System.err);
         System.err.println("--->%--- ");
     }
 
