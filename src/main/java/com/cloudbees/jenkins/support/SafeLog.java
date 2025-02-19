@@ -58,5 +58,16 @@ public class SafeLog {
         }
     }
 
+    public static void clear() throws Exception {
+        try (var os = Files.newOutputStream(file, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {}
+        System.err.println("Cleared " + file);
+    }
+
+    public static void show() throws Exception {
+        System.err.println("---%<--- " + file);
+        Files.copy(file, System.err);
+        System.err.println("--->%--- ");
+    }
+
     private SafeLog() {}
 }

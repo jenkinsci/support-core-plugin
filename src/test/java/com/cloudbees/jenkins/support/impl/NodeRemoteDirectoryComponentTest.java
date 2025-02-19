@@ -7,8 +7,6 @@ import com.cloudbees.jenkins.support.SafeLog;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
@@ -26,16 +24,12 @@ public class NodeRemoteDirectoryComponentTest {
 
     @Before
     public void clearLog() throws Throwable {
-        try (var os =
-                Files.newOutputStream(SafeLog.file, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {}
-        System.err.println("Cleared " + SafeLog.file);
+        SafeLog.clear();
     }
 
     @After
     public void showLog() throws Throwable {
-        System.err.println("---%<--- " + SafeLog.file);
-        Files.copy(SafeLog.file, System.err);
-        System.err.println("--->%--- ");
+        SafeLog.show();
     }
 
     /*
