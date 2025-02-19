@@ -177,12 +177,10 @@ public class SupportLogHandler extends Handler {
 
     @Override
     public void close() throws SecurityException {
-        SafeLog.print("close " + this.logDirectry + " " + this.logFilePrefix);
         outputLock.lock();
         try {
             if (writer != null) {
                 StreamUtils.closeQuietly(writer);
-                SafeLog.print("closed " + writer);
                 writer = null;
             }
         } finally {
@@ -246,7 +244,6 @@ public class SupportLogHandler extends Handler {
                 bos = new BufferedOutputStream(fos);
                 writer = new OutputStreamWriter(bos, StandardCharsets.UTF_8);
                 setWriter(writer);
-                SafeLog.print("setWriter " + file);
                 fileCount = 0;
                 success = true;
             } finally {

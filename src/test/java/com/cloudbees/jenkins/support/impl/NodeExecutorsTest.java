@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.cloudbees.jenkins.support.SafeLog;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
@@ -22,8 +21,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,16 +37,6 @@ public class NodeExecutorsTest {
 
     @ClassRule
     public static BuildWatcher bw = new BuildWatcher();
-
-    @Before
-    public void clearLog() throws Throwable {
-        SafeLog.clear();
-    }
-
-    @After
-    public void showLog() throws Throwable {
-        SafeLog.show();
-    }
 
     @Test
     public void addContents() throws Exception {
