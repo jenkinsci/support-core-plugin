@@ -44,7 +44,7 @@ public class CustomLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(CustomLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(CustomLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
-    private static final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
+    private final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
     private final List<LogRecorder> logRecorders = Jenkins.get().getLog().getRecorders();
 
     @NonNull
@@ -97,14 +97,15 @@ public class CustomLogs extends Component {
             }
 
             // Add rotated log files
-            File[] rotatedLogFiles = customLogs.listFiles((dir, filename) -> filename.matches(name + "\\.log\\.\\d+"));
+            File[] rotatedLogFiles =
+                    customLogs.listFiles((dir, filename) -> filename.matches(name + "[.]log[.][0-9]+"));
             if (rotatedLogFiles == null) {
                 LOGGER.fine("No rotated logs found for : " + name);
                 return;
             }
 
             for (File rotatedLogFile : rotatedLogFiles) {
-                String rotatedEntryName = "nodes/master/logs/custom/{0}.log.{1}";
+                String rotatedEntryName = "nodes/master/logs/custom/{0}.log.";
 
                 try {
                     // Fetch the rotations number of the log
@@ -113,7 +114,7 @@ public class CustomLogs extends Component {
                     String logRotationNumber = logNameParts[logNameParts.length - 1];
 
                     result.add(
-                            new FileContent(rotatedEntryName, new String[] {name, logRotationNumber}, rotatedLogFile));
+                            new FileContent(rotatedEntryName + logRotationNumber, new String[] {name}, rotatedLogFile));
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, "Error while adding rotated log files for " + name, e);
                 }
@@ -125,6 +126,7 @@ public class CustomLogs extends Component {
         private final RewindableRotatingFileOutputStream stream;
         private final Handler handler;
         private int count;
+        private final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
 
         @SuppressFBWarnings(
                 value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
