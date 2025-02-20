@@ -24,6 +24,8 @@
 
 package com.cloudbees.jenkins.support;
 
+import static com.cloudbees.jenkins.support.SupportAction.SYNC_SUPPORT_BUNDLE;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.ComponentVisitor;
 import com.cloudbees.jenkins.support.api.Container;
@@ -69,6 +71,7 @@ import hudson.slaves.ComputerListener;
 import hudson.triggers.SafeTimerTask;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -97,12 +100,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.DoubleConsumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import jenkins.metrics.impl.JenkinsMetricProviderImpl;
 import jenkins.model.GlobalConfiguration;
@@ -352,12 +357,74 @@ public class SupportPlugin extends Plugin {
      */
     public static void writeBundle(OutputStream outputStream, final List<? extends Component> components)
             throws IOException {
-        writeBundle(outputStream, components, new ComponentVisitor() {
-            @Override
-            public <T extends Component> void visit(Container container, T component) {
-                component.addContents(container);
-            }
-        });
+        writeBundle(
+                outputStream,
+                components,
+                new ComponentVisitor() {
+                    @Override
+                    public <T extends Component> void visit(Container container, T component) {
+                        component.addContents(container);
+                    }
+                },
+                null,
+                true);
+    }
+
+    /**
+     * Generate a bundle for the specified synchronous components.
+     * This is useful when generating a support bundle asynchronously. There are some components that can't be generated
+     * asynchronously as they need some context from the request. So these components must be first processed synchronously
+     * and then the remaining components can be processed asynchronously.
+     *
+     * @param components a list of synchronous {@link Component} to include in the bundle
+     * @throws IOException if an error occurs while generating the bundle.
+     */
+    static void writeBundleForSyncComponents(OutputStream outputStream, final List<? extends Component> components)
+            throws IOException {
+        writeBundle(
+                outputStream,
+                components,
+                new ComponentVisitor() {
+                    @Override
+                    public <T extends Component> void visit(Container container, T component) {
+                        component.addContents(container);
+                    }
+                },
+                null,
+                false);
+    }
+
+    /**
+     * Generate a bundle for the specified components.
+     *
+     * @param components a list of {@link Component} to include in the bundle
+     * @param progressCallback a callback to report progress back to the UI see ProgressiveRendering.progress
+     * @param outputPath the path with the support bundle will be created in the cases of async generations
+     * @throws IOException if an error occurs while generating the bundle.
+     */
+    static void writeBundle(
+            OutputStream outputStream,
+            final List<? extends Component> components,
+            DoubleConsumer progressCallback,
+            Path outputPath)
+            throws IOException {
+        writeBundle(
+                outputStream,
+                components,
+                new ComponentVisitor() {
+                    private final int totalComponents = components.size();
+                    private int currentIteration = 0;
+
+                    @Override
+                    public <T extends Component> void visit(Container container, T component) {
+                        if (component.canBeGeneratedAsync()) {
+                            component.addContents(container);
+                        }
+                        progressCallback.accept((currentIteration++) / (double) totalComponents);
+                    }
+                },
+                outputPath,
+                true);
     }
 
     /**
@@ -366,10 +433,16 @@ public class SupportPlugin extends Plugin {
      * @param outputStream an {@link OutputStream}
      * @param components a list of {@link Component} to include in the bundle
      * @param componentConsumer a {@link ComponentVisitor}
+     * @param outputPath the path with the support bundle will be created in the cases of async generations
+     *                   set this to null, if generating support bundle synchronously
      * @throws IOException if an error occurs while generating the bundle.
      */
     public static void writeBundle(
-            OutputStream outputStream, final List<? extends Component> components, ComponentVisitor componentConsumer)
+            OutputStream outputStream,
+            final List<? extends Component> components,
+            ComponentVisitor componentConsumer,
+            Path outputPath,
+            boolean addManifest)
             throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
@@ -390,7 +463,9 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms to process all components");
-                contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
+                if (addManifest) {
+                    contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
+                }
 
                 FilteredOutputStream textOut = new FilteredOutputStream(binaryOut, filter);
                 OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
@@ -444,6 +519,23 @@ public class SupportPlugin extends Plugin {
                                         + name);
                     }
                 }
+
+                // process for async components
+                if (outputPath != null) {
+                    try {
+                        File zipFile = outputPath.resolve(SYNC_SUPPORT_BUNDLE).toFile();
+                        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+                            ZipEntry entry;
+                            while ((entry = zis.getNextEntry()) != null) {
+                                binaryOut.putNextEntry(entry);
+                                zis.transferTo(binaryOut);
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.log(Level.WARNING, "Error while processing sync components in async mode", e);
+                    }
+                }
+
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms" + " and generated "
