@@ -9,19 +9,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
-import com.cloudbees.jenkins.support.api.Container;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.logging.LogRecorder;
-import hudson.security.Permission;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -30,6 +25,11 @@ public class CustomLogsTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
+    @After
+    public void closeAll() {
+        CustomLogs.closeAll();
+    }
 
     @Test
     public void testCustomLogsContentEmpty() {
@@ -46,25 +46,7 @@ public class CustomLogsTest {
         j.getInstance().getLog().getRecorders().add(testLogRecorder);
         testTarget.enable();
         testLogRecorder.save();
-        SupportTestUtils.invokeComponentToString(new Component() {
-
-            @NonNull
-            @Override
-            public Set<Permission> getRequiredPermissions() {
-                return Collections.singleton(Jenkins.ADMINISTER);
-            }
-
-            @NonNull
-            @Override
-            public String getDisplayName() {
-                return "";
-            }
-
-            @Override
-            public void addContents(@NonNull Container container) {
-                Logger.getLogger(CustomLogsTest.class.getName()).fine("Testing custom log recorders");
-            }
-        });
+        Logger.getLogger(CustomLogsTest.class.getName()).fine("Testing custom log recorders");
         String customLogs = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(CustomLogs.class)));
         assertFalse("Should write CustomLogsTest FINE logs", customLogs.isEmpty());
