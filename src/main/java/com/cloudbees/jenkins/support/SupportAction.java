@@ -71,7 +71,6 @@ import jenkins.util.Timer;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -373,7 +372,8 @@ public class SupportAction implements RootAction, StaplerProxy {
                     throw new IOException("Failed to create directory: " + outputDir.toAbsolutePath(), e);
                 }
             }
-            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir.toString(), SYNC_SUPPORT_BUNDLE))) {
+            try (FileOutputStream fileOutputStream =
+                    new FileOutputStream(new File(outputDir.toString(), SYNC_SUPPORT_BUNDLE))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
@@ -552,7 +552,8 @@ public class SupportAction implements RootAction, StaplerProxy {
                 }
             }
 
-            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir.toString(), supportBundleName))) {
+            try (FileOutputStream fileOutputStream =
+                    new FileOutputStream(new File(outputDir.toString(), supportBundleName))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     SupportPlugin.writeBundle(fileOutputStream, components, this::progress, outputDir);

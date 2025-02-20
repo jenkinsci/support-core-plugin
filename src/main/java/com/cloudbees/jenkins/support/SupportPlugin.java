@@ -379,13 +379,8 @@ public class SupportPlugin extends Plugin {
      * @param components a list of synchronous {@link Component} to include in the bundle
      * @throws IOException if an error occurs while generating the bundle.
      */
-<<<<<<< Updated upstream
-    public static void writeBundleForSyncComponents(
-            OutputStream outputStream, final List<? extends Component> components) throws IOException {
-=======
     static void writeBundleForSyncComponents(OutputStream outputStream, final List<? extends Component> components)
             throws IOException {
->>>>>>> Stashed changes
         writeBundle(
                 outputStream,
                 components,
