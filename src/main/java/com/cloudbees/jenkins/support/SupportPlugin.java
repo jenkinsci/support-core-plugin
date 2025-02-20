@@ -371,17 +371,21 @@ public class SupportPlugin extends Plugin {
     }
 
     /**
-     * Generate a bundle for all synchronous components.
+     * Generate a bundle for the specified synchronous components.
      * This is useful when generating a support bundle asynchronously. There are some components that can't be generated
      * asynchronously as they need some context from the request. So these components must be first processed synchronously
      * and then the remaining components can be processed asynchronously.
      *
-     * @param outputStream an {@link OutputStream}
-     * @param components a list of {@link Component} to include in the bundle
+     * @param components a list of synchronous {@link Component} to include in the bundle
      * @throws IOException if an error occurs while generating the bundle.
      */
+<<<<<<< Updated upstream
     public static void writeBundleForSyncComponents(
             OutputStream outputStream, final List<? extends Component> components) throws IOException {
+=======
+    static void writeBundleForSyncComponents(OutputStream outputStream, final List<? extends Component> components)
+            throws IOException {
+>>>>>>> Stashed changes
         writeBundle(
                 outputStream,
                 components,
@@ -396,15 +400,14 @@ public class SupportPlugin extends Plugin {
     }
 
     /**
-     * Generate a bundle for all components that are selected in the Global Configuration.
+     * Generate a bundle for the specified components.
      *
-     * @param outputStream an {@link OutputStream}
      * @param components a list of {@link Component} to include in the bundle
      * @param progressCallback a callback to report progress back to the UI see ProgressiveRendering.progress
      * @param outputPath the path with the support bundle will be created in the cases of async generations
      * @throws IOException if an error occurs while generating the bundle.
      */
-    public static void writeBundle(
+    static void writeBundle(
             OutputStream outputStream,
             final List<? extends Component> components,
             DoubleConsumer progressCallback,
@@ -699,7 +702,6 @@ public class SupportPlugin extends Plugin {
                 manifest.append("  * ").append(component.getDisplayName()).append("\n\n");
                 LOGGER.log(Level.FINE, "Start processing " + component.getDisplayName());
                 long startTime = System.currentTimeMillis();
-                // Calculate progress
                 componentVisitor.visit(contentsContainer, component);
                 LOGGER.log(
                         Level.FINE,

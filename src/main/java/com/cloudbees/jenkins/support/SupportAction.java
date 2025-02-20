@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -108,7 +109,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
     public static final String SYNC_SUPPORT_BUNDLE = "support-bundle.zip";
 
-    private static final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
+    private final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
 
     @Override
     @Restricted(NoExternalUse.class)
@@ -364,13 +365,15 @@ public class SupportAction implements RootAction, StaplerProxy {
         List<Component> syncComponent =
                 components.stream().filter(c -> !c.canBeGeneratedAsync()).toList();
         if (!syncComponent.isEmpty()) {
-            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
-            if (!outputDir.exists()) {
-                if (!outputDir.mkdirs()) {
-                    throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
+            Path outputDir = SUPPORT_BUNDLE_CREATION_FOLDER.resolve(taskId.toString());
+            if (!Files.exists(outputDir)) {
+                try {
+                    Files.createDirectories(outputDir);
+                } catch (IOException e) {
+                    throw new IOException("Failed to create directory: " + outputDir.toAbsolutePath(), e);
                 }
             }
-            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, SYNC_SUPPORT_BUNDLE))) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir.toString(), SYNC_SUPPORT_BUNDLE))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
                     SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
@@ -517,7 +520,7 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public static class SupportBundleAsyncGenerator extends ProgressiveRendering {
-        private final Logger logger = Logger.getLogger(SupportBundleAsyncGenerator.class.getName());
+        private final Logger logger = Logger.getLogger(SupportAction.class.getName());
         private UUID taskId;
         private boolean isCompleted;
         private List<Component> components;
@@ -540,18 +543,19 @@ public class SupportAction implements RootAction, StaplerProxy {
             this.supportBundleName = BundleFileName.generate();
             this.supportBundleGenerationInProgress = true;
             logger.fine("Generating support bundle... task id " + taskId);
-            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
-            if (!outputDir.exists()) {
-                if (!outputDir.mkdirs()) {
-                    throw new IOException("Failed to create directory: " + outputDir.getAbsolutePath());
+            Path outputDir = SUPPORT_BUNDLE_CREATION_FOLDER.resolve(taskId.toString());
+            if (!Files.exists(outputDir)) {
+                try {
+                    Files.createDirectories(outputDir);
+                } catch (IOException e) {
+                    throw new IOException("Failed to create directory: " + outputDir.toAbsolutePath(), e);
                 }
             }
 
-            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir, supportBundleName))) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(new File(outputDir.toString(), supportBundleName))) {
                 SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
                 try {
-                    SupportPlugin.writeBundle(
-                            fileOutputStream, components, this::progress, Path.of(outputDir.getAbsolutePath()));
+                    SupportPlugin.writeBundle(fileOutputStream, components, this::progress, outputDir);
                 } finally {
                     SupportPlugin.clearRequesterAuthentication();
                 }
@@ -588,9 +592,8 @@ public class SupportAction implements RootAction, StaplerProxy {
 
         rsp.setContentType("application/zip");
         rsp.addHeader("Content-Disposition", "attachment; filename=" + supportBundleName);
-        try (ServletOutputStream outputStream = rsp.getOutputStream();
-                FileInputStream inputStream = new FileInputStream(bundleFile)) {
-            IOUtils.copy(inputStream, outputStream);
+        try (ServletOutputStream outputStream = rsp.getOutputStream()) {
+            Files.copy(bundleFile.toPath(), outputStream);
         }
 
         // Clean up temporary files after assembling the full bundle
@@ -608,7 +611,7 @@ public class SupportAction implements RootAction, StaplerProxy {
                                 logger.log(Level.WARNING, () -> "Unable to delete " + outputDir);
                             }
                         },
-                        1,
-                        TimeUnit.HOURS);
+                        15,
+                        TimeUnit.MINUTES);
     }
 }

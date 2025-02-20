@@ -28,12 +28,14 @@ import hudson.model.Slave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,9 +75,6 @@ import org.xml.sax.SAXException;
  * @author Kohsuke Kawaguchi
  */
 public class SupportActionTest {
-
-    private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
-            Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -347,7 +346,7 @@ public class SupportActionTest {
         AtomicReference<HtmlPage> pageRef = new AtomicReference<>(page);
 
         HtmlPage finalPage = page;
-        await().timeout(10, TimeUnit.HOURS).until(() -> {
+        await().timeout(10, TimeUnit.SECONDS).until(() -> {
             try {
                 return pageRef.get().getAnchorByText("click here") != null;
             } catch (ElementNotFoundException e) {
@@ -361,8 +360,8 @@ public class SupportActionTest {
             // Download the zip file
             WebResponse response = downloadLink.click().getWebResponse();
             zipFile = File.createTempFile("downloaded", ".zip");
-            try (OutputStream os = Files.newOutputStream(zipFile.toPath())) {
-                IOUtils.copy(response.getContentAsStream(), os);
+            try (InputStream in = response.getContentAsStream()) {
+                Files.copy(in, zipFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         } else {
             throw new IOException("Download link not found after " + 10 + " retries");
