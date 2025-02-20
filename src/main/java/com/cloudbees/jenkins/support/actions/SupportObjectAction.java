@@ -137,12 +137,17 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                 "Content-Disposition", "inline; filename=" + BundleFileName.generate(getBundleNameQualifier()) + ";");
 
         try {
-            SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
-                @Override
-                public <C extends Component> void visit(Container container, C component) {
-                    ((ObjectComponent<T>) component).addContents(container, object);
-                }
-            });
+            SupportPlugin.writeBundle(
+                    rsp.getOutputStream(),
+                    components,
+                    new ComponentVisitor() {
+                        @Override
+                        public <C extends Component> void visit(Container container, C component) {
+                            ((ObjectComponent<T>) component).addContents(container, object);
+                        }
+                    },
+                    null,
+                    true);
             LOGGER.fine("Response completed");
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
