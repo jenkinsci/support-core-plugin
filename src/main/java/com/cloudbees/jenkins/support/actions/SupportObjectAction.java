@@ -150,7 +150,8 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                                 ((ObjectComponent<T>) component).addContents(container, object);
                             }
                         },
-                        null,true);
+                        null,
+                        true);
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e);
             } finally {

@@ -362,12 +362,12 @@ public class SupportPlugin extends Plugin {
                 components,
                 new ComponentVisitor() {
                     @Override
-
                     public <T extends Component> void visit(Container container, T component) {
                         component.addContents(container);
                     }
                 },
-                null,true);
+                null,
+                true);
     }
 
     /**
@@ -380,8 +380,8 @@ public class SupportPlugin extends Plugin {
      * @param components a list of {@link Component} to include in the bundle
      * @throws IOException if an error occurs while generating the bundle.
      */
-    public static void writeBundleForSyncComponents(OutputStream outputStream, final List<? extends Component> components)
-            throws IOException {
+    public static void writeBundleForSyncComponents(
+            OutputStream outputStream, final List<? extends Component> components) throws IOException {
         writeBundle(
                 outputStream,
                 components,
@@ -391,7 +391,8 @@ public class SupportPlugin extends Plugin {
                         component.addContents(container);
                     }
                 },
-                null,false);
+                null,
+                false);
     }
 
     /**
@@ -424,7 +425,8 @@ public class SupportPlugin extends Plugin {
                         progressCallback.accept((currentIteration++) / (double) totalComponents);
                     }
                 },
-                outputPath,true);
+                outputPath,
+                true);
     }
 
     /**
@@ -441,7 +443,8 @@ public class SupportPlugin extends Plugin {
             OutputStream outputStream,
             final List<? extends Component> components,
             ComponentVisitor componentConsumer,
-            Path outputPath,boolean addManifest)
+            Path outputPath,
+            boolean addManifest)
             throws IOException {
         StringBuilder manifest = new StringBuilder();
         StringWriter errors = new StringWriter();
@@ -462,7 +465,7 @@ public class SupportPlugin extends Plugin {
                 LOGGER.log(
                         Level.FINE,
                         "Took " + (System.currentTimeMillis() - startTime) + "ms to process all components");
-                if(addManifest) {
+                if (addManifest) {
                     contents.add(new UnfilteredStringContent("manifest.md", manifest.toString()));
                 }
 
