@@ -163,7 +163,6 @@ public class SupportPlugin extends Plugin {
             Jenkins.ADMINISTER,
             PermissionScope.JENKINS);
 
-    private static final ThreadLocal<Authentication> requesterAuthentication = new InheritableThreadLocal<>();
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     public static final String SUPPORT_DIRECTORY_NAME = "support";
@@ -239,16 +238,12 @@ public class SupportPlugin extends Plugin {
         return new File(SafeTimerTask.getLogsRoot(), SUPPORT_DIRECTORY_NAME);
     }
 
+    /**
+     * @deprecated Check permissions directly.
+     */
+    @Deprecated
     public static Authentication getRequesterAuthentication() {
-        return requesterAuthentication.get();
-    }
-
-    public static void setRequesterAuthentication(Authentication authentication) {
-        requesterAuthentication.set(authentication);
-    }
-
-    public static void clearRequesterAuthentication() {
-        requesterAuthentication.remove();
+        return Jenkins.getAuthentication2();
     }
 
     public void setSupportProvider(SupportProvider supportProvider) throws IOException {
@@ -1066,7 +1061,6 @@ public class SupportPlugin extends Plugin {
                                 thread.setName(String.format(
                                         "%s periodic bundle generator: since %s",
                                         SupportPlugin.class.getSimpleName(), new Date()));
-                                clearRequesterAuthentication();
                                 try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
                                     File bundleDir = getRootDirectory();
                                     if (!bundleDir.exists()) {

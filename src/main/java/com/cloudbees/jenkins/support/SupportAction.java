@@ -34,8 +34,6 @@ import hudson.Extension;
 import hudson.model.Api;
 import hudson.model.Failure;
 import hudson.model.RootAction;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import hudson.security.Permission;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
@@ -374,12 +372,7 @@ public class SupportAction implements RootAction, StaplerProxy {
             }
             try (FileOutputStream fileOutputStream =
                     new FileOutputStream(new File(outputDir.toString(), SYNC_SUPPORT_BUNDLE))) {
-                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-                try {
-                    SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
-                } finally {
-                    SupportPlugin.clearRequesterAuthentication();
-                }
+                SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
             } finally {
                 logger.fine("Processing support bundle sunc completed");
             }
@@ -472,18 +465,10 @@ public class SupportAction implements RootAction, StaplerProxy {
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-            try {
-                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
-                } catch (IOException e) {
-                    logger.log(Level.FINE, e.getMessage(), e);
-                }
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
-            }
-        } finally {
+            SupportPlugin.writeBundle(servletOutputStream, components);
             logger.fine("Response completed");
+        } catch (IOException e) {
+            logger.log(Level.FINE, e.getMessage(), e);
         }
     }
 
@@ -554,12 +539,7 @@ public class SupportAction implements RootAction, StaplerProxy {
 
             try (FileOutputStream fileOutputStream =
                     new FileOutputStream(new File(outputDir.toString(), supportBundleName))) {
-                SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-                try {
-                    SupportPlugin.writeBundle(fileOutputStream, components, this::progress, outputDir);
-                } finally {
-                    SupportPlugin.clearRequesterAuthentication();
-                }
+                SupportPlugin.writeBundle(fileOutputStream, components, this::progress, outputDir);
             } finally {
                 logger.fine("Processing support bundle async completed");
             }
