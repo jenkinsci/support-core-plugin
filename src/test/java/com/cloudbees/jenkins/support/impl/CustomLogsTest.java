@@ -137,5 +137,14 @@ public class CustomLogsTest {
 
         // Assert the result map
         assertEquals(expectedMap, resultMap);
+
+        // Cleanup all the dummy files
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "test1.log"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "test1.log.1"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "test1.log.2"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "second.test2.log"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "second.test2.log.1"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "second.test2.log.2"));
+        Files.deleteIfExists(Paths.get(customLogsDir.getPath(), "nonRotatedCustomLog.log"));
     }
 }
