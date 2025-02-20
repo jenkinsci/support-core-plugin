@@ -115,8 +115,7 @@ public class CustomLogs extends Component {
                     result.add(
                             new FileContent(rotatedEntryName, new String[] {name, logRotationNumber}, rotatedLogFile));
                 } catch (Exception e) {
-                    LOGGER.warning(String.format(
-                            "Error while adding rotated log files for '%s'. Error: %s", name, e.getMessage()));
+                    LOGGER.log(Level.WARNING, "Error while adding rotated log files for " + name, e);
                 }
             }
         }
