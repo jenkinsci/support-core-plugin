@@ -3,8 +3,8 @@ package com.cloudbees.jenkins.support.actions;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.jenkins.support.SupportPlugin;
@@ -24,20 +24,18 @@ import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Allan Burdajewicz
  */
-public class SupportAbstractItemActionTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class SupportAbstractItemActionTest {
 
     @Test
-    public void onlyAdminCanSeeAction() throws Exception {
+    void onlyAdminCanSeeAction(JenkinsRule j) throws Exception {
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         SupportAbstractItemAction pAction =
@@ -62,7 +60,7 @@ public class SupportAbstractItemActionTest {
      * Integration test that simulates the user action of clicking the button to generate the bundle from a Folder.
      */
     @Test
-    public void generateFolderBundleDefaultsAndCheckContent() throws Exception {
+    void generateFolderBundleDefaultsAndCheckContent(JenkinsRule j) throws Exception {
         Folder folder = j.createProject(Folder.class, "testFolder");
         Folder subFolder = folder.createProject(Folder.class, "subFolder");
         subFolder.createProject(FreeStyleProject.class, "testFreestyle");
@@ -78,15 +76,15 @@ public class SupportAbstractItemActionTest {
         assertNotNull(z.getEntry("manifest.md"));
         assertNotNull(z.getEntry(itemEntryPrefix + "/config.xml"));
         assertNull(
-                "'**/jobs/**' should be excluded by default",
-                z.getEntry(itemEntryPrefix + "/jobs/subFolder/jobs/testFreestyle/config.xml"));
+                z.getEntry(itemEntryPrefix + "/jobs/subFolder/jobs/testFreestyle/config.xml"),
+                "'**/jobs/**' should be excluded by default");
     }
 
     /*
      * Integration test that simulates the user action of clicking the button to generate the bundle from a Freestyle job.
      */
     @Test
-    public void generateFreestyleBundleDefaultsAndCheckContent() throws Exception {
+    void generateFreestyleBundleDefaultsAndCheckContent(JenkinsRule j) throws Exception {
         Folder folder = j.createProject(Folder.class, "testFolder");
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, "testFreestyle");
         QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
@@ -113,7 +111,7 @@ public class SupportAbstractItemActionTest {
      * Integration test that simulates the user action of clicking the button to generate the bundle from a Pipeline job.
      */
     @Test
-    public void generatePipelineBundleDefaultsAndCheckContent() throws Exception {
+    void generatePipelineBundleDefaultsAndCheckContent(JenkinsRule j) throws Exception {
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))

@@ -4,8 +4,8 @@
 package com.cloudbees.jenkins.support.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -20,35 +20,33 @@ import java.util.Collections;
 import java.util.function.Consumer;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class OtherLogsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class OtherLogsTest {
 
     @Test
-    public void testOtherLogsContentEmpty() {
-        mockFinderAndGcLogs(finder -> {
+    void testOtherLogsContentEmpty(JenkinsRule j) {
+        mockFinderAndGcLogs(j, finder -> {
             String otherLogs = SupportTestUtils.invokeComponentToString(new OtherLogs());
-            assertTrue("Should not write anything", otherLogs.isEmpty());
+            assertTrue(otherLogs.isEmpty(), "Should not write anything");
         });
     }
 
     @Test
-    public void testOtherLogsRootDir() throws IOException {
+    void testOtherLogsRootDir(JenkinsRule j) throws IOException {
         File testFile = new File(j.getInstance().getRootDir(), "test.log");
         Files.write(
                 testFile.toPath(), Collections.singletonList("This is a test from root dir"), Charset.defaultCharset());
         String otherLogs = SupportTestUtils.invokeComponentToString(new OtherLogs());
-        assertFalse("Should collect *.log under the root dir", otherLogs.isEmpty());
+        assertFalse(otherLogs.isEmpty(), "Should collect *.log under the root dir");
         assertThat(otherLogs, Matchers.containsString("This is a test from root dir"));
     }
 
     @Test
-    public void testOtherLogsExcludeGCSimpleFile() throws Exception {
+    void testOtherLogsExcludeGCSimpleFile(JenkinsRule j) throws Exception {
         File testFile = new File(j.getInstance().getRootDir(), "test.log");
         Files.write(
                 testFile.toPath(), Collections.singletonList("This is a test from root dir"), Charset.defaultCharset());
@@ -56,7 +54,7 @@ public class OtherLogsTest {
         File tmpFile = File.createTempFile("gclogs", ".log", j.getInstance().getRootDir());
         Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             if (SupportTestUtils.isJava8OrBelow()) {
                 when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
                         .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tmpFile.getAbsolutePath());
@@ -74,7 +72,7 @@ public class OtherLogsTest {
     }
 
     @Test
-    public void testOtherLogsExcludeGCRotatedFiles() throws Exception {
+    void testOtherLogsExcludeGCRotatedFiles(JenkinsRule j) throws Exception {
         File rootDir = j.getInstance().getRootDir();
         File testFile = new File(rootDir, "test.log");
         Files.write(
@@ -85,7 +83,7 @@ public class OtherLogsTest {
             Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             if (SupportTestUtils.isJava8OrBelow()) {
                 when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
                 when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
@@ -106,7 +104,7 @@ public class OtherLogsTest {
     }
 
     @Test
-    public void testOtherLogsExcludeGCParameterizedFiles() throws Exception {
+    void testOtherLogsExcludeGCParameterizedFiles(JenkinsRule j) throws Exception {
         File rootDir = j.getInstance().getRootDir();
         File testFile = new File(rootDir, "test.log");
         Files.createFile(testFile.toPath());
@@ -118,7 +116,7 @@ public class OtherLogsTest {
             Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             if (SupportTestUtils.isJava8OrBelow()) {
                 when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
                         .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(rootDir, "gc.%t.%p.log").getAbsolutePath());
@@ -137,7 +135,7 @@ public class OtherLogsTest {
     }
 
     @Test
-    public void testOtherLogsExcludeGCParameterizedAndRotatedFiles() throws Exception {
+    void testOtherLogsExcludeGCParameterizedAndRotatedFiles(JenkinsRule j) throws Exception {
         File rootDir = j.getInstance().getRootDir();
         File testFile = new File(rootDir, "test.log");
         Files.createFile(testFile.toPath());
@@ -150,7 +148,7 @@ public class OtherLogsTest {
                     Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             if (SupportTestUtils.isJava8OrBelow()) {
                 when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
                         .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(rootDir, "gc%p.log").getAbsolutePath());
@@ -172,7 +170,7 @@ public class OtherLogsTest {
     }
 
     @Test
-    public void testOtherLogsNotExcludeGCLogsDirIsNotInRootDir() throws Exception {
+    void testOtherLogsNotExcludeGCLogsDirIsNotInRootDir(JenkinsRule j) throws Exception {
         File rootDir = j.getInstance().getRootDir();
         File testFile = new File(rootDir, "test.log");
         Files.write(
@@ -184,7 +182,7 @@ public class OtherLogsTest {
             Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             // Configure GC Logs to go under $JENKINS_ROOT/gc/
             if (SupportTestUtils.isJava8OrBelow()) {
                 when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
@@ -218,12 +216,13 @@ public class OtherLogsTest {
         });
     }
 
-    private void assertContentContainsFiles(Collection<String> fileNames) {
+    private static void assertContentContainsFiles(Collection<String> fileNames) {
         Assertions.assertThat(SupportTestUtils.invokeComponentToMap(new OtherLogs()))
                 .containsOnlyKeys(fileNames);
     }
 
-    private GCLogs.VmArgumentFinder mockFinderAndGcLogs(Consumer<GCLogs.VmArgumentFinder> consumer) {
+    private static GCLogs.VmArgumentFinder mockFinderAndGcLogs(
+            JenkinsRule j, Consumer<GCLogs.VmArgumentFinder> consumer) {
         GCLogs.VmArgumentFinder finder = mock(GCLogs.VmArgumentFinder.class);
         GCLogs gcLogs = new GCLogs(finder);
         j.jenkins.lookup.set(GCLogs.class, gcLogs);

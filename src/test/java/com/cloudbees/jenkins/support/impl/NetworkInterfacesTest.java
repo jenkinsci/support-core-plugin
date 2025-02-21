@@ -10,17 +10,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class NetworkInterfacesTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class NetworkInterfacesTest {
 
     @Test
-    public void testGetNetworkInterface() throws Exception {
+    void testGetNetworkInterface(JenkinsRule j) throws Exception {
         // This machine might not have a network interface. But how did it get this code?
         Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
         if (!networkInterfaces.hasMoreElements()) return;

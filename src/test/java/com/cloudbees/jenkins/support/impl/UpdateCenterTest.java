@@ -8,17 +8,15 @@ import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
 import hudson.model.UpdateSite;
 import java.util.Objects;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class UpdateCenterTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class UpdateCenterTest {
 
     @Test
-    public void testUpdateCenterContent() {
+    void testUpdateCenterContent(JenkinsRule j) {
         String ucMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(UpdateCenter.class)));
         for (UpdateSite site : j.jenkins.getUpdateCenter().getSiteList()) {

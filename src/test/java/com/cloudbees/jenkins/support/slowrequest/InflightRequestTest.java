@@ -1,19 +1,17 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
-import jakarta.servlet.ServletException;
-import java.io.IOException;
 import java.net.URL;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
@@ -21,14 +19,12 @@ import org.kohsuke.stapler.StaplerResponse2;
 /**
  * @author schristou88
  */
-public class InflightRequestTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class InflightRequestTest {
 
     @Test
     @Issue("JENKINS-24671")
-    public void verifyUsernameInflightRequest() throws Exception {
+    void verifyUsernameInflightRequest(JenkinsRule j) throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         JenkinsRule.WebClient webClient = j.createWebClient().login("bob", "bob");
         MockSlowURLCall.seconds = 5;
@@ -41,7 +37,7 @@ public class InflightRequestTest {
 
     @Test
     @Issue("JENKINS-24671")
-    public void verifyRefererHeaderFromInflightRequest() throws Exception {
+    void verifyRefererHeaderFromInflightRequest(JenkinsRule j) throws Exception {
         JenkinsRule.WebClient webClient = j.createWebClient();
 
         URL refererUrl = new URL(webClient.getContextPath() + "mockSlowURLCall/submitReferer");
@@ -57,8 +53,7 @@ public class InflightRequestTest {
         public static int seconds;
         public static InflightRequest request;
 
-        public HttpResponse doSubmitReferer(StaplerRequest2 req, StaplerResponse2 rsp)
-                throws ServletException, IOException {
+        public HttpResponse doSubmitReferer(StaplerRequest2 req, StaplerResponse2 rsp) {
             String literalHTML = "<html>" + "  <body>"
                     + "    <a href='"
                     + req.getContextPath() + "/mockSlowURLCall/submit" + "' id='link'>link</a>" + "  </body>"
@@ -66,7 +61,7 @@ public class InflightRequestTest {
             return HttpResponses.literalHtml(literalHTML);
         }
 
-        public HttpResponse doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
+        public HttpResponse doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) {
             request = new InflightRequest(req);
             return HttpResponses.redirectTo("..");
         }

@@ -2,7 +2,8 @@ package com.cloudbees.jenkins.support;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.configfiles.AgentsConfigFile;
@@ -38,7 +39,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -55,14 +55,13 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class CheckFilterTest {
+@WithJenkins
+class CheckFilterTest {
     private static final Logger LOGGER = Logger.getLogger(CheckFilterTest.class.getName());
 
     private static final String JOB_NAME = "thejob";
@@ -70,21 +69,15 @@ public class CheckFilterTest {
     private static final String VIEW_ALL_NEW_NAME = "all-view";
     private static final String ENV_VAR = getFirstEnvVar();
 
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public LoggerRule logging = new LoggerRule().record(AsyncResultCache.class, Level.FINER);
+    @TempDir
+    private File temp;
 
     @Test
-    public void checkFilterTest() throws Exception {
+    void checkFilterTest(JenkinsRule j) throws Exception {
         // Create the files to check
         FileChecker checker = new FileChecker(j.jenkins);
         // Create the objects needed for some contents to be included
-        QueueTaskFuture<FreeStyleBuild> build = createObjectsWithNames();
+        QueueTaskFuture<FreeStyleBuild> build = createObjectsWithNames(j);
 
         // Reload the mappings, after the objects were created
         ContentFilters.get().setEnabled(true);
@@ -123,7 +116,7 @@ public class CheckFilterTest {
         j.waitUntilNoActivity();
     }
 
-    private QueueTaskFuture<FreeStyleBuild> createObjectsWithNames() throws Exception {
+    private static QueueTaskFuture<FreeStyleBuild> createObjectsWithNames(JenkinsRule j) throws Exception {
         // For an environment variable
         if (ENV_VAR != null) {
             User.getOrCreateByIdOrFullName(ENV_VAR);
@@ -157,7 +150,7 @@ public class CheckFilterTest {
 
     private void assertComponent(List<Class<? extends Component>> componentClasses, FileChecker checker)
             throws IOException {
-        File fileZip = new File(temp.getRoot(), "filteredBundle.zip");
+        File fileZip = new File(temp, "filteredBundle.zip");
         Files.deleteIfExists(fileZip.toPath());
 
         try (FileOutputStream zipOutputStream = new FileOutputStream(fileZip)) {
@@ -191,7 +184,7 @@ public class CheckFilterTest {
         }
     }
 
-    private String getContentFromEntry(ZipFile zip, ZipEntry entry) throws IOException {
+    private static String getContentFromEntry(ZipFile zip, ZipEntry entry) throws IOException {
         if (entry.getSize() == 0) {
             return "";
         }
@@ -209,7 +202,7 @@ public class CheckFilterTest {
                 out.write(data, 0, currentByte);
             }
             out.flush();
-            content = new String(out.toByteArray(), StandardCharsets.UTF_8);
+            content = out.toString(StandardCharsets.UTF_8);
         }
         return content;
     }
@@ -228,11 +221,11 @@ public class CheckFilterTest {
     }
 
     private static class FileChecker {
-        private Set<FileToCheck> fileSet = new HashSet<>();
-        private Set<FileToCheck> unchecked = new HashSet<>();
-        private Set<String> words = new HashSet<>();
+        private final Set<FileToCheck> fileSet = new HashSet<>();
+        private final Set<FileToCheck> unchecked = new HashSet<>();
+        private final Set<String> words = new HashSet<>();
 
-        private FileChecker(Jenkins jenkins) throws UnknownHostException {
+        private FileChecker(Jenkins jenkins) {
             fileSet.add(of("manifest.md", "about", false));
             fileSet.add(of("about.md", "b", false));
             // fileSet.add(of("items.md", "jobs", false));
@@ -347,7 +340,7 @@ public class CheckFilterTest {
             unchecked.addAll(fileSet);
         }
 
-        private String getUpdateCenterURL(Jenkins jenkins) {
+        private static String getUpdateCenterURL(Jenkins jenkins) {
             if (jenkins.getUpdateCenter().getSiteList() != null
                     && jenkins.getUpdateCenter().getSiteList().get(0) != null) {
                 return jenkins.getUpdateCenter().getSiteList().get(0).getUrl();
@@ -355,14 +348,14 @@ public class CheckFilterTest {
             return null;
         }
 
-        private String getInetAddress() {
+        private static String getInetAddress() {
             try {
                 Enumeration<NetworkInterface> networkInterfaces = null;
                 networkInterfaces = NetworkInterface.getNetworkInterfaces();
                 if (networkInterfaces.hasMoreElements()) {
                     NetworkInterface ni = networkInterfaces.nextElement();
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
-                    if (inetAddresses != null && inetAddresses.hasMoreElements()) {
+                    if (inetAddresses.hasMoreElements()) {
                         return inetAddresses.nextElement().toString();
                     }
                 }
@@ -409,15 +402,15 @@ public class CheckFilterTest {
                     if (content == null) {
                         fail(String.format("Error checking the file %s because its content was null", file));
                     } else {
-                        Assert.assertTrue(
+                        assertTrue(
+                                content.toLowerCase(Locale.ENGLISH)
+                                        .contains(value.wordFiltered.toLowerCase(Locale.ENGLISH)),
                                 String.format(
                                         "The file '%s' should have the word '%s'. File content:\n\n----------\n%s\n%s----------\n\n",
                                         file,
                                         value.wordFiltered,
                                         content.substring(0, Math.min(MAX_CONTENT_LENGTH, content.length())),
-                                        content.length() > MAX_CONTENT_LENGTH ? "...\n(content cut off)\n" : ""),
-                                content.toLowerCase(Locale.ENGLISH)
-                                        .contains(value.wordFiltered.toLowerCase(Locale.ENGLISH)));
+                                        content.length() > MAX_CONTENT_LENGTH ? "...\n(content cut off)\n" : ""));
                     }
                     return;
                 }
@@ -427,9 +420,9 @@ public class CheckFilterTest {
     }
 
     private static class FileToCheck {
-        private String filePattern;
-        private String word;
-        private boolean fileIsFiltered;
+        private final String filePattern;
+        private final String word;
+        private final boolean fileIsFiltered;
         private String wordFiltered;
 
         private FileToCheck(String filePattern, String word, boolean fileIsFiltered) {

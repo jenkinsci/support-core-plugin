@@ -6,35 +6,33 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class BundleNamePrefixTest {
+@WithJenkins
+class BundleNamePrefixTest {
 
     private static final String CURRENT_YEAR = new SimpleDateFormat("yyyy").format(new Date());
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     @Test
-    public void checkOriginalBehaviour() {
+    void checkOriginalBehaviour(JenkinsRule j) {
         assertThat(BundleFileName.generate(), startsWith("support_" + CURRENT_YEAR));
     }
 
     @Test
-    public void checkWithOneProvider() {
+    void checkWithOneProvider(JenkinsRule j) {
         assertThat(BundleFileName.generate(), startsWith("support_pouet_" + CURRENT_YEAR));
     }
 
     @Test
-    public void tooManyProviders() {
+    void tooManyProviders(JenkinsRule j) {
         assertThat(BundleFileName.generate(), startsWith("support_Zis_" + CURRENT_YEAR));
     }
 
     @Test
-    public void withSysProp() {
+    void withSysProp(JenkinsRule j) {
         System.setProperty(BundleNameInstanceTypeProvider.SUPPORT_BUNDLE_NAMING_INSTANCE_SPEC_PROPERTY, "paf");
         assertThat(BundleFileName.generate(), startsWith("support_paf_" + CURRENT_YEAR));
         System.getProperties().remove(BundleNameInstanceTypeProvider.SUPPORT_BUNDLE_NAMING_INSTANCE_SPEC_PROPERTY);

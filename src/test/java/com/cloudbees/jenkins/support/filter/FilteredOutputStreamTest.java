@@ -34,12 +34,11 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceInputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 public class FilteredOutputStreamTest {
@@ -56,17 +55,20 @@ public class FilteredOutputStreamTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldModifyStream() throws IOException {
+    void shouldModifyStream() throws IOException {
         int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
         String inputContents =
                 IntStream.range(0, nrLines).mapToObj(i -> "Line " + i).collect(joining(System.lineSeparator()));
-        CharSequenceInputStream input = new CharSequenceInputStream(inputContents, UTF_8);
+        CharSequenceInputStream input = CharSequenceInputStream.builder()
+                .setCharSequence(inputContents)
+                .setCharset(UTF_8)
+                .get();
         ContentFilter filter = s -> s.replace("Line", "Network");
         FilteredOutputStream output = new FilteredOutputStream(testOutput, filter);
 
         IOUtils.copy(input, output);
         output.flush();
-        String outputContents = new String(testOutput.toByteArray(), UTF_8);
+        String outputContents = testOutput.toString(UTF_8);
 
         assertThat(outputContents).isNotEmpty();
         String[] lines = FilteredConstants.EOL.split(outputContents);
@@ -77,28 +79,31 @@ public class FilteredOutputStreamTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldSupportLinesLargerThanDefaultBufferSize() throws IOException {
+    void shouldSupportLinesLargerThanDefaultBufferSize() throws IOException {
         CharBuffer input = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY * 10);
         for (int i = 0; i < input.capacity(); i++) {
             input.put('*');
         }
         input.flip();
-        InputStream in = new CharSequenceInputStream(input, UTF_8);
+        InputStream in = CharSequenceInputStream.builder()
+                .setCharSequence(input)
+                .setCharset(UTF_8)
+                .get();
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.replace('*', 'a'));
 
         IOUtils.copy(in, out);
-        String contents = new String(testOutput.toByteArray(), UTF_8);
+        String contents = testOutput.toString(UTF_8);
 
         assertThat(contents).isEmpty();
 
         out.flush();
-        contents = new String(testOutput.toByteArray(), UTF_8);
+        contents = testOutput.toString(UTF_8);
 
         assertThat(contents).isNotEmpty().matches("^a+$");
     }
 
     @Test
-    public void shouldNotAllowOperationsAfterClose() throws IOException {
+    void shouldNotAllowOperationsAfterClose() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
         out.close();
         assertThatIllegalStateException().isThrownBy(() -> out.write(0));
@@ -111,9 +116,9 @@ public class FilteredOutputStreamTest {
     }
 
     @Test
-    public void shouldSupportMultipleUsesWithReset() throws IOException {
+    void shouldSupportMultipleUsesWithReset() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s);
-        List<String> paragraphs = Stream.generate(() -> FAKE_TEXT).limit(10).collect(Collectors.toList());
+        List<String> paragraphs = Stream.generate(() -> FAKE_TEXT).limit(10).toList();
         StringBuilder b = new StringBuilder();
         for (String paragraph : paragraphs) {
             out.write(paragraph.getBytes(UTF_8));
@@ -122,18 +127,16 @@ public class FilteredOutputStreamTest {
             out.reset();
         }
         String expected = b.toString();
-        assertThat(new String(testOutput.toByteArray(), UTF_8)).isNotEmpty().isEqualTo(expected);
+        assertThat(testOutput.toString(UTF_8)).isNotEmpty().isEqualTo(expected);
     }
 
     @Test
-    public void shouldSupportWriterView() throws IOException {
+    void shouldSupportWriterView() throws IOException {
         FilteredOutputStream out = new FilteredOutputStream(testOutput, s -> s.toUpperCase(Locale.ENGLISH));
         String original = FAKE_TEXT;
         try (FilteredWriter writer = out.asWriter()) {
             writer.write(original);
         }
-        assertThat(new String(testOutput.toByteArray(), UTF_8))
-                .isNotEmpty()
-                .isEqualTo(original.toUpperCase(Locale.ENGLISH));
+        assertThat(testOutput.toString(UTF_8)).isNotEmpty().isEqualTo(original.toUpperCase(Locale.ENGLISH));
     }
 }

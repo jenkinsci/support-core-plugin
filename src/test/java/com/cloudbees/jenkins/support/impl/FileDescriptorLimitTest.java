@@ -5,7 +5,6 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
-import com.cloudbees.jenkins.support.AsyncResultCache;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
@@ -19,35 +18,28 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class FileDescriptorLimitTest {
+@WithJenkins
+class FileDescriptorLimitTest {
 
     private static final String JOB_NAME = "job-name";
     private static final String SENSITIVE_JOB_NAME = "sensitive-" + JOB_NAME;
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
-
-    @Rule
-    public LoggerRule logging = new LoggerRule();
+    @TempDir
+    private File tmp;
 
     @Test
-    public void addContents() throws Exception {
-        Assume.assumeTrue(!Functions.isWindows());
-        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+    void addContents(JenkinsRule j) throws Exception {
+        Assumptions.assumeTrue(!Functions.isWindows());
+        Assumptions.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         FreeStyleProject p = j.createFreeStyleProject(JOB_NAME);
         String output;
         // Hold an open File Descriptor
@@ -61,9 +53,9 @@ public class FileDescriptorLimitTest {
     }
 
     @Test
-    public void addContentsFiltered() throws Exception {
-        Assume.assumeTrue(!Functions.isWindows());
-        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+    void addContentsFiltered(JenkinsRule j) throws Exception {
+        Assumptions.assumeTrue(!Functions.isWindows());
+        Assumptions.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
         FreeStyleProject p = j.createFreeStyleProject(SENSITIVE_JOB_NAME);
         ContentFilter filter = SupportPlugin.getDefaultContentFilter();
@@ -81,13 +73,12 @@ public class FileDescriptorLimitTest {
     }
 
     @Test
-    public void agentContentFilter() throws Exception {
-        Assume.assumeTrue(!Functions.isWindows());
-        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
-        logging.record(AsyncResultCache.class, Level.FINER);
+    void agentContentFilter(JenkinsRule j) throws Exception {
+        Assumptions.assumeTrue(!Functions.isWindows());
+        Assumptions.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
         ContentFilters.get().setEnabled(true);
         SlaveComputer agent = j.createOnlineSlave().getComputer();
-        File bundle = tmp.newFile("bundle.zip");
+        File bundle = File.createTempFile("bundle.zip", null, tmp);
         try (var os = new FileOutputStream(bundle)) {
             SupportPlugin.writeBundle(os, List.of(new FileDescriptorLimit()));
         }

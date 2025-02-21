@@ -11,19 +11,17 @@ import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
 import hudson.model.User;
 import jenkins.security.LastGrantedAuthoritiesProperty;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class UserCountTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class UserCountTest {
 
     @Test
     @Issue("JENKINS-56245")
-    public void testAboutJenkinsContent() throws Exception {
+    void testAboutJenkinsContent(JenkinsRule j) throws Exception {
         User.getOrCreateByIdOrFullName("alice");
         User.getOrCreateByIdOrFullName("bob");
         User.getOrCreateByIdOrFullName("charlie");

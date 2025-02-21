@@ -3,29 +3,27 @@ package com.cloudbees.jenkins.support;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
-import org.junit.Rule;
-import org.junit.Test;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
+import org.junit.jupiter.api.Test;
 
-public class CasCTest {
-
-    @Rule
-    public JenkinsConfiguredWithCodeRule r = new JenkinsConfiguredWithCodeRule();
+@WithJenkinsConfiguredWithCode
+class CasCTest {
 
     @Test
     @ConfiguredWithCode("configuration-as-code.yaml")
-    public void assertConfiguredAsExpected() {
+    void assertConfiguredAsExpected(JenkinsConfiguredWithCodeRule r) {
         assertTrue(
-                "JCasC should have configured support core to anonymize contents, but it didn't",
-                ContentFilters.get().isEnabled());
+                ContentFilters.get().isEnabled(),
+                "JCasC should have configured support core to anonymize contents, but it didn't");
         assertTrue(
-                "JCasC should have configured support period bundle generation enabled, but it didn't",
-                SupportAutomatedBundleConfiguration.get().isEnabled());
+                SupportAutomatedBundleConfiguration.get().isEnabled(),
+                "JCasC should have configured support period bundle generation enabled, but it didn't");
         assertThat(
                 "JCasC should have configured support period bundle generation period, but it didn't",
                 SupportAutomatedBundleConfiguration.get().getPeriod(),

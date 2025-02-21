@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.actions;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
@@ -14,20 +14,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Allan Burdajewicz
  */
-public class SupportComputerActionTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class SupportComputerActionTest {
 
     @Test
-    public void onlyAdminCanSeeAction() throws Exception {
+    void onlyAdminCanSeeAction(JenkinsRule j) throws Exception {
 
         Computer c = j.createSlave("slave1", "test", null).getComputer();
 
@@ -52,7 +50,7 @@ public class SupportComputerActionTest {
      * Integration test that simulates the user action of clicking the button to generate the bundle.
      */
     @Test
-    public void generateBundleDefaultsAndCheckContent() throws Exception {
+    void generateBundleDefaultsAndCheckContent(JenkinsRule j) throws Exception {
         j.createSlave("agent1", "test", null).getComputer().connect(false).get();
 
         // Check that the generation does not show any warnings
@@ -86,7 +84,7 @@ public class SupportComputerActionTest {
                     "dmi.txt");
 
             for (String file : files) {
-                assertNotNull(file + " was not found in the bundle", z.getEntry("nodes/slave/agent1/" + file));
+                assertNotNull(z.getEntry("nodes/slave/agent1/" + file), file + " was not found in the bundle");
             }
         }
     }

@@ -16,17 +16,15 @@ import hudson.model.AdministrativeMonitor;
 import hudson.model.FreeStyleProject;
 import java.io.IOException;
 import java.util.Objects;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class AdministrativeMonitorsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class AdministrativeMonitorsTest {
 
     @Test
-    public void testAdministrativeMonitorsContent() throws IOException {
+    void testAdministrativeMonitorsContent(JenkinsRule j) throws IOException {
         String monitorsMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AdministrativeMonitors.class)));
         // Enable all monitors and check that there is an output for all activated monitors
@@ -54,7 +52,7 @@ public class AdministrativeMonitorsTest {
     }
 
     @Test
-    public void testOldDataMonitorAnonymized() throws IOException {
+    void testOldDataMonitorAnonymized(JenkinsRule j) throws IOException {
         ContentFilters.get().setEnabled(true);
         FreeStyleProject p = j.createFreeStyleProject("sensitive-job-name");
         ContentFilter filter = SupportPlugin.getDefaultContentFilter();

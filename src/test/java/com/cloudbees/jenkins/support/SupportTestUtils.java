@@ -1,10 +1,6 @@
 package com.cloudbees.jenkins.support;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -47,7 +43,11 @@ import org.xml.sax.SAXException;
  * @author schristou88
  * @since 2.26
  */
-public class SupportTestUtils {
+public final class SupportTestUtils {
+
+    private SupportTestUtils() {
+        // hidden
+    }
 
     /**
      * Invoke a component, and return the component contents as a String.
@@ -269,10 +269,10 @@ public class SupportTestUtils {
             HtmlPage page = wc.goTo(baseUrl);
             HtmlDivision sidePanel = (HtmlDivision) page.getElementById("side-panel");
             assertTrue(
-                    userUnprivileged + " should not be able to see the Support action",
                     sidePanel
                             .getElementsByAttribute("a", "title", action.getDisplayName())
-                            .isEmpty());
+                            .isEmpty(),
+                    userUnprivileged + " should not be able to see the Support action");
         }
 
         {
@@ -280,11 +280,11 @@ public class SupportTestUtils {
             HtmlPage page = wc.goTo(baseUrl);
             HtmlDivision sidePanel = (HtmlDivision) page.getElementById("side-panel");
             assertEquals(
-                    userPrivileged + " should be able to see the Support action",
                     1,
                     sidePanel.getElementsByTagName("a").stream()
                             .filter(htmlElement -> htmlElement.getTextContent().equals(action.getDisplayName()))
-                            .count());
+                            .count(),
+                    userPrivileged + " should be able to see the Support action");
         }
     }
 
@@ -316,16 +316,16 @@ public class SupportTestUtils {
         {
             wc.login(userUnprivileged);
             assertThrows(
-                    userUnprivileged + " should not be able to display the Support action page",
                     FailingHttpStatusCodeException.class,
-                    () -> wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()));
+                    () -> wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()),
+                    userUnprivileged + " should not be able to display the Support action page");
         }
 
         {
             wc.login(userPrivileged);
             assertNotNull(
-                    userPrivileged + " should be able to display the Support action page",
-                    wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()));
+                    wc.withThrowExceptionOnFailingStatusCode(true).goTo(baseUrl + "/" + action.getUrlName()),
+                    userPrivileged + " should be able to display the Support action page");
         }
     }
 

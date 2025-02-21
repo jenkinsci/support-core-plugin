@@ -10,16 +10,18 @@ import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class ReverseProxyTest {
+@WithJenkins
+@ExtendWith(MockitoExtension.class)
+class ReverseProxyTest {
 
     private static final String HEADER_VALUE = "value";
 
@@ -27,19 +29,13 @@ public class ReverseProxyTest {
         return String.format("Detected `%s` header: %s", header, value);
     }
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public MockitoRule rule = MockitoJUnit.rule();
-
     @Mock
     private StaplerRequest2 staplerRequest;
 
     private ReverseProxy subject;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         subject = new ReverseProxy() {
             @Override
             protected StaplerRequest2 getCurrentRequest() {
@@ -49,7 +45,7 @@ public class ReverseProxyTest {
     }
 
     @Test
-    public void addContents() {
+    void addContents(JenkinsRule j) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Container container = createContainer(baos);
         for (String header : FORWARDED_HEADERS) {
@@ -64,7 +60,7 @@ public class ReverseProxyTest {
     }
 
     @Test
-    public void addContents_NoHeader() {
+    void addContents_NoHeader(JenkinsRule j) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Container container = createContainer(baos);
         for (String header : FORWARDED_HEADERS) {
@@ -79,7 +75,7 @@ public class ReverseProxyTest {
     }
 
     @Test
-    public void addContents_NoCurrentRequest() {
+    void addContents_NoCurrentRequest(JenkinsRule j) {
         subject = new ReverseProxy() {
             @Override
             protected StaplerRequest2 getCurrentRequest() {

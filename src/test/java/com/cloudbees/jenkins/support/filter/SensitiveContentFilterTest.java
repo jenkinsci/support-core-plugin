@@ -29,19 +29,17 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
 import java.io.IOException;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SensitiveContentFilterTest {
-
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class SensitiveContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void anonymizeAgentsAndLabels() throws Exception {
+    void anonymizeAgentsAndLabels(JenkinsRule j) throws Exception {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         // using foo, bar, jar and war could raise flaky test failures. It happened to me when
         // bar was changed by label_barrier :-O So we use stranger words to avoid this test to be flaky
@@ -64,7 +62,7 @@ public class SensitiveContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void anonymizeItems() throws IOException {
+    void anonymizeItems(JenkinsRule j) throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         FreeStyleProject project = j.createFreeStyleProject();
         filter.reload();
@@ -77,7 +75,7 @@ public class SensitiveContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void anonymizeViews() throws IOException {
+    void anonymizeViews(JenkinsRule j) throws IOException {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         j.getInstance().addView(new ListView("foobar"));
         filter.reload();
@@ -89,7 +87,7 @@ public class SensitiveContentFilterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void anonymizeUsers() {
+    void anonymizeUsers(JenkinsRule j) {
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         User.getOrCreateByIdOrFullName("gibson");
         filter.reload();
@@ -101,7 +99,7 @@ public class SensitiveContentFilterTest {
 
     @Issue("JENKINS-54688")
     @Test
-    public void shouldNotFilterOperatingSystem() throws Exception {
+    void shouldNotFilterOperatingSystem(JenkinsRule j) throws Exception {
         String os = "Linux";
         String label = "fake";
         SensitiveContentFilter filter = SensitiveContentFilter.get();
