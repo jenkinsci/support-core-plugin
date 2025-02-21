@@ -38,6 +38,11 @@ public class AboutBrowser extends Component {
     }
 
     @Override
+    public boolean canBeGeneratedAsync() {
+        return false;
+    }
+
+    @Override
     public void addContents(@NonNull Container result) {
         final StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
         if (currentRequest != null) {

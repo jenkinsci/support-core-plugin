@@ -248,4 +248,17 @@ public class CustomLogs extends Component {
             }
         }
     }
+
+    /**
+     * Closes all open file handles, allowing locks to be released in Windows tests.
+     */
+    static void closeAll() {
+        for (var h : Logger.getLogger("").getHandlers()) {
+            if (h instanceof CustomHandler ch) {
+                for (var lf : ch.logFiles.values()) {
+                    lf.handler.close();
+                }
+            }
+        }
+    }
 }
