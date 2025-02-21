@@ -2,31 +2,29 @@ package com.cloudbees.jenkins.support.filter;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class PasswordRedactorTest {
-
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class PasswordRedactorTest {
 
     @Test
-    public void redactWhenSimplePairKeyValueThenPasswordRedacted() {
+    void redactWhenSimplePairKeyValueThenPasswordRedacted(JenkinsRule r) {
         assertThat(PasswordRedactor.get().redact("key=a"), is("key=REDACTED"));
     }
 
     @Test
-    public void redactWhenPasswordContainsRegexReservedCharThenPasswordRedacted() {
+    void redactWhenPasswordContainsRegexReservedCharThenPasswordRedacted(JenkinsRule r) {
         assertThat(PasswordRedactor.get().redact("key=     *REDACTED*"), is("key=REDACTED"));
     }
 
     @Test
-    public void redactWhenMoreThanOneSecretsInInputSpaceSeparatedThenAllRedacted() {
+    void redactWhenMoreThanOneSecretsInInputSpaceSeparatedThenAllRedacted(JenkinsRule r) {
         assertThat(
                 PasswordRedactor.get()
                         .redact("sun.java.command=jenkins.war password=word -Dcasc.reload.token=any_value_here"),
@@ -34,7 +32,7 @@ public class PasswordRedactorTest {
     }
 
     @Test
-    public void redactWhenMoreThenOneSecretsInInputCommaSeparatedThenAllRedacted() {
+    void redactWhenMoreThenOneSecretsInInputCommaSeparatedThenAllRedacted(JenkinsRule r) {
         assertThat(
                 PasswordRedactor.get()
                         .redact(
@@ -43,7 +41,7 @@ public class PasswordRedactorTest {
     }
 
     @Test
-    public void redactWhenSecretsContainKeyWordsThenAllRedacted() {
+    void redactWhenSecretsContainKeyWordsThenAllRedacted(JenkinsRule r) {
         assertThat(
                 PasswordRedactor.get()
                         .redact("Djavax.net.ssl.private_password=mySecret, passwd=password key.damp=keypass"),
@@ -51,14 +49,14 @@ public class PasswordRedactorTest {
     }
 
     @Test
-    public void redactWhenKeyAndSecretSeparatedBySpaceThenRedacted() {
+    void redactWhenKeyAndSecretSeparatedBySpaceThenRedacted(JenkinsRule r) {
         assertThat(
                 PasswordRedactor.get().redact("--argumentsRealm.passwd.<user> = pass "),
                 is("--argumentsRealm.passwd.<user> =REDACTED "));
     }
 
     @Test
-    public void redactWhenSeparatorIsNulThenRedacted() {
+    void redactWhenSeparatorIsNulThenRedacted(JenkinsRule r) {
         assertThat(
                 PasswordRedactor.get()
                         .redact(
@@ -68,7 +66,7 @@ public class PasswordRedactorTest {
     }
 
     @Test
-    public void redactWhenPropertiesContainSecretThenAllRedacted() {
+    void redactWhenPropertiesContainSecretThenAllRedacted(JenkinsRule r) {
         Map<String, String> variables = new HashMap<>();
         variables.put("SECRET_AWS", "gdfdfdddd");
         variables.put(
@@ -87,17 +85,17 @@ public class PasswordRedactorTest {
     }
 
     @Test
-    public void redactWhenFileIsEmptyShouldReturnInput() {
+    void redactWhenFileIsEmptyShouldReturnInput(JenkinsRule r) {
         assertThat(new PasswordRedactor(null, null).redact("secret=passwd"), is("secret=passwd"));
     }
 
     @Test
-    public void matchWhenFileIsEmptyShouldReturnFalse() {
+    void matchWhenFileIsEmptyShouldReturnFalse(JenkinsRule r) {
         assertFalse(new PasswordRedactor(null, null).match("secret"));
     }
 
     @Test
-    public void redactWhenFileIsEmptyShouldReturnInputProperties() {
+    void redactWhenFileIsEmptyShouldReturnInputProperties(JenkinsRule r) {
         Map<String, String> variables = new HashMap<>();
         variables.put("secret", "gdfdfdddd");
         assertThat(new PasswordRedactor(null, null).redact(variables), is(variables));
