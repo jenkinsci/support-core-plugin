@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -77,31 +76,18 @@ public class CustomLogsTest {
         customLogsDir.mkdirs();
 
         // Create dummy log for test1 log recorder
-        Files.write(Paths.get(customLogsDir.getPath(), "test1.log"), "test1 one".getBytes(), StandardOpenOption.CREATE);
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "test1.log.1"), "test1 two".getBytes(), StandardOpenOption.CREATE);
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "test1.log.2"), "test1 three".getBytes(), StandardOpenOption.CREATE);
+        Files.write(Paths.get(customLogsDir.getPath(), "test1.log"), "test1 one".getBytes());
+        Files.write(Paths.get(customLogsDir.getPath(), "test1.log.1"), "test1 two".getBytes());
+        Files.write(Paths.get(customLogsDir.getPath(), "test1.log.2"), "test1 three".getBytes());
 
         // Create dummy log for second.test2 log recorder
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "second.test2.log"),
-                "second.test2 one".getBytes(),
-                StandardOpenOption.CREATE);
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "second.test2.log.1"),
-                "second.test2 two".getBytes(),
-                StandardOpenOption.CREATE);
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "second.test2.log.2"),
-                "second.test2 three".getBytes(),
-                StandardOpenOption.CREATE);
+        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log"), "second.test2 one".getBytes());
+        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log.1"), "second.test2 two".getBytes());
+        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log.2"), "second.test2 three".getBytes());
 
         // Create dummy log for nonRotatedCustomLog
         Files.write(
-                Paths.get(customLogsDir.getPath(), "nonRotatedCustomLog.log"),
-                "nonRotatedCustomLog one".getBytes(),
-                StandardOpenOption.CREATE);
+                Paths.get(customLogsDir.getPath(), "nonRotatedCustomLog.log"), "nonRotatedCustomLog one".getBytes());
 
         // Invoke the component and get the result map
         Map<String, String> resultMap = SupportTestUtils.invokeComponentToMap(

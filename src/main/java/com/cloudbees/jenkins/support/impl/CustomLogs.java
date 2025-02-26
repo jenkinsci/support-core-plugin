@@ -126,12 +126,11 @@ public class CustomLogs extends Component {
         private final RewindableRotatingFileOutputStream stream;
         private final Handler handler;
         private int count;
-        private final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
 
         @SuppressFBWarnings(
                 value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
                 justification = "if mkdirs fails, will just get a stack trace later")
-        LogFile(String name) throws IOException {
+        LogFile(String name, File customLogs) throws IOException {
             customLogs.mkdirs();
             stream = new RewindableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
             // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just
@@ -197,7 +196,7 @@ public class CustomLogs extends Component {
                             synchronized (logFiles) {
                                 logFile = logFiles.get(name);
                                 if (logFile == null) {
-                                    logFile = new LogFile(name);
+                                    logFile = new LogFile(name,customLogs);
                                     logFiles.put(name, logFile);
                                 }
                             }
