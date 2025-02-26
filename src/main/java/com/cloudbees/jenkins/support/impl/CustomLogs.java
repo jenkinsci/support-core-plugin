@@ -196,7 +196,7 @@ public class CustomLogs extends Component {
                             synchronized (logFiles) {
                                 logFile = logFiles.get(name);
                                 if (logFile == null) {
-                                    logFile = new LogFile(name,customLogs);
+                                    logFile = new LogFile(name, customLogs);
                                     logFiles.put(name, logFile);
                                 }
                             }
