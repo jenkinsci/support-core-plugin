@@ -76,18 +76,17 @@ public class CustomLogsTest {
         customLogsDir.mkdirs();
 
         // Create dummy log for test1 log recorder
-        Files.write(Paths.get(customLogsDir.getPath(), "test1.log"), "test1 one".getBytes());
-        Files.write(Paths.get(customLogsDir.getPath(), "test1.log.1"), "test1 two".getBytes());
-        Files.write(Paths.get(customLogsDir.getPath(), "test1.log.2"), "test1 three".getBytes());
+        Files.writeString(Paths.get(customLogsDir.getPath(), "test1.log"), "test1 one");
+        Files.writeString(Paths.get(customLogsDir.getPath(), "test1.log.1"), "test1 two");
+        Files.writeString(Paths.get(customLogsDir.getPath(), "test1.log.2"), "test1 three");
 
         // Create dummy log for second.test2 log recorder
-        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log"), "second.test2 one".getBytes());
-        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log.1"), "second.test2 two".getBytes());
-        Files.write(Paths.get(customLogsDir.getPath(), "second.test2.log.2"), "second.test2 three".getBytes());
+        Files.writeString(Paths.get(customLogsDir.getPath(), "second.test2.log"), "second.test2 one");
+        Files.writeString(Paths.get(customLogsDir.getPath(), "second.test2.log.1"), "second.test2 two");
+        Files.writeString(Paths.get(customLogsDir.getPath(), "second.test2.log.2"), "second.test2 three");
 
         // Create dummy log for nonRotatedCustomLog
-        Files.write(
-                Paths.get(customLogsDir.getPath(), "nonRotatedCustomLog.log"), "nonRotatedCustomLog one".getBytes());
+        Files.writeString(Paths.get(customLogsDir.getPath(), "nonRotatedCustomLog.log"), "nonRotatedCustomLog one");
 
         // Invoke the component and get the result map
         Map<String, String> resultMap = SupportTestUtils.invokeComponentToMap(
