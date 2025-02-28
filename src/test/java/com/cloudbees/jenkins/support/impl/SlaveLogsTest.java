@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2020, CloudBees, Inc.
+ * Copyright 2024 CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,22 @@
 
 package com.cloudbees.jenkins.support.impl;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
+import org.jvnet.hudson.test.JenkinsRule;
 
-/**
- * Matches agent log files in an interval of time
- * @see SlaveLogs
- */
-class LogFilenameAgentFilter implements FilenameFilter, Serializable {
+public final class SlaveLogsTest {
 
-    public static final long MAX_TIME_AGENT_LOG_RETRIEVAL = Long.getLong(
-            System.getProperty(LogFilenameAgentFilter.class.getName() + ".maxTimeAgentLogRetrieval"),
-            TimeUnit.DAYS.toMillis(7));
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-    public boolean accept(File dir, String name) {
-        // We should avoid taking agent files which are very old
-        // as they are not usually very helpful to troubleshoot
-        // 1 week should be enough in most of the cases
-        if (name.endsWith(".log") && new Date().getTime() - dir.lastModified() < MAX_TIME_AGENT_LOG_RETRIEVAL) {
-            return true;
-        }
-        return false;
-    }
+    // TODO INFO messages from online agent after connection
+    // TODO messages from online agent prior to connection (if -workDir set)
+    // TODO messages from disconnected agent
+    // TODO messages from deleted agent
+    // TODO messages from reconnected agent
+    // TODO FINE messages
+    // TODO winsw logs
+    // TODO honor SafeTimerTask.getLogsRoot (if applicable)
+    // TODO rotation of old or excessively long logs
 
-    private static final long serialVersionUID = 1L;
 }
