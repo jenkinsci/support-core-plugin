@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Attempts to detect reverse proxies in front of Jenkins.
@@ -42,6 +42,11 @@ public class ReverseProxy extends Component {
             X_FORWARDED_HOST_HEADER,
             X_FORWARDED_PORT_HEADER);
 
+    @Override
+    public boolean canBeGeneratedAsync() {
+        return false;
+    }
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
@@ -61,7 +66,7 @@ public class ReverseProxy extends Component {
             protected void printTo(PrintWriter out) {
                 out.println("Reverse Proxy");
                 out.println("=============");
-                StaplerRequest currentRequest = getCurrentRequest();
+                StaplerRequest2 currentRequest = getCurrentRequest();
                 for (String forwardedHeader : FORWARDED_HEADERS) {
                     out.println(String.format(
                             " * Detected `%s` header: %s",
@@ -83,14 +88,14 @@ public class ReverseProxy extends Component {
         return ComponentCategory.PLATFORM;
     }
 
-    private Trilean isForwardedHeaderDetected(StaplerRequest req, String header) {
+    private Trilean isForwardedHeaderDetected(StaplerRequest2 req, String header) {
         if (req == null) {
             return Trilean.UNKNOWN;
         }
         return req.getHeader(header) != null ? Trilean.TRUE : Trilean.FALSE;
     }
 
-    protected StaplerRequest getCurrentRequest() {
-        return Stapler.getCurrentRequest();
+    protected StaplerRequest2 getCurrentRequest() {
+        return Stapler.getCurrentRequest2();
     }
 }

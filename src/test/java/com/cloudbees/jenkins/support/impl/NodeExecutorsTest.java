@@ -124,9 +124,13 @@ public class NodeExecutorsTest {
         assertTrue(Pattern.compile("- currentWorkUnit:.*" + workflowRun.getFullDisplayName() + ".*")
                 .matcher(scanner.nextLine())
                 .find());
-        assertTrue(Pattern.compile("- executable:.*" + workflowRun.getFullDisplayName() + ".*")
-                .matcher(scanner.nextLine())
-                .find());
+        assertTrue(
+                executorMd,
+                Pattern.compile("- executable:.*(" + workflowRun.getExternalizableId()
+                                + /* TODO delete after https://github.com/jenkinsci/workflow-job-plugin/pull/499 */ "|"
+                                + workflowRun.getFullDisplayName() + ").*")
+                        .matcher(scanner.nextLine())
+                        .find());
         assertTrue(scanner.nextLine().contains("- elapsedTime: "));
         assertFalse(scanner.hasNextLine());
         scanner.close();

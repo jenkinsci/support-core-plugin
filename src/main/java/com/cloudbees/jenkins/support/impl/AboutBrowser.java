@@ -17,7 +17,7 @@ import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Basic information about the user's browser.
@@ -38,8 +38,13 @@ public class AboutBrowser extends Component {
     }
 
     @Override
+    public boolean canBeGeneratedAsync() {
+        return false;
+    }
+
+    @Override
     public void addContents(@NonNull Container result) {
-        final StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        final StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
         if (currentRequest != null) {
             result.add(new PrintedContent("browser.md") {
                 @Override

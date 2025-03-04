@@ -13,9 +13,9 @@ import hudson.model.AbstractModelObject;
 import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import hudson.util.DescribableList;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,14 +24,12 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
@@ -118,7 +116,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
 
     @RequirePOST
     @SuppressWarnings("unused") // used by Stapler
-    public final void doGenerateAndDownload(StaplerRequest req, StaplerResponse rsp)
+    public final void doGenerateAndDownload(StaplerRequest2 req, StaplerResponse2 rsp)
             throws ServletException, IOException, Descriptor.FormException {
 
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
@@ -139,21 +137,20 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
                 "Content-Disposition", "inline; filename=" + BundleFileName.generate(getBundleNameQualifier()) + ";");
 
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-            try (ACLContext old = ACL.as2(ACL.SYSTEM2)) {
-                SupportPlugin.writeBundle(rsp.getOutputStream(), components, new ComponentVisitor() {
-                    @Override
-                    public <C extends Component> void visit(Container container, C component) {
-                        ((ObjectComponent<T>) component).addContents(container, object);
-                    }
-                });
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
-            }
-        } finally {
+            SupportPlugin.writeBundle(
+                    rsp.getOutputStream(),
+                    components,
+                    new ComponentVisitor() {
+                        @Override
+                        public <C extends Component> void visit(Container container, C component) {
+                            ((ObjectComponent<T>) component).addContents(container, object);
+                        }
+                    },
+                    null,
+                    true);
             LOGGER.fine("Response completed");
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
         }
     }
 
@@ -163,7 +160,7 @@ public abstract class SupportObjectAction<T extends AbstractModelObject> impleme
      * @param req the request
      * @return the {@link DescribableList} of components
      */
-    protected final List<ObjectComponent<T>> parseRequest(StaplerRequest req)
+    protected final List<ObjectComponent<T>> parseRequest(StaplerRequest2 req)
             throws ServletException, Descriptor.FormException {
 
         // Inspired by

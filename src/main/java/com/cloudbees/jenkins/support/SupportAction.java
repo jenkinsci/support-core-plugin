@@ -24,20 +24,27 @@
 
 package com.cloudbees.jenkins.support;
 
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.SupportProvider;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Api;
 import hudson.model.Failure;
 import hudson.model.RootAction;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import hudson.security.Permission;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,25 +55,31 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
+import jenkins.util.ProgressiveRendering;
+import jenkins.util.Timer;
+import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpRedirect;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerProxy;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.WebMethod;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -88,6 +101,12 @@ public class SupportAction implements RootAction, StaplerProxy {
      * Our logger (retain an instance ref to avoid classloader leaks).
      */
     private final Logger logger = Logger.getLogger(SupportAction.class.getName());
+
+    private static final Path SUPPORT_BUNDLE_CREATION_FOLDER =
+            Paths.get(System.getProperty("java.io.tmpdir")).resolve("support-bundle");
+    public static final String SYNC_SUPPORT_BUNDLE = "support-bundle.zip";
+
+    private final Map<UUID, SupportBundleAsyncGenerator> generatorByTaskId = new ConcurrentHashMap<>();
 
     @Override
     @Restricted(NoExternalUse.class)
@@ -184,11 +203,10 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     @RequirePOST
-    public void doDeleteBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public HttpResponse doDeleteBundles(StaplerRequest2 req) throws ServletException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+            return HttpResponses.error(SC_BAD_REQUEST, "Missing bundles attribute");
         }
         Set<String> bundlesToDelete = getSelectedBundles(req, json);
         File rootDirectory = SupportPlugin.getRootDirectory();
@@ -205,14 +223,14 @@ public class SupportAction implements RootAction, StaplerProxy {
                 logger.log(Level.SEVERE, "Unable to delete file " + fileToDelete.getAbsolutePath(), e);
             }
         }
-        rsp.sendRedirect("");
+        return HttpResponses.redirectToDot();
     }
 
     @RequirePOST
-    public void doDownloadBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDownloadBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("bundles")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            rsp.sendError(SC_BAD_REQUEST);
             return;
         }
 
@@ -249,7 +267,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         }
     }
 
-    private Set<String> getSelectedBundles(StaplerRequest req, JSONObject json) throws ServletException, IOException {
+    private Set<String> getSelectedBundles(StaplerRequest2 req, JSONObject json) {
         Set<String> bundles = new HashSet<>();
         List<String> existingBundles = getBundles();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("bundles"))) {
@@ -298,7 +316,7 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doDownload(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doDownload(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         doGenerateAllBundles(req, rsp);
     }
 
@@ -310,12 +328,64 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doGenerateAllBundles(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doGenerateAllBundles(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         JSONObject json = req.getSubmittedForm();
         if (!json.has("components")) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            rsp.sendError(SC_BAD_REQUEST);
             return;
         }
+        final List<Component> components = getComponents(req, json);
+        prepareBundle(rsp, components);
+    }
+
+    /**
+     * Generates a support bundle with selected components from the UI. in async
+     * @param req The stapler request
+     * @param rsp The stapler response
+     * @throws ServletException If an error occurred during form submission
+     * @throws IOException If an input or output exception occurs
+     */
+    @RequirePOST
+    public HttpRedirect doGenerateBundleAsync(StaplerRequest2 req, StaplerResponse2 rsp)
+            throws ServletException, IOException {
+        JSONObject json = req.getSubmittedForm();
+        if (!json.has("components")) {
+            rsp.sendError(SC_BAD_REQUEST);
+            return new HttpRedirect("support");
+        }
+        final List<Component> components = getComponents(req, json);
+        UUID taskId = UUID.randomUUID();
+
+        // There are some components that need the request components to be processed
+        // these components cannot be processed async
+        // so process them first and then process the other components async
+        List<Component> syncComponent =
+                components.stream().filter(c -> !c.canBeGeneratedAsync()).toList();
+        if (!syncComponent.isEmpty()) {
+            Path outputDir = SUPPORT_BUNDLE_CREATION_FOLDER.resolve(taskId.toString());
+            if (!Files.exists(outputDir)) {
+                try {
+                    Files.createDirectories(outputDir);
+                } catch (IOException e) {
+                    throw new IOException("Failed to create directory: " + outputDir.toAbsolutePath(), e);
+                }
+            }
+            try (FileOutputStream fileOutputStream =
+                    new FileOutputStream(new File(outputDir.toString(), SYNC_SUPPORT_BUNDLE))) {
+                SupportPlugin.writeBundleForSyncComponents(fileOutputStream, syncComponent);
+            } finally {
+                logger.fine("Processing support bundle sunc completed");
+            }
+        }
+
+        // Process the remaining components that can be process async
+        SupportBundleAsyncGenerator supportBundleAsyncGenerator = new SupportBundleAsyncGenerator();
+        supportBundleAsyncGenerator.init(taskId, components);
+        generatorByTaskId.put(taskId, supportBundleAsyncGenerator);
+        return new HttpRedirect("progressPage?taskId=" + taskId);
+    }
+
+    private List<Component> getComponents(StaplerRequest2 req, JSONObject json) throws IOException {
         logger.fine("Parsing request...");
         Set<String> remove = new HashSet<>();
         for (Selection s : req.bindJSONToList(Selection.class, json.get("components"))) {
@@ -341,7 +411,7 @@ public class SupportAction implements RootAction, StaplerProxy {
         if (supportPlugin != null) {
             supportPlugin.setExcludedComponents(remove);
         }
-        prepareBundle(rsp, components);
+        return components;
     }
 
     /**
@@ -351,10 +421,10 @@ public class SupportAction implements RootAction, StaplerProxy {
      * @throws IOException If an input or output exception occurs
      */
     @RequirePOST
-    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse rsp)
+    public void doGenerateBundle(@QueryParameter("components") String components, StaplerResponse2 rsp)
             throws IOException {
         if (components == null) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "components parameter is mandatory");
+            rsp.sendError(SC_BAD_REQUEST, "components parameter is mandatory");
             return;
         }
         Set<String> componentNames = Arrays.stream(components.split(",")).collect(Collectors.toSet());
@@ -383,30 +453,22 @@ public class SupportAction implements RootAction, StaplerProxy {
                 .filter(c -> componentNames.contains(c.getId()))
                 .collect(Collectors.toList());
         if (selectedComponents.isEmpty()) {
-            rsp.sendError(HttpServletResponse.SC_BAD_REQUEST, "selected component list is empty");
+            rsp.sendError(SC_BAD_REQUEST, "selected component list is empty");
             return;
         }
         prepareBundle(rsp, selectedComponents);
     }
 
-    private void prepareBundle(StaplerResponse rsp, List<Component> components) throws IOException {
+    private void prepareBundle(StaplerResponse2 rsp, List<Component> components) throws IOException {
         logger.fine("Preparing response...");
         rsp.setContentType("application/zip");
         rsp.addHeader("Content-Disposition", "inline; filename=" + BundleFileName.generate() + ";");
         final ServletOutputStream servletOutputStream = rsp.getOutputStream();
         try {
-            SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-            try {
-                try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                    SupportPlugin.writeBundle(servletOutputStream, components);
-                } catch (IOException e) {
-                    logger.log(Level.FINE, e.getMessage(), e);
-                }
-            } finally {
-                SupportPlugin.clearRequesterAuthentication();
-            }
-        } finally {
+            SupportPlugin.writeBundle(servletOutputStream, components);
             logger.fine("Response completed");
+        } catch (IOException e) {
+            logger.log(Level.FINE, e.getMessage(), e);
         }
     }
 
@@ -436,5 +498,101 @@ public class SupportAction implements RootAction, StaplerProxy {
         public boolean isSelected() {
             return selected;
         }
+    }
+
+    public ProgressiveRendering getGeneratorByTaskId(String taskId) throws Exception {
+        return generatorByTaskId.get(UUID.fromString(taskId));
+    }
+
+    public static class SupportBundleAsyncGenerator extends ProgressiveRendering {
+        private final Logger logger = Logger.getLogger(SupportAction.class.getName());
+        private UUID taskId;
+        private boolean isCompleted;
+        private List<Component> components;
+        private boolean supportBundleGenerationInProgress = false;
+        private String supportBundleName;
+
+        public SupportBundleAsyncGenerator init(UUID taskId, List<Component> components) {
+            this.taskId = taskId;
+            this.components = components;
+            return this;
+        }
+
+        @Override
+        protected void compute() throws Exception {
+            if (supportBundleGenerationInProgress) {
+                logger.fine("Support bundle generation already in progress, for task id " + taskId);
+                return;
+            }
+
+            this.supportBundleName = BundleFileName.generate();
+            this.supportBundleGenerationInProgress = true;
+            logger.fine("Generating support bundle... task id " + taskId);
+            Path outputDir = SUPPORT_BUNDLE_CREATION_FOLDER.resolve(taskId.toString());
+            if (!Files.exists(outputDir)) {
+                try {
+                    Files.createDirectories(outputDir);
+                } catch (IOException e) {
+                    throw new IOException("Failed to create directory: " + outputDir.toAbsolutePath(), e);
+                }
+            }
+
+            try (FileOutputStream fileOutputStream =
+                    new FileOutputStream(new File(outputDir.toString(), supportBundleName))) {
+                SupportPlugin.writeBundle(fileOutputStream, components, this::progress, outputDir);
+            } finally {
+                logger.fine("Processing support bundle async completed");
+            }
+
+            isCompleted = true;
+        }
+
+        @NonNull
+        @Override
+        protected JSON data() {
+            JSONObject json = new JSONObject();
+            json.put("isCompleted", isCompleted);
+            json.put("taskId", String.valueOf(taskId));
+            return json;
+        }
+
+        public String getSupportBundleName() {
+            return supportBundleName;
+        }
+    }
+
+    public void doDownloadBundle(@QueryParameter("taskId") String taskId, StaplerResponse2 rsp) throws IOException {
+        String supportBundleName =
+                generatorByTaskId.get(UUID.fromString(taskId)).getSupportBundleName();
+
+        File bundleFile = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId + "/" + supportBundleName);
+        if (!bundleFile.exists()) {
+            rsp.sendError(HttpServletResponse.SC_NOT_FOUND, "Support bundle file not found");
+            return;
+        }
+
+        rsp.setContentType("application/zip");
+        rsp.addHeader("Content-Disposition", "attachment; filename=" + supportBundleName);
+        try (ServletOutputStream outputStream = rsp.getOutputStream()) {
+            Files.copy(bundleFile.toPath(), outputStream);
+        }
+
+        // Clean up temporary files after assembling the full bundle
+        Timer.get()
+                .schedule(
+                        () -> {
+                            File outputDir = new File(SUPPORT_BUNDLE_CREATION_FOLDER + "/" + taskId);
+
+                            try {
+                                FileUtils.deleteDirectory(outputDir);
+                                generatorByTaskId.remove(taskId);
+                                logger.fine(() -> "Cleaned up temporary directory " + outputDir);
+
+                            } catch (IOException e) {
+                                logger.log(Level.WARNING, () -> "Unable to delete " + outputDir);
+                            }
+                        },
+                        15,
+                        TimeUnit.MINUTES);
     }
 }

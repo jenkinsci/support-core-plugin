@@ -1,16 +1,14 @@
 package com.cloudbees.jenkins.support.api;
 
+import com.cloudbees.jenkins.support.filter.FilteredInputStream;
 import com.cloudbees.jenkins.support.filter.PasswordRedactor;
 import com.cloudbees.jenkins.support.impl.SlaveLaunchLogs;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
+import java.util.function.Function;
 
 /**
  * @see SlaveLaunchLogs
@@ -23,14 +21,8 @@ public class LaunchLogsFileContent extends FileContent {
 
     @Override
     protected InputStream getInputStream() throws IOException {
-        try (FileInputStream inputStream = new FileInputStream(file)) {
-            List<String> strings = IOUtils.readLines(inputStream, Charset.defaultCharset());
-            byte[] bytes = strings.stream()
-                    .map(line -> PasswordRedactor.get().redact(line))
-                    .collect(Collectors.joining("\n", "", "\n"))
-                    .getBytes(Charset.defaultCharset());
-            return new ByteArrayInputStream(bytes);
-        }
+        Function<String, String> filter = PasswordRedactor.get()::redact;
+        return new FilteredInputStream(new FileInputStream(file), Charset.defaultCharset(), filter);
     }
 
     @Override
