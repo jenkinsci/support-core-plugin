@@ -107,6 +107,16 @@ public abstract class Component implements ExtensionPoint {
     }
 
     /**
+     * This method will indicate if the component can be generated asynchronously.
+     * This is useful for components that need request context info that only be available in a request thread.
+     * By default, it will return true.
+     * @return
+     */
+    public boolean canBeGeneratedAsync() {
+        return true;
+    }
+
+    /**
      * Return if this component is applicable to a specific class of item.
      *
      * @param clazz the class

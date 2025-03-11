@@ -49,6 +49,7 @@ public class SmartLogCleanerTest {
         }
 
         assertEquals(cacheDir.list().length, 2);
+        agent2.toComputer().disconnect(null).get();
         j.getInstance().removeNode(agent2);
 
         generateBundle();

@@ -1,7 +1,9 @@
 package com.cloudbees.jenkins.support.impl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
@@ -30,7 +32,7 @@ public class NodeRemoteDirectoryComponentTest {
                 SupportTestUtils.invokeComponentToMap(new NodeRemoteDirectoryComponent(), agent.toComputer());
 
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
-        assertTrue(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
+        assertThat(output.keySet(), hasItem(matchesPattern(prefix + "/support/.*.log")));
     }
 
     /*
@@ -46,7 +48,7 @@ public class NodeRemoteDirectoryComponentTest {
                 new NodeRemoteDirectoryComponent("", "**/*.log", true, 10), agent.toComputer());
 
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
-        assertFalse(output.keySet().stream().anyMatch(key -> key.matches(prefix + ".*/.*.log")));
+        assertThat(output.keySet(), not(hasItem(matchesPattern(prefix + ".*/.*.log"))));
     }
 
     /*
@@ -62,7 +64,7 @@ public class NodeRemoteDirectoryComponentTest {
                 new NodeRemoteDirectoryComponent("support/*.log", "", true, 10), agent.toComputer());
 
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
-        assertTrue(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
+        assertThat(output.keySet(), hasItem(matchesPattern(prefix + "/support/.*.log")));
     }
 
     /*
@@ -78,6 +80,6 @@ public class NodeRemoteDirectoryComponentTest {
                 new NodeRemoteDirectoryComponent("", "", true, 1), agent.toComputer());
 
         String prefix = "nodes/slave/" + agent.getNodeName() + "/remote";
-        assertFalse(output.keySet().stream().anyMatch(key -> key.matches(prefix + "/support/.*.log")));
+        assertThat(output.keySet(), not(hasItem(matchesPattern(prefix + "/support/.*.log"))));
     }
 }

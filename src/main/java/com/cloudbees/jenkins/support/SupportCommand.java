@@ -31,8 +31,6 @@ import hudson.CloseProofOutputStream;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.remoting.RemoteOutputStream;
-import hudson.security.ACL;
-import hudson.security.ACLContext;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -93,20 +91,13 @@ public class SupportCommand extends CLICommand {
                 selected.add(c);
             }
         }
-        SupportPlugin.setRequesterAuthentication(Jenkins.getAuthentication2());
-        try {
-            try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
-                OutputStream os;
-                if (channel != null) { // Remoting mode
-                    os = channel.call(new SaveBundle(BundleFileName.generate()));
-                } else { // redirect output to a ZIP file yourself
-                    os = new CloseProofOutputStream(stdout);
-                }
-                SupportPlugin.writeBundle(os, new ArrayList<>(selected));
-            }
-        } finally {
-            SupportPlugin.clearRequesterAuthentication();
+        OutputStream os;
+        if (channel != null) { // Remoting mode
+            os = channel.call(new SaveBundle(BundleFileName.generate()));
+        } else { // redirect output to a ZIP file yourself
+            os = new CloseProofOutputStream(stdout);
         }
+        SupportPlugin.writeBundle(os, new ArrayList<>(selected));
         return 0;
     }
 
