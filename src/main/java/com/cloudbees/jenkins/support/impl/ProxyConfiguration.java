@@ -42,7 +42,8 @@ public class ProxyConfiguration extends Component {
                 out.println();
                 hudson.ProxyConfiguration proxy = Jenkins.get().getProxy();
                 if (proxy != null) {
-                    out.println("  - Host: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, proxy.getName())) + "`");
+                    out.println("  - Host: `" + Markdown.escapeBacktick(ContentFilter.filter(filter, proxy.getName()))
+                            + "`");
                     out.println("  - Port: `" + proxy.getPort() + "`");
                     out.println("  - No Proxy Hosts: ");
                     String noProxyHostsString = proxy.getNoProxyHost();
