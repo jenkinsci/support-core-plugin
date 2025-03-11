@@ -143,7 +143,8 @@ public class RootCAs extends Component {
         // https://docs.oracle.com/en/java/javase/11/security/java-secure-socket-extension-jsse-reference-guide.html#GUID-7D9F43B8-AABF-4C5B-93E6-3AFB18B66150
 
         var javaHome = System.getProperty("java.home");
-        Optional<String> maybeExplictTrustStorePath = Optional.ofNullable(System.getProperty("javax.net.ssl.trustStore"));
+        Optional<String> maybeExplictTrustStorePath =
+                Optional.ofNullable(System.getProperty("javax.net.ssl.trustStore"));
         var jssecacertPath = Path.of(javaHome, "lib", "security", "jssecacerts");
         var cacertPath = Path.of(javaHome, "lib", "security", "cacerts");
 
@@ -158,7 +159,6 @@ public class RootCAs extends Component {
         formatter.format("%s: %s%n", jssecacertPath, summarizePath(jssecacertPath));
         formatter.format("%s: %s%n", cacertPath, summarizePath(cacertPath));
         writer.write('\n');
-
     }
 
     public static void getRootCAList(StringWriter writer) {
