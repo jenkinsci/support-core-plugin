@@ -29,9 +29,11 @@ import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
 import hudson.model.Describable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
+import org.jvnet.tiger_types.Types;
 
 /**
  * Represents a component of a support bundle for a specific model object.
@@ -86,8 +88,12 @@ public abstract class ObjectComponent<T extends AbstractModelObject> extends Com
      */
     @Override
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {
-        Class<T> type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        return type.isAssignableFrom(clazz);
+        Type parameterization = Types.getBaseClass(getClass(), ObjectComponent.class);
+        if (parameterization instanceof ParameterizedType pt) {
+            return Types.erasure(Types.getTypeArgument(pt, 0)).isAssignableFrom(clazz);
+        } else {
+            throw new AssertionError(getClass() + " does not parameterize " + ObjectComponent.class);
+        }
     }
 
     /**
