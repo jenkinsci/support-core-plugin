@@ -36,11 +36,17 @@ import hudson.model.Node;
 import hudson.security.Permission;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
+import java.util.Formatter;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import javax.net.ssl.TrustManager;
@@ -124,11 +130,35 @@ public class RootCAs extends Component {
                 justification = "Best effort")
         public String call() {
             StringWriter writer = new StringWriter();
+            getTrustStoreConfiguration(writer);
             getRootCAList(writer);
             return writer.toString();
         }
 
         private static final long serialVersionUID = 1L;
+    }
+
+    public static void getTrustStoreConfiguration(StringWriter writer) {
+        // Customizing the Default Keystores and Truststores, Store Types, and Store Passwords
+        // https://docs.oracle.com/en/java/javase/11/security/java-secure-socket-extension-jsse-reference-guide.html#GUID-7D9F43B8-AABF-4C5B-93E6-3AFB18B66150
+
+        var javaHome = System.getProperty("java.home");
+        Optional<String> maybeExplictTrustStorePath =
+                Optional.ofNullable(System.getProperty("javax.net.ssl.trustStore"));
+        var jssecacertPath = Path.of(javaHome, "lib", "security", "jssecacerts");
+        var cacertPath = Path.of(javaHome, "lib", "security", "cacerts");
+
+        var formatter = new Formatter(writer);
+        writer.write("==== Trust Store Configuration ====\n");
+        formatter.format("javax.net.ssl.trustStore: %s", maybeExplictTrustStorePath.orElse("not set"));
+        if (maybeExplictTrustStorePath.isPresent()) {
+            formatter.format(": %s%n", summarizePath(Path.of(maybeExplictTrustStorePath.get())));
+        } else {
+            writer.write('\n');
+        }
+        formatter.format("%s: %s%n", jssecacertPath, summarizePath(jssecacertPath));
+        formatter.format("%s: %s%n", cacertPath, summarizePath(cacertPath));
+        writer.write('\n');
     }
 
     public static void getRootCAList(StringWriter writer) {
@@ -166,6 +196,27 @@ public class RootCAs extends Component {
             }
         } catch (KeyStoreException | NoSuchAlgorithmException e) {
             writer.write(Functions.printThrowable(e));
+        }
+    }
+
+    static String summarizePath(Path path) {
+        if (!Files.exists(path)) {
+            return "not a file";
+        }
+        try {
+            var fileAttributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            if (fileAttributes.isSymbolicLink()) {
+                Path target = Files.readSymbolicLink(path);
+                return "symlink to " + target.toAbsolutePath();
+            } else if (fileAttributes.isRegularFile()) {
+                return "regular file";
+            } else if (fileAttributes.isDirectory()) {
+                return "directory";
+            } else {
+                return "other";
+            }
+        } catch (IOException e) {
+            return "error reading file attributes: " + e.getMessage();
         }
     }
 }

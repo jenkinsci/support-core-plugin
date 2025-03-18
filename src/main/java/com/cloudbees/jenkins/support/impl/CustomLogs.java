@@ -44,7 +44,7 @@ public class CustomLogs extends Component {
 
     private static final Logger LOGGER = Logger.getLogger(CustomLogs.class.getName());
     private static final int MAX_ROTATE_LOGS = Integer.getInteger(CustomLogs.class.getName() + ".MAX_ROTATE_LOGS", 9);
-    private static final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
+    private final File customLogs = new File(SafeTimerTask.getLogsRoot(), "custom");
     private final List<LogRecorder> logRecorders = Jenkins.get().getLog().getRecorders();
 
     @NonNull
@@ -95,6 +95,30 @@ public class CustomLogs extends Component {
                     }
                 });
             }
+
+            // Add rotated log files
+            File[] rotatedLogFiles =
+                    customLogs.listFiles((dir, filename) -> filename.matches(name + "[.]log[.][0-9]+"));
+            if (rotatedLogFiles == null) {
+                LOGGER.fine("No rotated logs found for : " + name);
+                return;
+            }
+
+            for (File rotatedLogFile : rotatedLogFiles) {
+                String rotatedEntryName = "nodes/master/logs/custom/{0}.log.";
+
+                try {
+                    // Fetch the rotations number of the log
+                    // eg. custom.log.2 , the rotation number is 2
+                    String[] logNameParts = rotatedLogFile.getName().split("\\.");
+                    String logRotationNumber = logNameParts[logNameParts.length - 1];
+
+                    result.add(
+                            new FileContent(rotatedEntryName + logRotationNumber, new String[] {name}, rotatedLogFile));
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error while adding rotated log files for " + name, e);
+                }
+            }
         }
     }
 
@@ -106,7 +130,7 @@ public class CustomLogs extends Component {
         @SuppressFBWarnings(
                 value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE",
                 justification = "if mkdirs fails, will just get a stack trace later")
-        LogFile(String name) throws IOException {
+        LogFile(String name, File customLogs) throws IOException {
             customLogs.mkdirs();
             stream = new RewindableRotatingFileOutputStream(new File(customLogs, name + ".log"), MAX_ROTATE_LOGS);
             // TODO there is no way to avoid rotating when first opened; if .rewind is skipped, the file is just
@@ -172,7 +196,7 @@ public class CustomLogs extends Component {
                             synchronized (logFiles) {
                                 logFile = logFiles.get(name);
                                 if (logFile == null) {
-                                    logFile = new LogFile(name);
+                                    logFile = new LogFile(name, customLogs);
                                     logFiles.put(name, logFile);
                                 }
                             }
