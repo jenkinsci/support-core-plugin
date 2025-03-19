@@ -34,7 +34,6 @@ import hudson.security.Permission;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Set;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
@@ -84,7 +83,12 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
 
     @Override
     public void addContents(@NonNull Container container) {
-        Jenkins.get().getNodes().forEach(node -> addContents(container, Objects.requireNonNull(node.toComputer())));
+        for (var n : Jenkins.get().getNodes()) {
+            var c = n.toComputer();
+            if (c != null) {
+                addContents(container, c);
+            }
+        }
     }
 
     @Override
@@ -105,7 +109,7 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
 
     @Override
     public boolean isApplicable(Computer item) {
-        return item != Jenkins.get().toComputer();
+        return !(item instanceof Jenkins.MasterComputer);
     }
 
     @Override

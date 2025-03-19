@@ -220,7 +220,7 @@ public class SupportLogHandler extends Handler {
     }
 
     @SuppressFBWarnings(
-            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
+            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
             justification = "Best effort")
     private void setFile(File file) throws FileNotFoundException {
         outputLock.lock();
@@ -234,6 +234,7 @@ public class SupportLogHandler extends Handler {
                 parentFile.mkdirs();
             }
 
+            StreamUtils.closeQuietly(null); // ensure class is loaded so close() can succeed
             boolean success = false;
             FileOutputStream fos = null;
             BufferedOutputStream bos = null;

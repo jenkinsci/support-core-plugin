@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -27,16 +28,20 @@ import hudson.model.Slave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -45,10 +50,11 @@ import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
+import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.HttpMethod;
-import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
+import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
@@ -68,6 +74,7 @@ import org.xml.sax.SAXException;
  * @author Kohsuke Kawaguchi
  */
 public class SupportActionTest {
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
@@ -92,6 +99,16 @@ public class SupportActionTest {
     @Test
     public void generateAllBundles() throws IOException, SAXException {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
+    }
+
+    @Test
+    public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
+        ZipFile supportBundle = downloadSupportBundleByButtonClick();
+        assertNotNull(supportBundle.getEntry("manifest.md"));
+        assertNotNull(supportBundle.getEntry("browser.md"));
+        assertNotNull(supportBundle.getEntry("user.md"));
+        assertNotNull(supportBundle.getEntry("reverse-proxy.md"));
+        assertNotNull(supportBundle.getEntry("nodes/master/logs/jenkins.log"));
     }
 
     @Test
@@ -316,6 +333,41 @@ public class SupportActionTest {
         // Zip file is valid
     }
 
+    private ZipFile downloadSupportBundleByButtonClick() throws IOException, SAXException, InterruptedException {
+        WebClient wc = j.createWebClient();
+        HtmlPage p = wc.goTo(root.getUrlName());
+        HtmlForm form = p.getFormByName("bundle-contents");
+        HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
+        HtmlPage page = submit.click();
+
+        HtmlAnchor downloadLink = null;
+        File zipFile;
+        AtomicReference<HtmlPage> pageRef = new AtomicReference<>(page);
+
+        HtmlPage finalPage = page;
+        await().timeout(10, TimeUnit.SECONDS).until(() -> {
+            try {
+                return pageRef.get().getAnchorByText("click here") != null;
+            } catch (ElementNotFoundException e) {
+                pageRef.set((HtmlPage) pageRef.get().refresh());
+                return false;
+            }
+        });
+
+        downloadLink = pageRef.get().getAnchorByText("click here");
+        if (downloadLink != null) {
+            // Download the zip file
+            WebResponse response = downloadLink.click().getWebResponse();
+            zipFile = File.createTempFile("downloaded", ".zip");
+            try (InputStream in = response.getContentAsStream()) {
+                Files.copy(in, zipFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } else {
+            throw new IOException("Download link not found after " + 10 + " retries");
+        }
+        return new ZipFile(zipFile);
+    }
+
     @Test
     public void generateBundleFailsWhenNoParameter() {
         Exception exception = assertThrows(IOException.class, () -> downloadBundle("/generateBundle"));
@@ -364,16 +416,7 @@ public class SupportActionTest {
         logger.addHandler(checker);
 
         try {
-            WebClient wc = j.createWebClient();
-            HtmlPage p = wc.goTo(root.getUrlName());
-
-            HtmlForm form = p.getFormByName("bundle-contents");
-            HtmlButton submit = (HtmlButton) form.getElementsByTagName("button").get(0);
-            Page zip = submit.click();
-            File zipFile = File.createTempFile("test", "zip");
-            IOUtils.copy(zip.getWebResponse().getContentAsStream(), Files.newOutputStream(zipFile.toPath()));
-
-            ZipFile z = new ZipFile(zipFile);
+            ZipFile z = downloadSupportBundleByButtonClick();
 
             // check the presence of files
             // TODO: emit some log entries and see if it gets captured here

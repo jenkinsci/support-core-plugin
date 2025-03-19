@@ -42,6 +42,11 @@ public class ReverseProxy extends Component {
             X_FORWARDED_HOST_HEADER,
             X_FORWARDED_PORT_HEADER);
 
+    @Override
+    public boolean canBeGeneratedAsync() {
+        return false;
+    }
+
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {
