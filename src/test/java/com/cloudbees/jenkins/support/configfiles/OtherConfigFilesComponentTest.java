@@ -6,9 +6,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyIterable;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -28,20 +26,17 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class OtherConfigFilesComponentTest {
+@WithJenkins
+class OtherConfigFilesComponentTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public LoggerRule logging = new LoggerRule()
+    private static final LogRecorder logging = new LogRecorder()
             .recordPackage(OtherConfigFilesComponent.class, Level.WARNING)
             .capture(100);
 
@@ -76,8 +71,8 @@ public class OtherConfigFilesComponentTest {
                     + "    </domainCredentialsMap>\n"
                     + "</com.cloudbees.plugins.credentials.SystemCredentialsProvider>";
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         Secret secret = Secret.fromString("this-is-a-secret");
         SecretBytes secret2 = SecretBytes.fromBytes("this-is-another-type-of-secret".getBytes());
         assertEquals("this-is-a-secret", secret.getPlainText());
@@ -114,7 +109,7 @@ public class OtherConfigFilesComponentTest {
     }
 
     @Test
-    public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
+    void shouldPutAPlaceHolderInsteadOfSecret(JenkinsRule j) throws Exception {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
@@ -122,7 +117,7 @@ public class OtherConfigFilesComponentTest {
     }
 
     @Test
-    public void missingFile() throws Exception {
+    void missingFile(JenkinsRule j) throws Exception {
         File file = new File(j.jenkins.root, "x.xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         Map<String, Content> contents = new HashMap<>();
@@ -154,7 +149,7 @@ public class OtherConfigFilesComponentTest {
     }
 
     @Test
-    public void regexpFromFileFilter() throws Exception {
+    void regexpFromFileFilter(JenkinsRule j) throws Exception {
         List<String> filesToExclude = List.of(
                 "test-abc.xml",
                 "test-efgh.xml",
@@ -184,12 +179,10 @@ public class OtherConfigFilesComponentTest {
         for (String fileNotToExclude : filesNotToExclude) {
             Files.delete(Path.of(j.jenkins.root.getPath(), fileNotToExclude));
         }
-        filesToExclude.forEach(s -> {
-            assertNull(s + " should not be included", contents.get("jenkins-root-configuration-files/" + s));
-        });
-        filesNotToExclude.forEach(s -> {
-            assertNotNull(s + " should be included", contents.get("jenkins-root-configuration-files/" + s));
-        });
+        filesToExclude.forEach(
+                s -> assertNull(contents.get("jenkins-root-configuration-files/" + s), s + " should not be included"));
+        filesNotToExclude.forEach(
+                s -> assertNotNull(contents.get("jenkins-root-configuration-files/" + s), s + " should be included"));
     }
 
     @TestExtension

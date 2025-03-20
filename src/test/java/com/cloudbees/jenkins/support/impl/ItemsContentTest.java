@@ -7,21 +7,19 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
 import hudson.ExtensionList;
 import hudson.model.FreeStyleProject;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Allan Burdajewicz
  */
-public class ItemsContentTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class ItemsContentTest {
 
     @Test
-    public void testItemsContent() throws Exception {
+    void testItemsContent(JenkinsRule j) throws Exception {
         MockFolder testFolder1 = j.createFolder("testFolder1");
         FreeStyleProject project11 = testFolder1.createProject(FreeStyleProject.class, "testProject12");
         project11.scheduleBuild2(0);

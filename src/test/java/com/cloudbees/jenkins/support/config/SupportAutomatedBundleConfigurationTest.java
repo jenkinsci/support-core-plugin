@@ -9,21 +9,19 @@ import java.util.stream.Collectors;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Test for the {@link SupportAutomatedBundleConfiguration}
  * @author Allan Burdajewicz
  */
-public class SupportAutomatedBundleConfigurationTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class SupportAutomatedBundleConfigurationTest {
 
     @Test
-    public void testDefaults() {
+    void testDefaults(JenkinsRule j) {
         assertThat(
                 "by default, support bundle generation should be enabled",
                 SupportAutomatedBundleConfiguration.get().isEnabled(),
@@ -40,7 +38,7 @@ public class SupportAutomatedBundleConfigurationTest {
     }
 
     @Test
-    public void testRoundTrip() throws Exception {
+    void testRoundTrip(JenkinsRule j) throws Exception {
         HtmlForm cfg = j.createWebClient().goTo("supportCore").getFormByName("config");
         ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "enabled")).setChecked(true);
         ((HtmlInput) cfg.getOneHtmlElementByAttribute("input", "name", "period")).setValue("2");
@@ -78,7 +76,7 @@ public class SupportAutomatedBundleConfigurationTest {
     }
 
     @Test
-    public void testSetPeriod() {
+    void testSetPeriod(JenkinsRule j) {
         // Test that setting the period to a value lower than -1 set it to minimum 1
         SupportAutomatedBundleConfiguration.get().setPeriod(-1);
         assertThat(SupportAutomatedBundleConfiguration.get().getPeriod(), is(1));
