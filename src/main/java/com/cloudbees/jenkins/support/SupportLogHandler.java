@@ -220,7 +220,7 @@ public class SupportLogHandler extends Handler {
     }
 
     @SuppressFBWarnings(
-            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
+            value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"},
             justification = "Best effort")
     private void setFile(File file) throws FileNotFoundException {
         outputLock.lock();

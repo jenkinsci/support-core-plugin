@@ -9,7 +9,6 @@ import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.AbstractModelObject;
@@ -20,6 +19,7 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import java.io.*;
 import java.lang.management.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -200,16 +200,14 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     }
 
     private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
-        @SuppressFBWarnings(
-                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
-                justification = "Best effort")
+
         public String call() {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
                 threadDump(bos);
                 return bos.toString(StandardCharsets.UTF_8);
             } catch (UnsupportedEncodingException e) {
-                return bos.toString();
+                return bos.toString(Charset.defaultCharset());
             }
         }
 
@@ -222,7 +220,6 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      * @param out an output stream.
      * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
-    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We don't want platform specific")
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
 

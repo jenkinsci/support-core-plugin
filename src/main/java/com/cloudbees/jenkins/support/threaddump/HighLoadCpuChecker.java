@@ -30,7 +30,6 @@ import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricSet;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.PeriodicWork;
@@ -98,7 +97,6 @@ public class HighLoadCpuChecker extends PeriodicWork {
     }
 
     @Override
-    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION", justification = "Intentional")
     protected void doRun() throws Exception {
         Double cpuLoad;
         try {

@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.google.common.annotations.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -183,9 +182,6 @@ public final class SlaveCommandStatistics extends Component {
             return IRRELEVANT.matcher(cmd.toString()).replaceFirst("");
         }
 
-        @SuppressFBWarnings(
-                value = "UC_USELESS_OBJECT_STACK",
-                justification = "Maybe FindBugs is just confused? The TreeMap _is_ being used.")
         private void print(PrintWriter out) {
             out.println("# Totals");
             synchronized (writes) {
