@@ -38,16 +38,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Function;
 import jenkins.model.Jenkins;
 
 /**
@@ -93,11 +90,7 @@ public class ItemsContent extends Component {
                         // too expensive: int builds = j.getBuilds().size();
                         int builds = 0;
                         File buildDir = jenkins.getBuildDirFor(j);
-                        if (new File(buildDir, "legacyIds").isFile()) {
-                            builds += countBuilds(buildDir.toPath(), this::parseInt);
-                        } else {
-                            builds += countBuilds(buildDir.toPath(), this::parseDate);
-                        }
+                        builds += countBuilds(buildDir.toPath());
                         jobTotal.add(builds);
                         Stats s = jobStats.get(key);
                         if (s == null) {
@@ -145,21 +138,12 @@ public class ItemsContent extends Component {
                 }
             }
 
-            private Optional<Date> parseDate(String fileName) {
-                try {
-                    return Optional.of(BUILD_FORMAT.parse(fileName));
-                } catch (ParseException x) {
-                    return Optional.empty();
-                }
-            }
-
-            private Integer countBuilds(
-                    Path buildDirPath, Function<String, Optional<? extends Comparable>> parseMethod) {
+            private Integer countBuilds(Path buildDirPath) {
                 int builds = 0;
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(buildDirPath)) {
                     for (Path path : stream) {
                         if (Files.isDirectory(path)
-                                && parseMethod.apply(path.toFile().getName()).isPresent()) {
+                                && this.parseInt(path.toFile().getName()).isPresent()) {
                             builds++;
                         }
                     }
