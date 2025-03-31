@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -28,7 +29,7 @@ import org.kohsuke.stapler.QueryParameter;
  * @author Allan Burdajewicz
  */
 @Extension
-public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
+public class RunDirectoryComponent extends DirectoryComponent<Run> {
 
     public RunDirectoryComponent() {
         super();
@@ -40,7 +41,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
     }
 
     @Override
-    public void addContents(@NonNull Container container, @NonNull Run<?, ?> item) {
+    public void addContents(@NonNull Container container, @NonNull Run item) {
         try {
             File itemRootDir = item.getRootDir();
             String relativeToRoot =
@@ -109,7 +110,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
 
     @Extension
     @Symbol("runDirectoryComponent")
-    public static class DescriptorImpl extends DirectoryComponentsDescriptor<Run<?, ?>> {
+    public static class DescriptorImpl extends DirectoryComponentsDescriptor<Run> {
 
         static final int DEFAULT_MAX_DEPTH = 10;
 
@@ -126,7 +127,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
                 "jacoco/");
 
         public DescriptorImpl() {
-            super("", String.join(",", EXCLUDES), true, DEFAULT_MAX_DEPTH);
+            super("", EXCLUDES.stream().collect(Collectors.joining(",")), true, DEFAULT_MAX_DEPTH);
         }
 
         /**
@@ -146,7 +147,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused") // used by Stapler
-        public FormValidation doCheckIncludes(@AncestorInPath Run<?, ?> item, @QueryParameter String includes)
+        public FormValidation doCheckIncludes(@AncestorInPath Run item, @QueryParameter String includes)
                 throws IOException {
             if (item == null) {
                 return FormValidation.ok();
@@ -170,7 +171,7 @@ public class RunDirectoryComponent extends DirectoryComponent<Run<?, ?>> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused") // used by Stapler
-        public FormValidation doCheckExcludes(@AncestorInPath Run<?, ?> item, @QueryParameter String excludes) {
+        public FormValidation doCheckExcludes(@AncestorInPath Run item, @QueryParameter String excludes) {
             if (item == null) {
                 return FormValidation.ok();
             }
