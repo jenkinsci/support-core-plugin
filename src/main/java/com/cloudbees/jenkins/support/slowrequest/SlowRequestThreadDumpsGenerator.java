@@ -1,15 +1,12 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import static java.util.logging.Level.WARNING;
-
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.timer.FileListCap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
@@ -80,8 +77,6 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
     @SuppressFBWarnings
     public static boolean DISABLED = Boolean.getBoolean(SlowRequestThreadDumpsGenerator.class.getName() + ".DISABLED");
 
-    private final SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
-
     private long iota = 0l;
 
     public SlowRequestThreadDumpsGenerator(long iota) {
@@ -100,27 +95,7 @@ public class SlowRequestThreadDumpsGenerator extends Thread {
 
         long fileNameDate = this.iota;
 
-        for (int i = 0; i < TOTAL_ITERATIONS; i++) {
-            File threadDumpFile = logs.file(format.format(new Date(fileNameDate)) + "-" + i + ".txt");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
-                ThreadDumps.threadDump(fileOutputStream);
-                logs.add(threadDumpFile);
-                sleep(FREQUENCY_SEC * 1000);
-            } catch (IOException ioe) {
-                LOGGER.log(
-                        WARNING,
-                        "Support Core plugin can't generate automatically thread dumps under SlowRequest scenario",
-                        ioe);
-            } catch (InterruptedException ie) {
-                LOGGER.log(
-                        WARNING,
-                        "The SlowRequestThreadDumpsGenerator thread was interrupted by unknown reasons. It may be a bug",
-                        ie);
-            } finally {
-                fileNameDate += FREQUENCY_SEC * 1000;
-            }
-        }
-
+        ThreadDumps.collectMultiple(logs, fileNameDate, TimeUnit.SECONDS.toMillis(FREQUENCY_SEC), TOTAL_ITERATIONS);
         setRunningStatus(false);
     }
 
