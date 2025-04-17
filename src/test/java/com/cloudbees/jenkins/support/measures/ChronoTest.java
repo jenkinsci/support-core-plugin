@@ -1,14 +1,15 @@
 package com.cloudbees.jenkins.support.measures;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.util.Chrono;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ChronoTest {
+class ChronoTest {
+
     @Test
-    public void chronoTest() throws Exception {
+    void chronoTest() throws Exception {
         Chrono c = new Chrono("Test Chrono");
         Thread.sleep(1000);
         c.markFromPrevious("After 1s");

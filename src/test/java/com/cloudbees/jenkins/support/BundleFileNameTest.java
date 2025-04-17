@@ -9,28 +9,26 @@ import java.io.PrintWriter;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.localizer.Localizable;
 
-public class BundleFileNameTest {
+@WithJenkins
+class BundleFileNameTest {
 
     private static final Clock TEST_CLOCK = Clock.fixed(Instant.parse("2020-10-01T10:20:30Z"), ZoneOffset.UTC);
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     @Test
-    public void testGenerate_Default() {
+    void testGenerate_Default(JenkinsRule j) {
         assertThat(BundleFileName.generate(TEST_CLOCK, null), equalTo("support_2020-10-01_10.20.30.zip"));
     }
 
-    @Ignore("Relies on SupportPlugin object which is not instantiated by TestPluginManager")
+    @Disabled("Relies on SupportPlugin object which is not instantiated by TestPluginManager")
     @Test
-    public void testGenerate_WithSupportProvider() {
+    void testGenerate_WithSupportProvider(JenkinsRule j) {
         assertThat(BundleFileName.generate(TEST_CLOCK, null), equalTo("amazing-support_2020-10-01_10.20.30.zip"));
     }
 
@@ -61,13 +59,13 @@ public class BundleFileNameTest {
     }
 
     @Test
-    public void testGenerate_WithQualifier() {
+    void testGenerate_WithQualifier(JenkinsRule j) {
         assertThat(
                 BundleFileName.generate(TEST_CLOCK, "qualifier"), equalTo("support_qualifier_2020-10-01_10.20.30.zip"));
     }
 
     @Test
-    public void testGenerate_WithQualifierAndInstanceType() {
+    void testGenerate_WithQualifierAndInstanceType(JenkinsRule j) {
         assertThat(
                 BundleFileName.generate(TEST_CLOCK, "qualifier"),
                 equalTo("support_qualifier_instance_type_2020-10-01_10.20.30.zip"));
