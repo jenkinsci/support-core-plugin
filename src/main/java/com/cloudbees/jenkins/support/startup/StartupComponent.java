@@ -61,6 +61,8 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
     }
 
     private static class StartupContent extends PrefilteredPrintedContent {
+        public static final String MILESTONE_HEADER = "Milestone";
+        public static final String TIME_HEADER = "Time";
         private final Map<InitMilestone, Long> timePerMilestone;
 
         StartupContent(Map<InitMilestone, Long> timePerMilestone) {
@@ -75,11 +77,9 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
 
             InitMilestone previousMilestone = null;
             List<TimingEntry> timingEntries = new ArrayList<>();
-            var milestoneHeader = "Milestone";
-            var timeHeader = "Time";
 
-            var maxMilestoneLength = milestoneHeader.length();
-            var maxTimingLength = timeHeader.length();
+            var maxMilestoneLength = MILESTONE_HEADER.length();
+            var maxTimingLength = TIME_HEADER.length();
             for (var milestone : InitMilestone.values()) {
                 var currentMilestoneTimestamp = timePerMilestone.get(milestone);
                 if (previousMilestone != null) {
@@ -99,7 +99,7 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
             }
             var totalStartupTime = lastMilestoneTimestamp - startTime;
             out.println(
-                    "| " + pad(milestoneHeader, maxMilestoneLength) + " | " + pad(timeHeader, maxTimingLength) + " |");
+                    "| " + pad(MILESTONE_HEADER, maxMilestoneLength) + " | " + pad(TIME_HEADER, maxTimingLength) + " |");
             out.println("|" + "-".repeat(maxMilestoneLength + 2) + "|" + "-".repeat(maxTimingLength + 2) + "|");
             for (var entry : timingEntries) {
                 out.println("| " + pad(entry.milestone, maxMilestoneLength) + " | "
@@ -109,7 +109,7 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
             out.println("Total startup time : " + Util.getTimeSpanString(totalStartupTime));
         }
 
-        private String pad(@NonNull Object o, int size) {
+        private static String pad(@NonNull Object o, int size) {
             var string = o.toString();
             return string + " ".repeat(Math.max(0, size - string.length()));
         }
