@@ -98,8 +98,8 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
                 previousMilestone = milestone;
             }
             var totalStartupTime = lastMilestoneTimestamp - startTime;
-            out.println(
-                    "| " + pad(MILESTONE_HEADER, maxMilestoneLength) + " | " + pad(TIME_HEADER, maxTimingLength) + " |");
+            out.println("| " + pad(MILESTONE_HEADER, maxMilestoneLength) + " | " + pad(TIME_HEADER, maxTimingLength)
+                    + " |");
             out.println("|" + "-".repeat(maxMilestoneLength + 2) + "|" + "-".repeat(maxTimingLength + 2) + "|");
             for (var entry : timingEntries) {
                 out.println("| " + pad(entry.milestone, maxMilestoneLength) + " | "
