@@ -63,6 +63,19 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      * @param iterations the number of thread dumps to collect
      */
     public static void collectMultiple(FileListCap fileList, long timestamp, long delay, int iterations) {
+        collectMultiple(fileList, timestamp, delay, iterations, Level.WARNING);
+    }
+
+    /**
+     * Collects multiple thread dumps and saves them to the specified file list.
+     * @param fileList the file list where the thread dumps will be saved
+     * @param timestamp the initial timestamp
+     * @param delay the delay between two consecutive thread dumps
+     * @param iterations the number of thread dumps to collect
+     * @param loggingLevel the logging level to use for logging errors
+     */
+    public static void collectMultiple(
+            FileListCap fileList, long timestamp, long delay, int iterations, Level loggingLevel) {
         if (delay <= 0) {
             throw new IllegalArgumentException("delay must be greater than 0");
         }
@@ -74,9 +87,9 @@ public class ThreadDumps extends ObjectComponent<Computer> {
                 fileList.add(threadDumpFile);
                 Thread.sleep(delay);
             } catch (IOException ioe) {
-                LOGGER.log(Level.WARNING, "Support Core plugin can't generate automatically thread dump", ioe);
+                LOGGER.log(loggingLevel, "Support Core plugin can't generate automatically thread dump", ioe);
             } catch (InterruptedException ie) {
-                LOGGER.log(Level.WARNING, "The thread was interrupted by unknown reasons. It may be a bug", ie);
+                LOGGER.log(loggingLevel, "The thread was interrupted by unknown reasons. It may be a bug", ie);
             } finally {
                 timestamp += delay;
             }

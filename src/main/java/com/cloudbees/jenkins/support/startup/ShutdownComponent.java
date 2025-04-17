@@ -91,7 +91,11 @@ public class ShutdownComponent extends UnfilteredFileListCapComponent {
                         try {
                             Thread.sleep(TimeUnit.SECONDS.toMillis(INITIAL_DELAY));
                             ThreadDumps.collectMultiple(
-                                    logs, System.currentTimeMillis(), DELAY_BETWEEN_THREAD_DUMPS_MS, TOTAL_ITERATIONS);
+                                    logs,
+                                    System.currentTimeMillis(),
+                                    DELAY_BETWEEN_THREAD_DUMPS_MS,
+                                    TOTAL_ITERATIONS,
+                                    Level.FINE);
                         } catch (InterruptedException e) {
                             LOGGER.log(Level.WARNING, "Thread was interrupted", e);
                         }
