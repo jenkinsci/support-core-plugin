@@ -63,6 +63,9 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      * @param iterations the number of thread dumps to collect
      */
     public static void collectMultiple(FileListCap fileList, long timestamp, long delay, int iterations) {
+        if (delay <= 0) {
+            throw new IllegalArgumentException("delay must be greater than 0");
+        }
         var format = new SimpleDateFormat(DATE_FORMAT);
         for (int i = 0; i < iterations; i++) {
             File threadDumpFile = fileList.file(format.format(new Date(timestamp)) + ".txt");
