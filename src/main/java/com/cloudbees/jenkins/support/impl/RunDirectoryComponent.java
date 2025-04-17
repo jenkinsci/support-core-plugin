@@ -44,16 +44,15 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     public void addContents(@NonNull Container container, @NonNull Run item) {
         try {
             File itemRootDir = item.getRootDir();
-            String relativeToRoot = Functions.isWindows()
-                    ? new File(Jenkins.get().getRootDir(), "jobs")
-                            .toPath()
-                            .relativize(itemRootDir.toPath())
-                            .toString()
-                            .replace('\\', '/')
-                    : new File(Jenkins.get().getRootDir(), "jobs")
-                            .toPath()
-                            .relativize(itemRootDir.toPath())
-                            .toString();
+            String relativeToRoot =
+                    "${ITEM_ROOTDIR}/builds".equals(Jenkins.get().getRawBuildsDir())
+                            ? new File(Jenkins.get().getRootDir(), "jobs")
+                                    .toPath()
+                                    .relativize(itemRootDir.toPath())
+                                    .toString()
+                                    .replace(File.separatorChar, '/')
+                            // Not default build dir, just using item full name as relative path
+                            : item.getParent().getFullName() + "/builds/" + item.getNumber();
             list(itemRootDir, new FileVisitor() {
 
                 @Override
@@ -67,11 +66,6 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
                                 @Override
                                 protected void printTo(PrintWriter out) {
                                     out.println("symlink -> " + target);
-                                }
-
-                                @Override
-                                public boolean shouldBeFiltered() {
-                                    return true;
                                 }
                             });
                 }
