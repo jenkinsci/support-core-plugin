@@ -88,7 +88,6 @@ public final class ShutdownComponent extends UnfilteredFileListCapComponent {
                     .schedule(
                             () -> {
                                 LOGGER.log(Level.FINE, () -> "Collecting shutdown thread dumps");
-                                ;
                                 try {
                                     ThreadDumps.collectMultiple(
                                             logs,
