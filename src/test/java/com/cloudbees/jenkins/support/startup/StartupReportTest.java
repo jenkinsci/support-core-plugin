@@ -58,7 +58,7 @@ public class StartupReportTest {
         // Other milestones got recorded. Don't want to hardcode them in case it changes.
         assertThat(startupReport.getTimesPerMilestone().keySet(), hasSize(greaterThan(1)));
         var l = startupReport.getTimesPerMilestone().get(InitMilestone.COMPLETED);
-        assertThat(l, greaterThan(0L));
+        assertThat(l.toEpochMilli(), greaterThan(0L));
         Jenkins.get().save();
         assertThat(startupReport.getTimesPerMilestone().get(InitMilestone.COMPLETED), equalTo(l));
     }

@@ -33,6 +33,8 @@ import hudson.Util;
 import hudson.init.InitMilestone;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,17 +65,18 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
     private static class StartupContent extends PrefilteredPrintedContent {
         public static final String MILESTONE_HEADER = "Milestone";
         public static final String TIME_HEADER = "Time";
-        private final Map<InitMilestone, Long> timePerMilestone;
+        private final Map<InitMilestone, Instant> timePerMilestone;
 
-        StartupContent(Map<InitMilestone, Long> timePerMilestone) {
+        StartupContent(Map<InitMilestone, Instant> timePerMilestone) {
             super("startup-timings.md");
             this.timePerMilestone = timePerMilestone;
         }
 
         @Override
         protected void printTo(PrintWriter out, @NonNull ContentFilter filter) {
-            var startTime = ManagementFactory.getRuntimeMXBean().getStartTime();
-            long lastMilestoneTimestamp = startTime;
+            var startTime =
+                    Instant.ofEpochMilli(ManagementFactory.getRuntimeMXBean().getStartTime());
+            Instant lastMilestoneTimestamp = startTime;
 
             InitMilestone previousMilestone = null;
             List<TimingEntry> timingEntries = new ArrayList<>();
@@ -86,7 +89,9 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
                     var milestoneString = previousMilestone.toString();
                     String timeString;
                     if (currentMilestoneTimestamp != null) {
-                        timeString = Util.getTimeSpanString(currentMilestoneTimestamp - lastMilestoneTimestamp);
+                        timeString = Util.getTimeSpanString(
+                                Duration.between(lastMilestoneTimestamp, currentMilestoneTimestamp)
+                                        .toMillis());
                         lastMilestoneTimestamp = currentMilestoneTimestamp;
                     } else {
                         timeString = "(No data)";
@@ -97,7 +102,7 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
                 }
                 previousMilestone = milestone;
             }
-            var totalStartupTime = lastMilestoneTimestamp - startTime;
+            var totalStartupTime = Duration.between(startTime, lastMilestoneTimestamp);
             out.println("| " + pad(MILESTONE_HEADER, maxMilestoneLength) + " | " + pad(TIME_HEADER, maxTimingLength)
                     + " |");
             out.println("|" + "-".repeat(maxMilestoneLength + 2) + "|" + "-".repeat(maxTimingLength + 2) + "|");
@@ -106,7 +111,7 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
                         + pad(entry.timeString, maxTimingLength) + " |");
             }
             out.println();
-            out.println("Total startup time : " + Util.getTimeSpanString(totalStartupTime));
+            out.println("Total startup time : " + Util.getTimeSpanString(totalStartupTime.toMillis()));
         }
 
         private static String pad(@NonNull Object o, int size) {

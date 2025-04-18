@@ -80,18 +80,19 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             throw new IllegalArgumentException("delay must be greater than 0");
         }
         var format = new SimpleDateFormat(DATE_FORMAT);
-        for (int i = 0; i < iterations; i++) {
-            File threadDumpFile = fileList.file(format.format(new Date(timestamp)) + ".txt");
-            try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
-                threadDump(fileOutputStream);
-                fileList.add(threadDumpFile);
-                Thread.sleep(delay);
-            } catch (IOException ioe) {
-                LOGGER.log(loggingLevel, "Support Core plugin can't generate automatically thread dump", ioe);
-            } catch (InterruptedException ie) {
-                LOGGER.log(loggingLevel, "The thread was interrupted by unknown reasons. It may be a bug", ie);
-            } finally {
-                timestamp += delay;
+        File threadDumpFile = fileList.file(format.format(new Date(timestamp)) + ".txt");
+        try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
+            threadDump(fileOutputStream);
+            fileList.add(threadDumpFile);
+        } catch (IOException ioe) {
+            LOGGER.log(loggingLevel, "Failed to generate thread dump", ioe);
+        } finally {
+            if (iterations > 1) {
+                Timer.get()
+                        .schedule(
+                                () -> collectMultiple(fileList, timestamp + delay, delay, iterations - 1, loggingLevel),
+                                delay,
+                                TimeUnit.MILLISECONDS);
             }
         }
     }

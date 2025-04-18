@@ -32,22 +32,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.listeners.ItemListener;
-import hudson.util.ClassLoaderSanityThreadFactory;
-import hudson.util.DaemonThreadFactory;
-import hudson.util.ExceptionCatchingThreadFactory;
-import hudson.util.NamingThreadFactory;
 import java.io.File;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.util.SystemProperties;
+import jenkins.util.Timer;
 
 /**
  * Collects thread dumps during shutdown if it exceeds a certain threshold.
  */
 @Extension
-public class ShutdownComponent extends UnfilteredFileListCapComponent {
+public final class ShutdownComponent extends UnfilteredFileListCapComponent {
     private static final Logger LOGGER = Logger.getLogger(ShutdownComponent.class.getName());
 
     private static final int THREAD_DUMPS_TO_RETAIN =
@@ -56,8 +52,8 @@ public class ShutdownComponent extends UnfilteredFileListCapComponent {
             SystemProperties.getInteger(ShutdownComponent.class.getName() + ".TOTAL_ITERATIONS", 4);
     private static final int DELAY_BETWEEN_THREAD_DUMPS_MS =
             SystemProperties.getInteger(ShutdownComponent.class.getName() + ".DELAY_BETWEEN_THREAD_DUMPS_MS", 1000);
-    public static final int INITIAL_DELAY =
-            SystemProperties.getInteger(ShutdownComponent.class.getName() + ".INITIAL_DELAY_SECONDS", 10);
+    public static final int INITIAL_DELAY_SECONDS =
+            SystemProperties.getInteger(ShutdownComponent.class.getName() + ".INITIAL_DELAY_SECONDS", 15);
 
     private final FileListCap logs =
             new FileListCap(new File(SupportPlugin.getRootDirectory(), "shutdown-threaddumps"), THREAD_DUMPS_TO_RETAIN);
@@ -79,31 +75,36 @@ public class ShutdownComponent extends UnfilteredFileListCapComponent {
         return ComponentCategory.CONTROLLER;
     }
 
+    public FileListCap getLogs() {
+        return logs;
+    }
+
     @Extension
     public static class OnShutdown extends ItemListener {
         @Override
         public void onBeforeShutdown() {
             var logs = ShutdownComponent.get().logs;
-            Executors.newSingleThreadExecutor(new ExceptionCatchingThreadFactory(new NamingThreadFactory(
-                            new ClassLoaderSanityThreadFactory(new DaemonThreadFactory()),
-                            ShutdownComponent.class.getSimpleName())))
-                    .execute(() -> {
-                        try {
-                            Thread.sleep(TimeUnit.SECONDS.toMillis(INITIAL_DELAY));
-                            ThreadDumps.collectMultiple(
-                                    logs,
-                                    System.currentTimeMillis(),
-                                    DELAY_BETWEEN_THREAD_DUMPS_MS,
-                                    TOTAL_ITERATIONS,
-                                    Level.FINE);
-                        } catch (InterruptedException e) {
-                            LOGGER.log(Level.WARNING, "Thread was interrupted", e);
-                        }
-                    });
+            Timer.get()
+                    .schedule(
+                            () -> {
+                                LOGGER.log(Level.FINE, () -> "Collecting shutdown thread dumps");;
+                                try {
+                                    ThreadDumps.collectMultiple(
+                                            logs,
+                                            System.currentTimeMillis(),
+                                            DELAY_BETWEEN_THREAD_DUMPS_MS,
+                                            TOTAL_ITERATIONS,
+                                            Level.FINE);
+                                } catch (Exception e) {
+                                    LOGGER.log(Level.WARNING, "Failed to collect thread dumps", e);
+                                }
+                            },
+                            INITIAL_DELAY_SECONDS,
+                            TimeUnit.SECONDS);
         }
     }
 
-    private static ShutdownComponent get() {
+    public static ShutdownComponent get() {
         return ExtensionList.lookupSingleton(ShutdownComponent.class);
     }
 }

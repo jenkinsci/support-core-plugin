@@ -38,6 +38,7 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.SaveableListener;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +69,7 @@ public final class StartupReport extends AsyncPeriodicWork {
     /**
      * Record the timestamp at which each milestone was reached.
      */
-    private Map<InitMilestone, Long> timesPerMilestone = new ConcurrentHashMap<>();
+    private Map<InitMilestone, Instant> timesPerMilestone = new ConcurrentHashMap<>();
 
     public StartupReport() {
         super("Startup report");
@@ -89,7 +90,7 @@ public final class StartupReport extends AsyncPeriodicWork {
         return TimeUnit.SECONDS.toMillis(INITIAL_DELAY_SECONDS);
     }
 
-    public Map<InitMilestone, Long> getTimesPerMilestone() {
+    public Map<InitMilestone, Instant> getTimesPerMilestone() {
         return Map.copyOf(timesPerMilestone);
     }
 
@@ -97,32 +98,36 @@ public final class StartupReport extends AsyncPeriodicWork {
 
     @Initializer(after = InitMilestone.PLUGINS_STARTED)
     public void onPluginsStarted() {
-        timesPerMilestone.put(InitMilestone.PLUGINS_STARTED, System.currentTimeMillis());
+        onMilestone(InitMilestone.PLUGINS_STARTED);
     }
 
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
     public void onExtensionsAugmented() {
-        timesPerMilestone.put(InitMilestone.EXTENSIONS_AUGMENTED, System.currentTimeMillis());
+        onMilestone(InitMilestone.EXTENSIONS_AUGMENTED);
     }
 
     @Initializer(after = InitMilestone.SYSTEM_CONFIG_LOADED)
     public void onSystemConfigLoaded() {
-        timesPerMilestone.put(InitMilestone.SYSTEM_CONFIG_LOADED, System.currentTimeMillis());
+        onMilestone(InitMilestone.SYSTEM_CONFIG_LOADED);
     }
 
     @Initializer(after = InitMilestone.SYSTEM_CONFIG_ADAPTED)
     public void onSystemConfigAdapted() {
-        timesPerMilestone.put(InitMilestone.SYSTEM_CONFIG_ADAPTED, System.currentTimeMillis());
+        onMilestone(InitMilestone.SYSTEM_CONFIG_ADAPTED);
     }
 
     @Initializer(after = InitMilestone.JOB_LOADED)
     public void onJobLoaded() {
-        timesPerMilestone.put(InitMilestone.JOB_LOADED, System.currentTimeMillis());
+        onMilestone(InitMilestone.JOB_LOADED);
     }
 
     @Initializer(after = InitMilestone.JOB_CONFIG_ADAPTED)
     public void onJobConfigAdapted() {
-        timesPerMilestone.put(InitMilestone.JOB_CONFIG_ADAPTED, System.currentTimeMillis());
+        onMilestone(InitMilestone.JOB_CONFIG_ADAPTED);
+    }
+
+    private void onMilestone(InitMilestone milestone) {
+        timesPerMilestone.put(milestone, Instant.now());
     }
 
     @Override
@@ -157,7 +162,7 @@ public final class StartupReport extends AsyncPeriodicWork {
                 }
                 if (o instanceof Jenkins && Jenkins.get().getInitLevel() == InitMilestone.COMPLETED) {
                     LOGGER.fine("Recording the initial Jenkins save");
-                    get().timesPerMilestone.put(InitMilestone.COMPLETED, System.currentTimeMillis());
+                    get().timesPerMilestone.put(InitMilestone.COMPLETED, Instant.now());
                     disabled = true;
                 }
             }
