@@ -71,7 +71,7 @@
         </f:bottomButtonBar>
       </f:form>
 
-      <j:if test="${it.bundles}">
+      <j:if test="${!it.bundles.isEmpty()}">
         <f:section title="${%Existing support bundles}">
         <f:form name="bundle-contents" method="POST">
           <j:forEach var="bundle" items="${it.bundles}">
@@ -83,10 +83,10 @@
             </div>
             </f:entry>
           </j:forEach>
-          <f:entry>
+          <div class="jenkins-buttons-row">
             <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
             <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
-          </f:entry>
+          </div>
         </f:form>
         </f:section>
       </j:if>
