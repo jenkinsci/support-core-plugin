@@ -27,15 +27,11 @@ package com.cloudbees.jenkins.support.api;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Functions;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.function.Supplier;
 
 /**
  * Content that is stored as a file on disk. The content is filtered with the {@link ContentFilter} defined in the
@@ -97,13 +93,6 @@ public class FileContent extends PrefilteredContent {
     }
 
     private BaseFileContent createBaseFileContent(File file, long maxSize) {
-        Supplier<InputStream> supplier = () -> {
-            try {
-                return getInputStream();
-            } catch (IOException e) {
-                return new ByteArrayInputStream(Functions.printThrowable(e).getBytes(StandardCharsets.UTF_8));
-            }
-        };
-        return new BaseFileContent(file, supplier, maxSize, this::getSimpleValueOrRedactedPassword);
+        return new BaseFileContent(file, this::getInputStream, maxSize, this::getSimpleValueOrRedactedPassword);
     }
 }
