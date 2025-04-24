@@ -1,0 +1,18 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler">
+    <l:layout title="Support bundle generation">
+        <style>
+            .app-progress-bar--animate {
+            width: 100%;
+            }
+        </style>
+        <l:main-panel>
+            <h2>Generating Support Bundle</h2>
+            <p id="progressMessage">Generating a support bundle for this Jenkins instance. This may take a few minutes.</p>
+            <l:progressiveRendering handler="${it.getGeneratorByTaskId(request2.getParameter('taskId'))}" callback="updateProgressUI"/>
+            <p id="downloadMessage" style="display:none;">Your download should start automatically, if not <a id="downloadButton" href="downloadBundle?taskId=${request2.getParameter('taskId')}">click here</a></p>
+        </l:main-panel>
+
+        <st:adjunct  includes="js/progressPage"/>
+    </l:layout>
+</j:jelly>

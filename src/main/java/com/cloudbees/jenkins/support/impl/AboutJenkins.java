@@ -184,14 +184,6 @@ public class AboutJenkins extends Component {
     private static class GetAgentVersion extends MasterToSlaveCallable<String, RuntimeException> {
         private static final long serialVersionUID = 1L;
 
-        @SuppressFBWarnings(
-                value = {
-                    "NP_LOAD_OF_KNOWN_NULL_VALUE",
-                    "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
-                    "RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE"
-                },
-                justification =
-                        "{Findbugs mis-diagnosing closeQuietly's built-in null check, https://github.com/spotbugs/spotbugs/issues/756}")
         @Override
         public String call() throws RuntimeException {
             try (InputStream is =
@@ -834,9 +826,6 @@ public class AboutJenkins extends Component {
         }
 
         @Override
-        @SuppressFBWarnings(
-                value = "DCN_NULLPOINTER_EXCEPTION",
-                justification = "pity Stapler.getCurrent() throws an NPE when outside of a request")
         protected void printTo(PrintWriter out) throws IOException {
             final Jenkins jenkins = Jenkins.get();
             if (jenkins == null) {

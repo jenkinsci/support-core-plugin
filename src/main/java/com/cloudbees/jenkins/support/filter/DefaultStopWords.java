@@ -17,8 +17,15 @@ public class DefaultStopWords implements StopWords {
         return Set.of(
                 "agent",
                 "jenkins",
+                "build",
+                "scm",
+                "builder",
+                "publisher",
+                "test",
+                "plugin",
                 "node",
                 "master",
+                "controller",
                 "computer",
                 "item",
                 "label",
@@ -40,6 +47,8 @@ public class DefaultStopWords implements StopWords {
                 "vault",
                 "exists",
                 "log",
-                "info");
+                "info",
+                "java",
+                "url");
     }
 }

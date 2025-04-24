@@ -7,9 +7,9 @@ import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import com.cloudbees.jenkins.support.api.StringContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.timer.FileListCap;
 import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.AbstractModelObject;
@@ -20,10 +20,13 @@ import hudson.remoting.VirtualChannel;
 import hudson.security.Permission;
 import java.io.*;
 import java.lang.management.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -45,10 +48,54 @@ import org.kohsuke.stapler.DataBoundConstructor;
 @Extension(ordinal = -100.0) // run this last as it blocks the channel
 public class ThreadDumps extends ObjectComponent<Computer> {
 
-    private final Logger logger = Logger.getLogger(ThreadDumps.class.getName());
+    private static final String DATE_FORMAT = "yyyyMMdd-HHmmss.SSS";
+
+    private static final Logger LOGGER = Logger.getLogger(ThreadDumps.class.getName());
 
     @DataBoundConstructor
     public ThreadDumps() {}
+
+    /**
+     * Collects multiple thread dumps and saves them to the specified file list.
+     * @param fileList the file list where the thread dumps will be saved
+     * @param timestamp the initial timestamp
+     * @param delay the delay between two consecutive thread dumps
+     * @param iterations the number of thread dumps to collect
+     */
+    public static void collectMultiple(FileListCap fileList, long timestamp, long delay, int iterations) {
+        collectMultiple(fileList, timestamp, delay, iterations, Level.WARNING);
+    }
+
+    /**
+     * Collects multiple thread dumps and saves them to the specified file list.
+     * @param fileList the file list where the thread dumps will be saved
+     * @param timestamp the initial timestamp
+     * @param delay the delay between two consecutive thread dumps
+     * @param iterations the number of thread dumps to collect
+     * @param loggingLevel the logging level to use for logging errors
+     */
+    public static void collectMultiple(
+            FileListCap fileList, long timestamp, long delay, int iterations, Level loggingLevel) {
+        if (delay <= 0) {
+            throw new IllegalArgumentException("delay must be greater than 0");
+        }
+        var format = new SimpleDateFormat(DATE_FORMAT);
+        File threadDumpFile = fileList.file(format.format(new Date(timestamp)) + ".txt");
+        try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
+            threadDump(fileOutputStream);
+            fileList.add(threadDumpFile);
+        } catch (IOException ioe) {
+            LOGGER.log(loggingLevel, "Failed to generate thread dump", ioe);
+        } finally {
+            if (iterations > 1) {
+                Timer.get()
+                        .schedule(
+                                () -> collectMultiple(fileList, timestamp + delay, delay, iterations - 1, loggingLevel),
+                                delay,
+                                TimeUnit.MILLISECONDS);
+            }
+        }
+    }
 
     @NonNull
     @Override
@@ -93,7 +140,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
                             })
                             .get(10, TimeUnit.SECONDS);
                 } catch (ExecutionException | InterruptedException x) {
-                    logger.log(Level.WARNING, null, x);
+                    LOGGER.log(Level.WARNING, null, x);
                 } catch (TimeoutException x) {
                     out.println("*WARNING*: jenkins.util.Timer is unresponsive");
                 }
@@ -121,7 +168,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
         try {
             threadDump = getThreadDump(node);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
+            LOGGER.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
             final StringWriter sw = new StringWriter();
             PrintWriter out = new PrintWriter(sw);
             Functions.printStackTrace(e, out);
@@ -159,10 +206,10 @@ public class ThreadDumps extends ObjectComponent<Computer> {
                                                     SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC)),
                                     TimeUnit.MILLISECONDS);
                         } catch (InterruptedException | ExecutionException e) {
-                            logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
+                            LOGGER.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
                             Functions.printStackTrace(e, out);
                         } catch (TimeoutException e) {
-                            logger.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
+                            LOGGER.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
                             Functions.printStackTrace(e, out);
                             threadDump.cancel(true);
                         }
@@ -200,16 +247,14 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     }
 
     private static final class GetThreadDump extends MasterToSlaveCallable<String, RuntimeException> {
-        @SuppressFBWarnings(
-                value = {"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING"},
-                justification = "Best effort")
+
         public String call() {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
                 threadDump(bos);
                 return bos.toString(StandardCharsets.UTF_8);
             } catch (UnsupportedEncodingException e) {
-                return bos.toString();
+                return bos.toString(Charset.defaultCharset());
             }
         }
 
@@ -222,7 +267,6 @@ public class ThreadDumps extends ObjectComponent<Computer> {
      * @param out an output stream.
      * @throws UnsupportedEncodingException if the utf-8 encoding is not supported.
      */
-    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We don't want platform specific")
     public static void threadDump(OutputStream out) throws UnsupportedEncodingException {
         final PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
 
