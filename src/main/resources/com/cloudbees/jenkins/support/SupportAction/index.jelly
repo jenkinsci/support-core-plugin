@@ -84,7 +84,7 @@
             </f:entry>
           </j:forEach>
           <div class="jenkins-buttons-row">
-            <button type="submit" class="jenkins-button jenkins-button--primary jenkins-!-margin-1" formaction="downloadBundles">${%Download Bundle}</button>
+            <button type="submit" class="jenkins-button jenkins-button--primary" formaction="downloadBundles">${%Download Bundle}</button>
             <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
           </div>
         </f:form>
