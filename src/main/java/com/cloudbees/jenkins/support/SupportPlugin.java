@@ -519,12 +519,16 @@ public class SupportPlugin extends Plugin {
                 if (outputPath != null) {
                     try {
                         File zipFile = outputPath.resolve(SYNC_SUPPORT_BUNDLE).toFile();
-                        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
-                            ZipEntry entry;
-                            while ((entry = zis.getNextEntry()) != null) {
-                                binaryOut.putNextEntry(entry);
-                                zis.transferTo(binaryOut);
+                        if (zipFile.exists()) {
+                            try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+                                ZipEntry entry;
+                                while ((entry = zis.getNextEntry()) != null) {
+                                    binaryOut.putNextEntry(entry);
+                                    zis.transferTo(binaryOut);
+                                }
                             }
+                        } else {
+                            LOGGER.log(Level.FINE, "No sync component to process");
                         }
                     } catch (Exception e) {
                         LOGGER.log(Level.WARNING, "Error while processing sync components in async mode", e);
