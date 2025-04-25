@@ -4,8 +4,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.jenkins.support.SupportTestUtils;
@@ -18,19 +18,17 @@ import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class RunDirectoryComponentTest {
+@WithJenkins
+class RunDirectoryComponentTest {
 
     private static final String JOB_NAME = "job-name";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     @Test
-    public void addContentsFromFreestyle() throws Exception {
+    void addContentsFromFreestyle(JenkinsRule j) throws Exception {
         FreeStyleProject p = j.jenkins.createProject(FreeStyleProject.class, JOB_NAME);
         FreeStyleBuild fBuild = j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
                 .orElseThrow(AssertionFailedError::new)
@@ -48,7 +46,7 @@ public class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFromPipeline() throws Exception {
+    void addContentsFromPipeline(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
@@ -71,7 +69,7 @@ public class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFromWithExcludes() throws Exception {
+    void addContentsFromWithExcludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
@@ -91,7 +89,7 @@ public class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFromWithIncludes() throws Exception {
+    void addContentsFromWithIncludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
@@ -111,7 +109,7 @@ public class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFromWithMaxDepth() throws Exception {
+    void addContentsFromWithMaxDepth(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
@@ -131,7 +129,7 @@ public class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFromWithIncludesExcludes() throws Exception {
+    void addContentsFromWithIncludesExcludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
