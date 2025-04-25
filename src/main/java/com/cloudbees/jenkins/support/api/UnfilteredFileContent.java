@@ -29,8 +29,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -86,15 +84,7 @@ public class UnfilteredFileContent extends Content {
     }
 
     private BaseFileContent createBaseFileContent(File file, long maxSize) {
-        Supplier<InputStream> supplier = () -> {
-            try {
-                return getInputStream();
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Error opening file " + file, e);
-                return null;
-            }
-        };
-        return new BaseFileContent(file, supplier, maxSize, s -> s);
+        return new BaseFileContent(file, this::getInputStream, maxSize, s -> s);
     }
 
     @Override
