@@ -193,7 +193,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
 
     @Override
     public @NonNull String getIconFileName() {
-        return "/plugin/support-core/images/support.svg";
+        return "symbol-support plugin-support-core";
     }
 
     @Override

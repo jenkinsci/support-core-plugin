@@ -283,7 +283,8 @@ public class SupportTestUtils {
                     userPrivileged + " should be able to see the Support action",
                     1,
                     sidePanel.getElementsByTagName("a").stream()
-                            .filter(htmlElement -> htmlElement.getTextContent().equals(action.getDisplayName()))
+                            .filter(htmlElement ->
+                                    htmlElement.getTextContent().trim().equals(action.getDisplayName()))
                             .count());
         }
     }

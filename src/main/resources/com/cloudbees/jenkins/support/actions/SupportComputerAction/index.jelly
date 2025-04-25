@@ -29,10 +29,7 @@
     <l:layout title="${it.actionTitle}" norefresh="true" permission="${app.ADMINISTER}">
         <st:include page="sidepanel.jelly" it="${it.object}"/>
         <l:main-panel>
-            <h1>
-                <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
-                ${it.actionTitle}
-            </h1>
+            <l:app-bar title="${it.actionTitle}" />
             <p>
                 ${it.actionBlurb}
             </p>
