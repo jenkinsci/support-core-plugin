@@ -56,7 +56,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.imageio.ImageIO;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * This component captures the Jenkins {@link LoadStatistics} for overall load, jobs not tied to a label and each
