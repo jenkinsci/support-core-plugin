@@ -22,7 +22,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -50,8 +49,8 @@ class SecretHandler {
      * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
      * Otherwise will be enabled.
      */
-    private static boolean ENABLE_FALLBACK = !StringUtils.equalsIgnoreCase(
-            System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"), "FALSE");
+    private static boolean ENABLE_FALLBACK = !"FALSE".equalsIgnoreCase(
+            System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"));
 
     /**
      * find the secret in the xml file and replace it with the place holder
@@ -139,7 +138,7 @@ class SecretHandler {
             String secret = matcher.group();
             if (secret.length() > 1) secret = secret.substring(1, secret.length() - 1);
             if ((Secret.decrypt(secret)) != null || SecretBytes.isSecretBytes(secret)) {
-                xml = StringUtils.replace(xml, secret, SECRET_MARKER);
+                xml = xml.replace(secret, SECRET_MARKER);
             }
         }
 

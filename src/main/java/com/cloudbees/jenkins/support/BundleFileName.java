@@ -6,7 +6,6 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * <p>Generate the support bundle names.</p>
@@ -52,11 +51,11 @@ public final class BundleFileName {
 
         StringBuilder filename = new StringBuilder();
         filename.append(getSupportProviderName());
-        if (StringUtils.isNotBlank(qualifier)) {
+        if (qualifier != null && !qualifier.trim().isEmpty()) {
             filename.append('_').append(qualifier.trim());
         }
         final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
-        if (StringUtils.isNotBlank(instanceType)) {
+        if (instanceType != null && !instanceType.trim().isEmpty()) {
             filename.append("_").append(instanceType);
         }
         filename.append("_").append(LocalDateTime.now(clock).format(DATE_TIME_FORMATTER));

@@ -37,7 +37,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
-import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -93,7 +92,7 @@ public class SensitiveContentFilter implements ContentFilter {
                 });
 
         NameProvider.all().forEach(provider -> provider.names()
-                .filter(StringUtils::isNotBlank)
+                .filter(s -> s != null && !s.trim().isEmpty())
                 .forEach(name -> {
                     String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
                     // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the

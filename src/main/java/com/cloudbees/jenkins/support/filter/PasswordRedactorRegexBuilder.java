@@ -15,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 
 public class PasswordRedactorRegexBuilder {
 
@@ -91,7 +90,7 @@ public class PasswordRedactorRegexBuilder {
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
                 for (String line = br.readLine(); line != null; line = br.readLine()) {
-                    if (StringUtils.isNotEmpty(line)) {
+                    if (!line.trim().isEmpty()) {
                         words.add(line);
                     }
                 }

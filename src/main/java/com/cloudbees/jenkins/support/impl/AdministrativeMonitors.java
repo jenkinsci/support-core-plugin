@@ -42,7 +42,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Warns if any administrative monitors are currently active.
@@ -91,7 +90,7 @@ public final class AdministrativeMonitors extends Component {
                                         out.println("    - " + range);
                                     }
                                     String extra = value.extra;
-                                    if (!StringUtils.isBlank(extra)) {
+                                    if (extra != null && !extra.trim().isEmpty()) {
                                         out.println("    - "
                                                 + filter.filter(
                                                         extra)); // TODO could be a multiline stack trace, quote it
