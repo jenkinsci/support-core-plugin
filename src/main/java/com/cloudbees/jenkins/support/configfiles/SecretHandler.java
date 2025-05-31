@@ -49,8 +49,8 @@ class SecretHandler {
      * FALLBACK will be disable in case you define a system property like -Dsupport-core-plugin.SecretHandler.ENABLE_FALLBACK=false
      * Otherwise will be enabled.
      */
-    private static boolean ENABLE_FALLBACK = !"FALSE".equalsIgnoreCase(
-            System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"));
+    private static boolean ENABLE_FALLBACK =
+            !"FALSE".equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"));
 
     /**
      * find the secret in the xml file and replace it with the place holder
