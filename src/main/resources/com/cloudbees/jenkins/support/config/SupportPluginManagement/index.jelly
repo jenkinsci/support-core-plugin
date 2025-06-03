@@ -10,8 +10,7 @@
                 <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
                 ${it.displayName}
             </h1>
-            <p/>
-            <div class="behavior-loading">${%LOADING}</div>
+            <l:skeleton />
             <f:form name="config" method="POST" action="configure">
                 <j:set var="instance" value="${it}"/>
                 <j:set var="descriptor" value="${it.descriptor}"/>
