@@ -37,28 +37,20 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.remoting.VirtualChannel;
 import hudson.slaves.DumbSlave;
-import hudson.slaves.SlaveComputer;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 import jenkins.MasterToSlaveFileCallable;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SlaveCommandStatisticsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public LoggerRule logging = new LoggerRule().record(SlaveComputer.class, Level.FINEST);
+@WithJenkins
+class SlaveCommandStatisticsTest {
 
     @Test
-    public void smokes() throws Exception {
+    void smokes(JenkinsRule j) throws Exception {
         DumbSlave s = j.createSlave();
         FreeStyleProject p = j.createFreeStyleProject();
         p.setAssignedNode(s);
@@ -80,14 +72,14 @@ public class SlaveCommandStatisticsTest {
 
     private static class SampleCallable extends MasterToSlaveFileCallable<Void> {
         @Override
-        public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
+        public Void invoke(File f, VirtualChannel channel) {
             return null;
         }
     }
 
     @Test
     @Issue("JENKINS-58528")
-    public void statisticsAreRotatedWithComputers() throws Exception {
+    void statisticsAreRotatedWithComputers(JenkinsRule j) throws Exception {
         SlaveCommandStatistics scs = ExtensionList.lookupSingleton(SlaveCommandStatistics.class);
 
         SlaveCommandStatistics.MAX_STATS_SIZE = 0;

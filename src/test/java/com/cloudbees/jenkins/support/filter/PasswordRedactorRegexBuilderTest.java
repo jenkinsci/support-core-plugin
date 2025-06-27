@@ -5,22 +5,20 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Collections;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class PasswordRedactorRegexBuilderTest {
-
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class PasswordRedactorRegexBuilderTest {
 
     @Test
-    public void getPasswordPatternWhenWordsIsEmptyThenReturnNull() {
+    void getPasswordPatternWhenWordsIsEmptyThenReturnNull(JenkinsRule r) {
         assertThat(PasswordRedactorRegexBuilder.getPasswordPattern(Collections.emptySet()), is(nullValue()));
     }
 
     @Test
-    public void getSecretMatcherWhenWordsIsEmptyThenReturnNull() {
+    void getSecretMatcherWhenWordsIsEmptyThenReturnNull(JenkinsRule r) {
         assertThat(PasswordRedactorRegexBuilder.getSecretMatcher(Collections.emptySet()), is(nullValue()));
     }
 }
