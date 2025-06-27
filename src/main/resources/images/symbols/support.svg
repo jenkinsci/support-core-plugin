@@ -1,6 +1,3 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M109.048 262C100.256 232.571 100.173 227.512 99.4703 218.313L99.4699 218.308C92.5292 127.326 163.319 56 256 56C349.106 56 419.492 128.724 412.524 218.395L412.524 218.399" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M355.895 223.5C351.455 283.254 306.055 332 256.215 332C206.375 332 160.895 283.265 156.534 223.5C152.003 161.339 196.18 115 256.215 115C316.25 115 360.426 162.469 355.895 223.5Z" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M402 465C368.929 411.746 312.163 384 255.998 384C199.834 384 143.067 411.746 110 465" stroke="currentColor" stroke-width="32" stroke-miterlimit="10" stroke-linecap="round"/>
-    <path d="M110.215 262L236.215 262" stroke="currentColor" stroke-width="32" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" width="24px" viewBox="0 -960 960 960">
+  <path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80ZM364-182l48-110q-42-15-72.5-46.5T292-412l-110 46q23 64 71 112t111 72Zm-72-366q17-42 47.5-73.5T412-668l-46-110q-64 24-112 72t-72 112l110 46Zm188 188q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm116 178q63-24 110.5-71.5T778-364l-110-48q-15 42-46 72.5T550-292l46 110Zm72-368 110-46q-24-63-71.5-110.5T596-778l-46 112q41 15 71 45.5t47 70.5Z" fill="currentColor" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
