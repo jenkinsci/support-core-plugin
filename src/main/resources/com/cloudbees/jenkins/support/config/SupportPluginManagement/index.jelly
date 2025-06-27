@@ -3,14 +3,9 @@
          xmlns:st="jelly:stapler"
          xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}">
-        <st:include page="sidepanel.jelly" />
+    <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}" type="one-column">
         <l:main-panel>
-            <h1>
-                <img src="${resURL}/plugin/support-core/images/support.svg" alt=""/>
-                ${it.displayName}
-            </h1>
-            <p/>
+            <l:app-bar title="${it.displayName}" />
             <div class="behavior-loading">${%LOADING}</div>
             <f:form name="config" method="POST" action="configure">
                 <j:set var="instance" value="${it}"/>

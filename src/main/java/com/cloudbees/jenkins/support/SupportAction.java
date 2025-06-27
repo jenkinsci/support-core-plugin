@@ -116,7 +116,11 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public String getIconFileName() {
-        return "/plugin/support-core/images/support.svg";
+        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+            return null;
+        }
+
+        return "symbol-support plugin-support-core";
     }
 
     public String getDisplayName() {
