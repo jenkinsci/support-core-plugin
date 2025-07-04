@@ -32,7 +32,6 @@ public class GCLogs extends Component {
     static final String GCLOGS_JRE9_SWITCH = "-Xlog:gc";
     // We need (?:[a-zA-Z]\:\\)? to handle Windows disk drive
     static final String GCLOGS_JRE9_LOCATION = ".*:file=[\"]?(?<location>(?:[a-zA-Z]:\\\\)?[^\":]*).*";
-    static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
     static final String GCLOGS_JRE9_ROTATION_SWITCH = ".*filecount=0.*";
 
     private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
