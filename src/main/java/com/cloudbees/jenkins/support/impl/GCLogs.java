@@ -29,12 +29,9 @@ import jenkins.model.Jenkins;
 @Extension(ordinal = 90.0) // probably big too, see JenkinsLogs
 public class GCLogs extends Component {
 
-    // TODO: Remove the JDK 8 part after the June 2022 LTS that drop support for JDK 8
-    static final String GCLOGS_JRE_SWITCH = "-Xloggc:";
     static final String GCLOGS_JRE9_SWITCH = "-Xlog:gc";
     // We need (?:[a-zA-Z]\:\\)? to handle Windows disk drive
     static final String GCLOGS_JRE9_LOCATION = ".*:file=[\"]?(?<location>(?:[a-zA-Z]:\\\\)?[^\":]*).*";
-    static final String GCLOGS_ROTATION_SWITCH = "-XX:+UseGCLogFileRotation";
     static final String GCLOGS_JRE9_ROTATION_SWITCH = ".*filecount=0.*";
 
     private static final String GCLOGS_RETENTION_PROPERTY = GCLogs.class.getName() + ".retention";
@@ -155,31 +152,18 @@ public class GCLogs extends Component {
 
     @CheckForNull
     public String getGcLogFileLocation() {
-
         String fileLocation;
-
-        if (isJava8OrBelow()) {
-            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE_SWITCH);
-            if (gcLogSwitch == null) {
-                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
-                fileLocation = null;
-            } else {
-                fileLocation = gcLogSwitch.substring(GCLOGS_JRE_SWITCH.length());
-            }
+        String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
+        if (gcLogSwitch == null) {
+            LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
+            fileLocation = null;
         } else {
-            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
-            if (gcLogSwitch == null) {
-                LOGGER.fine("No GC Logging switch found, cannot collect gc logging files.");
-                fileLocation = null;
+            Matcher fileLocationMatcher = Pattern.compile(GCLOGS_JRE9_LOCATION).matcher(gcLogSwitch);
+            if (fileLocationMatcher.matches()) {
+                fileLocation = fileLocationMatcher.group("location");
             } else {
-                Matcher fileLocationMatcher =
-                        Pattern.compile(GCLOGS_JRE9_LOCATION).matcher(gcLogSwitch);
-                if (fileLocationMatcher.matches()) {
-                    fileLocation = fileLocationMatcher.group("location");
-                } else {
-                    LOGGER.fine("No GC Logging custom file location found.");
-                    fileLocation = null;
-                }
+                LOGGER.fine("No GC Logging custom file location found.");
+                fileLocation = null;
             }
         }
         return fileLocation;
@@ -201,26 +185,12 @@ public class GCLogs extends Component {
     }
 
     public boolean isGcLogRotationConfigured() {
-        if (isJava8OrBelow()) {
-            return vmArgumentFinder.findVmArgument(GCLOGS_ROTATION_SWITCH) != null;
-        } else {
-            // JDK 9 and -Xlog:gc rotation is defaulted to 5 files and only disabled if filecount=0 is set
-            String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
-            return gcLogSwitch != null
-                    && !Pattern.compile(GCLOGS_JRE9_ROTATION_SWITCH)
-                            .matcher(gcLogSwitch)
-                            .find();
-        }
-    }
-
-    /**
-     * Return if this instance if running Java 8 or a lower version
-     * (Can be replaced by JavaUtils.isRunningWithJava8OrBelow() since 2.164.1)
-     * @ See https://openjdk.java.net/jeps/223
-     * @return true if running java 8 or an older version
-     */
-    private boolean isJava8OrBelow() {
-        return System.getProperty("java.specification.version").startsWith("1.");
+        // JDK 9 and -Xlog:gc rotation is defaulted to 5 files and only disabled if filecount=0 is set
+        String gcLogSwitch = vmArgumentFinder.findVmArgument(GCLOGS_JRE9_SWITCH);
+        return gcLogSwitch != null
+                && !Pattern.compile(GCLOGS_JRE9_ROTATION_SWITCH)
+                        .matcher(gcLogSwitch)
+                        .find();
     }
 
     /**
