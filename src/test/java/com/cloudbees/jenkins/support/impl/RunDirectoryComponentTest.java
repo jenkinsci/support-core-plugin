@@ -149,7 +149,7 @@ class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsFolder() throws Exception {
+    void addContentsFolder(JenkinsRule j) throws Exception {
         Folder folder = j.createProject(Folder.class, "topFolder");
         Folder subFolder = folder.createProject(Folder.class, "subFolder");
         WorkflowJob p = subFolder.createProject(WorkflowJob.class, JOB_NAME);
@@ -174,7 +174,7 @@ class RunDirectoryComponentTest {
     }
 
     @Test
-    public void addContentsCustomBuildsDir() throws Exception {
+    void addContentsCustomBuildsDir(JenkinsRule j) throws Exception {
         j.jenkins.setRawBuildsDir("${JENKINS_HOME}/buildsRoot/${ITEM_FULL_NAME}/builds");
 
         Folder folder = j.createProject(Folder.class, "topFolder");

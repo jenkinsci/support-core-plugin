@@ -54,7 +54,7 @@ class OtherLogsTest {
         File tmpFile = File.createTempFile("gclogs", ".log", j.getInstance().getRootDir());
         Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
                     .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + tmpFile.getAbsolutePath());
             assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
@@ -78,7 +78,7 @@ class OtherLogsTest {
             Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
                     .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
                             + "gc.log.%p" + ":filecount=10,filesize=50m");
@@ -105,7 +105,7 @@ class OtherLogsTest {
             Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
                     .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
                             + "gc.%t.%p.log");
@@ -132,7 +132,7 @@ class OtherLogsTest {
                     Collections.singletonList("This is a GC file"));
         }
 
-        mockFinderAndGcLogs(finder -> {
+        mockFinderAndGcLogs(j, finder -> {
             when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
                     .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
                             + "gc%t.log.%p" + ":filecount=10,filesize=50m");
