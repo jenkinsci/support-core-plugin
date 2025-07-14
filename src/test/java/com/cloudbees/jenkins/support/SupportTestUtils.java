@@ -328,13 +328,4 @@ public final class SupportTestUtils {
                     userPrivileged + " should be able to display the Support action page");
         }
     }
-
-    /**
-     * Return if this instance if running Java 8 or a lower version
-     * (Can be replaced by JavaUtils.isRunningWithJava8OrBelow() since 2.164.1)
-     * @return true if running java 8 or an older version
-     */
-    public static boolean isJava8OrBelow() {
-        return System.getProperty("java.specification.version").startsWith("1.");
-    }
 }
