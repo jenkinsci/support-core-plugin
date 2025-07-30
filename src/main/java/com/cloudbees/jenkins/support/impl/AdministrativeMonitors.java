@@ -42,7 +42,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Warns if any administrative monitors are currently active.

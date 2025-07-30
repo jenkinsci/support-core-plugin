@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Efficient incremental retrieval of log files from {@link Node}, by taking advantages of

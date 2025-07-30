@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
