@@ -210,6 +210,12 @@ public class SlaveLogs extends Component {
             tasks.add(new java.util.concurrent.Callable<List<FileContent>>() {
                 public List<FileContent> call() throws Exception {
                     List<FileContent> result = new ArrayList<FileContent>();
+                    // TODO presumes that WinSW’s %BASE% would be the remoteFS as in
+                    // https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/client-and-managed-controllers/how-to-install-windows-agents-as-a-service
+                    // and that
+                    // https://github.com/winsw/winsw/blob/6cf303c1d3fbe1069d95af230b8efa117d29cdf2/src/WinSW.Core/Configuration/XmlServiceConfig.cs#L273
+                    // is not overridden from e.g.
+                    // https://github.com/winsw/winsw/blob/e4cf507bae5981363a9cdc0f7301c1aa892af401/samples/shared-directory-mapper.xml#L8
                     final Map<String, File> logFiles = logFetcher.forNode(node).getLogFiles(rootPath);
                     for (Map.Entry<String, File> entry : logFiles.entrySet()) {
                         result.add(new FileContent(
