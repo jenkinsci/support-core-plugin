@@ -90,7 +90,7 @@ public final class AdministrativeMonitors extends Component {
                                         out.println("    - " + range);
                                     }
                                     String extra = value.extra;
-                                    if (extra != null && !extra.trim().isEmpty()) {
+                                    if (extra != null && !extra.isBlank()) {
                                         out.println("    - "
                                                 + filter.filter(
                                                         extra)); // TODO could be a multiline stack trace, quote it

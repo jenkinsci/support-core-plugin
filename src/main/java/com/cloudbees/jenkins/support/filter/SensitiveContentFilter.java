@@ -92,7 +92,6 @@ public class SensitiveContentFilter implements ContentFilter {
                 });
 
         NameProvider.all().forEach(provider -> provider.names()
-                .filter(s -> s != null && !s.trim().isEmpty())
                 .forEach(name -> {
                     String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
                     // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the

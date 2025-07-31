@@ -542,7 +542,7 @@ public class SupportPlugin extends Plugin {
                                 + (countingOs.getByteCount() - startSize) + " bytes" + " to process all contents");
                 errorWriter.close();
                 String errorContent = errors.toString();
-                if (errorContent != null && !errorContent.trim().isEmpty()) {
+                if (errorContent != null && !errorContent.isBlank()) {
                     try {
                         binaryOut.putNextEntry(new ZipEntry("manifest/errors.txt"));
                         entryCreated = true;

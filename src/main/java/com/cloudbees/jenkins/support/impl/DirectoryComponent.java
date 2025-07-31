@@ -13,13 +13,14 @@ import hudson.util.FormValidation;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
@@ -221,15 +222,12 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
             fileSet.setFollowSymlinks(followSymlinks);
             if (dir.exists()) {
                 DirectoryScanner dirScanner = fileSet.getDirectoryScanner(new Project());
-                String[] var5 = (String[]) ArrayUtils.addAll(
-                        dirScanner.getIncludedFiles(),
-                        Stream.of(dirScanner.getNotFollowedSymlinks())
-                                .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
-                                .toArray());
-                int var6 = var5.length;
+                ArrayList<String> var5 = new ArrayList<>(Arrays.asList(dirScanner.getIncludedFiles()));
+                var5.addAll(Stream.of(dirScanner.getNotFollowedSymlinks())
+                        .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
+                        .toList());
 
-                for (int var7 = 0; var7 < var6; ++var7) {
-                    String f = var5[var7];
+                for (String f: var5) {
                     File file = new File(dir, f);
                     this.scanSingle(file, f, visitor);
                 }

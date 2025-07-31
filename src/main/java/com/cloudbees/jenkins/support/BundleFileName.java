@@ -51,11 +51,11 @@ public final class BundleFileName {
 
         StringBuilder filename = new StringBuilder();
         filename.append(getSupportProviderName());
-        if (qualifier != null && !qualifier.trim().isEmpty()) {
+        if (qualifier != null && !qualifier.isBlank()) {
             filename.append('_').append(qualifier.trim());
         }
         final String instanceType = BundleNameInstanceTypeProvider.getInstance().getInstanceType();
-        if (instanceType != null && !instanceType.trim().isEmpty()) {
+        if (!instanceType.isBlank()) {
             filename.append("_").append(instanceType);
         }
         filename.append("_").append(LocalDateTime.now(clock).format(DATE_TIME_FORMATTER));

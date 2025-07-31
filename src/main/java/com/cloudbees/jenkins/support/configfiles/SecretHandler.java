@@ -21,6 +21,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import jenkins.util.SystemProperties;
 import org.apache.commons.io.FileUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -50,7 +51,7 @@ class SecretHandler {
      * Otherwise will be enabled.
      */
     private static boolean ENABLE_FALLBACK =
-            !"FALSE".equalsIgnoreCase(System.getProperty("support-core-plugin.SecretHandler.ENABLE_FALLBACK", "TRUE"));
+            SystemProperties.getBoolean("support-core-plugin.SecretHandler.ENABLE_FALLBACK", true);
 
     /**
      * find the secret in the xml file and replace it with the place holder

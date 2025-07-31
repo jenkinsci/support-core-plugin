@@ -90,7 +90,7 @@ public class PasswordRedactorRegexBuilder {
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(new FileInputStream(fileLocation), Charset.defaultCharset()))) {
                 for (String line = br.readLine(); line != null; line = br.readLine()) {
-                    if (!line.trim().isEmpty()) {
+                    if (!line.isBlank()) {
                         words.add(line);
                     }
                 }
