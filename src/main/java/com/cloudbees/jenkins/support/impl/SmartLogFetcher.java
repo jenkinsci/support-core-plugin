@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import jenkins.MasterToSlaveFileCallable;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Efficient incremental retrieval of log files from {@link Node}, by taking advantages of
@@ -70,7 +69,7 @@ class SmartLogFetcher {
 
             String cacheKey =
                     Util.getDigestOf(node.getNodeName() + ":" + node.getRootPath()); // FIPS OK: Not security related.
-            this.cacheDir = new File(rootCacheDir, StringUtils.right(cacheKey, 8));
+            this.cacheDir = new File(rootCacheDir, cacheKey.substring(cacheKey.length() - 8));
 
             if (!cacheDir.isDirectory() && !cacheDir.mkdirs()) {
                 throw new IOException("Could not create local cache directory: " + cacheDir);

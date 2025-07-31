@@ -56,7 +56,6 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.imageio.ImageIO;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * This component captures the Jenkins {@link LoadStatistics} for overall load, jobs not tied to a label and each
@@ -197,7 +196,7 @@ public class LoadStats extends Component {
                     if (ts != null) {
                         TimeSeries series = ts.pick(scale);
                         if (series != null) {
-                            data.put(camelCaseToSentenceCase(f.getName()), series.getHistory());
+                            data.put(f.getName(), series.getHistory());
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -218,7 +217,7 @@ public class LoadStats extends Component {
                     if (ts != null) {
                         TimeSeries series = ts.pick(scale);
                         if (series != null) {
-                            data.put(camelCaseToSentenceCase(f.getName()), series.getHistory());
+                            data.put(f.getName(), series.getHistory());
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -295,7 +294,7 @@ public class LoadStats extends Component {
                 int col = 2;
                 List<String> names = new ArrayList<String>();
                 for (Field f : FIELDS) {
-                    names.add(camelCaseToSentenceCase(f.getName()));
+                    names.add(f.getName());
                 }
                 Collections.sort(names);
                 for (String name : names) {
@@ -313,17 +312,5 @@ public class LoadStats extends Component {
             // The information of this content is not sensible, so it doesn't need to be filtered.
             return false;
         }
-    }
-
-    /**
-     * Converts "aCamelCaseString" into "A sentence case string".
-     *
-     * @param camelCase camelCase.
-     * @return Sentence case.
-     */
-    private static String camelCaseToSentenceCase(String camelCase) {
-        String name = StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(camelCase), " ");
-        return name.substring(0, 1).toUpperCase(Locale.ENGLISH)
-                + name.substring(1).toLowerCase(Locale.ENGLISH);
     }
 }
