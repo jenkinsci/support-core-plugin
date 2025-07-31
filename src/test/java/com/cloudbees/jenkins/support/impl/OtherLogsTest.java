@@ -57,18 +57,13 @@ public class OtherLogsTest {
         Files.write(tmpFile.toPath(), Collections.singletonList("This is a GC file"));
 
         mockFinderAndGcLogs(finder -> {
-            if (SupportTestUtils.isJava8OrBelow()) {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + tmpFile.getAbsolutePath());
-            } else {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + tmpFile.getAbsolutePath());
-                assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + tmpFile.getAbsolutePath());
+            assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
 
-                // The file locations may be wrapped with quotes
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + tmpFile.getAbsolutePath() + "\"");
-            }
+            // The file locations may be wrapped with quotes
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + tmpFile.getAbsolutePath() + "\"");
             assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
         });
     }
@@ -86,21 +81,15 @@ public class OtherLogsTest {
         }
 
         mockFinderAndGcLogs(finder -> {
-            if (SupportTestUtils.isJava8OrBelow()) {
-                when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + rootDir.getAbsolutePath() + File.separator + "gc.log");
-            } else {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
-                                + "gc.log.%p" + ":filecount=10,filesize=50m");
-                assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
+                            + "gc.log.%p" + ":filecount=10,filesize=50m");
+            assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
 
-                // The file locations may be wrapped with quotes
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
-                                + "gc.log.%p\":filecount=10,filesize=50m");
-            }
+            // The file locations may be wrapped with quotes
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
+                            + "gc.log.%p\":filecount=10,filesize=50m");
             assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
         });
     }
@@ -119,19 +108,15 @@ public class OtherLogsTest {
         }
 
         mockFinderAndGcLogs(finder -> {
-            if (SupportTestUtils.isJava8OrBelow()) {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(rootDir, "gc.%t.%p.log").getAbsolutePath());
-            } else {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
-                                + "gc.%t.%p.log");
-                assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
+                            + "gc.%t.%p.log");
+            assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
 
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
-                                + "gc.%t.%p.log\"");
-            }
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
+                            + "gc.%t.%p.log\"");
+
             assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
         });
     }
@@ -151,22 +136,16 @@ public class OtherLogsTest {
         }
 
         mockFinderAndGcLogs(finder -> {
-            if (SupportTestUtils.isJava8OrBelow()) {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + new File(rootDir, "gc%p.log").getAbsolutePath());
-                when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-            } else {
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
+                            + "gc%t.log.%p" + ":filecount=10,filesize=50m");
+            assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
 
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
-                                + "gc%t.log.%p" + ":filecount=10,filesize=50m");
-                assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
+            // The file locations may be wrapped with quotes
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
+                            + "gc%t.log.%p\"" + ":filecount=10,filesize=50m");
 
-                // The file locations may be wrapped with quotes
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
-                                + "gc%t.log.%p\"" + ":filecount=10,filesize=50m");
-            }
             assertContentContainsFiles(Collections.singletonList("other-logs/test.log"));
         });
     }
@@ -186,28 +165,22 @@ public class OtherLogsTest {
 
         mockFinderAndGcLogs(finder -> {
             // Configure GC Logs to go under $JENKINS_ROOT/gc/
-            if (SupportTestUtils.isJava8OrBelow()) {
-                when(finder.findVmArgument(GCLogs.GCLOGS_ROTATION_SWITCH)).thenReturn(GCLogs.GCLOGS_ROTATION_SWITCH);
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE_SWITCH + rootDir.getAbsolutePath() + File.separator + "gc"
-                                + File.separator + "gc.log");
-            } else {
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
-                                + "gc" + File.separator + "gc.log.%p" + ":filecount=10,filesize=50m");
-                assertContentContainsFiles(Arrays.asList(
-                        "other-logs/test.log",
-                        "other-logs/gc.log.0",
-                        "other-logs/gc.log.1",
-                        "other-logs/gc.log.2",
-                        "other-logs/gc.log.3",
-                        "other-logs/gc.log.4"));
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=" + rootDir.getAbsolutePath() + File.separator
+                            + "gc" + File.separator + "gc.log.%p" + ":filecount=10,filesize=50m");
+            assertContentContainsFiles(Arrays.asList(
+                    "other-logs/test.log",
+                    "other-logs/gc.log.0",
+                    "other-logs/gc.log.1",
+                    "other-logs/gc.log.2",
+                    "other-logs/gc.log.3",
+                    "other-logs/gc.log.4"));
 
-                // The file locations may be wrapped with quotes
-                when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
-                        .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
-                                + "gc" + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
-            }
+            // The file locations may be wrapped with quotes
+            when(finder.findVmArgument(GCLogs.GCLOGS_JRE9_SWITCH))
+                    .thenReturn(GCLogs.GCLOGS_JRE9_SWITCH + "*:file=\"" + rootDir.getAbsolutePath() + File.separator
+                            + "gc" + File.separator + "gc.log.%p\":filecount=10,filesize=50m");
+
             assertContentContainsFiles(Arrays.asList(
                     "other-logs/test.log",
                     "other-logs/gc.log.0",
