@@ -227,7 +227,7 @@ public abstract class DirectoryComponent<T extends AbstractModelObject> extends 
                         .map(s -> dir.toPath().relativize(Paths.get(s)).toString())
                         .toList());
 
-                for (String f: var5) {
+                for (String f : var5) {
                     File file = new File(dir, f);
                     this.scanSingle(file, f, visitor);
                 }

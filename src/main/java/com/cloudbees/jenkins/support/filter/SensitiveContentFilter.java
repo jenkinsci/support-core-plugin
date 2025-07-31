@@ -91,9 +91,8 @@ public class SensitiveContentFilter implements ContentFilter {
                     }
                 });
 
-        NameProvider.all().forEach(provider -> provider.names()
-                .filter(s -> !s.isBlank())
-                .forEach(name -> {
+        NameProvider.all()
+                .forEach(provider -> provider.names().filter(s -> !s.isBlank()).forEach(name -> {
                     String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
                     // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the
                     // conditional here. Or find a better way to deal with insensitive key mapping in general.
