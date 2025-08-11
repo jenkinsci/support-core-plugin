@@ -56,7 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Adds the agent logs from all of the machines
@@ -234,7 +233,7 @@ public class SlaveLogs extends Component {
             String cacheKey = Util.getDigestOf(node.getNodeName() + ":"
                     + ((hudson.model.Slave) node).getRemoteFS()); // FIPS OK: Not security related.
             LOGGER.log(Level.FINEST, "cacheKey {0} is active", cacheKey);
-            cacheKeys.add(StringUtils.right(cacheKey, 8));
+            cacheKeys.add(cacheKey.substring(cacheKey.length() - 8));
         }
         return cacheKeys;
     }

@@ -31,7 +31,6 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Saveable;
 import java.io.IOException;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
@@ -105,7 +104,7 @@ public interface ContentFilter extends ExtensionPoint {
      * @return the text filtered if it is not empty and the filter is not null
      */
     static String filter(@NonNull ContentFilter filter, @CheckForNull String text) {
-        if (StringUtils.isNotEmpty(text)) {
+        if (text != null && !text.isEmpty()) {
             return filter.filter(text);
         } else {
             return text;
