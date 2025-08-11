@@ -150,6 +150,14 @@ public class SupportPlugin extends Plugin {
     public static final int AUTO_BUNDLE_PERIOD_HOURS = Math.max(
             Math.min(24, Integer.getInteger(SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS", 1)), 0);
 
+    /**
+     * How many log Jenkins log entries to capture for each file before rotating.
+     * On an active Jenkins instance logs can accumulate quickly, so the default value of {@code 2048} may not be enough to capture an hours worth of logs.
+     * Conversely on an inactive Jenkins setting this too high will cause the hourly captured bundles to contain lots of duplicate information, which wastes disk space.
+     */
+    public static final int MAX_JENKINS_LOG_ENTRIES_PER_FILE =
+            Integer.getInteger(SupportPlugin.class.getName() + ".MAX_JENKINS_LOG_ENTRIES_PER_FILE ", 2048);
+
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
 
@@ -167,7 +175,7 @@ public class SupportPlugin extends Plugin {
     private static final AtomicLong nextBundleWrite = new AtomicLong(Long.MIN_VALUE);
     private static final Logger logger = Logger.getLogger(SupportPlugin.class.getName());
     public static final String SUPPORT_DIRECTORY_NAME = "support";
-    private final transient SupportLogHandler handler = new SupportLogHandler(256, 2048, 8);
+    private final transient SupportLogHandler handler = new SupportLogHandler(256, MAX_JENKINS_LOG_ENTRIES_PER_FILE, 8);
 
     private transient SupportContextImpl context = null;
     private transient Logger rootLogger;
