@@ -38,6 +38,7 @@ import hudson.model.Queue;
 import hudson.model.queue.WorkUnit;
 import hudson.security.Permission;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
@@ -127,7 +128,7 @@ public class NodeExecutors extends ObjectComponent<Computer> {
                 out.println("          - idle: " + executor.isIdle());
                 long idleStartMilliseconds = executor.getIdleStartMilliseconds();
                 out.println("          - idleStartMilliseconds: " + idleStartMilliseconds + " ("
-                        + Util.XS_DATETIME_FORMATTER.format(idleStartMilliseconds) + ")");
+                        + Util.XS_DATETIME_FORMATTER2.format(Instant.ofEpochMilli(idleStartMilliseconds)) + ")");
                 out.println("          - progress: " + executor.getProgress());
                 out.println("          - state: " + executor.getState());
                 WorkUnit workUnit = executor.getCurrentWorkUnit();

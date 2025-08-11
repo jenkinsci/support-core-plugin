@@ -31,7 +31,7 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Saveable;
 import java.io.IOException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Provides a strategy to filter support bundle written contents. This is primarily useful to anonymize data written
