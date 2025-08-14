@@ -156,7 +156,7 @@ public class SupportPlugin extends Plugin {
      * Conversely on an inactive Jenkins setting this too high will cause the hourly captured bundles to contain lots of duplicate information, which wastes disk space.
      */
     public static final int MAX_JENKINS_LOG_ENTRIES_PER_FILE =
-            Integer.getInteger(SupportPlugin.class.getName() + ".MAX_JENKINS_LOG_ENTRIES_PER_FILE ", 2048);
+            Integer.getInteger(SupportPlugin.class.getName() + ".MAX_JENKINS_LOG_ENTRIES_PER_FILE", 2048);
 
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
