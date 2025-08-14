@@ -1,7 +1,7 @@
 package com.cloudbees.jenkins.support.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.filter.ContentMapping;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStreamTest;
@@ -16,15 +16,15 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.recipes.WithTimeout;
 
-public class WordReplacerTest {
+class WordReplacerTest {
 
     @Test
-    public void wordReplacerTest() {
+    void wordReplacerTest() {
         // The ignore case doesn't work in these cases:
         // Chinese numbers lower: 一, 二,三,四,五,六,七,八,九,十,百,千,萬
         // Chinese numbers upper: 壹,貳,參,肆,伍,陸,柒,捌,玖,拾,佰,仟,萬
@@ -49,7 +49,7 @@ public class WordReplacerTest {
     }
 
     @Test
-    public void sameResultTest() {
+    void sameResultTest() {
         String[] searches = new String[] {"one", "two"};
         String[] replaces = new String[] {"111", "111"};
 
@@ -83,23 +83,23 @@ public class WordReplacerTest {
 
             // Both filtered strings should be the same
             assertEquals(
-                    "The string replaced should be the same using RegExp or WordReplacer",
                     resultCM,
-                    resultWordReplacer);
+                    resultWordReplacer,
+                    "The string replaced should be the same using RegExp or WordReplacer");
 
             resultWordReplacer =
                     WordReplacer.replaceWords(input, triePattern(searches), replacementsMap(searches, replaces));
 
             // Both filtered strings should be the same
             assertEquals(
-                    "The string replaced should be the same using RegExp or WordReplacer",
                     resultCM,
-                    resultWordReplacer);
+                    resultWordReplacer,
+                    "The string replaced should be the same using RegExp or WordReplacer");
         }
     }
 
     @Test
-    public void specialCharacter() {
+    void specialCharacter() {
         // Test the replacement of a single word a*z with * being a set of special characters
         String singleWord = "a~`!@#$%^&*()_+-={}[]|\\:\";'<>?,./z";
         String singleWordReplace = "filtered";
@@ -141,7 +141,7 @@ public class WordReplacerTest {
     }
 
     @Test
-    public void characterScopeReplaceWordsPattern() {
+    void characterScopeReplaceWordsPattern() {
         // Test the replacement of single words a*z for all characters
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
@@ -163,7 +163,7 @@ public class WordReplacerTest {
 
     @Test
     @WithTimeout(120)
-    public void characterScopeReplaceWordsPatternIgnoreCase() {
+    void characterScopeReplaceWordsPatternIgnoreCase() {
         // Test the replacement of single words a*z for all characters
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
@@ -186,7 +186,7 @@ public class WordReplacerTest {
 
     @Test
     @WithTimeout(120)
-    public void characterScopeReplaceWords() {
+    void characterScopeReplaceWords() {
         // Test the replacement of single words a*z for all characters
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
@@ -202,9 +202,9 @@ public class WordReplacerTest {
                 String.join(" ", replaceList), WordReplacer.replaceWords(String.join(" ", words), searches, replaces));
     }
 
-    @Ignore("This test takes a very long time but we keep it here for future cases")
+    @Disabled("This test takes a very long time but we keep it here for future cases")
     @Test
-    public void characterScopeReplaceWordsIgnoreCase() {
+    void characterScopeReplaceWordsIgnoreCase() {
         // Test the replacement of single words a*z for all characters
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
@@ -221,10 +221,10 @@ public class WordReplacerTest {
                 WordReplacer.replaceWordsIgnoreCase(String.join(" ", words), searches, replaces));
     }
 
-    @Ignore("It was useful to make the decision to move out of ContentMapping#filter and later out of WordReplacer "
+    @Disabled("It was useful to make the decision to move out of ContentMapping#filter and later out of WordReplacer "
             + "without Pattern. It has no sense to test. We keep it here for future cases.")
     @Test
-    public void performanceTest() {
+    void performanceTest() {
         // Create a lot of word and replaces (each character letter or digit. Aprox: 4070)
         List<String> words = new ArrayList<>();
         List<String> replaceList = new ArrayList<>();
@@ -302,7 +302,7 @@ public class WordReplacerTest {
      * Basic case replacements tests
      */
     @Test
-    public void caseReplacementsTest() {
+    void caseReplacementsTest() {
         String[] originals = new String[] {"a", "b", "c"};
         String[] replaces = new String[] {"1", "2", "3"};
         String input = "a A b,B.c:C abc ABC ignored";
@@ -339,7 +339,7 @@ public class WordReplacerTest {
     }
 
     @Test
-    public void replacementByShorterWordTest() {
+    void replacementByShorterWordTest() {
         String input = "input one input";
         String[] words = new String[] {"input", "one"};
         String[] replaces = new String[] {"i", "o"};
@@ -352,7 +352,7 @@ public class WordReplacerTest {
 
     @Test
     @Issue("JENKINS-71529")
-    public void testBoundaries() {
+    void testBoundaries() {
         String specialChars = "~`!@#$%^&*()_+-={}[]|\\:\";'<>?,./";
         String[] words = new String[specialChars.length()];
         String[] replaces = new String[specialChars.length()];
@@ -369,14 +369,14 @@ public class WordReplacerTest {
                         String.join(" ", words), triePattern(words), replacementsMap(words, replaces)));
     }
 
-    private List<String> generateFakeListString(int lines) {
+    private static List<String> generateFakeListString(int lines) {
         assertTrue(lines < 1001);
         return Stream.generate(() -> FilteredOutputStreamTest.FAKE_TEXT)
                 .limit(lines)
                 .collect(Collectors.toList());
     }
 
-    private ContentMapping[] getContentMappings(String[] searches, String[] replaces) {
+    private static ContentMapping[] getContentMappings(String[] searches, String[] replaces) {
         ContentMapping[] contentMappings = new ContentMapping[searches.length];
         for (int i = 0; i < searches.length; i++) {
             contentMappings[i] = ContentMapping.of(searches[i], replaces[i]);
@@ -384,7 +384,7 @@ public class WordReplacerTest {
         return contentMappings;
     }
 
-    private String[][][] getWordsLikeContentMapping(String[] searches, String[] replaces) {
+    private static String[][][] getWordsLikeContentMapping(String[] searches, String[] replaces) {
         String[][][] result = new String[searches.length][2][4];
 
         for (int i = 0; i < searches.length; i++) {
@@ -406,7 +406,7 @@ public class WordReplacerTest {
         return result;
     }
 
-    private Map<String, String> getReplacementsLikeContentMapping(String[][][] tokens) {
+    private static Map<String, String> getReplacementsLikeContentMapping(String[][][] tokens) {
         Map<String, String> replacementMap = new HashMap<>();
         for (String[][] token : tokens) {
             for (int i = 0; i < token[0].length; i++) {
@@ -422,7 +422,7 @@ public class WordReplacerTest {
      * @param lowercase whether to force lowercase or not (lowercase used for case-insensitive matching in filters)
      * @return the Pattern
      */
-    private Pattern triePattern(String[] originals, boolean lowercase) {
+    private static Pattern triePattern(String[] originals, boolean lowercase) {
         WordsTrie trie = new WordsTrie();
         for (String search : originals) {
             trie.add(lowercase ? search.toLowerCase(Locale.ENGLISH) : search);
@@ -437,7 +437,7 @@ public class WordReplacerTest {
      * @param lowercase whether to force lowercase or not (lowercase used for case-insensitive matching in filters)
      * @return the Pattern
      */
-    private Map<String, String> replacementsMap(String[] originals, String[] replacements, boolean lowercase) {
+    private static Map<String, String> replacementsMap(String[] originals, String[] replacements, boolean lowercase) {
         Map<String, String> result = new HashMap<>();
         for (int i = 0; i < originals.length; i++) {
             result.put(
@@ -447,11 +447,11 @@ public class WordReplacerTest {
         return result;
     }
 
-    private Pattern triePattern(String[] searches) {
+    private static Pattern triePattern(String[] searches) {
         return triePattern(searches, true);
     }
 
-    private Map<String, String> replacementsMap(String[] searches, String[] replaces) {
+    private static Map<String, String> replacementsMap(String[] searches, String[] replaces) {
         return replacementsMap(searches, replaces, true);
     }
 
@@ -460,7 +460,7 @@ public class WordReplacerTest {
      * @param originals the original words
      * @return the pattern
      */
-    private Pattern unionPattern(String[] originals) {
+    private static Pattern unionPattern(String[] originals) {
         // Chunking is necessary here to prevent StackOverFlow in pattern matching unions
         final StringBuilder buf = new StringBuilder();
         if (originals.length < 1024) {
