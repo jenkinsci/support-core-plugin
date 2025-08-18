@@ -27,22 +27,19 @@ import static org.mockito.BDDMockito.then;
 
 import java.io.IOException;
 import java.io.Writer;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class IgnoreCloseWriterTest {
-
-    @Rule
-    public MockitoRule rule = MockitoJUnit.rule();
+@ExtendWith(MockitoExtension.class)
+class IgnoreCloseWriterTest {
 
     @Mock
     private Writer out;
 
     @Test
-    public void shouldFlushInsteadOfClose() throws IOException {
+    void shouldFlushInsteadOfClose() throws IOException {
         IgnoreCloseWriter stream = new IgnoreCloseWriter(out);
 
         stream.close();

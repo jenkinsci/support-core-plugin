@@ -18,22 +18,20 @@ import java.util.Objects;
 import jenkins.model.Jenkins;
 import jenkins.model.identity.IdentityRootAction;
 import jenkins.slaves.RemotingVersionInfo;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Stephen Connolly
  */
-public class AboutJenkinsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class AboutJenkinsTest {
 
     @Test
     @Issue("JENKINS-56245")
-    public void testAboutJenkinsContent() {
+    void testAboutJenkinsContent(JenkinsRule j) {
 
         String aboutMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
@@ -46,17 +44,14 @@ public class AboutJenkinsTest {
         assertThat(aboutMdToString, containsString(idRootaction.getPublicKey()));
         assertThat(aboutMdToString, containsString(idRootaction.getFingerprint()));
         assertThat(
-                aboutMdToString,
-                containsString("  * Embedded Version: `"
-                        + RemotingVersionInfo.getEmbeddedVersion().toString()));
+                aboutMdToString, containsString("  * Embedded Version: `" + RemotingVersionInfo.getEmbeddedVersion()));
         assertThat(
                 aboutMdToString,
-                containsString("  * Minimum Supported Version: `"
-                        + RemotingVersionInfo.getMinimumSupportedVersion().toString()));
+                containsString("  * Minimum Supported Version: `" + RemotingVersionInfo.getMinimumSupportedVersion()));
     }
 
     @Test
-    public void testAboutNodesContent() throws Exception {
+    void testAboutNodesContent(JenkinsRule j) throws Exception {
 
         DumbSlave tcp1 = j.createSlave("tcp1", "test", null);
         tcp1.setLauncher(new JNLPLauncher());
@@ -70,7 +65,7 @@ public class AboutJenkinsTest {
 
     @Test
     @Issue("JENKINS-68743")
-    public void testAboutNodesContent_OfflineBuiltIn() {
+    void testAboutNodesContent_OfflineBuiltIn(JenkinsRule j) {
 
         Node builtInNode = Jenkins.get();
         String aboutMdToString = SupportTestUtils.invokeComponentToString(

@@ -30,40 +30,41 @@ import static org.quicktheories.generators.SourceDSL.integers;
 import hudson.BulkChange;
 import java.util.stream.IntStream;
 import jenkins.model.Jenkins;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.quicktheories.core.Gen;
 
-public class InetAddressContentFilterTest {
+@WithJenkins
+class InetAddressContentFilterTest {
 
     private static String originalVersion;
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
-    @Before
-    public void resetMappings() {
+    @BeforeEach
+    void resetMappings(JenkinsRule j) {
+        this.j = j;
         ContentMappings.get().clear();
     }
 
-    @BeforeClass
-    public static void storeVersion() {
+    @BeforeAll
+    static void storeVersion() {
         originalVersion = Jenkins.VERSION;
     }
 
-    @AfterClass
-    public static void restoreVersion() {
+    @AfterAll
+    static void restoreVersion() {
         Jenkins.VERSION = originalVersion;
     }
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldFilterInetAddresses() {
+    void shouldFilterInetAddresses() {
         InetAddressContentFilter filter = InetAddressContentFilter.get();
         // speed up test execution by ignoring new content mappings
         ContentMappings mappings = ContentMappings.get();
@@ -76,9 +77,9 @@ public class InetAddressContentFilterTest {
 
     @Issue("JENKINS-53184")
     @Test
-    public void shouldNotFilterInetAddressMatchingJenkinsVersion() {
+    void shouldNotFilterInetAddressMatchingJenkinsVersion() {
         Jenkins.VERSION = "1.2.3.4";
-        resetMappings();
+        ContentMappings.get().clear();
         InetAddressContentFilter filter = InetAddressContentFilter.get();
         assertThat(ContentFilter.filter(filter, Jenkins.VERSION)).isEqualTo(Jenkins.VERSION);
     }

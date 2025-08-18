@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,14 +15,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 
-public class GCLogsTest {
+class GCLogsTest {
 
     @Test
-    public void simpleFile() throws Exception {
+    void simpleFile() throws Exception {
         File tmpFile = File.createTempFile("gclogs", "");
         Files.touch(tmpFile);
 
@@ -39,8 +39,8 @@ public class GCLogsTest {
     }
 
     @Test
-    public void rotatedFiles() throws Exception {
-        File tempDir = Files.createTempDir();
+    void rotatedFiles() throws Exception {
+        File tempDir = java.nio.file.Files.createTempDirectory("junit").toFile();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc.log." + count));
         }
@@ -59,8 +59,8 @@ public class GCLogsTest {
     }
 
     @Test
-    public void parameterizedFiles() throws Exception {
-        File tempDir = Files.createTempDir();
+    void parameterizedFiles() throws Exception {
+        File tempDir = java.nio.file.Files.createTempDirectory("junit").toFile();
         for (int count = 0; count < 5; count++) {
             Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".1423.log"));
         }
@@ -80,8 +80,8 @@ public class GCLogsTest {
     }
 
     @Test
-    public void parameterizedAndRotatedFiles() throws Exception {
-        File tempDir = Files.createTempDir();
+    void parameterizedAndRotatedFiles() throws Exception {
+        File tempDir = java.nio.file.Files.createTempDirectory("junit").toFile();
         for (int count = 0; count < 10; count++) {
             Files.touch(new File(tempDir, "gc." + System.nanoTime() + ".5625.log." + count));
         }
@@ -104,8 +104,8 @@ public class GCLogsTest {
 
     @Test
     @Issue("JENKINS-58980")
-    public void latestFiles() throws Exception {
-        File tempDir = Files.createTempDir();
+    void latestFiles() throws Exception {
+        File tempDir = java.nio.file.Files.createTempDirectory("junit").toFile();
         long currentTime = System.currentTimeMillis();
         for (int count = 0; count < 10; count++) {
             File gcLogFile = new File(tempDir, "gc5625.log" + count);
@@ -138,7 +138,7 @@ public class GCLogsTest {
      * @param finder a {@link com.cloudbees.jenkins.support.impl.GCLogs.VmArgumentFinder}
      * @param numberOfFiles the expected number of files to be included
      */
-    private void assertContentWithFinderContainsFiles(GCLogs.VmArgumentFinder finder, int numberOfFiles) {
+    private static void assertContentWithFinderContainsFiles(GCLogs.VmArgumentFinder finder, int numberOfFiles) {
         TestContainer container = new TestContainer();
         new GCLogs(finder).addContents(container);
         assertEquals(numberOfFiles, container.getContents().size());
@@ -151,7 +151,8 @@ public class GCLogsTest {
      * @param finder a {@link com.cloudbees.jenkins.support.impl.GCLogs.VmArgumentFinder}
      * @param fileNames the expected set of files names
      */
-    private void assertContentWithFinderContainsFiles(GCLogs.VmArgumentFinder finder, Collection<String> fileNames) {
+    private static void assertContentWithFinderContainsFiles(
+            GCLogs.VmArgumentFinder finder, Collection<String> fileNames) {
         TestContainer container = new TestContainer();
         new GCLogs(finder).addContents(container);
         assertEquals(fileNames.size(), container.getContents().size());
@@ -162,7 +163,7 @@ public class GCLogsTest {
     }
 
     private static class TestContainer extends Container {
-        List<Content> contents = new ArrayList<Content>();
+        final List<Content> contents = new ArrayList<>();
 
         public List<Content> getContents() {
             return contents;
