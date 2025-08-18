@@ -353,7 +353,7 @@ public class SupportPlugin extends Plugin {
     }
 
     /**
-     * Generate a bundle for all components that are selected in the Global Configuration.
+     * Generate a bundle for the specified components.
      *
      * @param outputStream an {@link OutputStream}
      * @param components a list of {@link Component} to include in the bundle
