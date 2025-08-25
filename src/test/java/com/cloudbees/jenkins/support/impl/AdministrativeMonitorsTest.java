@@ -35,8 +35,9 @@ public class AdministrativeMonitorsTest {
                 .filter(monitor -> monitor.isEnabled() && monitor.isActivated())
                 .forEach(monitor -> assertThat(
                         monitorsMdToString,
-                        containsString("`" + monitor.id + "`" + System.lineSeparator() + "--------------"
-                                + System.lineSeparator() + "(active and enabled)")));
+                        containsString(
+                                "`" + monitor.id + "` _" + monitor.getDisplayName() + "_" + System.lineSeparator()
+                                        + "--------------" + System.lineSeparator() + "(active and enabled)")));
 
         // Disable all monitors and check there is not output for any even if activated
         for (AdministrativeMonitor monitor : j.jenkins.administrativeMonitors) {
@@ -49,8 +50,9 @@ public class AdministrativeMonitorsTest {
                 .filter(AdministrativeMonitor::isActivated)
                 .forEach(monitor -> assertThat(
                         monitorsDisabledMdToString,
-                        not(containsString("`" + monitor.id + "`" + System.lineSeparator() + "--------------"
-                                + System.lineSeparator() + "(active and enabled)"))));
+                        not(containsString(
+                                "`" + monitor.id + "`_" + monitor.getDisplayName() + "_" + System.lineSeparator()
+                                        + "--------------" + System.lineSeparator() + "(active and enabled)"))));
     }
 
     @Test
