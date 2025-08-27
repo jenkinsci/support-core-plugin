@@ -51,6 +51,9 @@ public class EnvironmentVariables extends Component {
     }
 
     @Override
+    public int getHash() { return 11; }
+
+    @Override
     public void addContents(@NonNull Container result) {
         result.add(new PrintedContent("nodes/master/environment.txt") {
             @Override

@@ -77,6 +77,9 @@ public class RootCAs extends Component {
     }
 
     @Override
+    public int getHash() { return 32; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         Jenkins j = Jenkins.get();
         addContents(container, j);

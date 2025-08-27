@@ -83,6 +83,9 @@ public class LoadStats extends Component {
         return "Load Statistics";
     }
 
+    @Override
+    public int getHash() { return 20; }
+
     /**
      * {@inheritDoc}
      */

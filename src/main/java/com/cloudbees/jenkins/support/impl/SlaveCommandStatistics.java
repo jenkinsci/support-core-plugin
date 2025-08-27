@@ -79,6 +79,9 @@ public final class SlaveCommandStatistics extends Component {
     }
 
     @Override
+    public int getHash() { return 36; }
+
+    @Override
     public Set<Permission> getRequiredPermissions() {
         return Collections.singleton(Jenkins.ADMINISTER);
     }

@@ -74,6 +74,9 @@ public class GCLogs extends Component {
     }
 
     @Override
+    public int getHash() { return 13; }
+
+    @Override
     public void addContents(@NonNull Container result) {
         LOGGER.fine("Trying to gather GC logs for support bundle");
         String gcLogFileLocation = getGcLogFileLocation();

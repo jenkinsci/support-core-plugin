@@ -29,6 +29,9 @@ import org.kohsuke.stapler.QueryParameter;
 @Extension
 public class NodeRemoteDirectoryComponent extends DirectoryComponent<Computer> implements Serializable {
 
+    @Override
+    public int getHash() { return 26; }
+
     public NodeRemoteDirectoryComponent() {
         super();
     }

@@ -35,6 +35,9 @@ public class TaskLogs extends Component {
     }
 
     @Override
+    public int getHash() { return 45; }
+
+    @Override
     public boolean isSelectedByDefault() {
         return true;
     }

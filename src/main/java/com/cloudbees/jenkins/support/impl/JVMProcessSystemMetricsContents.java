@@ -35,6 +35,9 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         }
 
         @Override
+        public int getHash() { return 18; }
+
+        @Override
         protected List<Node> getNodes() {
             return Collections.singletonList(Jenkins.get());
         }
@@ -88,6 +91,9 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         public String getDisplayName() {
             return "Agent JVM process system metrics (Linux only)";
         }
+
+        @Override
+        public int getHash() { return 19; }
 
         @NonNull
         @Override

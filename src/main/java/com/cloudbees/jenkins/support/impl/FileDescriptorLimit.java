@@ -53,6 +53,9 @@ public class FileDescriptorLimit extends Component {
     }
 
     @Override
+    public int getHash() { return 12; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         Jenkins j = Jenkins.get();
         addContents(container, j);

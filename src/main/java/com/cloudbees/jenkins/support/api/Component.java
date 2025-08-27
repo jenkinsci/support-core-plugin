@@ -148,6 +148,8 @@ public abstract class Component implements ExtensionPoint {
         return getClass().getSimpleName();
     }
 
+    public int getHash() { return -1; };
+
     @Deprecated
     public void start(@NonNull SupportContext context) {}
 

@@ -21,6 +21,9 @@ public class SlowRequestThreadDumpsComponent extends UnfilteredFileListCapCompon
     }
 
     @Override
+    public int getHash() { return 40; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         SlowRequestThreadDumpsGenerator generator =
                 ExtensionList.lookup(SlowRequestThreadDumpsGenerator.class).get(SlowRequestThreadDumpsGenerator.class);

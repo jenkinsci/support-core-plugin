@@ -104,6 +104,9 @@ public class AboutJenkins extends Component {
         return "About Jenkins";
     }
 
+    @Override
+    public int getHash() { return 1; }
+
     @NonNull
     @Override
     public ComponentCategory getCategory() {

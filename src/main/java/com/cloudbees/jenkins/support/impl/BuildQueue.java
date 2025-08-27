@@ -64,6 +64,9 @@ public class BuildQueue extends Component {
     }
 
     @Override
+    public int getHash() { return 6; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("buildqueue.md") {
             @Override

@@ -22,74 +22,119 @@
  ~ THE SOFTWARE.
  -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout"
-         xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core"
+         xmlns:l="/lib/layout"
+         xmlns:f="/lib/form"
+         xmlns:st="jelly:stapler">
   <l:layout title="${it.actionTitleText}" permission="${app.ADMINISTER}" type="one-column">
     <l:main-panel>
       <l:app-bar title="${it.actionTitle}" />
-
-      <p>
-        ${it.actionBlurb}
-      </p>
-      <p>
-        ${%detail}
-      </p>
-      <j:if test="${it.anonymized}">
+      <f:section>
         <p>
-          Support bundle anonymization is enabled. View
-          <a href="../anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
-          <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
+          ${it.actionBlurb}
         </p>
-      </j:if>
-      <j:if test="${!it.anonymized}">
-        <p class="warning">
-          Support bundle anonymization is disabled. This can be enabled in the
-          <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
+        <p>
+          ${%detail}
         </p>
-      </j:if>
-      <f:form name="bundle-contents" method="POST" action="generateBundleAsync">
-        <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
-          <section class="jenkins-section jenkins-section--bottom-padding">
-            <h2 class="jenkins-section__title">${category.key.label}</h2>
-            <div class="jenkins-section__items">
-              <j:forEach var="component" items="${category.value}">
-                <div name="components" class="jenkins-section__item">
-                  <j:if test="${component.enabled}">
-                    <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}"/>
-                  </j:if>
-                  <j:if test="${!component.enabled}">
-                    <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" readOnlyMode="true"/>
-                  </j:if>
-                  <input type="hidden" name="name" value="${component.id}"/>
-                </div>
+        <j:if test="${it.anonymized}">
+          <p>
+            Support bundle anonymization is enabled. View
+            <a href="../anonymizedMappings">anonymized mappings here</a>, or manage anonymization settings in the
+            <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
+          </p>
+        </j:if>
+        <j:if test="${!it.anonymized}">
+          <p class="warning">
+            Support bundle anonymization is disabled. This can be enabled in the
+            <a href="${rootURL}/configureSecurity">global security</a> under <i>Support Bundle Anonymization</i>.
+          </p>
+        </j:if>
+      </f:section>
+      <f:section title="${it.generateSupportBundle}">
+        <f:form name="bundle-contents" method="POST" action="generateBundleAsync">
+          <dialog id="categories_dialog" style="padding:20px; border-radius:8px;" >
+            <f:section title="${it.chooseOptions}">
+              <j:forEach var="category" items="${it.categorizedComponents.entrySet()}">
+                <section class="jenkins-section jenkins-section--bottom-padding">
+                  <h2 class="jenkins-section__title">${category.key.label}</h2>
+                  <div class="jenkins-section__items">
+                    <j:forEach var="component" items="${category.value}">
+                      <div name="components" class="jenkins-section__item">
+                        <j:set var="hash" value="${component.hash}"/>
+                        <j:if test="${hash == -1}">
+                          <j:if test="${component.enabled}">
+                            <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}" onclick="showIdMaps()"/>
+                          </j:if>
+                          <j:if test="${!component.enabled}">
+                            <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" readOnlyMode="true"/>
+                          </j:if>
+                        </j:if>
+                        <j:if test="${hash != -1}">
+                          <j:if test="${component.enabled}">
+                            <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}" id="${hash}" onclick="showIdMaps()"/>
+                          </j:if>
+                          <j:if test="${!component.enabled}">
+                            <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" id="${hash}" readOnlyMode="true"/>
+                          </j:if>
+                        </j:if>
+                        <input type="hidden" name="name" value="${component.id}"/>
+                      </div>
+                    </j:forEach>
+                  </div>
+                </section>
               </j:forEach>
-            </div>
-          </section>
-        </j:forEach>
-        <f:bottomButtonBar>
-          <f:submit value="${%Generate Bundle}" icon="symbol-download" />
-        </f:bottomButtonBar>
-      </f:form>
+              <div id="hashId" style="position: fixed; right: 3rem; bottom: 2rem;">
+                none
+              </div>
+              <button class="jenkins-button jenkins-button--primary" onclick="document.getElementById('categories_dialog').close();return false;">
+                ${it.close}
+              </button>
+            </f:section>
+          </dialog>
+          <f:entry title="${it.chooseGeneralOption}" field="mapText" help="/plugin/support-core/help/help-chooseGeneralOption.html">
+            <select id="idMapSelect" class="jenkins-select__input select">
+              <option value="1F79CB2F69F57">${it.genericOptionDefault}</option>
+              <option value="1F79CBAF69FD7">${it.genericOptionConfigurationFiles}</option>
+              <option value="1F7FCBBFEFFD7">${it.genericOptionPerformanceData}</option>
+              <option value="custom">${it.genericOptionCustom}</option>
+            </select>
+            <f:textbox id="idMapText" value="" onblur="setIdMaps()" style="display:none;margin-top:15px;"/>
+          </f:entry>
+          <p id="chooseGeneralOptionAppliedId" class="error" style="display:none">
+            ${it.chooseGeneralOptionApplied}
+          </p>
+          <p>${%Or}</p>
+          <f:bottomButtonBar>
+            <f:submit id="chooseOptionButtonId" value="${it.chooseOptions}">
+            </f:submit>
+          </f:bottomButtonBar>
+
+          <f:bottomButtonBar>
+            <f:submit value="${%Generate Bundle}" icon="symbol-download" />
+          </f:bottomButtonBar>
+        </f:form>
+      </f:section>
 
       <j:if test="${!it.bundles.isEmpty()}">
         <f:section title="${%Existing support bundles}">
-        <f:form name="bundle-contents" method="POST">
-          <j:forEach var="bundle" items="${it.bundles}">
-            <f:entry field="bundle">
-            <div name="bundles">
-            <f:checkbox name="selected" checked="false"
-                        title="${bundle}"/>
-              <input style="display:none" name="name" value="${bundle}"/>
+          <f:form name="bundle-contents" method="POST">
+            <j:forEach var="bundle" items="${it.bundles}">
+              <f:entry field="bundle">
+              <div name="bundles">
+              <f:checkbox name="selected" checked="false"
+                          title="${bundle}"/>
+                <input style="display:none" name="name" value="${bundle}"/>
+              </div>
+              </f:entry>
+            </j:forEach>
+            <div class="jenkins-buttons-row">
+              <button type="submit" class="jenkins-button jenkins-button--primary" formaction="downloadBundles">${%Download Bundle}</button>
+              <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
             </div>
-            </f:entry>
-          </j:forEach>
-          <div class="jenkins-buttons-row">
-            <button type="submit" class="jenkins-button jenkins-button--primary" formaction="downloadBundles">${%Download Bundle}</button>
-            <button type="submit" class="jenkins-button jenkins-!-destructive-color" formaction="deleteBundles">${%Delete Bundle}</button>
-          </div>
-        </f:form>
+          </f:form>
         </f:section>
       </j:if>
     </l:main-panel>
+    <st:adjunct  includes="js/generationAssist"/>
   </l:layout>
 </j:jelly>

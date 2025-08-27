@@ -39,6 +39,9 @@ public class OtherLogs extends Component {
     }
 
     @Override
+    public int getHash() { return 28; }
+
+    @Override
     public boolean isSelectedByDefault() {
         return false;
     }

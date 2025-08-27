@@ -59,6 +59,9 @@ public class OtherConfigFilesComponent extends Component {
     }
 
     @Override
+    public int getHash() { return 27; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {

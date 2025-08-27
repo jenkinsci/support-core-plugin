@@ -65,6 +65,9 @@ public final class ShutdownComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
+    public int getHash() { return 35; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         super.addContents(container, logs);
     }

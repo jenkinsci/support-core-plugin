@@ -41,6 +41,9 @@ public class JenkinsLogs extends Component {
     }
 
     @Override
+    public int getHash() { return 17; }
+
+    @Override
     public void addContents(@NonNull Container result) {
         addControllerJulRingBuffer(result);
         addControllerJulLogRecords(result);

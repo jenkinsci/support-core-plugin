@@ -30,6 +30,9 @@ public class Metrics extends Component {
     }
 
     @Override
+    public int getHash() { return 22; }
+
+    @Override
     public Set<Permission> getRequiredPermissions() {
         // TODO was originally no permissions, but that seems iffy
         return Collections.singleton(Jenkins.ADMINISTER);

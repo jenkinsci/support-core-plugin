@@ -38,6 +38,9 @@ public class LoggerManager extends Component {
     }
 
     @Override
+    public int getHash() { return 21; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrintedContent("loggers.md") {
             @Override

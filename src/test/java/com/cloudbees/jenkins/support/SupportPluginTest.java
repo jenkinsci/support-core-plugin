@@ -70,6 +70,9 @@ public class SupportPluginTest {
                     }
 
                     @Override
+                    public int getHash() { return 999; }
+
+                    @Override
                     public void addContents(@NonNull Container container) {
                         container.add(new Content("test/testGenerateBundleExceptionHandler.md") {
                             @Override
@@ -125,6 +128,9 @@ public class SupportPluginTest {
                     public String getDisplayName() {
                         return "Test Component";
                     }
+
+                    @Override
+                    public int getHash() { return 999; }
 
                     @Override
                     public boolean supersedes(Component component) {

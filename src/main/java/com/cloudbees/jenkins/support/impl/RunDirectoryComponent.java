@@ -104,6 +104,9 @@ public class RunDirectoryComponent extends DirectoryComponent<Run> {
     }
 
     @Override
+    public int getHash() { return 33; }
+
+    @Override
     public DescriptorImpl getDescriptor() {
         return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
     }

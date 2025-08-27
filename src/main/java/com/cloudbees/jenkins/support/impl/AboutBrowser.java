@@ -33,6 +33,9 @@ public class AboutBrowser extends Component {
     }
 
     @Override
+    public int getHash() { return 0; }
+
+    @Override
     public Set<Permission> getRequiredPermissions() {
         return Collections.emptySet();
     }

@@ -30,6 +30,9 @@ public class ConfigFileComponent extends Component {
     }
 
     @Override
+    public int getHash() { return 7; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         Jenkins jenkins = Jenkins.get();
         File configFile = new File(jenkins.getRootDir(), "config.xml");

@@ -72,6 +72,9 @@ public class NodeExecutors extends ObjectComponent<Computer> {
     }
 
     @Override
+    public int getHash() { return 24; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("executors.md") {
             @Override

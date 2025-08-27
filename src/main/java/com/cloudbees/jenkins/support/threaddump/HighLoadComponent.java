@@ -41,6 +41,9 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
+    public int getHash() { return 15; }
+
+    @Override
     public void addContents(@NonNull Container container) {
         HighLoadCpuChecker checker =
                 ExtensionList.lookup(HighLoadCpuChecker.class).get(HighLoadCpuChecker.class);
