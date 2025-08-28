@@ -51,7 +51,9 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() { return 41; }
+    public int getHash() {
+        return 41;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

@@ -72,7 +72,9 @@ public class NodeExecutors extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() { return 24; }
+    public int getHash() {
+        return 24;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

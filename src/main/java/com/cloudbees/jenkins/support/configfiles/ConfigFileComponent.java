@@ -30,7 +30,9 @@ public class ConfigFileComponent extends Component {
     }
 
     @Override
-    public int getHash() { return 7; }
+    public int getHash() {
+        return 7;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

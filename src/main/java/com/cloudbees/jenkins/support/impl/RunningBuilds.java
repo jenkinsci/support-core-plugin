@@ -31,7 +31,9 @@ public class RunningBuilds extends Component {
     }
 
     @Override
-    public int getHash() { return 34; }
+    public int getHash() {
+        return 34;
+    }
 
     @Override
     public void addContents(@NonNull Container result) {

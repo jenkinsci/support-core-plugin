@@ -57,7 +57,9 @@ public class DumpExportTable extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() { return 10; }
+    public int getHash() {
+        return 10;
+    }
 
     @Override
     public void addContents(@NonNull Container result) {

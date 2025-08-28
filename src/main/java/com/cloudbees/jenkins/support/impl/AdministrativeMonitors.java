@@ -57,7 +57,9 @@ public final class AdministrativeMonitors extends Component {
     }
 
     @Override
-    public int getHash() { return 4; }
+    public int getHash() {
+        return 4;
+    }
 
     @NonNull
     @Override

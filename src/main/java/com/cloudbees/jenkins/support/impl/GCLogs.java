@@ -74,7 +74,9 @@ public class GCLogs extends Component {
     }
 
     @Override
-    public int getHash() { return 13; }
+    public int getHash() {
+        return 13;
+    }
 
     @Override
     public void addContents(@NonNull Container result) {

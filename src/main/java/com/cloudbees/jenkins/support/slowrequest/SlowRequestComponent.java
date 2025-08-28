@@ -23,7 +23,9 @@ public class SlowRequestComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() { return 39; }
+    public int getHash() {
+        return 39;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

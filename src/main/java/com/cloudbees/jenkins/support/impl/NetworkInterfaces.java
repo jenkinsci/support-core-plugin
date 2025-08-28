@@ -68,7 +68,9 @@ public class NetworkInterfaces extends Component {
     }
 
     @Override
-    public int getHash() { return 23; }
+    public int getHash() {
+        return 23;
+    }
 
     @Override
     public void addContents(@NonNull Container result) {

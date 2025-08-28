@@ -60,7 +60,9 @@ public class ReverseProxy extends Component {
     }
 
     @Override
-    public int getHash() { return 31; }
+    public int getHash() {
+        return 31;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

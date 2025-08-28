@@ -105,7 +105,9 @@ public class AboutJenkins extends Component {
     }
 
     @Override
-    public int getHash() { return 1; }
+    public int getHash() {
+        return 1;
+    }
 
     @NonNull
     @Override

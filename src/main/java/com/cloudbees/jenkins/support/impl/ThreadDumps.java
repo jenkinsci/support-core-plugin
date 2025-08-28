@@ -110,7 +110,9 @@ public class ThreadDumps extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() { return 46; }
+    public int getHash() {
+        return 46;
+    }
 
     @Override
     public <C extends AbstractModelObject> boolean isApplicable(Class<C> clazz) {

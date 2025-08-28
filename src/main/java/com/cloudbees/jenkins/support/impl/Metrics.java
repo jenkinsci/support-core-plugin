@@ -30,7 +30,9 @@ public class Metrics extends Component {
     }
 
     @Override
-    public int getHash() { return 22; }
+    public int getHash() {
+        return 22;
+    }
 
     @Override
     public Set<Permission> getRequiredPermissions() {

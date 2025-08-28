@@ -77,7 +77,9 @@ public class SlaveLogs extends Component {
     }
 
     @Override
-    public int getHash() { return 38; }
+    public int getHash() {
+        return 38;
+    }
 
     @Override
     public boolean isSelectedByDefault() {

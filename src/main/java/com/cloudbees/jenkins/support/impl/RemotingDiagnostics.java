@@ -34,7 +34,9 @@ public class RemotingDiagnostics extends Component {
     }
 
     @Override
-    public int getHash() { return 30; }
+    public int getHash() {
+        return 30;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

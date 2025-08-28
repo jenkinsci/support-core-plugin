@@ -156,7 +156,10 @@ public abstract class Component implements ExtensionPoint {
      * The UI will ignore any component with a "-1" value in the id (extracted from this getHash method)
      * in order to generate the final hash value for the selected options.
      */
-    public int getHash() { return -1; };
+    public int getHash() {
+        return -1;
+    }
+    ;
 
     @Deprecated
     public void start(@NonNull SupportContext context) {}

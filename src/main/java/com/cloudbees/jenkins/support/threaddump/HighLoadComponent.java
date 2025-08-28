@@ -41,7 +41,9 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() { return 15; }
+    public int getHash() {
+        return 15;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

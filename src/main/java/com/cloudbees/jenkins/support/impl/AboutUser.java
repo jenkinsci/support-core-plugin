@@ -31,7 +31,9 @@ public class AboutUser extends Component {
     }
 
     @Override
-    public int getHash() { return 2; }
+    public int getHash() {
+        return 2;
+    }
 
     @Override
     public Set<Permission> getRequiredPermissions() {

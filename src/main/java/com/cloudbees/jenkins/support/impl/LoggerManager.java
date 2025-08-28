@@ -38,7 +38,9 @@ public class LoggerManager extends Component {
     }
 
     @Override
-    public int getHash() { return 21; }
+    public int getHash() {
+        return 21;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

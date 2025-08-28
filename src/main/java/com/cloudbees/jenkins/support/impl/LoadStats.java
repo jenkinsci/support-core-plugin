@@ -84,7 +84,9 @@ public class LoadStats extends Component {
     }
 
     @Override
-    public int getHash() { return 20; }
+    public int getHash() {
+        return 20;
+    }
 
     /**
      * {@inheritDoc}

@@ -70,7 +70,9 @@ public class SupportPluginTest {
                     }
 
                     @Override
-                    public int getHash() { return 999; }
+                    public int getHash() {
+                        return 999;
+                    }
 
                     @Override
                     public void addContents(@NonNull Container container) {
@@ -130,7 +132,9 @@ public class SupportPluginTest {
                     }
 
                     @Override
-                    public int getHash() { return 999; }
+                    public int getHash() {
+                        return 999;
+                    }
 
                     @Override
                     public boolean supersedes(Component component) {

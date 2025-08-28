@@ -33,7 +33,9 @@ import org.kohsuke.stapler.QueryParameter;
 public class AbstractItemDirectoryComponent extends DirectoryComponent<AbstractItem> {
 
     @Override
-    public int getHash() { return 3; }
+    public int getHash() {
+        return 3;
+    }
 
     public AbstractItemDirectoryComponent() {
         super();

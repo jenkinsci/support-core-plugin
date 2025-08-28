@@ -60,7 +60,9 @@ public class CustomLogs extends Component {
     }
 
     @Override
-    public int getHash() { return 8; }
+    public int getHash() {
+        return 8;
+    }
 
     @Override
     public void addContents(@NonNull Container result) {

@@ -32,7 +32,9 @@ public class ProxyConfiguration extends Component {
     }
 
     @Override
-    public int getHash() { return 29; }
+    public int getHash() {
+        return 29;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

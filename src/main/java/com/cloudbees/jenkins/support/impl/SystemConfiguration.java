@@ -72,7 +72,9 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         }
 
         @Override
-        public int getHash() { return 42; }
+        public int getHash() {
+            return 42;
+        }
 
         @Override
         protected List<Node> getNodes() {
@@ -130,7 +132,9 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         }
 
         @Override
-        public int getHash() { return 43; }
+        public int getHash() {
+            return 43;
+        }
 
         @Override
         public boolean isSelectedByDefault() {

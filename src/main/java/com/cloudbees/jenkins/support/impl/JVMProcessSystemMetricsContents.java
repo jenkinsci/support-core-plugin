@@ -35,7 +35,9 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         }
 
         @Override
-        public int getHash() { return 18; }
+        public int getHash() {
+            return 18;
+        }
 
         @Override
         protected List<Node> getNodes() {
@@ -93,7 +95,9 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
         }
 
         @Override
-        public int getHash() { return 19; }
+        public int getHash() {
+            return 19;
+        }
 
         @NonNull
         @Override

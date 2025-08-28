@@ -64,7 +64,9 @@ public class BuildQueue extends Component {
     }
 
     @Override
-    public int getHash() { return 6; }
+    public int getHash() {
+        return 6;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {

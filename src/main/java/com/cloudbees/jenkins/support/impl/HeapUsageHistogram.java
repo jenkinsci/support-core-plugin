@@ -52,7 +52,9 @@ public class HeapUsageHistogram extends Component {
     }
 
     @Override
-    public int getHash() { return 14; }
+    public int getHash() {
+        return 14;
+    }
 
     @Override
     public boolean isSelectedByDefault() {

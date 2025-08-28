@@ -131,19 +131,53 @@ public class SupportAction implements RootAction, StaplerProxy {
         return "support";
     }
 
-    public String getActionTitleText() { return getActionTitle().toString(); }
+    public String getActionTitleText() {
+        return getActionTitle().toString();
+    }
 
-    public String getApplyCustomChanges() { return Messages.SupportPlugin_ApplyCustomChanges(); }
-    public String getChooseGeneralOption() { return Messages.SupportPlugin_ChooseGeneralOption(); }
-    public String getChooseGeneralOptionApplied() { return Messages.SupportPlugin_ChooseGeneralOptionApplied(); }
-    public String getChooseGeneralOptionApplying() { return Messages.SupportPlugin_ChooseGeneralOptionApplying(); }
-    public String getChooseOptions() { return Messages.SupportPlugin_ChooseOptions(); }
-    public String getClose() { return Messages.SupportPlugin_Close(); }
-    public String getGenerateSupportBundle() { return Messages.SupportPlugin_GenerateSupportBundle(); }
-    public String getGenericOptionConfigurationFiles() { return Messages.SupportPlugin_GenericOption_ConfigurationFiles(); }
-    public String getGenericOptionCustom() { return Messages.SupportPlugin_GenericOption_Custom(); }
-    public String getGenericOptionDefault() { return Messages.SupportPlugin_GenericOption_Default(); }
-    public String getGenericOptionPerformanceData() { return Messages.SupportPlugin_GenericOption_PerformanceData(); }
+    public String getApplyCustomChanges() {
+        return Messages.SupportPlugin_ApplyCustomChanges();
+    }
+
+    public String getChooseGeneralOption() {
+        return Messages.SupportPlugin_ChooseGeneralOption();
+    }
+
+    public String getChooseGeneralOptionApplied() {
+        return Messages.SupportPlugin_ChooseGeneralOptionApplied();
+    }
+
+    public String getChooseGeneralOptionApplying() {
+        return Messages.SupportPlugin_ChooseGeneralOptionApplying();
+    }
+
+    public String getChooseOptions() {
+        return Messages.SupportPlugin_ChooseOptions();
+    }
+
+    public String getClose() {
+        return Messages.SupportPlugin_Close();
+    }
+
+    public String getGenerateSupportBundle() {
+        return Messages.SupportPlugin_GenerateSupportBundle();
+    }
+
+    public String getGenericOptionConfigurationFiles() {
+        return Messages.SupportPlugin_GenericOption_ConfigurationFiles();
+    }
+
+    public String getGenericOptionCustom() {
+        return Messages.SupportPlugin_GenericOption_Custom();
+    }
+
+    public String getGenericOptionDefault() {
+        return Messages.SupportPlugin_GenericOption_Default();
+    }
+
+    public String getGenericOptionPerformanceData() {
+        return Messages.SupportPlugin_GenericOption_PerformanceData();
+    }
 
     public Localizable getActionTitle() {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();

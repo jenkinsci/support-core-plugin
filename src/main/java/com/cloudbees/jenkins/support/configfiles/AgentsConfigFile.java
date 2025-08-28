@@ -82,7 +82,9 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() { return 5; }
+    public int getHash() {
+        return 5;
+    }
 
     @Override
     public void addContents(@NonNull Container container) {
