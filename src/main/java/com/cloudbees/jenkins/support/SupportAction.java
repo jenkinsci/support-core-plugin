@@ -154,6 +154,9 @@ public class SupportAction implements RootAction, StaplerProxy {
 
     public String getGenericOptionCustom() { return Messages.SupportPlugin_GenericOption_Custom(); }
 
+    public String getApplyCustomChanges() { return Messages.SupportPlugin_ApplyCustomChanges(); }
+
+    public String getChooseGeneralOptionApplying() { return Messages.SupportPlugin_ChooseGeneralOptionApplying(); }
 
     public Localizable getActionTitle() {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();

@@ -98,9 +98,17 @@
               <option value="1F7FCBBFEFFD7">${it.genericOptionPerformanceData}</option>
               <option value="custom">${it.genericOptionCustom}</option>
             </select>
-            <f:textbox id="idMapText" value="" onblur="setIdMaps()" style="display:none;margin-top:15px;"/>
+            <div id="idMapDiv" style="display: none; align-items: center;margin-top:15px;">
+              <f:textbox id="idMapText" value="" style="margin-right:15px;"/>
+              <button id="idMapTextApply" class="jenkins-button jenkins-submit-button jenkins-button--primary" onclick="setIdMaps(); return false;">
+                ${it.applyCustomChanges}
+              </button>
+            </div>
           </f:entry>
-          <p id="chooseGeneralOptionAppliedId" class="error" style="display:none">
+          <p id="chooseGeneralOptionApplyingId" class="error" style="display:none">
+            ${it.chooseGeneralOptionApplying}
+          </p>
+          <p id="chooseGeneralOptionAppliedId" class="info" style="display:none;color:green">
             ${it.chooseGeneralOptionApplied}
           </p>
           <p>${%Or}</p>
