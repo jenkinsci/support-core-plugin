@@ -148,6 +148,14 @@ public abstract class Component implements ExtensionPoint {
         return getClass().getSimpleName();
     }
 
+    /**
+     * Used for getting a hash code with the options selected by the user.
+     * Each component (class that extends the Component class) should have a unique value.
+     * Only child components were treated in this plugin. Other plugins that extends the Component class
+     * should implement (override) the getHash method with a unique value.
+     * The UI will ignore any component with a "-1" value in the id (extracted from this getHash method)
+     * in order to generate the final hash value for the selected options.
+     */
     public int getHash() { return -1; };
 
     @Deprecated
