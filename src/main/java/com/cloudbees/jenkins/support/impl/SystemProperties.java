@@ -55,11 +55,6 @@ public class SystemProperties extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 44;
-    }
-
-    @Override
     public void addContents(@NonNull Container result) {
         result.add(new Content("nodes/master/system.properties") {
             @Override

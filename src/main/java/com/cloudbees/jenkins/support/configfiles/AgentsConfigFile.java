@@ -82,11 +82,6 @@ public class AgentsConfigFile extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() {
-        return 5;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         for (var n : Jenkins.get().getNodes()) {
             var c = n.toComputer();

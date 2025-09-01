@@ -68,11 +68,6 @@ public class NetworkInterfaces extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 23;
-    }
-
-    @Override
     public void addContents(@NonNull Container result) {
         result.add(new Content("nodes/master/networkInterface.md") {
             @Override

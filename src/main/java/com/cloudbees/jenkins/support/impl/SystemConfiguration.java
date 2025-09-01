@@ -72,11 +72,6 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         }
 
         @Override
-        public int getHash() {
-            return 42;
-        }
-
-        @Override
         protected List<Node> getNodes() {
             return Collections.singletonList(Jenkins.get());
         }
@@ -129,11 +124,6 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
         @NonNull
         public String getDisplayName() {
             return "Agent system configuration (Linux only)";
-        }
-
-        @Override
-        public int getHash() {
-            return 43;
         }
 
         @Override

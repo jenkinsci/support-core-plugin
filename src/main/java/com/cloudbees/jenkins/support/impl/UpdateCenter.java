@@ -34,11 +34,6 @@ public class UpdateCenter extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 47;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("update-center.md") {
             @Override

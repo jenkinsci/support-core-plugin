@@ -51,11 +51,6 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() {
-        return 41;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         super.addContents(container, StartupReport.get().getLogs());
         container.add(new StartupContent(StartupReport.get().getTimesPerMilestone()));

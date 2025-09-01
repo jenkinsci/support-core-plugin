@@ -65,11 +65,6 @@ public class ItemsContent extends Component {
         return "Items Content (Computationally expensive)";
     }
 
-    @Override
-    public int getHash() {
-        return 16;
-    }
-
     private final DateFormat BUILD_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     @Override

@@ -54,11 +54,6 @@ public class UserCount extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() {
-        return 48;
-    }
-
-    @Override
     public void addContents(@NonNull Container result) {
         result.add(new PrintedContent("users/count.md") {
             @Override

@@ -56,11 +56,6 @@ public final class AdministrativeMonitors extends Component {
         return "Administrative monitors";
     }
 
-    @Override
-    public int getHash() {
-        return 4;
-    }
-
     @NonNull
     @Override
     public Set<Permission> getRequiredPermissions() {

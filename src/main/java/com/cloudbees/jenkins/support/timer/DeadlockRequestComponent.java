@@ -22,11 +22,6 @@ public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
     }
 
     @Override
-    public int getHash() {
-        return 9;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         super.addContents(container, checker.logs);
     }

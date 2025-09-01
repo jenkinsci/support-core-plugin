@@ -90,11 +90,6 @@ public class SlaveLaunchLogs extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() {
-        return 37;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         ExtensionList.lookupSingleton(LogArchiver.class).addContents(container);
     }

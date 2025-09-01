@@ -57,11 +57,6 @@ public class DumpExportTable extends ObjectComponent<Computer> {
     }
 
     @Override
-    public int getHash() {
-        return 10;
-    }
-
-    @Override
     public void addContents(@NonNull Container result) {
         Jenkins.get().getNodes().stream().map(Node::toComputer).forEach(computer -> Optional.ofNullable(computer)
                 .ifPresent(comp -> addContents(result, comp)));

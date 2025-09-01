@@ -34,11 +34,6 @@ public class RemotingDiagnostics extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 30;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrintedContent("channel-diagnostics.md") {
             @Override

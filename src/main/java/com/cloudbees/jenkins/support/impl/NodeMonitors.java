@@ -33,11 +33,6 @@ public class NodeMonitors extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 25;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("node-monitors.md") {
             @Override

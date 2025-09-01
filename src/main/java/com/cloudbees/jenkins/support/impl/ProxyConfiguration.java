@@ -32,11 +32,6 @@ public class ProxyConfiguration extends Component {
     }
 
     @Override
-    public int getHash() {
-        return 29;
-    }
-
-    @Override
     public void addContents(@NonNull Container container) {
         container.add(new PrefilteredPrintedContent("proxy.md") {
 
