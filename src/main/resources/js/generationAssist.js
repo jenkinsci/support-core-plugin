@@ -31,10 +31,10 @@ function showIdMaps(){
 }
 
 function setIdMaps(){
-    var chooseGeneralOptionApplyingElement = document.getElementById("chooseGeneralOptionApplyingId")
-    var chooseGeneralOptionAppliedElement = document.getElementById("chooseGeneralOptionAppliedId")
-    if (chooseGeneralOptionApplyingElement) { chooseGeneralOptionApplyingElement.style.display = 'block' }
-    if (chooseGeneralOptionAppliedElement) { chooseGeneralOptionAppliedElement.style.display = 'none'}
+    var chooseGeneralComponentApplyingElement = document.getElementById("chooseGeneralComponentApplyingId")
+    var chooseGeneralComponentAppliedElement = document.getElementById("chooseGeneralComponentAppliedId")
+    if (chooseGeneralComponentApplyingElement) { chooseGeneralComponentApplyingElement.style.display = 'block' }
+    if (chooseGeneralComponentAppliedElement) { chooseGeneralComponentAppliedElement.style.display = 'none'}
 
     var currentValue = document.getElementById('idMapText').value
     var arrayWithChecked = convertStringToArray(currentValue)
@@ -53,8 +53,8 @@ function setIdMaps(){
     document.getElementById("hashId").innerHTML = currentValue
 
     setTimeout(function() {
-        if (chooseGeneralOptionApplyingElement) { chooseGeneralOptionApplyingElement.style.display = 'none' }
-        if (chooseGeneralOptionAppliedElement) { chooseGeneralOptionAppliedElement.style.display = 'block' }
+        if (chooseGeneralComponentApplyingElement) { chooseGeneralComponentApplyingElement.style.display = 'none' }
+        if (chooseGeneralComponentAppliedElement) { chooseGeneralComponentAppliedElement.style.display = 'block' }
     }, 1000);
 
 }
@@ -80,14 +80,14 @@ function convertStringToArray(hex){
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    var chooseOptionButtonElement = document.getElementById('chooseOptionButtonId')
+    var chooseComponentButtonElement = document.getElementById('chooseComponentButtonId')
     var mapTextElement = document.getElementById('idMapText')
     var mapSelectElement = document.getElementById('idMapSelect')
     var mapDivElement = document.getElementById('idMapDiv')
     showIdMaps()
 
-    if (chooseOptionButtonElement) {
-        chooseOptionButtonElement.addEventListener('click', function(event) {
+    if (chooseComponentButtonElement) {
+        chooseComponentButtonElement.addEventListener('click', function(event) {
             event.preventDefault();
             document.getElementById('categories_dialog').showModal();
             return false;

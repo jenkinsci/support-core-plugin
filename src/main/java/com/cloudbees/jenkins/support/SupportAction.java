@@ -139,20 +139,20 @@ public class SupportAction implements RootAction, StaplerProxy {
         return Messages.SupportPlugin_ApplyCustomChanges();
     }
 
-    public String getChooseGeneralOption() {
-        return Messages.SupportPlugin_ChooseGeneralOption();
+    public String getChooseGeneralComponent() {
+        return Messages.SupportPlugin_ChooseGeneralComponent();
     }
 
-    public String getChooseGeneralOptionApplied() {
-        return Messages.SupportPlugin_ChooseGeneralOptionApplied();
+    public String getChooseGeneralComponentApplied() {
+        return Messages.SupportPlugin_ChooseGeneralComponentApplied();
     }
 
-    public String getChooseGeneralOptionApplying() {
-        return Messages.SupportPlugin_ChooseGeneralOptionApplying();
+    public String getChooseGeneralComponentApplying() {
+        return Messages.SupportPlugin_ChooseGeneralComponentApplying();
     }
 
-    public String getChooseOptions() {
-        return Messages.SupportPlugin_ChooseOptions();
+    public String getChooseComponents() {
+        return Messages.SupportPlugin_ChooseComponents();
     }
 
     public String getClose() {
@@ -163,20 +163,20 @@ public class SupportAction implements RootAction, StaplerProxy {
         return Messages.SupportPlugin_GenerateSupportBundle();
     }
 
-    public String getGenericOptionConfigurationFiles() {
-        return Messages.SupportPlugin_GenericOption_ConfigurationFiles();
+    public String getGenericComponentConfigurationFiles() {
+        return Messages.SupportPlugin_GenericComponent_ConfigurationFiles();
     }
 
-    public String getGenericOptionCustom() {
-        return Messages.SupportPlugin_GenericOption_Custom();
+    public String getGenericComponentCustom() {
+        return Messages.SupportPlugin_GenericComponent_Custom();
     }
 
-    public String getGenericOptionDefault() {
-        return Messages.SupportPlugin_GenericOption_Default();
+    public String getGenericComponentDefault() {
+        return Messages.SupportPlugin_GenericComponent_Default();
     }
 
-    public String getGenericOptionPerformanceData() {
-        return Messages.SupportPlugin_GenericOption_PerformanceData();
+    public String getGenericComponentPerformanceData() {
+        return Messages.SupportPlugin_GenericComponent_PerformanceData();
     }
 
     public Localizable getActionTitle() {
