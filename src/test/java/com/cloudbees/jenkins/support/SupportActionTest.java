@@ -6,12 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.configfiles.ConfigFileComponent;
@@ -58,51 +53,49 @@ import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.xml.sax.SAXException;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class SupportActionTest {
+@WithJenkins
+class SupportActionTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
-
-    @Rule
-    public LoggerRule logger = new LoggerRule();
+    @TempDir
+    private File temp;
 
     private SupportAction root;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(JenkinsRule j) {
+        this.j = j;
         root = ExtensionList.lookupSingleton(SupportAction.class);
     }
 
     @Test
-    public void download() throws IOException, SAXException {
+    void download() throws IOException, SAXException {
         downloadBundle("/download?json={\"components\":1}");
     }
 
     @Test
-    public void generateAllBundles() throws IOException, SAXException {
+    void generateAllBundles() throws IOException, SAXException {
         downloadBundle("/generateAllBundles?json={\"components\":1}");
     }
 
     @Test
-    public void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
+    void generateBundlesByUIButtonClick() throws IOException, SAXException, InterruptedException {
         ZipFile supportBundle = downloadSupportBundleByButtonClick();
         assertNotNull(supportBundle.getEntry("manifest.md"));
         assertNotNull(supportBundle.getEntry("browser.md"));
@@ -113,9 +106,9 @@ public class SupportActionTest {
 
     @Test
     @Issue("JENKINS-63722")
-    public void generateAllBundlesBackwardCompatibility() throws Exception {
-        Assume.assumeTrue(!Functions.isWindows());
-        Assume.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
+    void generateAllBundlesBackwardCompatibility() throws Exception {
+        Assumptions.assumeTrue(!Functions.isWindows());
+        Assumptions.assumeTrue(SystemPlatform.LINUX == SystemPlatform.current());
 
         List<String> jvmSystemProcessMetricsFiles = Arrays.asList(
                 "proc/meminfo.txt",
@@ -137,7 +130,7 @@ public class SupportActionTest {
                 "dmi.txt");
         List<String> allFiles = Stream.of(jvmSystemProcessMetricsFiles, systemConfigurationFiles)
                 .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+                .toList();
 
         // Master should retrieve all files (backward compatibility)
         ZipFile zip = downloadBundle("/generateBundle?components=" + String.join(",", "Master"));
@@ -216,19 +209,21 @@ public class SupportActionTest {
      * Trying to remove not existing bundles will do nothing, just a message in the log.
      */
     @Test
-    public void deleteNotExistingBundleWillFail() throws IOException, SAXException {
+    void deleteNotExistingBundleWillFail() throws IOException {
         String bundle = "../config.xml";
-        logger.record(SupportAction.class, Level.FINE).capture(1);
-        deleteBundle(bundle, "admin");
-        assertTrue(logger.getMessages().stream()
-                .anyMatch(m -> m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
+        try (LogRecorder logger =
+                new LogRecorder().record(SupportAction.class, Level.FINE).capture(1)) {
+            deleteBundle(bundle, "admin");
+            assertTrue(logger.getMessages().stream()
+                    .anyMatch(m -> m.startsWith(String.format("The bundle selected %s does not exist", bundle))));
+        }
     }
 
     /*
      * Trying to remove an existing bundle (a zip or log file in JH/support directory) will success.
      */
     @Test
-    public void deleteExistingBundleWillSucceed() throws IOException {
+    void deleteExistingBundleWillSucceed() throws IOException {
         // Create a zip file as if it is a support bundle
         Path bundle = createFakeSupportBundle();
         assertTrue(Files.exists(bundle));
@@ -237,7 +232,7 @@ public class SupportActionTest {
     }
 
     @Test
-    public void deleteExistingBundleWithoutPermissionWillFail() throws IOException {
+    void deleteExistingBundleWithoutPermissionWillFail() throws IOException {
         // Create a zip file as if it is a support bundle
         Path bundle = createFakeSupportBundle();
         assertTrue(Files.exists(bundle));
@@ -251,26 +246,31 @@ public class SupportActionTest {
     }
 
     @Test
-    public void downloadOneBundleWillSucced() throws IOException {
+    void downloadOneBundleWillSucced() throws IOException {
         // Create a zip file as if it is a support bundle
         Path bundle = createFakeSupportBundle();
         assertTrue(Files.exists(bundle));
-        logger.record(SupportAction.class, Level.FINE).capture(1);
-        downloadBundle(bundle.getFileName().toString(), "admin", null);
-        assertTrue(logger.getMessages().stream()
-                .anyMatch(m -> m.startsWith(String.format("Bundle %s successfully downloaded", bundle))));
+        try (LogRecorder logger =
+                new LogRecorder().record(SupportAction.class, Level.FINE).capture(1)) {
+            downloadBundle(bundle.getFileName().toString(), "admin", null);
+            assertTrue(logger.getMessages().stream()
+                    .anyMatch(m -> m.startsWith(String.format("Bundle %s successfully downloaded", bundle))));
+        }
     }
 
     @Test
-    public void downloadMultiBundleWillSucced() throws IOException {
+    void downloadMultiBundleWillSucced() throws IOException {
         Path bundle = createFakeSupportBundle();
         Path bundle2 = createFakeSupportBundle();
-        logger.record(SupportAction.class, Level.FINE).capture(2);
-        downloadBundle(
-                bundle.getFileName().toString(), "admin", bundle2.getFileName().toString());
-        assertTrue(logger.getMessages().stream().anyMatch(m -> m.endsWith(String.format("successfully downloaded"))));
-        assertTrue(logger.getMessages().stream()
-                .anyMatch(m -> m.startsWith(String.format("Temporary multiBundle file deleted"))));
+        try (LogRecorder logger =
+                new LogRecorder().record(SupportAction.class, Level.FINE).capture(2)) {
+            downloadBundle(
+                    bundle.getFileName().toString(),
+                    "admin",
+                    bundle2.getFileName().toString());
+            assertTrue(logger.getMessages().stream().anyMatch(m -> m.endsWith("successfully downloaded")));
+            assertTrue(logger.getMessages().stream().anyMatch(m -> m.startsWith("Temporary multiBundle file deleted")));
+        }
     }
 
     private Path createFakeSupportBundle() throws IOException {
@@ -369,13 +369,13 @@ public class SupportActionTest {
     }
 
     @Test
-    public void generateBundleFailsWhenNoParameter() {
+    void generateBundleFailsWhenNoParameter() {
         Exception exception = assertThrows(IOException.class, () -> downloadBundle("/generateBundle"));
         assertThat(exception.getMessage(), startsWith("Server returned HTTP response code: 400 for URL:"));
     }
 
     @Test
-    public void generateBundleWithSingleComponent() throws IOException, SAXException {
+    void generateBundleWithSingleComponent() throws IOException, SAXException {
         ZipFile zip = downloadBundle("/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class));
         assertNotNull(zip.getEntry("manifest.md"));
         assertNotNull(zip.getEntry("jenkins-root-configuration-files/config.xml"));
@@ -383,7 +383,7 @@ public class SupportActionTest {
     }
 
     @Test
-    public void generateBundleWith2Components() throws IOException, SAXException {
+    void generateBundleWith2Components() throws IOException, SAXException {
         ZipFile zip = downloadBundle(
                 "/generateBundle?components=" + componentIdsOf(ConfigFileComponent.class, AboutUser.class));
         assertNotNull(zip.getEntry("manifest.md"));
@@ -392,8 +392,9 @@ public class SupportActionTest {
         assertEquals(3, zip.size());
     }
 
-    private String componentIdsOf(Class<? extends Component>... components) {
-        return Arrays.asList(components).stream()
+    @SafeVarargs
+    private static String componentIdsOf(Class<? extends Component>... components) {
+        return Arrays.stream(components)
                 .map(c -> ExtensionList.lookupSingleton(c).getId())
                 .collect(Collectors.joining(","));
     }
@@ -406,7 +407,7 @@ public class SupportActionTest {
      * {@link Component} impls.
      */
     @Test
-    public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
+    void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
         j.createSlave("agent1", "test", null).getComputer().connect(false).get();
         j.createSlave("agent2", "test", null).getComputer().connect(false).get();
 
@@ -444,7 +445,7 @@ public class SupportActionTest {
                         "dmi.txt");
 
                 for (String file : files) {
-                    assertNotNull(file + " was not found in the bundle", z.getEntry("nodes/master/" + file));
+                    assertNotNull(z.getEntry("nodes/master/" + file), file + " was not found in the bundle");
                 }
             }
         } finally {
@@ -461,9 +462,9 @@ public class SupportActionTest {
     }
 
     @Test
-    public void anonymizationSmokes() throws Exception {
+    void anonymizationSmokes() throws Exception {
         Slave node = j.createSlave(Label.get("super_secret_node"));
-        File bundleFile = temp.newFile();
+        File bundleFile = File.createTempFile("junit", null, temp);
         List<Component> componentsToCreate =
                 Collections.singletonList(ExtensionList.lookup(Component.class).get(AboutJenkins.class));
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
@@ -477,7 +478,7 @@ public class SupportActionTest {
                     nodeComponentText,
                     containsString(node.getNodeName()));
         }
-        bundleFile = temp.newFile();
+        bundleFile = File.createTempFile("junit", null, temp);
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(true);
             SupportPlugin.writeBundle(os, componentsToCreate);
@@ -500,7 +501,7 @@ public class SupportActionTest {
      * Check if the zip loses the folders due to anonymize '/' because there is an object with such a name. For example, a label.
      */
     @Test
-    public void corruptZipTestBySlash() throws Exception {
+    void corruptZipTestBySlash() throws Exception {
         String objectName = "agent-test";
         j.createSlave(objectName, "/", null);
 
@@ -522,7 +523,7 @@ public class SupportActionTest {
      * For example, a label.
      */
     @Test
-    public void corruptZipTestByDot() throws Exception {
+    void corruptZipTestByDot() throws Exception {
         String objectName = "agent-test";
         j.createSlave(objectName, ".", null);
 
@@ -544,7 +545,7 @@ public class SupportActionTest {
      * with such a name. For example, a label.
      */
     @Test
-    public void corruptZipTestByWordsInFileName() throws Exception {
+    void corruptZipTestByWordsInFileName() throws Exception {
         String objectName = "agent-test";
         // Create an agent with very bad words
         j.createSlave(objectName, "active plugins checksums md5 items about nodes manifest errors", null);
@@ -585,22 +586,23 @@ public class SupportActionTest {
         // The name of the node created becomes replaced, so we change it to how the anonymization process has left it
         List<String> anonymizedEntriesRestored = anonymizedEntries.stream()
                 .map(entry -> entry.replaceAll(anonymizedObjectName, objectName))
-                .collect(Collectors.toList());
+                .toList();
 
         // More debugging
         // System.out.println("Anonymized:");
         // entries.stream().forEach(entry -> System.out.println(entry));
         // System.out.println("nodes.md: \n"+ getContentZipEntry(zip,"nodes.md"));
 
-        assertTrue(
+        assertEquals(
+                anonymizedEntriesRestored,
+                entries,
                 "Bundles should have the same files but it's not the case.\nBundle:\n " + entries + "\nAnonymized:\n "
-                        + anonymizedEntriesRestored,
-                anonymizedEntriesRestored.equals(entries));
+                        + anonymizedEntriesRestored);
     }
 
     private ZipFile generateBundle(List<Component> componentsToCreate, boolean enabledAnonymization)
             throws IOException {
-        File bundleFile = temp.newFile();
+        File bundleFile = File.createTempFile("junit", null, temp);
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             ContentFilters.get().setEnabled(enabledAnonymization);
             SupportPlugin.writeBundle(os, componentsToCreate);
@@ -609,7 +611,7 @@ public class SupportActionTest {
     }
 
     @NonNull
-    private List<String> getFileNamesFromBundle(ZipFile zip) {
+    private static List<String> getFileNamesFromBundle(ZipFile zip) {
         List<String> entries = new ArrayList<>();
         zip.stream().forEach(entry -> entries.add(entry.getName()));
         return entries;
@@ -621,9 +623,9 @@ public class SupportActionTest {
      * @param zip the bundle {@link ZipFile}
      * @param fileNames the list of files names
      */
-    private void assertBundleContains(ZipFile zip, Collection<String> fileNames) {
+    private static void assertBundleContains(ZipFile zip, Collection<String> fileNames) {
         for (String file : fileNames) {
-            assertNotNull(file + " was not found in the bundle", zip.getEntry(file));
+            assertNotNull(zip.getEntry(file), file + " was not found in the bundle");
         }
     }
 
@@ -633,9 +635,9 @@ public class SupportActionTest {
      * @param zip the bundle {@link ZipFile}
      * @param fileNames the list of files names
      */
-    private void assertBundleNotContains(ZipFile zip, Collection<String> fileNames) {
+    private static void assertBundleNotContains(ZipFile zip, Collection<String> fileNames) {
         for (String file : fileNames) {
-            assertNull(file + " was found in the bundle", zip.getEntry(file));
+            assertNull(zip.getEntry(file), file + " was found in the bundle");
         }
     }
 }
