@@ -135,6 +135,50 @@ public class SupportAction implements RootAction, StaplerProxy {
         return getActionTitle().toString();
     }
 
+    public String getApplyCustomChanges() {
+        return Messages.SupportPlugin_ApplyCustomChanges();
+    }
+
+    public String getChooseGeneralComponent() {
+        return Messages.SupportPlugin_ChooseGeneralComponent();
+    }
+
+    public String getChooseGeneralComponentApplied() {
+        return Messages.SupportPlugin_ChooseGeneralComponentApplied();
+    }
+
+    public String getChooseGeneralComponentApplying() {
+        return Messages.SupportPlugin_ChooseGeneralComponentApplying();
+    }
+
+    public String getChooseComponents() {
+        return Messages.SupportPlugin_ChooseComponents();
+    }
+
+    public String getClose() {
+        return Messages.SupportPlugin_Close();
+    }
+
+    public String getGenerateSupportBundle() {
+        return Messages.SupportPlugin_GenerateSupportBundle();
+    }
+
+    public String getGenericComponentConfigurationFiles() {
+        return Messages.SupportPlugin_GenericComponent_ConfigurationFiles();
+    }
+
+    public String getGenericComponentCustom() {
+        return Messages.SupportPlugin_GenericComponent_Custom();
+    }
+
+    public String getGenericComponentDefault() {
+        return Messages.SupportPlugin_GenericComponent_Default();
+    }
+
+    public String getGenericComponentPerformanceData() {
+        return Messages.SupportPlugin_GenericComponent_PerformanceData();
+    }
+
     public Localizable getActionTitle() {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {

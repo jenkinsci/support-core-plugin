@@ -29,6 +29,7 @@ public class Metrics extends Component {
         return "Metrics";
     }
 
+
     @Override
     public Set<Permission> getRequiredPermissions() {
         // TODO was originally no permissions, but that seems iffy
