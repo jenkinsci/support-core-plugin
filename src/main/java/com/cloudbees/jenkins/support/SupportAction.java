@@ -167,6 +167,10 @@ public class SupportAction implements RootAction, StaplerProxy {
         return Messages.SupportPlugin_GenericComponent_ConfigurationFiles();
     }
 
+    public String getGenericComponentCopy() {
+        return Messages.SupportPlugin_GenericComponent_Copy();
+    }
+
     public String getGenericComponentCustom() {
         return Messages.SupportPlugin_GenericComponent_Custom();
     }
