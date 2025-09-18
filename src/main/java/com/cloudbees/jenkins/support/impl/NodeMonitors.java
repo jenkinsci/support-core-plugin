@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
@@ -66,5 +67,10 @@ public class NodeMonitors extends Component {
     @Override
     public ComponentCategory getCategory() {
         return ComponentCategory.AGENT;
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

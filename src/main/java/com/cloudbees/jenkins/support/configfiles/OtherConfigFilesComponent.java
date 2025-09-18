@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
@@ -129,5 +130,10 @@ public class OtherConfigFilesComponent extends Component {
         public boolean include(@NonNull File f) {
             return f.getName().toLowerCase().endsWith(".xml") && !BLACKLISTED_FILENAMES.contains(f.getName());
         }
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

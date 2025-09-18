@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -33,5 +34,10 @@ public class SlowRequestThreadDumpsComponent extends UnfilteredFileListCapCompon
     @Override
     public ComponentCategory getCategory() {
         return ComponentCategory.CONTROLLER;
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

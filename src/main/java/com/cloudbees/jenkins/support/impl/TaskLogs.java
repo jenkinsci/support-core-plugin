@@ -2,6 +2,7 @@ package com.cloudbees.jenkins.support.impl;
 
 import static com.cloudbees.jenkins.support.impl.JenkinsLogs.ROTATED_LOGFILE_FILTER;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.FileContent;
@@ -76,5 +77,10 @@ public class TaskLogs extends Component {
                 }
             }
         }
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

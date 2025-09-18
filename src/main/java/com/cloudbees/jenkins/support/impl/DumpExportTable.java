@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
@@ -115,5 +116,10 @@ public class DumpExportTable extends ObjectComponent<Computer> {
         public String getDisplayName() {
             return "Dump agent export tables (could reveal some memory leaks)";
         }
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

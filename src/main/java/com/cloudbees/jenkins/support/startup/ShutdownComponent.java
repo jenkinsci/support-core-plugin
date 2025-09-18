@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.startup;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.impl.ThreadDumps;
@@ -106,5 +107,10 @@ public final class ShutdownComponent extends UnfilteredFileListCapComponent {
 
     public static ShutdownComponent get() {
         return ExtensionList.lookupSingleton(ShutdownComponent.class);
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

@@ -61,10 +61,10 @@
                     <j:forEach var="component" items="${category.value}">
                       <div name="components" class="jenkins-section__item">
                         <j:if test="${component.enabled}">
-                          <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}" id="${component.hash}" onclick="showIdMaps()"/>
+                          <f:checkbox title="${component.displayName}" name="selected" checked="${it.selectedByDefault(component)}" id="${component.id}" onclick="showIdMaps()"/>
                         </j:if>
                         <j:if test="${!component.enabled}">
-                          <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" id="${component.hash}" readOnlyMode="true"/>
+                          <f:checkbox title="${%permissionPreReqs(component.displayPermissions)}" name="selected" checked="false" id="${component.id}" readOnlyMode="true"/>
                         </j:if>
                         <input type="hidden" name="name" value="${component.id}"/>
                       </div>
@@ -82,9 +82,9 @@
           </dialog>
           <f:entry title="${it.chooseGeneralComponent}" field="mapText" help="/plugin/support-core/help/help-chooseGeneralComponent.html">
             <select id="idMapSelect" class="jenkins-select__input select">
-              <option value="H4sIAAAAAAAAE5VU0W7bMAz8mT0O+ofV6bAVcZHFad8Vi3XYSKRGUnH794OdYtiewj5Jgu544umkkUsYM7d0BNDwCnRG0qCtVhYLWGoOQ44X6LiUSGmwaKiGo34dbzM3rdT7t2V9iMcMHsojJ+iZ0FhcEncNc/rVoLmq7xsR0rSSXOW/HbnZw3XHhU8FCdUkGl4+1ciW4+quC7wTfnvvmF5waosU0w2WWhRrNQynZoln6rhUJiDz8q6jm5Z5FvjdQC0Mmef9dX44CcS0pEK9ldZ2n2qKBh2Qgfi8nCaQPlKcfISPG97y5LL/EPXsxa4JuhOe1XeUFf/kBC+4jpvPxYfnfic8gurwrgalBxMctWMyINMvfVSnv1f+f/nzsQ0LSNhATJnH80cqPhWFe7qgMBUge46Cy7fiuobvmGEDOgpWY9liQZfcI9jMcv65JO8ljj6tPVxAFNZH6rdzJ1xBDH0a/zylW56vyNRKDT9wOi3/zF/H/wARjOM1/gUAAA==">${it.genericComponentDefault}</option>
-              <option value="H4sIAAAAAAAAE6WUy3LbMAxFf6bLDv8hkdNpM1bqWk72NAnLqEmCAUAr+fuO5D5XhqcrUcN7eQbPQNmFRC3uAcR9h3LCIk5arcTqMNfkhuTP0FHOvsRBvaIoBvkYrjtXLdeHt/l/5/cJLJYnitBTQSU2Ie4bpvitQTO9vm2lYBkXk+n5uz01fbzcmPQxY0FR9opnayCBygHHAyYQ1y3nT5jmjFcqUNTCXZNfanML6qsegf/w5Cbghunt/WJuc7BUrrhEPWurbjg2jTQVK00STQyvDUTdkGjaXs5m+y/s5fuf1N2Rwce5rW/L1nONXqGDosC2co4jcO+LH22GrolSXtNo6tKfDW2VL41iFe+8nKzaZbrumSaxRbnon43iWddRsxXo8aXfMAUQGd5FIfegjEE6KgpF5UPvxVi6i/+fybC5FTOwW4GPicLpxjZf0A/ljEwlQ9EXzzivXFMZ5ulfgQTGqsRrzGjCPYFOxKcvc1MffLCxtnAGFljWhz2dG6YKrGhj/DWl13K+KGPL1X3G8Thv0d8Z/wFM9Gf4GgcAAA==">${it.genericComponentConfigurationFiles}</option>
-              <option value="H4sIAAAAAAAAE6WV3XIaMQyFXyaXGb9DsqGlHUgpP7k3XrGo2JYryUDevuOlKe0VYnq13vE5862PZG2g5EKk2m8BxP2AfMAsTmopxOowlehW0R+ho5R87lfqFUUxyGO47XypqUzO7X3ttxEsllfqYXKGUJXYxGiGOWW06p8rxv57hWr6nGXNGfMwmuSRePiQBXQl1qEZTsSHXaSTC0VcV2S9Z/B9O/tTUKT8sMACETNcNyzopy1V/XrZMen7hBlF2SserZEEyjscdhhBXDeuP2FsxS6UIauFOyM/tsU9qG+6B77y5C7ggun8fjHXdljKN1yinrUWt9pX7emUrTSJdGL4WUHUrSKdlpe12f6BvTz/k3ptnvvS2pTeK3SQFdhWzmEAnvvsB5uhq6KUZjSYuvR3Q1vlY6NYxWsvB6v2c2dVjvfwmekktjxG/cYobrqOqq2UU/BlI36AKYrSwD6ZEn+bL5gCiKzeRSHNQRmDdJQVssrD3IuxNS7+f26eza2YgN0L+D5SONx5jUb0JB+RKSfI+uYZ29/EVLw2XV5AAmNR4hkmNOFeQdtU/9Iuzc4HG2sJR2CBcTzZ41wwFWBFG+OvKXAr81HZ11TcFId9m9J/Ev8FWTBcDfUHAAA=">${it.genericComponentPerformanceData}</option>
+              <j:forEach var="preChoose" items="${it.PreChooseOptions}">
+                <option value="${it.getValuePreChooseOptions(preChoose)}">${it.getPreChooseOptionsMessage(preChoose)}</option>
+              </j:forEach>
               <option value="custom">${it.genericComponentCustom}</option>
             </select>
             <div id="idMapDiv" style="display: none; align-items: center;margin-top:15px;">

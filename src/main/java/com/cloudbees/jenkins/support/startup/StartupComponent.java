@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.startup;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
@@ -120,5 +121,10 @@ public class StartupComponent extends UnfilteredFileListCapComponent {
         }
 
         private record TimingEntry(String milestone, String timeString) {}
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

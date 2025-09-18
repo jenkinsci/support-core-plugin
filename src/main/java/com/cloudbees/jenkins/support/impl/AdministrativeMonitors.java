@@ -24,6 +24,7 @@
 
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
@@ -110,5 +111,10 @@ public final class AdministrativeMonitors extends Component {
     @Override
     public ComponentCategory getCategory() {
         return ComponentCategory.CONTROLLER;
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }

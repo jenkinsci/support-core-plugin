@@ -25,30 +25,23 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.Messages;
-import com.cloudbees.jenkins.support.configfiles.AgentsConfigFile;
-import com.cloudbees.jenkins.support.configfiles.ConfigFileComponent;
-import com.cloudbees.jenkins.support.configfiles.OtherConfigFilesComponent;
-import com.cloudbees.jenkins.support.impl.*;
-import com.cloudbees.jenkins.support.slowrequest.SlowRequestComponent;
-import com.cloudbees.jenkins.support.slowrequest.SlowRequestThreadDumpsComponent;
-import com.cloudbees.jenkins.support.startup.ShutdownComponent;
-import com.cloudbees.jenkins.support.startup.StartupComponent;
-import com.cloudbees.jenkins.support.threaddump.HighLoadComponent;
-import com.cloudbees.jenkins.support.timer.DeadlockRequestComponent;
+import com.cloudbees.jenkins.support.SupportAction;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
 import hudson.security.ACL;
 import hudson.security.Permission;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+
+
 import jenkins.model.Jenkins;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.springframework.security.core.Authentication;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Represents a component of a support bundle.
@@ -160,16 +153,6 @@ public abstract class Component implements ExtensionPoint {
         return getClass().getSimpleName();
     }
 
-    /**
-     * Used for getting a hash code with the components selected by the user.
-     * Each component (class that extends the Component class) should have a unique value.
-     * The UI will ignore any component with a "-1" value in the id (extracted from this getHash method)
-     * in order to generate the final hash value for the selected components.
-     */
-    public final String getHash() {
-        return this.getClass().getName();
-    }
-
     @Deprecated
     public void start(@NonNull SupportContext context) {}
 
@@ -191,6 +174,14 @@ public abstract class Component implements ExtensionPoint {
      */
     public boolean supersedes(Component component) {
         return false;
+    }
+
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions(){
+        return new SupportAction.PreChooseOptions[0];
+    }
+
+    public Boolean checkDefaultPreChooseOptions(SupportAction.PreChooseOptions preChooseOptions) {
+        return Arrays.stream(getDefautlPreChooseOptions()).anyMatch(it -> {return it == preChooseOptions;});
     }
 
     /**

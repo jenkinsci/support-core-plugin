@@ -23,6 +23,7 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
@@ -89,5 +90,10 @@ public class UserCount extends UnfilteredFileListCapComponent {
     @Override
     public ComponentCategory getCategory() {
         return ComponentCategory.MISC;
+    }
+
+    @Override
+    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
+        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
     }
 }
