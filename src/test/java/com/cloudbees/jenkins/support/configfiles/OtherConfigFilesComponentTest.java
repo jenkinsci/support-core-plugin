@@ -41,6 +41,7 @@ class OtherConfigFilesComponentTest {
             .capture(100);
 
     private String xml;
+    private JenkinsRule j;
 
     private final String expectedXml =
             "<com.cloudbees.plugins.credentials.SystemCredentialsProvider plugin=\"credentials@1.18\">\n"
@@ -72,7 +73,8 @@ class OtherConfigFilesComponentTest {
                     + "</com.cloudbees.plugins.credentials.SystemCredentialsProvider>";
 
     @BeforeEach
-    void setup() {
+    void setup(JenkinsRule rule) {
+        j = rule;
         Secret secret = Secret.fromString("this-is-a-secret");
         SecretBytes secret2 = SecretBytes.fromBytes("this-is-another-type-of-secret".getBytes());
         assertEquals("this-is-a-secret", secret.getPlainText());
@@ -109,7 +111,7 @@ class OtherConfigFilesComponentTest {
     }
 
     @Test
-    void shouldPutAPlaceHolderInsteadOfSecret(JenkinsRule j) throws Exception {
+    void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
@@ -117,7 +119,7 @@ class OtherConfigFilesComponentTest {
     }
 
     @Test
-    void missingFile(JenkinsRule j) throws Exception {
+    void missingFile() throws Exception {
         File file = new File(j.jenkins.root, "x.xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         Map<String, Content> contents = new HashMap<>();
@@ -149,7 +151,7 @@ class OtherConfigFilesComponentTest {
     }
 
     @Test
-    void regexpFromFileFilter(JenkinsRule j) throws Exception {
+    void regexpFromFileFilter() throws Exception {
         List<String> filesToExclude = List.of(
                 "test-abc.xml",
                 "test-efgh.xml",

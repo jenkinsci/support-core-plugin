@@ -16,7 +16,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.util.OneShotEvent;
 import java.util.Optional;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -94,7 +93,7 @@ class RunningBuildsTest {
         WorkflowJob p = j.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node {semaphore 'wait'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
 
         String output = SupportTestUtils.invokeComponentToString(new RunningBuilds());

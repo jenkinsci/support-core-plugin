@@ -11,19 +11,25 @@ import hudson.ProxyConfiguration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class ProxyConfigurationTest {
+@WithJenkins
+class ProxyConfigurationTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
     @Issue({"JENKINS-68008", "JENKINS-73599"})
-    public void testProxyContent() {
+    void testProxyContent() {
         List<String> noProxyHosts = Arrays.asList(".server.com", "*.example.com");
         j.jenkins.setProxy(new ProxyConfiguration(
                 "proxy.server.com",

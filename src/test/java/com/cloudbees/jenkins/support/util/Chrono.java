@@ -202,7 +202,7 @@ public class Chrono {
         Optional<TimeUnit> first = Stream.of(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
                 .filter(u -> u.convert(millis, MILLISECONDS) > 0)
                 .findFirst();
-        TimeUnit unit = first.isPresent() ? first.get() : MILLISECONDS;
+        TimeUnit unit = first.orElse(MILLISECONDS);
         double value = (double) millis / MILLISECONDS.convert(1, unit);
         return String.format("%.4g %s", value, unit.name().toLowerCase());
     }

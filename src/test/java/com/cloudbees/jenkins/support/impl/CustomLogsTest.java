@@ -32,7 +32,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 class CustomLogsTest {
 
     @AfterEach
-    public void closeAll() {
+    void closeAll() {
         CustomLogs.closeAll();
     }
 

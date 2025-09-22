@@ -13,7 +13,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import java.util.Map;
 import java.util.Optional;
-import junit.framework.AssertionFailedError;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -31,7 +30,7 @@ class RunDirectoryComponentTest {
     void addContentsFromFreestyle(JenkinsRule j) throws Exception {
         FreeStyleProject p = j.jenkins.createProject(FreeStyleProject.class, JOB_NAME);
         FreeStyleBuild fBuild = j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
 
         j.waitUntilNoActivity();
@@ -51,7 +50,7 @@ class RunDirectoryComponentTest {
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -73,7 +72,7 @@ class RunDirectoryComponentTest {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -93,7 +92,7 @@ class RunDirectoryComponentTest {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -113,7 +112,7 @@ class RunDirectoryComponentTest {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -133,7 +132,7 @@ class RunDirectoryComponentTest {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -156,7 +155,7 @@ class RunDirectoryComponentTest {
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
         j.waitUntilNoActivity();
@@ -183,7 +182,7 @@ class RunDirectoryComponentTest {
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
         j.waitUntilNoActivity();
@@ -206,7 +205,7 @@ class RunDirectoryComponentTest {
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
         j.waitUntilNoActivity();

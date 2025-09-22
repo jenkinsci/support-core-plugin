@@ -14,10 +14,12 @@ import hudson.model.User;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
 import hudson.slaves.OfflineCause.UserCause;
+import java.nio.file.Files;
 import java.util.Objects;
 import jenkins.model.Jenkins;
 import jenkins.model.identity.IdentityRootAction;
 import jenkins.slaves.RemotingVersionInfo;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -29,10 +31,17 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 class AboutJenkinsTest {
 
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
+        Files.createDirectory(j.jenkins.getRootDir().toPath().resolve("plugins"));
+    }
+
     @Test
     @Issue("JENKINS-56245")
-    void testAboutJenkinsContent(JenkinsRule j) {
-
+    void testAboutJenkinsContent() {
         String aboutMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));
 
@@ -51,8 +60,7 @@ class AboutJenkinsTest {
     }
 
     @Test
-    void testAboutNodesContent(JenkinsRule j) throws Exception {
-
+    void testAboutNodesContent() throws Exception {
         DumbSlave tcp1 = j.createSlave("tcp1", "test", null);
         tcp1.setLauncher(new JNLPLauncher());
         tcp1.save();
@@ -65,8 +73,7 @@ class AboutJenkinsTest {
 
     @Test
     @Issue("JENKINS-68743")
-    void testAboutNodesContent_OfflineBuiltIn(JenkinsRule j) {
-
+    void testAboutNodesContent_OfflineBuiltIn() {
         Node builtInNode = Jenkins.get();
         String aboutMdToString = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(AboutJenkins.class)));

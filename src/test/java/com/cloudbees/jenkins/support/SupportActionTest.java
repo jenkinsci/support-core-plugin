@@ -79,8 +79,9 @@ class SupportActionTest {
     private SupportAction root;
 
     @BeforeEach
-    void setUp(JenkinsRule j) {
+    void setUp(JenkinsRule j) throws Exception {
         this.j = j;
+        Files.createDirectory(j.jenkins.getRootDir().toPath().resolve("plugins"));
         root = ExtensionList.lookupSingleton(SupportAction.class);
     }
 
@@ -453,8 +454,9 @@ class SupportActionTest {
             for (LogRecord r : checker.getView()) {
                 if (r.getLevel().intValue() >= Level.WARNING.intValue()) {
                     Throwable thrown = r.getThrown();
-                    if (thrown != null) thrown.printStackTrace(System.err);
-
+                    if (thrown != null) {
+                        thrown.printStackTrace(System.err);
+                    }
                     fail(r.getMessage());
                 }
             }

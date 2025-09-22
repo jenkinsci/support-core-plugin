@@ -19,10 +19,12 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 class SecretHandlerTest {
 
+    private JenkinsRule j;
     private String xml;
 
     @BeforeEach
-    void setup() {
+    void setup(JenkinsRule rule) {
+        j = rule;
         Secret secret1 = Secret.fromString("this-is-a-secret");
         SecretBytes secret2 = SecretBytes.fromBytes("this-is-another-type-of-secret".getBytes());
         assertEquals("this-is-a-secret", secret1.getPlainText());
@@ -60,7 +62,7 @@ class SecretHandlerTest {
 
     @Issue("JENKINS-41653")
     @Test
-    void shouldPutAPlaceHolderInsteadOfSecret(JenkinsRule j) throws Exception {
+    void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
@@ -97,12 +99,12 @@ class SecretHandlerTest {
 
     @Test
     @Issue("JENKINS-50765")
-    void shouldNotResolveExternalEntities(JenkinsRule j) throws Exception {
+    void shouldNotResolveExternalEntities() throws Exception {
         String xxeXml =
                 """
                 <?xml version="1.0" encoding="utf-8"?>
-                <!DOCTYPE test [\s
-                    <!ENTITY xxeattack SYSTEM "file:///">\s
+                <!DOCTYPE test [
+                    <!ENTITY xxeattack SYSTEM "file:///">
                 ]>
                 <xxx>&xxeattack;</xxx>""";
         File file = File.createTempFile("test", ".xml");

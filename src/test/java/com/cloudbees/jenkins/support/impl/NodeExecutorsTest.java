@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -84,7 +83,7 @@ class NodeExecutorsTest {
         WorkflowJob p = j.createProject(WorkflowJob.class, "nodeExecutorTestJob");
         p.setDefinition(new CpsFlowDefinition("node('test') {semaphore 'wait'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         SemaphoreStep.waitForStart("wait/1", workflowRun);
 
@@ -165,7 +164,7 @@ class NodeExecutorsTest {
         WorkflowJob p = j.createProject(WorkflowJob.class, "nodeExecutorTestJob");
         p.setDefinition(new CpsFlowDefinition("node('test') {semaphore 'wait'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         SemaphoreStep.waitForStart("wait/1", workflowRun);
 

@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -115,7 +114,7 @@ class SupportAbstractItemActionTest {
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
