@@ -28,6 +28,7 @@ import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
+import com.cloudbees.jenkins.support.util.Markdown;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.diagnosis.OldDataMonitor;
@@ -42,7 +43,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Warns if any administrative monitors are currently active.
@@ -77,10 +77,10 @@ public final class AdministrativeMonitors extends Component {
                         .sorted(Comparator.comparing(o -> o.id))
                         .forEach(monitor -> {
                             out.println();
-                            out.println("`" + monitor.id + "`");
+                            out.println("`" + monitor.id + "` _" + Markdown.escapeUnderscore(monitor.getDisplayName())
+                                    + "_");
                             out.println("--------------");
-                            if (monitor instanceof OldDataMonitor) {
-                                OldDataMonitor odm = (OldDataMonitor) monitor;
+                            if (monitor instanceof OldDataMonitor odm) {
                                 for (Map.Entry<Saveable, OldDataMonitor.VersionRange> entry :
                                         odm.getData().entrySet()) {
                                     out.println("  * Problematic object: `"
@@ -91,7 +91,7 @@ public final class AdministrativeMonitors extends Component {
                                         out.println("    - " + range);
                                     }
                                     String extra = value.extra;
-                                    if (!StringUtils.isBlank(extra)) {
+                                    if (extra != null && !extra.isBlank()) {
                                         out.println("    - "
                                                 + filter.filter(
                                                         extra)); // TODO could be a multiline stack trace, quote it

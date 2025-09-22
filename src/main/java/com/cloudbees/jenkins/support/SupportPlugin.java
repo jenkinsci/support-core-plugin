@@ -52,6 +52,7 @@ import hudson.FilePath;
 import hudson.Functions;
 import hudson.Main;
 import hudson.Plugin;
+import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Computer;
@@ -91,6 +92,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
@@ -115,7 +117,6 @@ import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.output.CountingOutputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -155,7 +156,7 @@ public class SupportPlugin extends Plugin {
      * Conversely on an inactive Jenkins setting this too high will cause the hourly captured bundles to contain lots of duplicate information, which wastes disk space.
      */
     public static final int MAX_JENKINS_LOG_ENTRIES_PER_FILE =
-            Integer.getInteger(SupportPlugin.class.getName() + ".MAX_JENKINS_LOG_ENTRIES_PER_FILE ", 2048);
+            Integer.getInteger(SupportPlugin.class.getName() + ".MAX_JENKINS_LOG_ENTRIES_PER_FILE", 2048);
 
     public static final PermissionGroup SUPPORT_PERMISSIONS =
             new PermissionGroup(SupportPlugin.class, Messages._SupportPlugin_PermissionGroup());
@@ -298,7 +299,7 @@ public class SupportPlugin extends Plugin {
     }
 
     public static void setLogLevel(String level) {
-        setLogLevel(Level.parse(StringUtils.defaultIfEmpty(level, "INFO")));
+        setLogLevel(Level.parse(Objects.toString(Util.fixEmptyAndTrim(level), "INFO")));
     }
 
     public static void setLogLevel(Level level) {
@@ -352,7 +353,7 @@ public class SupportPlugin extends Plugin {
     }
 
     /**
-     * Generate a bundle for all components that are selected in the Global Configuration.
+     * Generate a bundle for the specified components.
      *
      * @param outputStream an {@link OutputStream}
      * @param components a list of {@link Component} to include in the bundle
@@ -549,7 +550,7 @@ public class SupportPlugin extends Plugin {
                                 + (countingOs.getByteCount() - startSize) + " bytes" + " to process all contents");
                 errorWriter.close();
                 String errorContent = errors.toString();
-                if (StringUtils.isNotBlank(errorContent)) {
+                if (errorContent != null && !errorContent.isBlank()) {
                     try {
                         binaryOut.putNextEntry(new ZipEntry("manifest/errors.txt"));
                         entryCreated = true;
@@ -667,7 +668,7 @@ public class SupportPlugin extends Plugin {
                 (supportProvider == null ? "Support" : supportProvider.getDisplayName()) + " Bundle Manifest";
         manifest.append(bundleName)
                 .append('\n')
-                .append(StringUtils.repeat("=", bundleName.length()))
+                .append("=".repeat(bundleName.length()))
                 .append("\n\n");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
         f.setTimeZone(TimeZone.getTimeZone("UTC"));
