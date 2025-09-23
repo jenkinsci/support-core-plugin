@@ -33,8 +33,4 @@ public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
         return ComponentCategory.PLATFORM;
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

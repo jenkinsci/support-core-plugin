@@ -69,8 +69,4 @@ public class NodeMonitors extends Component {
         return ComponentCategory.AGENT;
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

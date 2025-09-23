@@ -133,7 +133,7 @@ public class OtherConfigFilesComponent extends Component {
     }
 
     @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.ConfigurationFiles || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
     }
 }

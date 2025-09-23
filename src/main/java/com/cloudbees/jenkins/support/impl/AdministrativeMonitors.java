@@ -113,8 +113,4 @@ public final class AdministrativeMonitors extends Component {
         return ComponentCategory.CONTROLLER;
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

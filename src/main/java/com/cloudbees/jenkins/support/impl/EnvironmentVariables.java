@@ -120,8 +120,4 @@ public class EnvironmentVariables extends Component {
         private static final long serialVersionUID = 1L;
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (mapSelectElement && mapDivElement) {
         mapSelectElement.addEventListener('change', function(event) {
             event.preventDefault();
-            if (mapSelectElement.value == "custom"){
+            if (mapSelectElement.value == ""){
                 mapDivElement.style.display = 'flex';
             }else{
                 mapDivElement.style.display = 'none';

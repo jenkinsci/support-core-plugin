@@ -57,7 +57,7 @@ public class ConfigFileComponent extends Component {
     private static final Logger LOGGER = Logger.getLogger(ConfigFileComponent.class.getName());
 
     @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.ConfigurationFiles || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
     }
 }

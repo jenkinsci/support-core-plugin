@@ -185,8 +185,4 @@ public class NodeExecutors extends ObjectComponent<Computer> {
         }
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

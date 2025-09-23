@@ -176,12 +176,8 @@ public abstract class Component implements ExtensionPoint {
         return false;
     }
 
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions(){
-        return new SupportAction.PreChooseOptions[0];
-    }
-
-    public Boolean checkDefaultPreChooseOptions(SupportAction.PreChooseOptions preChooseOptions) {
-        return Arrays.stream(getDefautlPreChooseOptions()).anyMatch(it -> {return it == preChooseOptions;});
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return isSelectedByDefault();
     }
 
     /**

@@ -109,8 +109,4 @@ public final class ShutdownComponent extends UnfilteredFileListCapComponent {
         return ExtensionList.lookupSingleton(ShutdownComponent.class);
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.Default, SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

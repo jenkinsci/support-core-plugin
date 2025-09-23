@@ -34,8 +34,4 @@ public class SlowRequestComponent extends UnfilteredFileListCapComponent {
         return ComponentCategory.CONTROLLER;
     }
 
-    @Override
-    public SupportAction.PreChooseOptions[] getDefautlPreChooseOptions() {
-        return new SupportAction.PreChooseOptions[]{ SupportAction.PreChooseOptions.ConfigurationFiles, SupportAction.PreChooseOptions.PerformanceData };
-    }
 }

@@ -50,7 +50,7 @@
           </p>
         </j:if>
       </f:section>
-      <f:section title="${it.generateSupportBundle}">
+      <f:section title="${%generateSupportBundle}">
         <f:form name="bundle-contents" method="POST" action="generateBundleAsync">
           <dialog id="categories_dialog" style="padding:20px; border-radius:8px;" >
             <f:section title="${it.chooseComponents}">
@@ -73,36 +73,35 @@
                 </section>
               </j:forEach>
               <button class="jenkins-button jenkins-button--primary" onclick="document.getElementById('categories_dialog').close();return false;">
-                ${it.close}
+                ${%close}
               </button>
               <button id="copyToClipboardButton" class="jenkins-button jenkins-submit-button jenkins-button--primary" style="margin-left:1em;" onclick="copyToClipboard(); return false;">
-                ${it.genericComponentCopy}
+                ${%genericComponent_Copy}
               </button>
             </f:section>
           </dialog>
-          <f:entry title="${it.chooseGeneralComponent}" field="mapText" help="/plugin/support-core/help/help-chooseGeneralComponent.html">
+          <f:entry title="${%chooseGeneralComponent}" field="mapText" help="/plugin/support-core/help/help-chooseGeneralComponent.html">
             <select id="idMapSelect" class="jenkins-select__input select">
               <j:forEach var="preChoose" items="${it.PreChooseOptions}">
-                <option value="${it.getValuePreChooseOptions(preChoose)}">${it.getPreChooseOptionsMessage(preChoose)}</option>
+                <option value="${it.getValuePreChooseOptions(preChoose)}">${preChoose.description}</option>
               </j:forEach>
-              <option value="custom">${it.genericComponentCustom}</option>
             </select>
             <div id="idMapDiv" style="display: none; align-items: center;margin-top:15px;">
               <f:textbox id="idMapText" value="" style="margin-right:15px;"/>
               <button id="idMapTextApply" class="jenkins-button jenkins-submit-button jenkins-button--primary" onclick="setIdMaps(); return false;">
-                ${it.applyCustomChanges}
+                ${%applyCustomChanges}
               </button>
             </div>
           </f:entry>
           <p id="chooseGeneralComponentApplyingId" class="error" style="display:none">
-            ${it.chooseGeneralComponentApplying}
+            ${%chooseGeneralComponentApplying}
           </p>
           <p id="chooseGeneralComponentAppliedId" class="info" style="display:none;color:green">
-            ${it.chooseGeneralComponentApplied}
+            ${%chooseGeneralComponentApplied}
           </p>
           <p>${%Or}</p>
           <f:bottomButtonBar>
-            <f:submit id="chooseComponentButtonId" value="${it.chooseComponents}">
+            <f:submit id="chooseComponentButtonId" value="${%chooseComponents}">
             </f:submit>
           </f:bottomButtonBar>
 

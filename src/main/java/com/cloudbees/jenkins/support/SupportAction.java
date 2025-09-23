@@ -136,54 +136,6 @@ public class SupportAction implements RootAction, StaplerProxy {
         return getActionTitle().toString();
     }
 
-    public String getApplyCustomChanges() {
-        return Messages.SupportPlugin_ApplyCustomChanges();
-    }
-
-    public String getChooseGeneralComponent() {
-        return Messages.SupportPlugin_ChooseGeneralComponent();
-    }
-
-    public String getChooseGeneralComponentApplied() {
-        return Messages.SupportPlugin_ChooseGeneralComponentApplied();
-    }
-
-    public String getChooseGeneralComponentApplying() {
-        return Messages.SupportPlugin_ChooseGeneralComponentApplying();
-    }
-
-    public String getChooseComponents() {
-        return Messages.SupportPlugin_ChooseComponents();
-    }
-
-    public String getClose() {
-        return Messages.SupportPlugin_Close();
-    }
-
-    public String getGenerateSupportBundle() {
-        return Messages.SupportPlugin_GenerateSupportBundle();
-    }
-
-    public String getGenericComponentConfigurationFiles() {
-        return Messages.SupportPlugin_GenericComponent_ConfigurationFiles();
-    }
-
-    public String getGenericComponentCopy() {
-        return Messages.SupportPlugin_GenericComponent_Copy();
-    }
-
-    public String getGenericComponentCustom() {
-        return Messages.SupportPlugin_GenericComponent_Custom();
-    }
-
-    public String getGenericComponentDefault() {
-        return Messages.SupportPlugin_GenericComponent_Default();
-    }
-
-    public String getGenericComponentPerformanceData() {
-        return Messages.SupportPlugin_GenericComponent_PerformanceData();
-    }
-
     public Localizable getActionTitle() {
         SupportPlugin supportPlugin = SupportPlugin.getInstance();
         if (supportPlugin != null) {
@@ -652,13 +604,8 @@ public class SupportAction implements RootAction, StaplerProxy {
     public String getValuePreChooseOptions(PreChooseOptions preChooseOptions) {
         return Jenkins.get().getExtensionList(Component.class).stream()
                 .filter(component -> component.isApplicable(Jenkins.class))
-                .filter(component -> { return component.checkDefaultPreChooseOptions(preChooseOptions);})
+                .filter(component -> { return component.isApplicable(preChooseOptions);})
                 .map(Component::getId).collect(Collectors.joining(","));
-    }
-
-    public String getPreChooseOptionsMessage(PreChooseOptions preChooseOptions) {
-        ResourceBundleHolder holder = ResourceBundleHolder.get(Messages.class);
-        return holder.format("SupportPlugin_GenericComponent_" + preChooseOptions.name());
     }
 
     public PreChooseOptions[] getPreChooseOptions(){
@@ -666,8 +613,19 @@ public class SupportAction implements RootAction, StaplerProxy {
     }
 
     public enum PreChooseOptions {
-        Default,
-        ConfigurationFiles,
-        PerformanceData
+        Default(Messages._SupportPlugin_GenericComponent_Default()),
+        ConfigurationFiles(Messages._SupportPlugin_GenericComponent_ConfigurationFiles()),
+        PerformanceData(Messages._SupportPlugin_GenericComponent_PerformanceData()),
+        Custom(Messages._SupportPlugin_GenericComponent_Custom());
+
+        private final Localizable description;
+
+        PreChooseOptions(Localizable description) {
+            this.description = description;
+        }
+
+        public Localizable getDescription() {
+            return description;
+        }
     }
 }
