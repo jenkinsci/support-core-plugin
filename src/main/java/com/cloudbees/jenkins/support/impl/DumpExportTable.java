@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.ObjectComponent;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
@@ -117,5 +116,4 @@ public class DumpExportTable extends ObjectComponent<Computer> {
             return "Dump agent export tables (could reveal some memory leaks)";
         }
     }
-
 }

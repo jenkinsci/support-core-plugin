@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrefilteredPrintedContent;
@@ -64,5 +63,4 @@ public class UpdateCenter extends Component {
     public ComponentCategory getCategory() {
         return ComponentCategory.CONTROLLER;
     }
-
 }

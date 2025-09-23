@@ -5,7 +5,6 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -964,5 +963,4 @@ public class AboutJenkins extends Component {
             }
         }
     }
-
 }

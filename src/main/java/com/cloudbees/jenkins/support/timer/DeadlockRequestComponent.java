@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.timer;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -32,5 +31,4 @@ public class DeadlockRequestComponent extends UnfilteredFileListCapComponent {
     public ComponentCategory getCategory() {
         return ComponentCategory.PLATFORM;
     }
-
 }

@@ -1,7 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
@@ -119,5 +118,4 @@ public class EnvironmentVariables extends Component {
 
         private static final long serialVersionUID = 1L;
     }
-
 }

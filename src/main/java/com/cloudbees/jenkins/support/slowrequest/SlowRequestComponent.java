@@ -1,6 +1,5 @@
 package com.cloudbees.jenkins.support.slowrequest;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
 import com.google.inject.Inject;
@@ -33,5 +32,4 @@ public class SlowRequestComponent extends UnfilteredFileListCapComponent {
     public ComponentCategory getCategory() {
         return ComponentCategory.CONTROLLER;
     }
-
 }

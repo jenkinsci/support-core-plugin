@@ -24,7 +24,6 @@
 
 package com.cloudbees.jenkins.support.threaddump;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -55,5 +54,4 @@ public class HighLoadComponent extends UnfilteredFileListCapComponent {
     public ComponentCategory getCategory() {
         return ComponentCategory.PLATFORM;
     }
-
 }

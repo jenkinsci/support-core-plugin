@@ -23,7 +23,6 @@
  */
 package com.cloudbees.jenkins.support.impl;
 
-import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.PrintedContent;
 import com.cloudbees.jenkins.support.timer.UnfilteredFileListCapComponent;
@@ -91,5 +90,4 @@ public class UserCount extends UnfilteredFileListCapComponent {
     public ComponentCategory getCategory() {
         return ComponentCategory.MISC;
     }
-
 }
