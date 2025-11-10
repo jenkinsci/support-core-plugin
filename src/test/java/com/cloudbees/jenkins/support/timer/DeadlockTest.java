@@ -26,24 +26,22 @@ package com.cloudbees.jenkins.support.timer;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author schristou88
  */
-public class DeadlockTest {
+@WithJenkins
+class DeadlockTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    public void sleep() {
+    private static void sleep() {
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
@@ -52,7 +50,7 @@ public class DeadlockTest {
     }
 
     @Test
-    public void detectDeadlock() throws Exception {
+    void detectDeadlock(JenkinsRule j) throws Exception {
         File[] files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
         int initialCount = files == null ? 0 : files.length;
         Object object1 = new Object();
@@ -79,12 +77,10 @@ public class DeadlockTest {
             }
         });
 
-        Thread t2 = new Thread(new Runnable() {
-            public void run() {
-                synchronized (object2) {
-                    sleep();
-                    synchronized (object1) {
-                    }
+        Thread t2 = new Thread(() -> {
+            synchronized (object2) {
+                sleep();
+                synchronized (object1) {
                 }
             }
         });
@@ -105,7 +101,7 @@ public class DeadlockTest {
 
                 // invoked twice.
                 files = new File(j.getInstance().getRootDir(), "/deadlocks").listFiles();
-                assertNotNull("There should be at least one deadlock file", files);
+                assertNotNull(files, "There should be at least one deadlock file");
                 assertThat(
                         "A deadlock was detected and a new deadlock file created",
                         files.length,

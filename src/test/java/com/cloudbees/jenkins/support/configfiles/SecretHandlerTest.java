@@ -3,28 +3,28 @@ package com.cloudbees.jenkins.support.configfiles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cloudbees.plugins.credentials.SecretBytes;
 import hudson.util.Secret;
 import java.io.File;
 import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SecretHandlerTest {
+@WithJenkins
+class SecretHandlerTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
+    private JenkinsRule j;
     private String xml;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup(JenkinsRule rule) {
+        j = rule;
         Secret secret1 = Secret.fromString("this-is-a-secret");
         SecretBytes secret2 = SecretBytes.fromBytes("this-is-another-type-of-secret".getBytes());
         assertEquals("this-is-a-secret", secret1.getPlainText());
@@ -62,7 +62,7 @@ public class SecretHandlerTest {
 
     @Issue("JENKINS-41653")
     @Test
-    public void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
+    void shouldPutAPlaceHolderInsteadOfSecret() throws Exception {
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xml, Charset.defaultCharset());
         String patchedXml = SecretHandler.findSecrets(file);
@@ -99,11 +99,14 @@ public class SecretHandlerTest {
 
     @Test
     @Issue("JENKINS-50765")
-    public void shouldNotResolveExternalEntities() throws Exception {
-        String xxeXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + "<!DOCTYPE test [ \n"
-                + "    <!ENTITY xxeattack SYSTEM \"file:///\"> \n"
-                + "]>\n"
-                + "<xxx>&xxeattack;</xxx>";
+    void shouldNotResolveExternalEntities() throws Exception {
+        String xxeXml =
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <!DOCTYPE test [
+                    <!ENTITY xxeattack SYSTEM "file:///">
+                ]>
+                <xxx>&xxeattack;</xxx>""";
         File file = File.createTempFile("test", ".xml");
         FileUtils.writeStringToFile(file, xxeXml, Charset.defaultCharset());
         String redactedXxeXml = SecretHandler.findSecrets(file);

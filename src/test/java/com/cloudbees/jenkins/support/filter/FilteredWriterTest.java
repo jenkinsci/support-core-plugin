@@ -31,14 +31,14 @@ import java.nio.CharBuffer;
 import java.util.stream.IntStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CharSequenceReader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
-public class FilteredWriterTest {
+class FilteredWriterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldModifyStream() throws Exception {
+    void shouldModifyStream() throws Exception {
         int nrLines = FilteredConstants.DEFAULT_DECODER_CAPACITY;
         String inputContents =
                 IntStream.range(0, nrLines).mapToObj(i -> "ManagedNode" + i).collect(joining(System.lineSeparator()));
@@ -60,7 +60,7 @@ public class FilteredWriterTest {
 
     @Issue("JENKINS-21670")
     @Test
-    public void shouldSupportLinesLongerThanDefaultBufferSize() throws Exception {
+    void shouldSupportLinesLongerThanDefaultBufferSize() throws Exception {
         CharBuffer input = CharBuffer.allocate(FilteredConstants.DEFAULT_DECODER_CAPACITY * 10);
         for (int i = 0; i < input.capacity(); i++) {
             input.put('+');

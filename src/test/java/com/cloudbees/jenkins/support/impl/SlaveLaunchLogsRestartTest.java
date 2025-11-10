@@ -30,35 +30,30 @@ import static org.hamcrest.Matchers.containsString;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.ExtensionList;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsSessionRule;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public final class SlaveLaunchLogsRestartTest {
-
-    @Rule
-    public JenkinsSessionRule rr = new JenkinsSessionRule();
+@WithJenkins
+class SlaveLaunchLogsRestartTest {
 
     @Test
-    public void twoAgents() throws Throwable {
-        rr.then(r -> {
-            var s = r.createSlave("agent1", null, null);
-            r.waitOnline(s);
-            assertThat(
-                    "reflects launch of agent1",
-                    SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                    containsString("Z agent1] Remoting version: "));
-            r.jenkins.removeNode(s);
-        });
-        rr.then(r -> {
-            var s = r.createSlave("agent2", null, null);
-            r.waitOnline(s);
-            assertThat(
-                    "reflects launch of both agent1 & agent2",
-                    SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
-                    allOf(
-                            containsString("Z agent1] Remoting version: "),
-                            containsString("Z agent2] Remoting version: ")));
-        });
+    void twoAgents(JenkinsRule r) throws Throwable {
+        var s = r.createSlave("agent1", null, null);
+        r.waitOnline(s);
+        assertThat(
+                "reflects launch of agent1",
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
+                containsString("Z agent1] Remoting version: "));
+        r.jenkins.removeNode(s);
+
+        r.restart();
+
+        s = r.createSlave("agent2", null, null);
+        r.waitOnline(s);
+        assertThat(
+                "reflects launch of both agent1 & agent2",
+                SupportTestUtils.invokeComponentToString(ExtensionList.lookupSingleton(SlaveLaunchLogs.class)),
+                allOf(containsString("Z agent1] Remoting version: "), containsString("Z agent2] Remoting version: ")));
     }
 }

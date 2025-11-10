@@ -23,37 +23,32 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SimpleCommandLauncher;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class Security2186Test {
+@WithJenkins
+class Security2186Test {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    @TempDir
+    private File temp;
 
-    ;
-
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
-
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup(JenkinsRule j) throws Exception {
         System.setProperty("password", "mySecret");
-        setupAgent();
+        setupAgent(j);
     }
 
     @Test
     @Issue("SECURITY-2186")
-    public void secretsFilterWhenSystemPropertyContainsPasswordThenValueRedacted() throws Exception {
+    void secretsFilterWhenSystemPropertyContainsPasswordThenValueRedacted() throws Exception {
         List<Component> componentsToCreate = Arrays.asList(
                 ExtensionList.lookup(Component.class).get(AboutJenkins.class),
                 ExtensionList.lookup(Component.class).get(EnvironmentVariables.class),
@@ -61,7 +56,7 @@ public class Security2186Test {
                 ExtensionList.lookup(Component.class).get(AgentsConfigFile.class),
                 ExtensionList.lookup(Component.class).get(SlaveLaunchLogs.class));
 
-        File bundleFile = temp.newFile();
+        File bundleFile = File.createTempFile("junit", null, temp);
 
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             SupportPlugin.writeBundle(os, componentsToCreate);
@@ -96,29 +91,28 @@ public class Security2186Test {
         }
     }
 
-    private void setupAgent() throws Exception {
-        ComputerLauncher launcher = createComputerLauncher();
-        DumbSlave agent = createSlave(launcher);
+    private void setupAgent(JenkinsRule j) throws Exception {
+        ComputerLauncher launcher = createComputerLauncher(j);
+        DumbSlave agent = createSlave(j, launcher);
         agent.save();
     }
 
-    private DumbSlave createSlave(ComputerLauncher launcher) throws Exception {
+    private DumbSlave createSlave(JenkinsRule j, ComputerLauncher launcher) throws Exception {
         DumbSlave slave = new DumbSlave(
-                "slave0",
-                "dummy",
-                temp.newFolder("agent").getPath(),
-                "1",
-                Node.Mode.NORMAL,
-                "Agent1",
-                launcher,
-                RetentionStrategy.NOOP,
-                Collections.EMPTY_LIST);
+                "slave0", Files.createDirectory(temp.toPath().resolve("agent")).toString(), launcher);
+        slave.setNodeDescription("dummy");
+        slave.setNumExecutors(1);
+        slave.setMode(Node.Mode.NORMAL);
+        slave.setLabelString("Agent1");
+        slave.setRetentionStrategy(RetentionStrategy.NOOP);
+        slave.setNodeProperties(List.of());
+
         j.jenkins.addNode(slave);
         j.waitOnline(slave);
         return slave;
     }
 
-    private ComputerLauncher createComputerLauncher() throws URISyntaxException, IOException {
+    private ComputerLauncher createComputerLauncher(JenkinsRule j) throws URISyntaxException, IOException {
         return new SimpleCommandLauncher(String.format(
                 "\"%s/bin/java\" %s %s -jar \"%s\"",
                 System.getProperty("java.home"),

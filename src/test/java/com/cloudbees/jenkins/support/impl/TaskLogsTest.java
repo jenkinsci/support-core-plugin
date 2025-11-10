@@ -4,7 +4,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.api.Component;
@@ -17,17 +17,15 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Objects;
 import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class TaskLogsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class TaskLogsTest {
 
     @Test
-    public void testTaskRootSafeTimerLogs() throws IOException {
+    void testTaskRootSafeTimerLogs(JenkinsRule j) throws IOException {
         File safeTimerTasksDir = SafeTimerTask.getLogsRoot();
         safeTimerTasksDir.mkdir();
         File testFile = new File(safeTimerTasksDir, "test.log");
@@ -39,12 +37,12 @@ public class TaskLogsTest {
 
         String otherLogs = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
-        assertFalse("Should collect *.log under the SafeTimerTask dir", otherLogs.isEmpty());
+        assertFalse(otherLogs.isEmpty(), "Should collect *.log under the SafeTimerTask dir");
         assertThat(otherLogs, Matchers.containsString("This is a test from SafeTimerTask dir"));
     }
 
     @Test
-    public void testTaskLogs() throws IOException {
+    void testTaskLogs(JenkinsRule j) throws IOException {
         File tasksDir = new File(SafeTimerTask.getLogsRoot(), "tasks");
         SafeTimerTask.getLogsRoot().mkdir();
         tasksDir.mkdir();
@@ -57,7 +55,7 @@ public class TaskLogsTest {
 
         String otherLogs = SupportTestUtils.invokeComponentToString(
                 Objects.requireNonNull(ExtensionList.lookup(Component.class).get(TaskLogs.class)));
-        assertFalse("Should collect *.log under the tasks dir", otherLogs.isEmpty());
+        assertFalse(otherLogs.isEmpty(), "Should collect *.log under the tasks dir");
         assertThat(otherLogs, Matchers.containsString("This is a test from tasks dir"));
     }
 }

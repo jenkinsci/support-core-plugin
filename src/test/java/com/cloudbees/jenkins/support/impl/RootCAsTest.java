@@ -4,12 +4,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.io.StringWriter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RootCAsTest {
+class RootCAsTest {
 
     @Test
-    public void getRootCAList() {
+    void getRootCAList() {
         StringWriter certsWriter = new StringWriter();
         RootCAs.getRootCAList(certsWriter);
         String rootCAs = certsWriter.toString();

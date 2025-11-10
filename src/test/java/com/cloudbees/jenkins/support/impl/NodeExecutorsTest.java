@@ -1,9 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
@@ -16,30 +13,22 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Tests for the {@link NodeExecutors}
  */
-public class NodeExecutorsTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @ClassRule
-    public static BuildWatcher bw = new BuildWatcher();
+@WithJenkins
+class NodeExecutorsTest {
 
     @Test
-    public void addContents() throws Exception {
+    void addContents(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
 
         String executorMd = SupportTestUtils.invokeComponentToString(new NodeExecutors());
@@ -88,13 +77,13 @@ public class NodeExecutorsTest {
     }
 
     @Test
-    public void addContentsRunningBuild() throws Exception {
+    void addContentsRunningBuild(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
 
         WorkflowJob p = j.createProject(WorkflowJob.class, "nodeExecutorTestJob");
         p.setDefinition(new CpsFlowDefinition("node('test') {semaphore 'wait'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         SemaphoreStep.waitForStart("wait/1", workflowRun);
 
@@ -125,12 +114,12 @@ public class NodeExecutorsTest {
                 .matcher(scanner.nextLine())
                 .find());
         assertTrue(
-                executorMd,
                 Pattern.compile("- executable:.*(" + workflowRun.getExternalizableId()
                                 + /* TODO delete after https://github.com/jenkinsci/workflow-job-plugin/pull/499 */ "|"
                                 + workflowRun.getFullDisplayName() + ").*")
                         .matcher(scanner.nextLine())
-                        .find());
+                        .find(),
+                executorMd);
         assertTrue(scanner.nextLine().contains("- elapsedTime: "));
         assertFalse(scanner.hasNextLine());
         scanner.close();
@@ -168,14 +157,14 @@ public class NodeExecutorsTest {
     }
 
     @Test
-    public void addContentsFiltered() throws Exception {
+    void addContentsFiltered(JenkinsRule j) throws Exception {
         ContentFilters.get().setEnabled(true);
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
 
         WorkflowJob p = j.createProject(WorkflowJob.class, "nodeExecutorTestJob");
         p.setDefinition(new CpsFlowDefinition("node('test') {semaphore 'wait'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         SemaphoreStep.waitForStart("wait/1", workflowRun);
 

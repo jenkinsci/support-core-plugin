@@ -40,23 +40,21 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author schristou88
  */
-public class BuildQueueTest {
+@WithJenkins
+class BuildQueueTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Ignore("Unit test fails when performing a release. The queue has a race condition"
+    @Disabled("Unit test fails when performing a release. The queue has a race condition"
             + "which is resolved in 1.607+ (TODO).")
     @Test
-    public void verifyMinimumBuildQueue() throws Exception {
+    void verifyMinimumBuildQueue(JenkinsRule j) throws Exception {
         // Given
         QueueTaskFuture<FreeStyleBuild> build;
         String assignedLabel = "foo";
@@ -78,11 +76,11 @@ public class BuildQueueTest {
         assertContains(output, "Waiting for next available executor");
     }
 
-    public void assertContains(List<String> list, String search) {
+    private static void assertContains(List<String> list, String search) {
         assertThat(list, hasItems(containsString(search)));
     }
 
-    public Container createContainer(final OutputStream os) {
+    private static Container createContainer(final OutputStream os) {
         return new Container() {
             @Override
             public void add(@CheckForNull Content content) {

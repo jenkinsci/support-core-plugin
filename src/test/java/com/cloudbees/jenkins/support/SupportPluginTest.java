@@ -1,8 +1,6 @@
 package com.cloudbees.jenkins.support;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
@@ -25,36 +23,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SupportPluginTest {
+@WithJenkins
+class SupportPluginTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
+    @TempDir
+    private File temp;
 
     @Test
     @Issue("JENKINS-63722")
-    public void testComponentIdsAreUnique() {
+    void testComponentIdsAreUnique(JenkinsRule j) {
         // If component IDs have duplicate, the Set size should be different because it only add an item if it is unique
         assertEquals(
-                "Components ids should be unique",
                 SupportPlugin.getComponents().stream()
                         .map(Component::getId)
                         .collect(Collectors.toSet())
                         .size(),
-                SupportPlugin.getComponents().stream().map(Component::getId).count());
+                SupportPlugin.getComponents().size(),
+                "Components ids should be unique");
     }
 
     @Test
     @Issue("JENKINS-58393")
-    public void testGenerateBundleExceptionHandler() throws Exception {
+    void testGenerateBundleExceptionHandler(JenkinsRule j) throws Exception {
         List<Component> componentsToCreate = Arrays.asList(
                 new Component() {
                     @NonNull
@@ -88,7 +84,7 @@ public class SupportPluginTest {
                 ExtensionList.lookup(Component.class).get(BuildQueue.class),
                 ExtensionList.lookup(Component.class).get(SystemProperties.class));
 
-        File bundleFile = temp.newFile();
+        File bundleFile = File.createTempFile("junit", null, temp);
 
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             SupportPlugin.writeBundle(os, componentsToCreate);
@@ -111,7 +107,7 @@ public class SupportPluginTest {
      * It will not add its files to the bundle
      */
     @Test
-    public void testSupersedesComponent() throws Exception {
+    void testSupersedesComponent(JenkinsRule j) throws Exception {
         List<Component> components = List.of(
                 new Component() {
                     @NonNull
@@ -145,7 +141,7 @@ public class SupportPluginTest {
                 ExtensionList.lookupSingleton(BuildQueue.class),
                 ExtensionList.lookupSingleton(SystemProperties.class));
 
-        File bundleFile = temp.newFile();
+        File bundleFile = File.createTempFile("junit", null, temp);
         try (OutputStream os = Files.newOutputStream(bundleFile.toPath())) {
             SupportPlugin.writeBundle(os, components);
         }

@@ -36,16 +36,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class OutputStreamSelectorTest {
+class OutputStreamSelectorTest {
 
-    private ByteArrayOutputStream binaryOut = spy(new ByteArrayOutputStream());
-    private ByteArrayOutputStream textOut = spy(new ByteArrayOutputStream());
-    private OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
+    private final ByteArrayOutputStream binaryOut = spy(new ByteArrayOutputStream());
+    private final ByteArrayOutputStream textOut = spy(new ByteArrayOutputStream());
+    private final OutputStreamSelector selector = new OutputStreamSelector(() -> binaryOut, () -> textOut);
 
     @Test
-    public void shouldNotAllowWritesAfterClose() throws IOException {
+    void shouldNotAllowWritesAfterClose() throws IOException {
         selector.close();
         assertThatIllegalStateException().isThrownBy(() -> selector.write(0)).withMessageContaining("closed");
         assertThatIllegalStateException()
@@ -54,13 +54,13 @@ public class OutputStreamSelectorTest {
         assertThatIllegalStateException()
                 .isThrownBy(() -> selector.write(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}, 4, 4))
                 .withMessageContaining("closed");
-        assertThatIllegalStateException().isThrownBy(() -> selector.flush());
-        assertThatIllegalStateException().isThrownBy(() -> selector.unwrap());
-        assertThatIllegalStateException().isThrownBy(() -> selector.reset());
+        assertThatIllegalStateException().isThrownBy(selector::flush);
+        assertThatIllegalStateException().isThrownBy(selector::unwrap);
+        assertThatIllegalStateException().isThrownBy(selector::reset);
     }
 
     @Test
-    public void shouldNotAllowNullOutputStreamReturnedBySupplier() {
+    void shouldNotAllowNullOutputStreamReturnedBySupplier() {
         assertThatNullPointerException().isThrownBy(() -> {
             OutputStreamSelector selector = new OutputStreamSelector(() -> null, () -> null);
             selector.write(0);
@@ -75,12 +75,12 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldNotAllowInvalidLengths() {
+    void shouldNotAllowInvalidLengths() {
         assertThatIllegalArgumentException().isThrownBy(() -> selector.write(new byte[0], 0, -1));
     }
 
     @Test
-    public void shouldIgnoreEmptyWritesWhereValid() throws IOException {
+    void shouldIgnoreEmptyWritesWhereValid() throws IOException {
         selector.write(new byte[0]);
         selector.write(new byte[0], 0, 0);
         selector.close();
@@ -91,7 +91,7 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldUseBinaryStreamWhenNonPrintableCharactersFoundEarly() throws IOException {
+    void shouldUseBinaryStreamWhenNonPrintableCharactersFoundEarly() throws IOException {
         byte[] bytes = new byte[] {0x41, 0x42, 0x43, 0x44, 0x4, 0x46, 0x47, 0x48, 0x49, 0x50}; // 0x4 is EOT
 
         selector.write(bytes);
@@ -101,12 +101,12 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldUseTextStreamWhenAllPrintable() {
+    void shouldUseTextStreamWhenAllPrintable() {
         assertThatContentsWriteToTextOut(FilteredOutputStreamTest.FAKE_TEXT);
     }
 
     @Test
-    public void shouldUseTextStreamForPrintableASCII() {
+    void shouldUseTextStreamForPrintableASCII() {
         int probeSize = StreamUtils.DEFAULT_PROBE_SIZE;
         qt().forAll(strings().betweenCodePoints(0x20, 0x7e).ofLengthBetween(probeSize / 2, probeSize * 2))
                 .checkAssert(this::assertThatContentsWriteToTextOut);
@@ -129,7 +129,7 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldForceStreamChoiceWhenFlushed() throws IOException {
+    void shouldForceStreamChoiceWhenFlushed() throws IOException {
         selector.write(0x42);
         selector.flush();
         assertThat(textOut.toByteArray()).isNotEmpty().containsOnly(0x42);
@@ -137,12 +137,12 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldForceTextStreamWhenUnwrappingFreshStream() throws IOException {
+    void shouldForceTextStreamWhenUnwrappingFreshStream() throws IOException {
         assertThat(selector.unwrap()).isSameAs(textOut);
     }
 
     @Test
-    public void shouldPassAlongFlushAfterStreamChosenPreviously() throws IOException {
+    void shouldPassAlongFlushAfterStreamChosenPreviously() throws IOException {
         for (int i = 0; i < 1024; i++) {
             selector.write(0);
         }
@@ -153,7 +153,7 @@ public class OutputStreamSelectorTest {
     }
 
     @Test
-    public void shouldUseBinaryStreamForSVG() throws IOException {
+    void shouldUseBinaryStreamForSVG() throws IOException {
         Path pngFile = Paths.get("src/test/resources/images/support.png");
         ByteArrayOutputStream expectedStreamContents = new ByteArrayOutputStream();
         Files.copy(pngFile, expectedStreamContents);

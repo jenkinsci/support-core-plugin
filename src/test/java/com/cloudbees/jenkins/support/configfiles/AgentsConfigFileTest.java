@@ -23,30 +23,28 @@
  */
 package com.cloudbees.jenkins.support.configfiles;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import hudson.EnvVars;
 import java.util.Map;
-import org.hamcrest.MatcherAssert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class AgentsConfigFileTest {
+@WithJenkins
+class AgentsConfigFileTest {
 
     private static final String SENSITIVE_AGENT_NAME = "sensitive-agent";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     @Test
-    public void agentsConfigFile() throws Exception {
+    void agentsConfigFile(JenkinsRule j) throws Exception {
         j.createSlave("node1", "node1", new EnvVars());
         String fileContent = SupportTestUtils.invokeComponentToString(new AgentsConfigFile());
         assertTrue(fileContent.contains("<name>node1</name>"));
@@ -54,12 +52,12 @@ public class AgentsConfigFileTest {
 
     @Issue("JENKINS-66064")
     @Test
-    public void agentsConfigFileFiltered() throws Exception {
+    void agentsConfigFileFiltered(JenkinsRule j) throws Exception {
         ContentFilters.get().setEnabled(true);
         j.createSlave(SENSITIVE_AGENT_NAME, "node1", new EnvVars());
         Map<String, String> output = SupportTestUtils.invokeComponentToMap(new AgentsConfigFile());
         String filtered = ContentMappings.get().getMappings().get(SENSITIVE_AGENT_NAME);
-        MatcherAssert.assertThat(output, hasKey("nodes/slave/" + filtered + "/config.xml"));
-        MatcherAssert.assertThat(output, not(hasKey("nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml")));
+        assertThat(output, hasKey("nodes/slave/" + filtered + "/config.xml"));
+        assertThat(output, not(hasKey("nodes/slave/" + SENSITIVE_AGENT_NAME + "/config.xml")));
     }
 }

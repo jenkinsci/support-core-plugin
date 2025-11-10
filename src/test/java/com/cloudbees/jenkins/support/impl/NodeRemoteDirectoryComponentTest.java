@@ -9,23 +9,21 @@ import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.Label;
 import hudson.slaves.DumbSlave;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Tests for the {@link NodeRemoteDirectoryComponent}
  */
-public class NodeRemoteDirectoryComponentTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class NodeRemoteDirectoryComponentTest {
 
     /*
      * Test adding agent remote directory content with the defaults.
      */
     @Test
-    public void addContents() throws Exception {
+    void addContents(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
 
         Map<String, String> output =
@@ -39,7 +37,7 @@ public class NodeRemoteDirectoryComponentTest {
      * Test adding agent remote directory content with excludes pattern(s).
      */
     @Test
-    public void addContentsWithExcludes() throws Exception {
+    void addContentsWithExcludes(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);
@@ -55,7 +53,7 @@ public class NodeRemoteDirectoryComponentTest {
      * Test adding agent remote directory content with includes pattern(s).
      */
     @Test
-    public void addContentsWithIncludes() throws Exception {
+    void addContentsWithIncludes(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);
@@ -71,7 +69,7 @@ public class NodeRemoteDirectoryComponentTest {
      * Test adding agent remote directory content with includes pattern(s).
      */
     @Test
-    public void addContentsWithMaxDepth() throws Exception {
+    void addContentsWithMaxDepth(JenkinsRule j) throws Exception {
         DumbSlave agent = j.createSlave("agent1", "test", null);
         agent.getComputer().connect(false).get();
         j.waitOnline(agent);

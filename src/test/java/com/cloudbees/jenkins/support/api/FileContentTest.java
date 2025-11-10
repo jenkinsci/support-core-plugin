@@ -23,8 +23,8 @@
  */
 package com.cloudbees.jenkins.support.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import java.io.ByteArrayOutputStream;
@@ -33,19 +33,18 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 
-public class FileContentTest {
+class FileContentTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    private File tmp;
 
     @Test
-    public void truncation() throws Exception {
-        File f = tmp.newFile();
+    void truncation() throws Exception {
+        File f = File.createTempFile("junit", null, tmp);
         FileUtils.writeStringToFile(f, "hello world\n", Charset.defaultCharset());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -63,7 +62,7 @@ public class FileContentTest {
 
     @Test
     @Issue("JENKINS-71466")
-    public void encoding() throws Exception {
+    void encoding() throws Exception {
         File f = new File(getClass().getResource("non-utf8.txt").getFile());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent("-", f).writeTo(baos);
@@ -74,8 +73,8 @@ public class FileContentTest {
     }
 
     @Test
-    public void normalizesLineEndingsWhenFiltering() throws IOException {
-        File f = tmp.newFile();
+    void normalizesLineEndingsWhenFiltering() throws IOException {
+        File f = File.createTempFile("junit", null, tmp);
         FileUtils.writeStringToFile(f, "Before\r\nlines\n", StandardCharsets.UTF_8);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent("-", f).writeTo(baos, s -> s.replace("Before", "After"));
@@ -84,12 +83,11 @@ public class FileContentTest {
     }
 
     @Test
-    public void preservesLineEndingsWithContentFilterNone() throws IOException {
-        File f = tmp.newFile();
+    void preservesLineEndingsWithContentFilterNone() throws IOException {
+        File f = File.createTempFile("junit", null, tmp);
         FileUtils.writeStringToFile(f, "Cool\r\nlines\n", StandardCharsets.UTF_8);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new FileContent("-", f).writeTo(baos, ContentFilter.NONE);
-        String x = baos.toString();
         assertEquals("Cool\r\nlines\n", baos.toString());
     }
 }

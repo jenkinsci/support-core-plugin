@@ -20,31 +20,38 @@ import hudson.slaves.SlaveComputer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import jenkins.slaves.StandardOutputSwapper;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.InboundAgentRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.InboundAgentExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SlaveLaunchLogsTest {
+@WithJenkins
+class SlaveLaunchLogsTest {
 
     static {
         StandardOutputSwapper.disabled = true; // TODO JENKINS-65582 noisy
         // TODO also suppress JnlpSlaveRestarterInstaller
     }
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
-    @Rule
-    public InboundAgentRule inboundAgents = new InboundAgentRule();
+    @RegisterExtension
+    private final InboundAgentExtension inboundAgents = new InboundAgentExtension();
 
-    @Rule
-    public LoggerRule logging = new LoggerRule().record(SlaveLaunchLogs.class, Level.FINE);
+    @SuppressWarnings("unused")
+    private final LogRecorder logging = new LogRecorder().record(SlaveLaunchLogs.class, Level.FINE);
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void onlineOutboundAgent() throws Exception {
+    void onlineOutboundAgent() throws Exception {
         var s = j.createOnlineSlave();
         assertThat(
                 "reflects JenkinsRule.createComputerLauncher command & SlaveComputer.setChannel",
@@ -53,7 +60,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void onlineInboundAgent() throws Exception {
+    void onlineInboundAgent() throws Exception {
         inboundAgents.createAgent(j, "remote");
         assertThat(
                 "reflects DefaultJnlpSlaveReceiver.beforeChannel & SlaveComputer.setChannel",
@@ -64,7 +71,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void component() throws Exception {
+    void component() throws Exception {
         var s = j.createSlave();
         assertThat(
                 SupportTestUtils.invokeComponentToMap(
@@ -73,7 +80,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void offlineAgent() throws Exception {
+    void offlineAgent() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
         await("still includes something")
@@ -84,7 +91,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void deletedAgent() throws Exception {
+    void deletedAgent() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
         await().until(
@@ -99,7 +106,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void multipleLaunchLogs() throws Exception {
+    void multipleLaunchLogs() throws Exception {
         var s = j.createOnlineSlave();
         s.toComputer().disconnect(null).get();
         await().until(
@@ -129,7 +136,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void anonymization() throws Exception {
+    void anonymization() throws Exception {
         var s = j.createOnlineSlave(Label.get("super_secret_node"));
         ContentFilters.get().setEnabled(true);
         assertThat(
@@ -141,7 +148,7 @@ public class SlaveLaunchLogsTest {
     }
 
     @Test
-    public void passwords() throws Exception {
+    void passwords() throws Exception {
         var s = j.createOnlineSlave();
         assertThat(
                 new TreeMap<>(SupportTestUtils.invokeComponentToMap(
