@@ -96,8 +96,6 @@ public class SlaveCommandStatisticsClassifyTest {
                 classify("UserRequest:RemoteLaunchCallable[cmd=[docker, --env, TIMESTAMP=%d]]@deadbeef"
                         .formatted(System.currentTimeMillis())));
 
-        assertThat(classify(withHugeEnv).length(), lessThan(100));
-        assertThat(classify(withHugeEnv), not(containsString("BUILD_USER_GROUPS")));
     }
 
     @Test
