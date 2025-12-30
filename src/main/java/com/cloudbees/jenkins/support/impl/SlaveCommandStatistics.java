@@ -58,6 +58,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nonnegative;
 import jenkins.model.Jenkins;
 import jenkins.model.NodeListener;
+import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -68,10 +69,10 @@ public final class SlaveCommandStatistics extends Component {
     /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
 
     /*protected*/ static @Nonnegative int MAX_COMMAND_LENGTH =
-            Integer.getInteger(SlaveCommandStatistics.class.getName() + ".maxCommandLength", 256);
+            SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxCommandLength", 256);
 
     /*protected*/ static @Nonnegative int MAX_ENTRIES_PER_AGENT =
-            Integer.getInteger(SlaveCommandStatistics.class.getName() + ".maxEntriesPerAgent", 1000);
+            SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxEntriesPerAgent", 1000);
 
     private final Object statLock = new Object();
 
