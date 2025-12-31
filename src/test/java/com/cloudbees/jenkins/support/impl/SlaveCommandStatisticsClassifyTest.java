@@ -95,7 +95,6 @@ public class SlaveCommandStatisticsClassifyTest {
                 expected,
                 classify("UserRequest:RemoteLaunchCallable[cmd=[docker, --env, TIMESTAMP=%d]]@deadbeef"
                         .formatted(System.currentTimeMillis())));
-
     }
 
     @Test
