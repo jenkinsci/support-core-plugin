@@ -19,12 +19,14 @@ import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
 import com.cloudbees.jenkins.support.impl.AboutUser;
+import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
+import hudson.slaves.DumbSlave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
@@ -406,9 +408,12 @@ public class SupportActionTest {
      * {@link Component} impls.
      */
     @Test
-    public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
-        j.createSlave("agent2", "test", null).getComputer().connect(false).get();
+    public void takeSnapshotAndMakeSureSomethingHappens() throws Throwable {
+        logger.record(AsyncResultCache.class, Level.FINER)
+                .record(CallAsyncWrapper.class, Level.FINER)
+                .record(SupportPlugin.class, Level.FINER);
+        DumbSlave agent1 = j.createSlave("agent1", "test", null);
+        j.waitOnline(agent1);
 
         RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
