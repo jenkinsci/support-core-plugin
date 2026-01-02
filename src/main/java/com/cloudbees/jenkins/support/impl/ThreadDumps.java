@@ -164,19 +164,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             return;
         }
         // let's start collecting thread dumps now... this gives us until the end of the bundle to finish
-        final Future<String> threadDump;
-        try {
-            threadDump = getThreadDump(node);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Could not record thread dump for " + node.getNodeName(), e);
-            final StringWriter sw = new StringWriter();
-            PrintWriter out = new PrintWriter(sw);
-            Functions.printStackTrace(e, out);
-            out.close();
-            container.add(new StringContent(
-                    "nodes/slave/{0}/thread-dump.txt", new String[] {node.getNodeName()}, sw.toString()));
-            return;
-        }
+        final Future<String> threadDump = getThreadDump(node);
         if (threadDump == null) {
             StringBuilder buf = new StringBuilder();
             buf.append(node.getNodeName()).append("\n");
@@ -230,7 +218,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
         return ComponentCategory.PLATFORM;
     }
 
-    public Future<String> getThreadDump(Node node) throws IOException {
+    public Future<String> getThreadDump(Node node) {
         VirtualChannel channel = node.getChannel();
         if (channel == null) {
             return null;

@@ -888,11 +888,7 @@ public class SupportPlugin extends Plugin {
                         List<LogRecord> records;
                         try {
                             records = future.get(REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
-                        } catch (InterruptedException e1) {
-                            final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
-                            lr.setThrown(e1);
-                            records = Collections.singletonList(lr);
-                        } catch (ExecutionException e1) {
+                        } catch (InterruptedException | ExecutionException e1) {
                             final LogRecord lr = new LogRecord(Level.WARNING, "Could not retrieve remote log records");
                             lr.setThrown(e1);
                             records = Collections.singletonList(lr);
@@ -1026,9 +1022,6 @@ public class SupportPlugin extends Plugin {
                         CallAsyncWrapper.callAsync(channel, new LogInitializer(rootPath, getLogLevel()));
                     }
                 }
-            } catch (IOException e) {
-                Logger.getLogger(SupportPlugin.class.getName())
-                        .log(Level.WARNING, "Could not install root log handler on node: " + c.getName(), e);
             } catch (RuntimeException e) {
                 Logger.getLogger(SupportPlugin.class.getName())
                         .log(Level.WARNING, "Could not install root log handler on node: " + c.getName(), e);
