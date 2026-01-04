@@ -9,6 +9,8 @@ import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A utility class to safely call asynchronous operations on a {@link VirtualChannel}. The primary purpose of this
@@ -21,9 +23,15 @@ import java.util.concurrent.TimeoutException;
  */
 public final class CallAsyncWrapper {
 
+    public static final Logger LOGGER = Logger.getLogger(CallAsyncWrapper.class.getName());
+
     public static <V, T extends Throwable> Future<V> callAsync(
             final VirtualChannel channel, final Callable<V, T> callable) {
         final AsyncFutureImpl<V> resultFuture = new AsyncFutureImpl<>();
+
+        LOGGER.log(Level.INFO, "Submitting async call to channel {0} with timeout of {1}ms", new Object[] {
+            channel, SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS
+        });
 
         Computer.threadPoolForRemoting.submit(() -> {
             Future<V> innerFuture = null;
@@ -31,12 +39,15 @@ public final class CallAsyncWrapper {
                 innerFuture = channel.callAsync(callable);
                 try {
                     V result = innerFuture.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    LOGGER.log(Level.INFO, "Async call to channel {0} completed successfully", channel);
                     resultFuture.set(result);
                 } catch (TimeoutException te) {
+                    LOGGER.log(Level.INFO, "Async call to channel {0} timed out", channel);
                     innerFuture.cancel(true);
                     resultFuture.set(new IOException(
                             "Operation timed out after " + SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS + "ms", te));
                 } catch (Throwable t) {
+                    LOGGER.log(Level.INFO, "Async call to channel {0} failed during execution", channel);
                     resultFuture.set(t);
                 }
 
@@ -44,9 +55,12 @@ public final class CallAsyncWrapper {
                 if (innerFuture != null) {
                     innerFuture.cancel(true);
                 }
+                LOGGER.log(Level.INFO, "Async call to channel {0} failed to execute", channel);
                 resultFuture.set(t);
             }
         });
+
+        LOGGER.log(Level.INFO, "Async call to channel {0} submitted", channel);
 
         return resultFuture;
     }

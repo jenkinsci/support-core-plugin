@@ -407,8 +407,8 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
-        j.createSlave("agent2", "test", null).getComputer().connect(false).get();
+        j.waitOnline(j.createSlave("agent1", "test", null));
+        j.waitOnline(j.createSlave("agent2", "test", null));
 
         RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
