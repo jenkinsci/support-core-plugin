@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.24</version>
+    <version>5.2102.v5f5fe09fccf1</version>
     <relativePath />
   </parent>
 
@@ -98,7 +98,7 @@
     <dependency>
       <groupId>io.jenkins.lib</groupId>
       <artifactId>support-log-formatter</artifactId>
-      <version>118.v18c3eb_f88f07</version>
+      <version>121.v4db_e40a_98359</version>
     </dependency>
     <!-- regular dependencies -->
     <dependency>
@@ -147,7 +147,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.27.3</version>
+      <version>3.27.6</version>
       <scope>test</scope>
       <!-- Included in bom (via mockito-core that is in jenkins core) -->
       <exclusions>
