@@ -25,6 +25,7 @@ import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
+import hudson.slaves.DumbSlave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.IOUtils;
 import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.HttpMethod;
@@ -407,8 +409,24 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
-        j.createSlave("agent1", "test", null).getComputer().connect(false).get();
-        j.createSlave("agent2", "test", null).getComputer().connect(false).get();
+        DumbSlave agent1 = j.createSlave("agent1", "test", null);
+        DumbSlave agent2 = j.createSlave("agent2", "test", null);
+        j.waitOnline(agent1);
+        j.waitOnline(agent2);
+
+        // Make sure agents have communicated at least once
+        agent1.toComputer().getChannel().callAsync(new MasterToSlaveCallable<>() {
+            @Override
+            public Object call() {
+                return null;
+            }
+        });
+        agent2.toComputer().getChannel().callAsync(new MasterToSlaveCallable<>() {
+            @Override
+            public Object call() {
+                return null;
+            }
+        });
 
         RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
