@@ -98,7 +98,7 @@
     <dependency>
       <groupId>io.jenkins.lib</groupId>
       <artifactId>support-log-formatter</artifactId>
-      <version>118.v18c3eb_f88f07</version>
+      <version>121.v4db_e40a_98359</version>
     </dependency>
     <!-- regular dependencies -->
     <dependency>
@@ -147,7 +147,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.27.3</version>
+      <version>3.27.6</version>
       <scope>test</scope>
       <!-- Included in bom (via mockito-core that is in jenkins core) -->
       <exclusions>
