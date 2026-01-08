@@ -85,18 +85,14 @@ public class SupportActionTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Rule
-    public LoggerRule logger = new LoggerRule()
-            .record(AsyncResultCache.class, Level.FINER)
-            .record(CallAsyncWrapper.class, Level.FINER)
-            .record(SupportPlugin.class, Level.FINER)
-            .record(Channel.class, Level.FINER)
-            .record("hudson.remoting.RemoteClassLoader", Level.FINER);
+    public LoggerRule logger;
 
     private SupportAction root;
 
     @Before
     public void setUp() {
         root = ExtensionList.lookupSingleton(SupportAction.class);
+        logger = new LoggerRule();
     }
 
     @Test
@@ -415,6 +411,11 @@ public class SupportActionTest {
      */
     @Test
     public void takeSnapshotAndMakeSureSomethingHappens() throws Throwable {
+        logger.record(AsyncResultCache.class, Level.FINER)
+                .record(CallAsyncWrapper.class, Level.FINER)
+                .record(SupportPlugin.class, Level.FINER)
+                .record(Channel.class, Level.FINER)
+                .record("hudson.remoting.RemoteClassLoader", Level.FINER);
         DumbSlave agent1 = j.createSlave("agent1", "test", null);
         j.waitOnline(agent1);
 

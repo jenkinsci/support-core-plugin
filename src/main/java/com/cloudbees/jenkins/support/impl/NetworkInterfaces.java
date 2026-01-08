@@ -126,35 +126,25 @@ public class NetworkInterfaces extends Component {
             sb.append(" * Name ").append(ni.getDisplayName()).append('\n');
 
             try {
-                byte[] hardwareAddress = ni.getHardwareAddress();
+                if (!ni.isUp()) {
+                    sb.append(" ** Is Down\n");
+                } else {
+                    sb.append(" ** Is Up\n");
+                    byte[] hardwareAddress = ni.getHardwareAddress();
 
-                // Do not have permissions or address does not exist
-                if (hardwareAddress != null && hardwareAddress.length != 0) {
-                    sb.append(" ** Hardware Address - ")
-                            .append(Util.toHexString(hardwareAddress))
-                            .append("\n");
-                }
-                sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
-                Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
-                while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddresses.nextElement();
-                    sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
-                }
-                sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
-                sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
-                sb.append(" ** Is Virtual - ").append(ni.isVirtual()).append('\n');
-                sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
-                sb.append(" ** Is Point to Point - ")
-                        .append(ni.isPointToPoint())
-                        .append('\n');
-                sb.append(" ** Supports multicast - ")
-                        .append(ni.supportsMulticast())
-                        .append('\n');
-
-                if (ni.getParent() != null) {
-                    sb.append(" ** Child of - ")
-                            .append(ni.getParent().getDisplayName())
-                            .append('\n');
+                    // Do not have permissions or address does not exist
+                    if (hardwareAddress != null && hardwareAddress.length != 0) {
+                        sb.append(" ** Hardware Address - ")
+                                .append(Util.toHexString(hardwareAddress))
+                                .append("\n");
+                    }
+                    sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
+                    Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress inetAddress = inetAddresses.nextElement();
+                        sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
+                    }
+                    sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
                 }
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
