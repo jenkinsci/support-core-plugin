@@ -127,9 +127,9 @@ public class NetworkInterfaces extends Component {
 
             try {
                 if (!ni.isUp()) {
-                    sb.append(" ** Is Up - false\n");
+                    sb.append(" ** Is Down\n");
                 } else {
-                    sb.append(" ** Is Up - true\n");
+                    sb.append(" ** Is Up\n");
                     byte[] hardwareAddress = ni.getHardwareAddress();
 
                     // Do not have permissions or address does not exist
