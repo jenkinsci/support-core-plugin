@@ -126,23 +126,26 @@ public class NetworkInterfaces extends Component {
             sb.append(" * Name ").append(ni.getDisplayName()).append('\n');
 
             try {
-                byte[] hardwareAddress = ni.getHardwareAddress();
+                if (!ni.isUp()) {
+                    sb.append(" ** Is Up - false\n");
+                } else {
+                    sb.append(" ** Is Up - true\n");
+                    byte[] hardwareAddress = ni.getHardwareAddress();
 
-                // Do not have permissions or address does not exist
-                if (hardwareAddress != null && hardwareAddress.length != 0) {
-                    sb.append(" ** Hardware Address - ")
-                            .append(Util.toHexString(hardwareAddress))
-                            .append("\n");
+                    // Do not have permissions or address does not exist
+                    if (hardwareAddress != null && hardwareAddress.length != 0) {
+                        sb.append(" ** Hardware Address - ")
+                                .append(Util.toHexString(hardwareAddress))
+                                .append("\n");
+                    }
+                    sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
+                    Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress inetAddress = inetAddresses.nextElement();
+                        sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
+                    }
+                    sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
                 }
-                sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
-                Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
-                while (inetAddresses.hasMoreElements()) {
-                    InetAddress inetAddress = inetAddresses.nextElement();
-                    sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
-                }
-                sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
-                sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
-
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
             }
