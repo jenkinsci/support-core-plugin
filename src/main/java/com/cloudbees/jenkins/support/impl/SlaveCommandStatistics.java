@@ -52,10 +52,13 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnegative;
 import jenkins.model.Jenkins;
 import jenkins.model.NodeListener;
+import jenkins.util.SystemProperties;
 import net.jcip.annotations.GuardedBy;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -64,6 +67,12 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public final class SlaveCommandStatistics extends Component {
 
     /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
+
+    /*protected*/ static @Nonnegative int MAX_COMMAND_LENGTH =
+            SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxCommandLength", 256);
+
+    /*protected*/ static @Nonnegative int MAX_ENTRIES_PER_AGENT =
+            SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxEntriesPerAgent", 1000);
 
     private final Object statLock = new Object();
 
@@ -116,7 +125,10 @@ public final class SlaveCommandStatistics extends Component {
         }
     }
 
-    private static final class Statistics extends Channel.Listener {
+    @VisibleForTesting
+    static final class Statistics extends Channel.Listener {
+
+        private static final Logger LOGGER = Logger.getLogger(Statistics.class.getName());
 
         /** Represents a tally of both the number of times some event occurred, and some integral metric associated with each event which should be summed. */
         private static final class CountSum {
@@ -143,13 +155,27 @@ public final class SlaveCommandStatistics extends Component {
 
         private final Set<File> jars = new LinkedHashSet<>();
 
+        private static void preferringOlder(Map<String, CountSum> map, String key, long value) {
+            CountSum cs = map.get(key);
+            if (cs != null) {
+                cs.tally(value);
+            } else if (map.size() < MAX_ENTRIES_PER_AGENT) {
+                cs = new CountSum();
+                cs.tally(value);
+                map.put(key, cs);
+            } else {
+                LOGGER.log(Level.FINE, () -> "Statistics map at capacity (%d), ignoring command type: %s"
+                        .formatted(MAX_ENTRIES_PER_AGENT, key));
+            }
+        }
+
         @Override
         public void onWrite(Channel channel, Command cmd, long blockSize) {
             String type = classify(cmd);
             // Synchronization probably unnecessary for tallying (since each channel processes commands sequentially),
             // but printing could happen at any time anyway.
             synchronized (writes) {
-                writes.computeIfAbsent(type, k -> new CountSum()).tally(blockSize);
+                preferringOlder(writes, type, blockSize);
             }
         }
 
@@ -157,7 +183,7 @@ public final class SlaveCommandStatistics extends Component {
         public void onRead(Channel channel, Command cmd, long blockSize) {
             String type = classify(cmd);
             synchronized (reads) {
-                reads.computeIfAbsent(type, k -> new CountSum()).tally(blockSize);
+                preferringOlder(reads, type, blockSize);
             }
         }
 
@@ -165,7 +191,7 @@ public final class SlaveCommandStatistics extends Component {
         public void onResponse(Channel channel, Request<?, ?> req, Response<?, ?> rsp, long totalTime) {
             String type = classify(req);
             synchronized (responses) {
-                responses.computeIfAbsent(type, k -> new CountSum()).tally(totalTime);
+                preferringOlder(responses, type, totalTime);
             }
         }
 
@@ -176,10 +202,20 @@ public final class SlaveCommandStatistics extends Component {
             }
         }
 
-        private static final Pattern IRRELEVANT = Pattern.compile("(@[a-f0-9]+|[(][^)]+[)])+$");
+        /** Strips brackets (content limited to 1MB), hash codes, and parentheses at the end of command strings. */
+        private static final Pattern IRRELEVANT = Pattern.compile("(\\[.{0,1048576}\\]|@[a-f0-9]+|[(][^)]+[)])+$");
 
         private static String classify(Command cmd) {
-            return IRRELEVANT.matcher(cmd.toString()).replaceFirst("");
+            return classify(cmd.toString());
+        }
+
+        @VisibleForTesting
+        static String classify(String cmdString) {
+            cmdString = IRRELEVANT.matcher(cmdString).replaceFirst("");
+            if (cmdString.length() > MAX_COMMAND_LENGTH) {
+                cmdString = cmdString.substring(0, MAX_COMMAND_LENGTH) + "...";
+            }
+            return cmdString;
         }
 
         private void print(PrintWriter out) {
