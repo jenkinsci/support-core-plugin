@@ -29,7 +29,6 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.Node;
 import hudson.security.Permission;
 import java.io.IOException;
@@ -61,6 +60,7 @@ import jenkins.security.MasterToSlaveCallable;
  */
 @Extension
 public class NetworkInterfaces extends Component {
+    private static final Logger LOGGER = Logger.getLogger(NetworkInterfaces.class.getName());
     private final WeakHashMap<Node, String> networkInterfaceCache = new WeakHashMap<Node, String>();
 
     @NonNull
@@ -158,48 +158,55 @@ public class NetworkInterfaces extends Component {
         }
 
         public static String nicDetails(NetworkInterface ni) {
-            Instant start = Instant.now();
+            Instant t0 = Instant.now();
             StringBuilder sb = new StringBuilder();
-            sb.append(" * Name ").append(ni.getDisplayName()).append('\n');
+
+            String displayName = ni.getDisplayName();
+            LOGGER.info(() -> "  getDisplayName(): %dms"
+                    .formatted(Duration.between(t0, Instant.now()).toMillis()));
+            sb.append(" * Name ").append(displayName).append('\n');
 
             try {
-                byte[] hardwareAddress = ni.getHardwareAddress();
+                Instant t1 = Instant.now();
+                int index = ni.getIndex();
+                LOGGER.info(() -> "  getIndex(): %dms"
+                        .formatted(Duration.between(t1, Instant.now()).toMillis()));
+                sb.append(" ** Index - ").append(index).append('\n');
 
-                // Do not have permissions or address does not exist
-                if (hardwareAddress != null && hardwareAddress.length != 0) {
-                    sb.append(" ** Hardware Address - ")
-                            .append(Util.toHexString(hardwareAddress))
-                            .append("\n");
-                }
-                sb.append(" ** Index - ").append(ni.getIndex()).append('\n');
+                Instant t2 = Instant.now();
                 Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
                 }
-                sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
-                sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
-                sb.append(" ** Is Virtual - ").append(ni.isVirtual()).append('\n');
-                sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
-                sb.append(" ** Is Point to Point - ")
-                        .append(ni.isPointToPoint())
-                        .append('\n');
-                sb.append(" ** Supports multicast - ")
-                        .append(ni.supportsMulticast())
-                        .append('\n');
+                LOGGER.info(() -> "  getInetAddresses(): %dms"
+                        .formatted(Duration.between(t2, Instant.now()).toMillis()));
 
-                if (ni.getParent() != null) {
-                    sb.append(" ** Child of - ")
-                            .append(ni.getParent().getDisplayName())
-                            .append('\n');
+                Instant t3 = Instant.now();
+                boolean isUp = ni.isUp();
+                LOGGER.info(() -> "  isUp(): %dms"
+                        .formatted(Duration.between(t3, Instant.now()).toMillis()));
+                sb.append(" ** Is Up - ").append(isUp).append('\n');
+
+                Instant t4 = Instant.now();
+                boolean isLoopback = ni.isLoopback();
+                LOGGER.info(() -> "  isLoopback(): %dms"
+                        .formatted(Duration.between(t4, Instant.now()).toMillis()));
+                sb.append(" ** Is Loopback - ").append(isLoopback).append('\n');
+
+                Instant t5 = Instant.now();
+                NetworkInterface parent = ni.getParent();
+                LOGGER.info(() -> "  getParent(): %dms"
+                        .formatted(Duration.between(t5, Instant.now()).toMillis()));
+                if (parent != null) {
+                    sb.append(" ** Child of - ").append(parent.getDisplayName()).append('\n');
                 }
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
             }
+
             LOGGER.info(() -> "NetworkInterface '%s' took %dms"
-                    .formatted(
-                            ni.getDisplayName(),
-                            Duration.between(start, Instant.now()).toMillis()));
+                    .formatted(displayName, Duration.between(t0, Instant.now()).toMillis()));
             return sb.toString();
         }
     }
