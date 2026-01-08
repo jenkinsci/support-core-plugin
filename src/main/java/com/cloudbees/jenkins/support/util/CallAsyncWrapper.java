@@ -39,15 +39,17 @@ public final class CallAsyncWrapper {
                 innerFuture = channel.callAsync(callable);
                 try {
                     V result = innerFuture.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    LOGGER.log(Level.INFO, "Async call to channel {0} completed successfully", channel);
+                    LOGGER.finer(() ->
+                            String.format("Async call %s to channel %s completed successfully", callable, channel));
                     resultFuture.set(result);
                 } catch (TimeoutException te) {
-                    LOGGER.log(Level.INFO, "Async call to channel {0} timed out", channel);
+                    LOGGER.finer(() -> String.format("Async call %s to channel %s timed out", callable, channel));
                     innerFuture.cancel(true);
                     resultFuture.set(new IOException(
                             "Operation timed out after " + SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS + "ms", te));
                 } catch (Throwable t) {
-                    LOGGER.log(Level.INFO, "Async call to channel {0} failed during execution", channel);
+                    LOGGER.finer(() ->
+                            String.format("Async call %s to channel %s failed during execution", callable, channel));
                     resultFuture.set(t);
                 }
 
@@ -55,13 +57,11 @@ public final class CallAsyncWrapper {
                 if (innerFuture != null) {
                     innerFuture.cancel(true);
                 }
-                LOGGER.log(Level.INFO, "Async call to channel {0} failed to execute", channel);
+                LOGGER.finer(() -> String.format("Async call %s to channel %s failed to execute", callable, channel));
                 resultFuture.set(t);
             }
         });
-
-        LOGGER.log(Level.INFO, "Async call to channel {0} submitted", channel);
-
+        LOGGER.finer(() -> String.format("Async call %s to channel %s submitted", callable, channel));
         return resultFuture;
     }
 

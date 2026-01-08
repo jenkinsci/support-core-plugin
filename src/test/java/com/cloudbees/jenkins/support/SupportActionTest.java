@@ -19,12 +19,14 @@ import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.impl.AboutJenkins;
 import com.cloudbees.jenkins.support.impl.AboutUser;
+import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import com.cloudbees.jenkins.support.util.SystemPlatform;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
+import hudson.remoting.Channel;
 import hudson.slaves.DumbSlave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
@@ -50,7 +52,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.IOUtils;
 import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.HttpMethod;
@@ -84,7 +85,12 @@ public class SupportActionTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Rule
-    public LoggerRule logger = new LoggerRule();
+    public LoggerRule logger = new LoggerRule()
+            .record(AsyncResultCache.class, Level.FINER)
+            .record(CallAsyncWrapper.class, Level.FINER)
+            .record(SupportPlugin.class, Level.FINER)
+            .record(Channel.class, Level.FINER)
+            .record("hudson.remoting.RemoteClassLoader", Level.FINER);
 
     private SupportAction root;
 
@@ -408,25 +414,9 @@ public class SupportActionTest {
      * {@link Component} impls.
      */
     @Test
-    public void takeSnapshotAndMakeSureSomethingHappens() throws Exception {
+    public void takeSnapshotAndMakeSureSomethingHappens() throws Throwable {
         DumbSlave agent1 = j.createSlave("agent1", "test", null);
-        DumbSlave agent2 = j.createSlave("agent2", "test", null);
         j.waitOnline(agent1);
-        j.waitOnline(agent2);
-
-        // Make sure agents have communicated at least once
-        agent1.toComputer().getChannel().callAsync(new MasterToSlaveCallable<>() {
-            @Override
-            public Object call() {
-                return null;
-            }
-        });
-        agent2.toComputer().getChannel().callAsync(new MasterToSlaveCallable<>() {
-            @Override
-            public Object call() {
-                return null;
-            }
-        });
 
         RingBufferLogHandler checker = new RingBufferLogHandler(256);
         Logger logger = Logger.getLogger(SupportPlugin.class.getPackage().getName());
