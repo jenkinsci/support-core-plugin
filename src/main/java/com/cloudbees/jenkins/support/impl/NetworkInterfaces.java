@@ -46,6 +46,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
@@ -109,6 +114,9 @@ public class NetworkInterfaces extends Component {
 
         public String call() {
             Instant startTime = Instant.now();
+            ExecutorService executor =
+                    Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 8));
+
             try {
                 // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take
                 // about 10ms and on windows we can easily have 60)
@@ -120,7 +128,19 @@ public class NetworkInterfaces extends Component {
                     }
                 }
 
-                String result = nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
+                List<Callable<String>> tasks = nics.stream()
+                        .map(nic -> (Callable<String>) () -> nicDetails(nic))
+                        .collect(Collectors.toList());
+
+                List<String> results = new ArrayList<>();
+                for (Future<String> future : executor.invokeAll(tasks, 400, TimeUnit.MILLISECONDS)) {
+                    try {
+                        results.add(future.get());
+                    } catch (Exception e) {
+                        results.add("Error: " + e.getMessage());
+                    }
+                }
+                String result = String.join("\n", results);
 
                 LOGGER.info(() -> "NetworkInterfaces: %d interfaces processed in %dms"
                         .formatted(
@@ -130,6 +150,10 @@ public class NetworkInterfaces extends Component {
                 return result;
             } catch (SocketException e) {
                 return e.getMessage();
+            } catch (InterruptedException e) {
+                return "Interrupted: " + e.getMessage();
+            } finally {
+                executor.shutdownNow();
             }
         }
 
