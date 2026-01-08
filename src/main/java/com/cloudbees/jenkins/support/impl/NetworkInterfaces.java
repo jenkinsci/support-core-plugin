@@ -142,20 +142,8 @@ public class NetworkInterfaces extends Component {
                 }
                 sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
                 sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
-                sb.append(" ** Is Virtual - ").append(ni.isVirtual()).append('\n');
                 sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
-                sb.append(" ** Is Point to Point - ")
-                        .append(ni.isPointToPoint())
-                        .append('\n');
-                sb.append(" ** Supports multicast - ")
-                        .append(ni.supportsMulticast())
-                        .append('\n');
 
-                if (ni.getParent() != null) {
-                    sb.append(" ** Child of - ")
-                            .append(ni.getParent().getDisplayName())
-                            .append('\n');
-                }
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
             }
