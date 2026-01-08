@@ -29,6 +29,7 @@ import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Node;
 import hudson.security.Permission;
 import java.io.IOException;
@@ -134,46 +135,78 @@ public class NetworkInterfaces extends Component {
         }
 
         public static String nicDetails(NetworkInterface ni) {
-            Instant t0 = Instant.now();
+            Instant start = Instant.now();
             StringBuilder sb = new StringBuilder();
 
             String displayName = ni.getDisplayName();
-            LOGGER.info(() -> "  getDisplayName(): %dms"
-                    .formatted(Duration.between(t0, Instant.now()).toMillis()));
             sb.append(" * Name ").append(displayName).append('\n');
 
             try {
-                Instant t1 = Instant.now();
+                Instant t = Instant.now();
+                byte[] hardwareAddress = ni.getHardwareAddress();
+                long ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] getHardwareAddress(): %dms", displayName, ms));
+                if (hardwareAddress != null && hardwareAddress.length != 0) {
+                    sb.append(" ** Hardware Address - ")
+                            .append(Util.toHexString(hardwareAddress))
+                            .append("\n");
+                }
+
+                t = Instant.now();
                 int index = ni.getIndex();
-                LOGGER.info(() -> "  getIndex(): %dms"
-                        .formatted(Duration.between(t1, Instant.now()).toMillis()));
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] getIndex(): %dms", displayName, ms));
                 sb.append(" ** Index - ").append(index).append('\n');
 
-                Instant t2 = Instant.now();
+                t = Instant.now();
                 Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
                 }
-                LOGGER.info(() -> "  getInetAddresses(): %dms"
-                        .formatted(Duration.between(t2, Instant.now()).toMillis()));
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] getInetAddresses(): %dms", displayName, ms));
 
-                Instant t3 = Instant.now();
+                t = Instant.now();
+                int mtu = ni.getMTU();
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] getMTU(): %dms", displayName, ms));
+                sb.append(" ** MTU - ").append(mtu).append('\n');
+
+                t = Instant.now();
                 boolean isUp = ni.isUp();
-                LOGGER.info(() -> "  isUp(): %dms"
-                        .formatted(Duration.between(t3, Instant.now()).toMillis()));
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] isUp(): %dms", displayName, ms));
                 sb.append(" ** Is Up - ").append(isUp).append('\n');
 
-                Instant t4 = Instant.now();
+                t = Instant.now();
+                boolean isVirtual = ni.isVirtual();
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] isVirtual(): %dms", displayName, ms));
+                sb.append(" ** Is Virtual - ").append(isVirtual).append('\n');
+
+                t = Instant.now();
                 boolean isLoopback = ni.isLoopback();
-                LOGGER.info(() -> "  isLoopback(): %dms"
-                        .formatted(Duration.between(t4, Instant.now()).toMillis()));
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] isLoopback(): %dms", displayName, ms));
                 sb.append(" ** Is Loopback - ").append(isLoopback).append('\n');
 
-                Instant t5 = Instant.now();
+                t = Instant.now();
+                boolean isPointToPoint = ni.isPointToPoint();
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] isPointToPoint(): %dms", displayName, ms));
+                sb.append(" ** Is Point to Point - ").append(isPointToPoint).append('\n');
+
+                t = Instant.now();
+                boolean supportsMulticast = ni.supportsMulticast();
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] supportsMulticast(): %dms", displayName, ms));
+                sb.append(" ** Supports multicast - ").append(supportsMulticast).append('\n');
+
+                t = Instant.now();
                 NetworkInterface parent = ni.getParent();
-                LOGGER.info(() -> "  getParent(): %dms"
-                        .formatted(Duration.between(t5, Instant.now()).toMillis()));
+                ms = Duration.between(t, Instant.now()).toMillis();
+                LOGGER.info(String.format("[%s] getParent(): %dms", displayName, ms));
                 if (parent != null) {
                     sb.append(" ** Child of - ").append(parent.getDisplayName()).append('\n');
                 }
@@ -181,8 +214,8 @@ public class NetworkInterfaces extends Component {
                 sb.append(e.getMessage()).append('\n');
             }
 
-            LOGGER.info(() -> "NetworkInterface '%s' took %dms"
-                    .formatted(displayName, Duration.between(t0, Instant.now()).toMillis()));
+            long totalMs = Duration.between(start, Instant.now()).toMillis();
+            LOGGER.info(String.format("[%s] TOTAL: %dms", displayName, totalMs));
             return sb.toString();
         }
     }
