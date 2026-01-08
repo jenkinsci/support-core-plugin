@@ -140,7 +140,6 @@ public class NetworkInterfaces extends Component {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     sb.append(" ** InetAddress - ").append(inetAddress).append('\n');
                 }
-                sb.append(" ** MTU - ").append(ni.getMTU()).append('\n');
                 sb.append(" ** Is Up - ").append(ni.isUp()).append('\n');
                 sb.append(" ** Is Loopback - ").append(ni.isLoopback()).append('\n');
 
