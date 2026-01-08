@@ -70,6 +70,7 @@ import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
+import org.jvnet.localizer.ResourceBundleHolder;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -598,5 +599,33 @@ public class SupportAction implements RootAction, StaplerProxy {
                         },
                         15,
                         TimeUnit.MINUTES);
+    }
+
+    public String getValuePreChooseOptions(PreChooseOptions preChooseOptions) {
+        return Jenkins.get().getExtensionList(Component.class).stream()
+                .filter(component -> component.isApplicable(Jenkins.class))
+                .filter(component -> { return component.isApplicable(preChooseOptions);})
+                .map(Component::getId).collect(Collectors.joining(","));
+    }
+
+    public PreChooseOptions[] getPreChooseOptions(){
+        return PreChooseOptions.values();
+    }
+
+    public enum PreChooseOptions {
+        Default(Messages._SupportPlugin_GenericComponent_Default()),
+        ConfigurationFiles(Messages._SupportPlugin_GenericComponent_ConfigurationFiles()),
+        PerformanceData(Messages._SupportPlugin_GenericComponent_PerformanceData()),
+        Custom(Messages._SupportPlugin_GenericComponent_Custom());
+
+        private final Localizable description;
+
+        PreChooseOptions(Localizable description) {
+            this.description = description;
+        }
+
+        public Localizable getDescription() {
+            return description;
+        }
     }
 }
