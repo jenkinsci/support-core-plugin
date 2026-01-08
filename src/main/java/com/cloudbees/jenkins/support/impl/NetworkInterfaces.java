@@ -38,12 +38,15 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
@@ -102,8 +105,10 @@ public class NetworkInterfaces extends Component {
     }
 
     private static final class GetNetworkInterfaces extends MasterToSlaveCallable<String, RuntimeException> {
+        private static final Logger LOGGER = Logger.getLogger(GetNetworkInterfaces.class.getName());
 
         public String call() {
+            Instant startTime = Instant.now();
             try {
                 // we need to do this in parallel otherwise we can not complete in a reasonable time (each nic will take
                 // about 10ms and on windows we can easily have 60)
@@ -115,13 +120,21 @@ public class NetworkInterfaces extends Component {
                     }
                 }
 
-                return nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
+                String result = nics.parallelStream().map(n -> nicDetails(n)).collect(Collectors.joining("\n"));
+
+                LOGGER.info(() -> "NetworkInterfaces: %d interfaces processed in %dms"
+                        .formatted(
+                                nics.size(),
+                                Duration.between(startTime, Instant.now()).toMillis()));
+
+                return result;
             } catch (SocketException e) {
                 return e.getMessage();
             }
         }
 
         public static String nicDetails(NetworkInterface ni) {
+            Instant start = Instant.now();
             StringBuilder sb = new StringBuilder();
             sb.append(" * Name ").append(ni.getDisplayName()).append('\n');
 
@@ -159,6 +172,10 @@ public class NetworkInterfaces extends Component {
             } catch (SocketException e) {
                 sb.append(e.getMessage()).append('\n');
             }
+            LOGGER.info(() -> "NetworkInterface '%s' took %dms"
+                    .formatted(
+                            ni.getDisplayName(),
+                            Duration.between(start, Instant.now()).toMillis()));
             return sb.toString();
         }
     }
