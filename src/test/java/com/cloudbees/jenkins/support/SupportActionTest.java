@@ -84,14 +84,13 @@ public class SupportActionTest {
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Rule
-    public LoggerRule logger;
+    public LoggerRule logger = new LoggerRule();
 
     private SupportAction root;
 
     @Before
     public void setUp() {
         root = ExtensionList.lookupSingleton(SupportAction.class);
-        logger = new LoggerRule().record(SupportAction.class, Level.FINER);
     }
 
     @Test
