@@ -131,20 +131,32 @@ public class AsyncResultCache<T> implements Runnable {
 
     @Override
     public void run() {
+        final String nodeName = getNodeName(node);
+        LOGGER.fine(() -> String.format(
+                "Waiting up to %ds for '%s' from node %s",
+                SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC, name, nodeName));
+        final long startTime = System.nanoTime();
         T result;
         try {
             result = future.get(SupportPlugin.REMOTE_OPERATION_CACHE_TIMEOUT_SEC, TimeUnit.SECONDS);
+            final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
             synchronized (cache) {
                 cache.put(node, result);
             }
+            LOGGER.fine(
+                    () -> String.format("Successfully cached '%s' from node %s after %dms", name, nodeName, duration));
         } catch (InterruptedException | ExecutionException e1) {
-            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[] {name, getNodeName(node)});
+            final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} for caching after {2}ms");
+            lr.setParameters(new Object[] {name, nodeName, duration});
             lr.setThrown(e1);
             LOGGER.log(lr);
         } catch (TimeoutException e1) {
-            final LogRecord lr = new LogRecord(Level.INFO, "Could not retrieve {0} from {1} for caching");
-            lr.setParameters(new Object[] {name, getNodeName(node)});
+            final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+            final LogRecord lr =
+                    new LogRecord(Level.INFO, "Could not retrieve {0} from {1} for caching after {2}ms, cancelling");
+            lr.setParameters(new Object[] {name, nodeName, duration});
+            lr.setParameters(new Object[] {name, nodeName, duration});
             lr.setThrown(e1);
             LOGGER.log(lr);
             future.cancel(true);
