@@ -27,8 +27,6 @@ public class NodeRemoteDirectoryComponentTest {
     @Test
     public void addContents() throws Exception {
         DumbSlave agent = j.createOnlineSlave(Label.parseExpression("test"), null);
-        agent.getComputer().connect(false).get();
-        j.waitOnline(agent);
 
         Map<String, String> output =
                 SupportTestUtils.invokeComponentToMap(new NodeRemoteDirectoryComponent(), agent.toComputer());
