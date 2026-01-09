@@ -26,7 +26,6 @@ import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Label;
 import hudson.model.Slave;
-import hudson.remoting.Channel;
 import hudson.slaves.DumbSlave;
 import hudson.util.RingBufferLogHandler;
 import java.io.File;
@@ -92,7 +91,7 @@ public class SupportActionTest {
     @Before
     public void setUp() {
         root = ExtensionList.lookupSingleton(SupportAction.class);
-        logger = new LoggerRule();
+        logger = new LoggerRule().record(SupportAction.class, Level.FINER);
     }
 
     @Test
@@ -413,9 +412,7 @@ public class SupportActionTest {
     public void takeSnapshotAndMakeSureSomethingHappens() throws Throwable {
         logger.record(AsyncResultCache.class, Level.FINER)
                 .record(CallAsyncWrapper.class, Level.FINER)
-                .record(SupportPlugin.class, Level.FINER)
-                .record(Channel.class, Level.FINER)
-                .record("hudson.remoting.RemoteClassLoader", Level.FINER);
+                .record(SupportPlugin.class, Level.FINER);
         DumbSlave agent1 = j.createSlave("agent1", "test", null);
         j.waitOnline(agent1);
 

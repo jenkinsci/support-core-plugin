@@ -9,7 +9,6 @@ import hudson.remoting.VirtualChannel;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -29,27 +28,40 @@ public final class CallAsyncWrapper {
             final VirtualChannel channel, final Callable<V, T> callable) {
         final AsyncFutureImpl<V> resultFuture = new AsyncFutureImpl<>();
 
-        LOGGER.log(Level.INFO, "Submitting async call to channel {0} with timeout of {1}ms", new Object[] {
-            channel, SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS
-        });
+        LOGGER.info(() -> String.format(
+                "Submitting async call %s to channel %s with timeout of %sms",
+                callable, channel, SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS));
 
         Computer.threadPoolForRemoting.submit(() -> {
             Future<V> innerFuture = null;
+            final long callAsyncStartTime;
+            final long callAsyncDuration;
+            final long callAsyncFutureTime;
+            final long callAsyncFutureDuration;
             try {
+                callAsyncStartTime = System.nanoTime();
                 innerFuture = channel.callAsync(callable);
+                callAsyncDuration = System.nanoTime() - callAsyncStartTime;
+                LOGGER.finer(() -> String.format(
+                        "Async call %s to channel %s started in %d ms",
+                        callable, channel, TimeUnit.NANOSECONDS.toMillis(callAsyncDuration)));
                 try {
+                    callAsyncFutureTime = System.nanoTime();
                     V result = innerFuture.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    LOGGER.finer(() ->
-                            String.format("Async call %s to channel %s completed successfully", callable, channel));
+                    callAsyncFutureDuration = System.nanoTime() - callAsyncFutureTime;
+                    LOGGER.finer(() -> String.format(
+                            "innerFuture for call %s to channel %s completed successfully in %d ms",
+                            callable, channel, TimeUnit.NANOSECONDS.toMillis(callAsyncFutureDuration)));
                     resultFuture.set(result);
                 } catch (TimeoutException te) {
-                    LOGGER.finer(() -> String.format("Async call %s to channel %s timed out", callable, channel));
+                    LOGGER.finer(
+                            () -> String.format("innerFuture for call %s to channel %s timed out", callable, channel));
                     innerFuture.cancel(true);
                     resultFuture.set(new IOException(
                             "Operation timed out after " + SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS + "ms", te));
                 } catch (Throwable t) {
-                    LOGGER.finer(() ->
-                            String.format("Async call %s to channel %s failed during execution", callable, channel));
+                    LOGGER.finer(() -> String.format(
+                            "innerFuture for call %s to channel %s failed during execution", callable, channel));
                     resultFuture.set(t);
                 }
 
