@@ -45,7 +45,13 @@ public class AsyncResultCache<T> implements Runnable {
             LOGGER.fine("no node");
             return null;
         }
+
+        final String nodeName = getNodeName(node);
+        LOGGER.fine(() -> String.format("Starting operation '%s' on node %s", name, nodeName));
+
         Future<V> future;
+        final long futureCreationStart = System.nanoTime();
+
         // If launching execution on the built-in node, no need to use the CallAsyncWrapper
         if (node instanceof Jenkins) {
             future = Computer.threadPoolForRemoting.submit(() -> {
@@ -55,34 +61,54 @@ public class AsyncResultCache<T> implements Runnable {
                     throw new IOException(e);
                 }
             });
+            final long futureCreationDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - futureCreationStart);
+            LOGGER.fine(() ->
+                    String.format("Created Future for '%s' on built-in node in %dms", name, futureCreationDuration));
         } else {
             VirtualChannel channel = node.getChannel();
             if (channel == null) {
-                LOGGER.fine("no channel for " + getNodeName(node));
+                LOGGER.fine(() ->
+                        String.format("No channel available for '%s' on node %s, using cached value", name, nodeName));
                 synchronized (cache) {
                     return cache.get(node);
                 }
             }
             future = CallAsyncWrapper.callAsync(channel, operation);
+            final long futureCreationDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - futureCreationStart);
+            LOGGER.fine(() -> String.format(
+                    "Created Future for '%s' on node %s in %dms", name, nodeName, futureCreationDuration));
         }
+
+        final long executionStart = System.nanoTime();
         try {
+            LOGGER.fine(() -> String.format(
+                    "Waiting up to %dms for '%s' to complete on node %s",
+                    SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, name, nodeName));
+
             final V result = future.get(SupportPlugin.REMOTE_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            final long executionDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - executionStart);
+
             synchronized (cache) {
                 cache.put(node, result);
             }
-            LOGGER.finer(() -> operation + " on " + getNodeName(node) + " succeeded");
+
+            LOGGER.fine(() ->
+                    String.format("Operation '%s' on node %s succeeded in %dms", name, nodeName, executionDuration));
             return result;
         } catch (InterruptedException | ExecutionException e) {
-            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[] {name, getNodeName(node)});
+            final long executionDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - executionStart);
+            final LogRecord lr = new LogRecord(Level.FINE, "Could not retrieve {0} from {1} after {2}ms");
+            lr.setParameters(new Object[] {name, nodeName, executionDuration});
             lr.setThrown(e);
             LOGGER.log(lr);
             synchronized (cache) {
                 return cache.get(node);
             }
         } catch (TimeoutException e) {
-            final LogRecord lr = new LogRecord(Level.FINER, "Could not retrieve {0} from {1}");
-            lr.setParameters(new Object[] {name, getNodeName(node)});
+            final long executionDuration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - executionStart);
+            final LogRecord lr = new LogRecord(
+                    Level.FINE, "Timeout retrieving {0} from {1} after {2}ms, scheduling background retry");
+            lr.setParameters(new Object[] {name, nodeName, executionDuration});
             lr.setThrown(e);
             LOGGER.log(lr);
             Computer.threadPoolForRemoting.submit(new AsyncResultCache<>(node, cache, future, name));
