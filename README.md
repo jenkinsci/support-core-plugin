@@ -10,7 +10,7 @@ support information within Jenkins.
 
 There are three ways of generating bundles:
 
--   Automatic bundles, these get saved in $JENKINS\_HOME/support once
+-   Automatic bundles, these get saved in `$JENKINS_HOME/support` once
     per hour starting 3 minutes after Jenkins starts the plugin (i.e.
     this may still be generated even if Jenkins will not fully start).
     The automatic bundles are retained using an exponential aging
