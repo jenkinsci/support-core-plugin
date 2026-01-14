@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.configfiles;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -54,4 +55,9 @@ public class ConfigFileComponent extends Component {
     }
 
     private static final Logger LOGGER = Logger.getLogger(ConfigFileComponent.class.getName());
+
+    @Override
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.ConfigurationFiles || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
+    }
 }

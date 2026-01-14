@@ -25,6 +25,7 @@
 package com.cloudbees.jenkins.support.impl;
 
 import com.cloudbees.jenkins.support.AsyncResultCache;
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.CommandOutputContent;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
@@ -109,6 +110,11 @@ public abstract class SystemConfiguration extends AdvancedProcFilesRetriever {
             public String getDisplayName() {
                 return "Controller system configuration (Linux only)";
             }
+        }
+
+        @Override
+        public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+            return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
         }
     }
 
