@@ -359,8 +359,11 @@ public class CheckFilterTest {
             try {
                 Enumeration<NetworkInterface> networkInterfaces = null;
                 networkInterfaces = NetworkInterface.getNetworkInterfaces();
-                if (networkInterfaces.hasMoreElements()) {
+                while (networkInterfaces.hasMoreElements()) {
                     NetworkInterface ni = networkInterfaces.nextElement();
+                    if (!ni.isUp()) {
+                        continue;
+                    }
                     Enumeration<InetAddress> inetAddresses = ni.getInetAddresses();
                     if (inetAddresses != null && inetAddresses.hasMoreElements()) {
                         return inetAddresses.nextElement().toString();
