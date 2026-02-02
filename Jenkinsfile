@@ -7,5 +7,5 @@ buildPlugin(
   useContainerAgent: true, // Set to `false` if you need to use Docker for containerized tests
   configurations: [
     [platform: 'linux', jdk: 25],
-    // TODO until CI is stabler [platform: 'windows', jdk: 21],
+    [platform: 'windows', jdk: 21],
 ])
