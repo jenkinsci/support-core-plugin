@@ -55,7 +55,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnegative;
 import jenkins.model.Jenkins;
 import jenkins.model.NodeListener;
 import jenkins.util.SystemProperties;
@@ -66,12 +65,12 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Extension
 public final class SlaveCommandStatistics extends Component {
 
-    /*protected*/ static @Nonnegative int MAX_STATS_SIZE = 1000;
+    /*protected*/ static int MAX_STATS_SIZE = 1000;
 
-    /*protected*/ static @Nonnegative int MAX_COMMAND_LENGTH =
+    /*protected*/ static int MAX_COMMAND_LENGTH =
             SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxCommandLength", 256);
 
-    /*protected*/ static @Nonnegative int MAX_ENTRIES_PER_AGENT =
+    /*protected*/ static int MAX_ENTRIES_PER_AGENT =
             SystemProperties.getInteger(SlaveCommandStatistics.class.getName() + ".maxEntriesPerAgent", 1000);
 
     private final Object statLock = new Object();
