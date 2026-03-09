@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.Component;
 import com.cloudbees.jenkins.support.api.Container;
 import com.cloudbees.jenkins.support.api.Content;
@@ -119,5 +120,10 @@ public class HeapUsageHistogram extends Component {
             result = "N/A";
         }
         return result;
+    }
+
+    @Override
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
     }
 }
