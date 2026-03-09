@@ -5,41 +5,37 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import hudson.model.FreeStyleProject;
 import java.util.Map;
 import java.util.Optional;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class AbstractItemDirectoryComponentTest {
+@WithJenkins
+class AbstractItemDirectoryComponentTest {
 
     private static final String JOB_NAME = "job-name";
     private static final String FOLDER_NAME = "folder-name";
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
 
     /*
      * Test adding item directory content with defaults for a folder.
      */
     @Test
-    public void addContentsFromFolder() throws Exception {
-
+    void addContentsFromFolder(JenkinsRule j) throws Exception {
         MockFolder f = j.createFolder(FOLDER_NAME);
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
         j.waitUntilNoActivity();
 
@@ -57,12 +53,12 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with includes patterns for a folder.
      */
     @Test
-    public void addContentsFromFolderWithIncludes() throws Exception {
+    void addContentsFromFolderWithIncludes(JenkinsRule j) throws Exception {
         MockFolder f = j.createFolder(FOLDER_NAME);
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
         j.waitUntilNoActivity();
 
@@ -82,12 +78,12 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with excludes patterns for a folder.
      */
     @Test
-    public void addContentsFromFolderWithExcludes() throws Exception {
+    void addContentsFromFolderWithExcludes(JenkinsRule j) throws Exception {
         MockFolder f = j.createFolder(FOLDER_NAME);
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
         j.waitUntilNoActivity();
 
@@ -107,12 +103,12 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with excludes patterns for a freestyle job.
      */
     @Test
-    public void addContentsFromFolderWithIncludesExcludes() throws Exception {
+    void addContentsFromFolderWithIncludesExcludes(JenkinsRule j) throws Exception {
         MockFolder f = j.createFolder(FOLDER_NAME);
         MockFolder subFolder = f.createProject(MockFolder.class, "subFolder");
         FreeStyleProject p = subFolder.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
         j.waitUntilNoActivity();
 
@@ -132,11 +128,11 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with defaults for a freestyle job.
      */
     @Test
-    public void addContentsFromFreestyle() throws Exception {
+    void addContentsFromFreestyle(JenkinsRule j) throws Exception {
         MockFolder f = j.createFolder(FOLDER_NAME);
         FreeStyleProject p = f.createProject(FreeStyleProject.class, JOB_NAME);
         j.waitForCompletion(Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart());
         j.waitUntilNoActivity();
 
@@ -153,13 +149,13 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with defaults for a pipeline.
      */
     @Test
-    public void addContentsFromPipeline() throws Exception {
+    void addContentsFromPipeline(JenkinsRule j) throws Exception {
         MockFolder folder = j.createFolder(FOLDER_NAME);
         WorkflowJob p = folder.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(
                 new CpsFlowDefinition("node {writeFile file: 'test.txt', text: ''; archiveArtifacts '*.txt'}", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -182,11 +178,11 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with excludes patterns.
      */
     @Test
-    public void addContentsFromJobWithExcludes() throws Exception {
+    void addContentsFromJobWithExcludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -208,11 +204,11 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with includes patterns.
      */
     @Test
-    public void addContentsFromJobWithIncludes() throws Exception {
+    void addContentsFromJobWithIncludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -232,11 +228,11 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with includes patterns.
      */
     @Test
-    public void addContentsFromJobWithMaxDepth() throws Exception {
+    void addContentsFromJobWithMaxDepth(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 
@@ -256,11 +252,11 @@ public class AbstractItemDirectoryComponentTest {
      * Test adding item directory content with includes / excludes patterns.
      */
     @Test
-    public void addContentsFromJobWithIncludesExcludes() throws Exception {
+    void addContentsFromJobWithIncludesExcludes(JenkinsRule j) throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, JOB_NAME);
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun workflowRun = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(workflowRun);
 

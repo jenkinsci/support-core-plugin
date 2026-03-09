@@ -135,7 +135,7 @@ public class Chrono {
     public String printMeasures(String pointName) {
         StringBuilder sb = new StringBuilder();
 
-        if (pointName != initName) {
+        if (!pointName.equals(initName)) {
             Map<String, Long> measures = getMeasures(pointName);
 
             sb.append("Measures for point '");
@@ -148,7 +148,7 @@ public class Chrono {
 
                 sb.append("\n");
 
-                if (measures.size() > 0) {
+                if (!measures.isEmpty()) {
                     for (Map.Entry<String, Long> e : measures.entrySet()) {
                         sb.append("\t - From point '");
                         sb.append(e.getKey());
@@ -202,7 +202,7 @@ public class Chrono {
         Optional<TimeUnit> first = Stream.of(DAYS, HOURS, MINUTES, SECONDS, MILLISECONDS)
                 .filter(u -> u.convert(millis, MILLISECONDS) > 0)
                 .findFirst();
-        TimeUnit unit = first.isPresent() ? first.get() : MILLISECONDS;
+        TimeUnit unit = first.orElse(MILLISECONDS);
         double value = (double) millis / MILLISECONDS.convert(1, unit);
         return String.format("%.4g %s", value, unit.name().toLowerCase());
     }
@@ -210,10 +210,10 @@ public class Chrono {
     /**
      * Private class to manage the points to measure time.
      */
-    private class Point {
-        String name;
-        Long time;
-        List<String> fromPoints;
+    private static class Point {
+        final String name;
+        final Long time;
+        final List<String> fromPoints;
 
         private Point(String name, Long moment, List<String> fromPoints) {
             this.name = name;

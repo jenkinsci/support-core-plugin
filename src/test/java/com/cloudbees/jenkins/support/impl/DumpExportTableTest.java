@@ -4,7 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.cloudbees.jenkins.support.SupportTestUtils;
 import com.cloudbees.jenkins.support.timer.FileListCapComponent;
@@ -14,17 +14,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class DumpExportTableTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class DumpExportTableTest {
 
     @Test
-    public void testAddContents() throws Exception {
+    void testAddContents(JenkinsRule j) throws Exception {
         // Given
         DumbSlave onlineAgent = j.createOnlineSlave();
 
@@ -32,14 +30,14 @@ public class DumpExportTableTest {
         String dumpTableString = SupportTestUtils.invokeComponentToString(new DumpExportTable());
 
         // Then
-        assertFalse("Should have dumped the export table.", dumpTableString.isEmpty());
+        assertFalse(dumpTableString.isEmpty(), "Should have dumped the export table.");
 
         List<String> output = new ArrayList<>(Arrays.asList(dumpTableString.split("\n")));
         assertThat(output, hasItems(containsString("hudson.remoting.ExportTable")));
     }
 
     @Test
-    public void testLargeExportTableTruncated() throws Exception {
+    void testLargeExportTableTruncated(JenkinsRule j) throws Exception {
         // Given
         DumbSlave onlineAgent = j.createOnlineSlave();
         VirtualChannel channel = onlineAgent.getChannel();
@@ -55,5 +53,5 @@ public class DumpExportTableTest {
         assertThat(dumpTableString.length(), lessThanOrEqualTo(FileListCapComponent.MAX_FILE_SIZE));
     }
 
-    public interface MockSerializable extends Serializable {}
+    private interface MockSerializable extends Serializable {}
 }

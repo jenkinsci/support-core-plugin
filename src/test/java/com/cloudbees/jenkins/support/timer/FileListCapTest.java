@@ -23,22 +23,22 @@
  */
 package com.cloudbees.jenkins.support.timer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import java.io.File;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-public class FileListCapTest {
+class FileListCapTest {
 
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    private File tmp;
 
     @Test
-    public void add() throws Exception {
-        FileListCap flc = new FileListCap(tmp.getRoot(), 3);
+    void add() throws Exception {
+        FileListCap flc = new FileListCap(tmp, 3);
         for (int i = 0; i < 10; i++) {
-            flc.add(tmp.newFile());
+            flc.add(File.createTempFile("junit", null, tmp));
         }
         assertEquals(3, flc.getFolder().list().length);
     }

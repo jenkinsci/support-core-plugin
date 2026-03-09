@@ -32,20 +32,20 @@ import static org.hamcrest.Matchers.hasSize;
 import hudson.init.InitMilestone;
 import java.io.IOException;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.RealJenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.RealJenkinsExtension;
 
-public class StartupReportTest {
-    @Rule
-    public RealJenkinsRule rr = new RealJenkinsRule()
+class StartupReportTest {
+    @RegisterExtension
+    private final RealJenkinsExtension extension = new RealJenkinsExtension()
             .javaOptions("-Dcom.cloudbees.jenkins.support.startup.StartupReport.INITIAL_DELAY_SECONDS=0")
             .javaOptions("-Dcom.cloudbees.jenkins.support.startup.StartupReport.RECURRENCE_PERIOD_SECONDS=1");
 
     @Test
-    public void startupReport() throws Throwable {
-        rr.then(StartupReportTest::assertStartupReportExists);
+    void startupReport() throws Throwable {
+        extension.then(StartupReportTest::assertStartupReportExists);
         System.out.println("Finished");
     }
 

@@ -1,16 +1,16 @@
 package com.cloudbees.jenkins.support.filter;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class FilteredInputStreamTest {
+class FilteredInputStreamTest {
 
     @Test
-    public void testReadSingleLine() throws IOException {
+    void testReadSingleLine() throws IOException {
         String input = "foo bar";
         String output;
         try (FilteredInputStream fis = new FilteredInputStream(
@@ -23,7 +23,7 @@ public class FilteredInputStreamTest {
     }
 
     @Test
-    public void testReadMultipleLines() throws IOException {
+    void testReadMultipleLines() throws IOException {
         String input = "Line 1\nLine 2\nLine 3";
         String output;
         try (FilteredInputStream fis = new FilteredInputStream(
@@ -39,7 +39,7 @@ public class FilteredInputStreamTest {
     }
 
     @Test
-    public void testReadEmptyStream() throws IOException {
+    void testReadEmptyStream() throws IOException {
         byte[] input = new byte[0];
         String output;
         try (FilteredInputStream fis =
