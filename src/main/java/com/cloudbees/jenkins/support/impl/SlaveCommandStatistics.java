@@ -163,8 +163,10 @@ public final class SlaveCommandStatistics extends Component {
                 cs.tally(value);
                 map.put(key, cs);
             } else {
-                LOGGER.log(Level.FINE, () -> "Statistics map at capacity (%d), ignoring command type: %s"
-                        .formatted(MAX_ENTRIES_PER_AGENT, key));
+                LOGGER.log(
+                        Level.FINE,
+                        () -> "Statistics map at capacity (%d), ignoring command type: %s"
+                                .formatted(MAX_ENTRIES_PER_AGENT, key));
             }
         }
 
