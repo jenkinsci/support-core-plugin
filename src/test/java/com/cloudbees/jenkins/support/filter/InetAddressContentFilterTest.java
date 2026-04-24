@@ -69,9 +69,10 @@ class InetAddressContentFilterTest {
         // speed up test execution by ignoring new content mappings
         ContentMappings mappings = ContentMappings.get();
         try (BulkChange ignored = new BulkChange(mappings)) {
-            qt().forAll(inetAddress()).checkAssert(address -> assertThat(ContentFilter.filter(filter, address))
-                    .contains("ip_")
-                    .doesNotContain(address));
+            qt().forAll(inetAddress())
+                    .checkAssert(address -> assertThat(ContentFilter.filter(filter, address))
+                            .contains("ip_")
+                            .doesNotContain(address));
         }
     }
 
