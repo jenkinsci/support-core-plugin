@@ -1,5 +1,6 @@
 package com.cloudbees.jenkins.support.impl;
 
+import com.cloudbees.jenkins.support.SupportAction;
 import com.cloudbees.jenkins.support.api.ObjectComponentDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -72,6 +73,11 @@ public abstract class JVMProcessSystemMetricsContents extends AdvancedProcFilesR
             public String getDisplayName() {
                 return "Controller JVM process system metrics (Linux only)";
             }
+        }
+
+        @Override
+        public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+            return (super.isApplicable(preChooseOptions) || preChooseOptions == SupportAction.PreChooseOptions.PerformanceData);
         }
     }
 
