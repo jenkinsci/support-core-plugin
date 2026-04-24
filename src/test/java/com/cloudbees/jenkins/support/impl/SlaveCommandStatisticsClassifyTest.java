@@ -26,14 +26,14 @@ package com.cloudbees.jenkins.support.impl;
 import static com.cloudbees.jenkins.support.impl.SlaveCommandStatistics.Statistics.classify;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SlaveCommandStatisticsClassifyTest {
+class SlaveCommandStatisticsClassifyTest {
 
     @Test
-    public void patternStripsEndBracketsHashAndParentheses() {
+    void patternStripsEndBracketsHashAndParentheses() {
         assertEquals(
                 "UserRequest:RemoteLaunchCallable",
                 classify("UserRequest:RemoteLaunchCallable[cmd=[docker, exec, --env, FOO=bar]]@2b194a2b"));
@@ -79,7 +79,7 @@ public class SlaveCommandStatisticsClassifyTest {
     }
 
     @Test
-    public void hugeEnvVarsDeduplicateToSameKey() {
+    void hugeEnvVarsDeduplicateToSameKey() {
         String hugeEnv = "group1,group2,group3,%s".formatted("x".repeat(12000));
         String withHugeEnv =
                 "UserRequest:RemoteLaunchCallable[cmd=[docker, exec, --env, BUILD_USER_GROUPS=%s]]@67c6eade8"
@@ -98,7 +98,7 @@ public class SlaveCommandStatisticsClassifyTest {
     }
 
     @Test
-    public void defenseInDepthTruncationAndBounds() {
+    void defenseInDepthTruncationAndBounds() {
         // Truncation: MAX_COMMAND_LENGTH = 256
         String veryLongCommand = "UserRequest:%s@1a2b3c4d".formatted("VeryLongClassName".repeat(20));
         String truncated = classify(veryLongCommand);

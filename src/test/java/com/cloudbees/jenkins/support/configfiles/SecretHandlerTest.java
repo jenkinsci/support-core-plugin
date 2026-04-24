@@ -100,8 +100,7 @@ class SecretHandlerTest {
     @Test
     @Issue("JENKINS-50765")
     void shouldNotResolveExternalEntities() throws Exception {
-        String xxeXml =
-                """
+        String xxeXml = """
                 <?xml version="1.0" encoding="utf-8"?>
                 <!DOCTYPE test [
                     <!ENTITY xxeattack SYSTEM "file:///">
