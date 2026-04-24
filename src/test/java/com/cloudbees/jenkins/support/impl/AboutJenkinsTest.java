@@ -36,7 +36,7 @@ class AboutJenkinsTest {
     @BeforeEach
     void setUp(JenkinsRule rule) throws Exception {
         j = rule;
-        Files.createDirectory(j.jenkins.getRootDir().toPath().resolve("plugins"));
+        Files.createDirectories(j.jenkins.getRootDir().toPath().resolve("plugins"));
     }
 
     @Test

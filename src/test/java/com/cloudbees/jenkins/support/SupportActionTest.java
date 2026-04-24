@@ -81,7 +81,7 @@ class SupportActionTest {
     @BeforeEach
     void setUp(JenkinsRule j) throws Exception {
         this.j = j;
-        Files.createDirectory(j.jenkins.getRootDir().toPath().resolve("plugins"));
+        Files.createDirectories(j.jenkins.getRootDir().toPath().resolve("plugins"));
         root = ExtensionList.lookupSingleton(SupportAction.class);
     }
 

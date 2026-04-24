@@ -99,7 +99,9 @@ class Security2186Test {
 
     private DumbSlave createSlave(JenkinsRule j, ComputerLauncher launcher) throws Exception {
         DumbSlave slave = new DumbSlave(
-                "slave0", Files.createDirectory(temp.toPath().resolve("agent")).toString(), launcher);
+                "slave0",
+                Files.createDirectories(temp.toPath().resolve("agent")).toString(),
+                launcher);
         slave.setNodeDescription("dummy");
         slave.setNumExecutors(1);
         slave.setMode(Node.Mode.NORMAL);
