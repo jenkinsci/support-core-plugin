@@ -10,23 +10,24 @@ import com.cloudbees.jenkins.support.api.Component;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.RealJenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.RealJenkinsExtension;
 
 /**
  * Test for the {@link SupportAutomatedBundleConfiguration}
  *
  * @author Allan Burdajewicz
  */
-public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
-    @Rule
-    public RealJenkinsRule rr = new RealJenkinsRule();
+class SupportAutomatedBundleConfigurationSystemPropertiesTest {
+    @RegisterExtension
+    private final RealJenkinsExtension extension = new RealJenkinsExtension();
 
     @Test
-    public void enforcePeriod() throws Throwable {
-        rr.javaOptions()
+    void enforcePeriod() throws Throwable {
+        extension
+                .javaOptions()
                 .javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=2")
                 .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforcePeriod);
     }
@@ -83,8 +84,9 @@ public class SupportAutomatedBundleConfigurationSystemPropertiesTest {
     }
 
     @Test
-    public void enforceDisable() throws Throwable {
-        rr.javaOptions()
+    void enforceDisable() throws Throwable {
+        extension
+                .javaOptions()
                 .javaOptions("-D" + SupportPlugin.class.getName() + ".AUTO_BUNDLE_PERIOD_HOURS=0")
                 .then(SupportAutomatedBundleConfigurationSystemPropertiesTest::_enforceDisabled);
     }

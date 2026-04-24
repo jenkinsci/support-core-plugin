@@ -1,6 +1,6 @@
 package com.cloudbees.jenkins.support.actions;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.cloudbees.jenkins.support.SupportPlugin;
 import com.cloudbees.jenkins.support.SupportTestUtils;
@@ -14,30 +14,27 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipFile;
 import jenkins.model.Jenkins;
-import junit.framework.AssertionFailedError;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Allan Burdajewicz
  */
-public class SupportRunActionTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+@WithJenkins
+class SupportRunActionTest {
 
     @Test
-    public void onlyAdminCanSeeAction() throws Exception {
+    void onlyAdminCanSeeAction(JenkinsRule j) throws Exception {
 
         WorkflowJob p = j.createProject(WorkflowJob.class, "testPipeline");
         p.setDefinition(new CpsFlowDefinition("node { echo 'test' }", true));
         WorkflowRun r = Optional.ofNullable(p.scheduleBuild2(0))
-                .orElseThrow(AssertionFailedError::new)
+                .orElseThrow(AssertionError::new)
                 .waitForStart();
         j.waitForCompletion(r);
         SupportRunAction rAction = new SupportRunAction(r);
@@ -61,7 +58,7 @@ public class SupportRunActionTest {
      * Integration test that simulates the user action of clicking the button to generate the bundle.
      */
     @Test
-    public void generateBundleDefaultsAndCheckContent() throws Exception {
+    void generateBundleDefaultsAndCheckContent(JenkinsRule j) throws Exception {
         MockFolder folder = j.createFolder("testFolder");
         FreeStyleProject p = folder.createProject(FreeStyleProject.class, "testFreestyle");
         QueueTaskFuture<FreeStyleBuild> freeStyleBuildQueueTaskFuture = p.scheduleBuild2(0);
