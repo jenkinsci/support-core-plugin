@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -80,6 +81,7 @@ public class ThreadDumps extends ObjectComponent<Computer> {
             throw new IllegalArgumentException("delay must be greater than 0");
         }
         var format = new SimpleDateFormat(DATE_FORMAT);
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
         File threadDumpFile = fileList.file(format.format(new Date(timestamp)) + ".txt");
         try (FileOutputStream fileOutputStream = new FileOutputStream(threadDumpFile)) {
             threadDump(fileOutputStream);
