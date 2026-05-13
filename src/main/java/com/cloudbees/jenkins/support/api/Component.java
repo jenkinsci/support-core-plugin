@@ -25,18 +25,23 @@
 package com.cloudbees.jenkins.support.api;
 
 import com.cloudbees.jenkins.support.Messages;
+import com.cloudbees.jenkins.support.SupportAction;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractModelObject;
 import hudson.security.ACL;
 import hudson.security.Permission;
-import java.util.Collections;
-import java.util.Set;
+
+
 import jenkins.model.Jenkins;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.springframework.security.core.Authentication;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Represents a component of a support bundle.
@@ -171,6 +176,10 @@ public abstract class Component implements ExtensionPoint {
         return false;
     }
 
+    public boolean isApplicable(SupportAction.PreChooseOptions preChooseOptions) {
+        return isSelectedByDefault();
+    }
+
     /**
      * Categories supported by this version of support-core
      *
@@ -215,5 +224,6 @@ public abstract class Component implements ExtensionPoint {
         public @NonNull String getLabel() {
             return label.toString();
         }
+
     }
 }
