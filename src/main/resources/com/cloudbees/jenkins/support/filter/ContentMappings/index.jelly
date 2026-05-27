@@ -25,29 +25,26 @@
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
-    <l:layout title="${it.displayName}" permission="${app.ADMINISTER}">
-        <st:include page="sidepanel.jelly" it="${app}"/>
-        <l:main-panel>
-            <h1>Anonymized Items</h1>
-            <h2>Mappings</h2>
-            <table class="pane sortable bigtable">
+    <l:settings-subpage title="${it.displayName}" permission="${app.ADMINISTER}">
+        <h1>Anonymized Items</h1>
+        <h2>Mappings</h2>
+        <table class="pane sortable bigtable">
+            <tr>
+                <th class="pane-header">Actual Name</th>
+                <th class="pane-header" initialSortDir="up">Anonymized Name</th>
+            </tr>
+            <j:forEach items="${it.mappings}" var="item">
                 <tr>
-                    <th class="pane-header">Actual Name</th>
-                    <th class="pane-header" initialSortDir="up">Anonymized Name</th>
+                    <td class="pane">${item.key}</td>
+                    <td class="pane">${item.value}</td>
                 </tr>
-                <j:forEach items="${it.mappings}" var="item">
-                    <tr>
-                        <td class="pane">${item.key}</td>
-                        <td class="pane">${item.value}</td>
-                    </tr>
-                </j:forEach>
-            </table>
-            <h2>Stop Words</h2>
-            <ul>
-                <j:forEach items="${it.stopWords}" var="stopWord">
-                    <li>${stopWord}</li>
-                </j:forEach>
-            </ul>
-        </l:main-panel>
-    </l:layout>
+            </j:forEach>
+        </table>
+        <h2>Stop Words</h2>
+        <ul>
+            <j:forEach items="${it.stopWords}" var="stopWord">
+                <li>${stopWord}</li>
+            </j:forEach>
+        </ul>
+    </l:settings-subpage>
 </j:jelly>

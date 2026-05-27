@@ -3,29 +3,29 @@
          xmlns:st="jelly:stapler"
          xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <l:layout title="${it.displayName}" norefresh="true" permission="${app.ADMINISTER}" type="one-column">
-        <l:main-panel>
-            <l:app-bar title="${it.displayName}" />
-            <div class="behavior-loading">${%LOADING}</div>
-            <f:form name="config" method="POST" action="configure">
-                <j:set var="instance" value="${it}"/>
-                <j:set var="descriptor" value="${it.descriptor}"/>
-                <j:forEach var="descriptor" items="${it.descriptors}">
-                    <j:set var="instance" value="${descriptor}"/>
-                    <f:rowSet name="${descriptor.jsonSafeClassName}">
-                        <f:section title="${descriptor.displayName}">
-                            <st:include from="${descriptor}" page="${descriptor.globalConfigPage}"/>
-                        </f:section>
-                    </f:rowSet>
-                </j:forEach>
-                <f:bottomButtonBar>
-                    <f:submit value="Save"/>
-                    <f:apply/>
-                </f:bottomButtonBar>
-            </f:form>
-            <l:hasAdministerOrManage>
-                <st:adjunct includes="lib.form.confirm"/>
-            </l:hasAdministerOrManage>
-        </l:main-panel>
-    </l:layout>
+    <j:set var="header">
+        <l:app-bar title="${it.displayName}" />
+    </j:set>
+    <l:settings-subpage title="${it.displayName}" noDefer="true" permission="${app.ADMINISTER}" header="${header}">
+        <div class="behavior-loading">${%LOADING}</div>
+        <f:form name="config" method="POST" action="configure">
+            <j:set var="instance" value="${it}"/>
+            <j:set var="descriptor" value="${it.descriptor}"/>
+            <j:forEach var="descriptor" items="${it.descriptors}">
+                <j:set var="instance" value="${descriptor}"/>
+                <f:rowSet name="${descriptor.jsonSafeClassName}">
+                    <f:section title="${descriptor.displayName}">
+                        <st:include from="${descriptor}" page="${descriptor.globalConfigPage}"/>
+                    </f:section>
+                </f:rowSet>
+            </j:forEach>
+            <f:bottomButtonBar>
+                <f:submit value="Save"/>
+                <f:apply/>
+            </f:bottomButtonBar>
+        </f:form>
+        <l:hasAdministerOrManage>
+            <st:adjunct includes="lib.form.confirm"/>
+        </l:hasAdministerOrManage>
+    </l:settings-subpage>
 </j:jelly>
