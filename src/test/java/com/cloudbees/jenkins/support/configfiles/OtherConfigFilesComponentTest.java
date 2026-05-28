@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -191,7 +190,7 @@ class OtherConfigFilesComponentTest {
     public static class TestConfigFilesFilter implements OtherConfigFilesComponent.ConfigFilesFilter {
 
         @Override
-        public boolean include(@NotNull File file) {
+        public boolean include(File file) {
             return !List.of("test-abc.xml", "test-efgh.xml", "toexclude.xml").contains(file.getName());
         }
     }
