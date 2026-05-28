@@ -38,7 +38,6 @@ import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
-import com.cloudbees.jenkins.support.impl.ThreadDumps;
 import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
 import com.cloudbees.jenkins.support.util.IgnoreCloseOutputStream;
 import com.cloudbees.jenkins.support.util.OutputStreamSelector;
@@ -73,14 +72,11 @@ import hudson.triggers.SafeTimerTask;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -794,7 +790,6 @@ public class SupportPlugin extends Plugin {
     public static void completedMilestones() throws IOException {
         // Do nothing
     }
-
 
     @Override
     public synchronized void start() throws Exception {
