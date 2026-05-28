@@ -26,8 +26,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <l:settings-subpage title="${it.displayName}" permission="${app.ADMINISTER}">
-        <h1>Anonymized Items</h1>
-        <h2>Mappings</h2>
+        <h2>Anonymized Items</h2>
+        <h3>Mappings</h3>
         <table class="pane sortable bigtable">
             <tr>
                 <th class="pane-header">Actual Name</th>
@@ -40,7 +40,7 @@
                 </tr>
             </j:forEach>
         </table>
-        <h2>Stop Words</h2>
+        <h3>Stop Words</h3>
         <ul>
             <j:forEach items="${it.stopWords}" var="stopWord">
                 <li>${stopWord}</li>
