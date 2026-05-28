@@ -789,58 +789,12 @@ public class SupportPlugin extends Plugin {
         if (instance != null) instance.load();
     }
 
-    private static final boolean logStartupPerformanceIssues =
-            Boolean.getBoolean(SupportPlugin.class.getCanonicalName() + ".threadDumpStartup");
-    private static final int secondsPerThreadDump =
-            Integer.getInteger(SupportPlugin.class.getCanonicalName() + ".secondsPerTD", 60);
-
     @Deprecated
     @Restricted(NoExternalUse.class)
     public static void completedMilestones() throws IOException {
         // Do nothing
     }
 
-    @Initializer(after = InitMilestone.STARTED)
-    public static void threadDumpStartup() throws Exception {
-        if (!logStartupPerformanceIssues) return;
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final File f = new File(getRootDirectory(), "/startup-threadDump" + dateFormat.format(new Date()) + ".txt");
-        if (!f.exists()) {
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        Thread t = new Thread("Support core plugin startup diagnostics") {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        final Jenkins jenkins = Jenkins.getInstanceOrNull();
-                        if (jenkins == null || jenkins.getInitLevel() != InitMilestone.COMPLETED) {
-                            continue;
-                        }
-                        try (PrintStream ps = new PrintStream(new FileOutputStream(f, true), false, "UTF-8")) {
-                            ps.println("=== Thread dump at " + new Date() + " ===");
-                            ThreadDumps.threadDump(ps);
-                            // Generate a thread dump every few seconds/minutes
-                            ps.flush();
-                            TimeUnit.SECONDS.sleep(secondsPerThreadDump);
-                        } catch (FileNotFoundException | UnsupportedEncodingException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
-                }
-            }
-        };
-        t.start();
-    }
 
     @Override
     public synchronized void start() throws Exception {
