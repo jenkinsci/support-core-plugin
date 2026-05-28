@@ -3,10 +3,7 @@
          xmlns:st="jelly:stapler"
          xmlns:l="/lib/layout"
          xmlns:f="/lib/form">
-    <j:set var="header">
-        <l:app-bar title="${it.displayName}" />
-    </j:set>
-    <l:settings-subpage title="${it.displayName}" noDefer="true" permission="${app.ADMINISTER}" header="${header}">
+    <l:settings-subpage title="${it.displayName}" noDefer="true" permission="${app.ADMINISTER}">
         <div class="behavior-loading">${%LOADING}</div>
         <f:form name="config" method="POST" action="configure">
             <j:set var="instance" value="${it}"/>
