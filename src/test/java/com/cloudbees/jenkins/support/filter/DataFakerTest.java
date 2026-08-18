@@ -124,27 +124,23 @@ class DataFakerTest {
     }
 
     @Test
-    void seedOverflowRegression(JenkinsRule r) {
+    void avoidsLibraryCursorHazard(JenkinsRule r) {
         assertThrows(
                 IndexOutOfBoundsException.class,
                 () -> new RandomNameGenerator(2144220205).next(),
-                "Seed 2144220205 causes pos+prime overflow, yielding negative index");
+                "Seed 2144220205 causes pos+prime overflow in RandomNameGenerator, yielding negative index");
 
-        long hazardousSeed = 2144220205L;
-        long mask = 0x0FFFFFFFL;
-        String[] testInputs = {"00000000", "7fffffff", String.format("%08x", hazardousSeed), "ffffffff"};
+        org.kohsuke.randname.Dictionary dict = new org.kohsuke.randname.Dictionary();
+        int dictSize = dict.size();
+        String[] testInputs = {"00000000", "ffffffff"};
 
         for (String hexInput : testInputs) {
             long value = Long.parseLong(hexInput, 16);
-            long masked = value & mask;
+            long index = value % dictSize;
 
             assertTrue(
-                    masked <= mask,
-                    String.format("Masked value %d exceeds mask bound %d for input %s", masked, mask, hexInput));
-            assertNotEquals(
-                    hazardousSeed,
-                    masked,
-                    String.format("Masked value equals hazardous seed %d for input %s", hazardousSeed, hexInput));
+                    index >= 0 && index < dictSize,
+                    String.format("Index %d not in [0, %d) for input %s", index, dictSize, hexInput));
         }
 
         DataFaker faker = new DataFaker();

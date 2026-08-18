@@ -33,7 +33,7 @@ import java.util.function.Function;
 import jenkins.security.HMACConfidentialKey;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.randname.RandomNameGenerator;
+import org.kohsuke.randname.Dictionary;
 
 /**
  * Provides deterministic pseudonym generation for anonymization.
@@ -48,6 +48,7 @@ import org.kohsuke.randname.RandomNameGenerator;
 public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Function<String, String>> {
 
     private static final HMACConfidentialKey PSEUDONYMS = new HMACConfidentialKey(DataFaker.class, "pseudonyms");
+    private static final Dictionary DICTIONARY = new Dictionary();
 
     /**
      * @return the singleton instance
@@ -66,14 +67,11 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
     public Function<String, String> apply(@NonNull Function<String, String> nameTransformer) {
         return original -> {
             String hex = PSEUDONYMS.mac(original);
-            // Masked because RandomNameGenerator computes Math.abs(pos + prime) % size, and
-            // Math.abs(Integer.MIN_VALUE) is negative, which would yield a negative word index.
-            int seed = (int) (Long.parseLong(hex.substring(0, 8), 16) & 0x0FFFFFFFL);
+            int index = (int) (Long.parseLong(hex.substring(0, 8), 16) % DICTIONARY.size());
             String tail = hex.substring(8, 16);
 
-            RandomNameGenerator generator = new RandomNameGenerator(seed);
             String name = nameTransformer
-                    .apply(generator.next())
+                    .apply(DICTIONARY.word(index))
                     .toLowerCase(Locale.ENGLISH)
                     .replace(' ', '_');
             return name + "_" + tail;
