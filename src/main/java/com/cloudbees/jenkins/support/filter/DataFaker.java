@@ -39,7 +39,9 @@ import org.kohsuke.randname.Dictionary;
  * Provides deterministic pseudonym generation for anonymization.
  *
  * <p>Derives stable pseudonyms from originals using HMAC-keyed word pairs and hex tails.
- * Same original always produces the same pseudonym across instances and over time.
+ * Same original always produces the same pseudonym within one installation (stable across
+ * restarts and HA replicas sharing JENKINS_HOME). Deliberately differs across installations
+ * with different secret keys, preventing brute-force attacks on guessable originals.
  *
  * @since TODO
  */
@@ -66,7 +68,9 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
     @Override
     public Function<String, String> apply(@NonNull Function<String, String> nameTransformer) {
         return original -> {
-            String hex = PSEUDONYMS.mac(original);
+            String hex = PSEUDONYMS.mac(original).toLowerCase(Locale.ROOT);
+            // Index Dictionary directly rather than RandomNameGenerator.next() because next()
+            // computes Math.abs(pos + prime) % size and Math.abs(Integer.MIN_VALUE) is negative.
             int index = (int) (Long.parseLong(hex.substring(0, 8), 16) % DICTIONARY.size());
             String tail = hex.substring(8, 16);
 

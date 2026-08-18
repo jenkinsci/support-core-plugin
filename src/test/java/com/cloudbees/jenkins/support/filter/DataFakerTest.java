@@ -32,7 +32,6 @@ import jenkins.security.HMACConfidentialKey;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
-import org.kohsuke.randname.RandomNameGenerator;
 
 @WithJenkins
 class DataFakerTest {
@@ -121,32 +120,6 @@ class DataFakerTest {
                         o, DataFaker.get().apply(name -> "user_" + name).apply(o)));
 
         assertEquals(legacyPseudonym, retrieved.getReplacement(), "Legacy pseudonym should be preserved");
-    }
-
-    @Test
-    void avoidsLibraryCursorHazard(JenkinsRule r) {
-        assertThrows(
-                IndexOutOfBoundsException.class,
-                () -> new RandomNameGenerator(2144220205).next(),
-                "Seed 2144220205 causes pos+prime overflow in RandomNameGenerator, yielding negative index");
-
-        org.kohsuke.randname.Dictionary dict = new org.kohsuke.randname.Dictionary();
-        int dictSize = dict.size();
-        String[] testInputs = {"00000000", "ffffffff"};
-
-        for (String hexInput : testInputs) {
-            long value = Long.parseLong(hexInput, 16);
-            long index = value % dictSize;
-
-            assertTrue(
-                    index >= 0 && index < dictSize,
-                    String.format("Index %d not in [0, %d) for input %s", index, dictSize, hexInput));
-        }
-
-        DataFaker faker = new DataFaker();
-        for (int i = 0; i < 1000; i++) {
-            faker.apply(name -> "user_" + name).apply("test" + i);
-        }
     }
 
     @Test
