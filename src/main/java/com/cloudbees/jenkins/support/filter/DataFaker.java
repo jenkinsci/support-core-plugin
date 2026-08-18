@@ -30,19 +30,24 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import java.util.Locale;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import jenkins.security.HMACConfidentialKey;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.randname.RandomNameGenerator;
 
 /**
- * Provides a way to generate random names.
+ * Provides deterministic pseudonym generation for anonymization.
+ *
+ * <p>Derives stable pseudonyms from originals using HMAC-keyed word pairs and hex tails.
+ * Same original always produces the same pseudonym across instances and over time.
  *
  * @since TODO
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Supplier<String>> {
+public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Function<String, String>> {
+
+    private static final HMACConfidentialKey PSEUDONYMS = new HMACConfidentialKey(DataFaker.class, "pseudonyms");
 
     /**
      * @return the singleton instance
@@ -51,16 +56,27 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
         return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
-    private final RandomNameGenerator generator = new RandomNameGenerator();
-
     /**
-     * Applies the provided function to a random name and normalizes the result.
+     * Applies the provided function to a deterministic name derived from the original and normalizes the result.
+     *
+     * @param nameTransformer function to apply to the generated word pair (e.g., adds prefix like "user_")
+     * @return function that maps original strings to stable pseudonyms
      */
     @Override
-    public Supplier<String> apply(@NonNull Function<String, String> nameTransformer) {
-        return () -> nameTransformer
-                .apply(generator.next())
-                .toLowerCase(Locale.ENGLISH)
-                .replace(' ', '_');
+    public Function<String, String> apply(@NonNull Function<String, String> nameTransformer) {
+        return original -> {
+            String hex = PSEUDONYMS.mac(original);
+            // Masked because RandomNameGenerator computes Math.abs(pos + prime) % size, and
+            // Math.abs(Integer.MIN_VALUE) is negative, which would yield a negative word index.
+            int seed = (int) (Long.parseLong(hex.substring(0, 8), 16) & 0x0FFFFFFFL);
+            String tail = hex.substring(8, 16);
+
+            RandomNameGenerator generator = new RandomNameGenerator(seed);
+            String name = nameTransformer
+                    .apply(generator.next())
+                    .toLowerCase(Locale.ENGLISH)
+                    .replace(' ', '_');
+            return name + "_" + tail;
+        };
     }
 }
