@@ -108,4 +108,26 @@ class SensitiveContentFilterTest {
         assertThat(filter.filter(os)).isEqualTo(os);
         assertThat(filter.filter(label)).startsWith("label_").isNotEqualTo(label);
     }
+
+    @Test
+    void anonymizeUnicodeCaseVariants(JenkinsRule j) {
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("sapphirium", original -> ContentMapping.of(original, "item_test_alpha"));
+        mappings.getMappingOrCreate("idalium", original -> ContentMapping.of(original, "item_test_beta"));
+
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        filter.reload();
+
+        // U+017F LATIN SMALL LETTER LONG S matches the literal 's' under CASE_INSENSITIVE|UNICODE_CASE, but
+        // String#toLowerCase leaves it untouched -- so keying the map that way loses the entry.
+        assertThat(filter.filter("build ſapphirium done")).isEqualTo("build item_test_alpha done");
+
+        // U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE matches the literal 'i', but String#toLowerCase
+        // decomposes it to 'i' + U+0307 COMBINING DOT ABOVE.
+        assertThat(filter.filter("job İdalium ran")).isEqualTo("job item_test_beta ran");
+
+        // plain ASCII case-insensitivity must keep working
+        assertThat(filter.filter("SAPPHIRIUM")).isEqualTo("item_test_alpha");
+        assertThat(filter.filter("sapphirium")).isEqualTo("item_test_alpha");
+    }
 }

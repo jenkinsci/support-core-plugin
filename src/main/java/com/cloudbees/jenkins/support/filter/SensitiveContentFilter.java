@@ -61,7 +61,26 @@ public class SensitiveContentFilter implements ContentFilter {
 
     @Override
     public @NonNull String filter(@NonNull String input) {
-        return WordReplacer.replaceWords(input, mappingsPattern.get(), replacementsMap.get());
+        Map<String, String> replacements = replacementsMap.get();
+        return WordReplacer.replaceWords(input, mappingsPattern.get(), match -> replacements.get(fold(match)));
+    }
+
+    /**
+     * Canonicalizes a value for use as a key in the replacements map, folding case the same way the compiled
+     * {@link Pattern} does.
+     *
+     * <p>The pattern is compiled with {@link Pattern#CASE_INSENSITIVE} and {@link Pattern#UNICODE_CASE}, which
+     * compares characters via {@code toLowerCase(toUpperCase(c))}. {@link String#toLowerCase(Locale)} does not
+     * always agree with that, so deriving the key one way and the lookup the other lets the pattern match text
+     * that the map has no entry for. Two concrete divergences: {@code U+017F LATIN SMALL LETTER LONG S} matches
+     * the literal {@code s} but {@code toLowerCase} leaves it unchanged, and {@code U+0130 LATIN CAPITAL LETTER I
+     * WITH DOT ABOVE} matches the literal {@code i} but {@code toLowerCase} decomposes it to {@code i U+0307}.
+     * Deriving both sides with this fold keeps them in agreement.
+     */
+    static String fold(String value) {
+        StringBuilder folded = new StringBuilder(value.length());
+        value.codePoints().forEach(cp -> folded.appendCodePoint(Character.toLowerCase(Character.toUpperCase(cp))));
+        return folded.toString();
     }
 
     @Override
@@ -79,35 +98,38 @@ public class SensitiveContentFilter implements ContentFilter {
                 // Filter out IP mappings
                 .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
                 .forEach(contentMapping -> {
-                    String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
-                    if (!stopWords.contains(lowerCaseOriginal)) {
+                    String original = contentMapping.getOriginal();
+                    // Stop words are stored lower cased, so they are matched that way; the trie and the map are
+                    // keyed on the case fold instead, so that filter() can look up whatever the pattern matched.
+                    if (!stopWords.contains(original.toLowerCase(Locale.ENGLISH))) {
+                        String key = fold(original);
                         replacementsMap.put(
-                                lowerCaseOriginal,
+                                key,
                                 contentMapping
                                         .getReplacement()
                                         .replaceAll("\\\\", "\\\\\\\\")
                                         .replaceAll("\\$", "\\\\\\$"));
-                        trie.add(lowerCaseOriginal);
+                        trie.add(key);
                     }
                 });
 
         NameProvider.all()
                 .forEach(provider -> provider.names().filter(s -> !s.isBlank()).forEach(name -> {
-                    String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
                     // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the
                     // conditional here. Or find a better way to deal with insensitive key mapping in general.
                     // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
                     // container)
-                    if (!stopWords.contains(lowerCaseOriginal)) {
+                    if (!stopWords.contains(name.toLowerCase(Locale.ENGLISH))) {
                         ContentMapping mapping = mappings.getMappingOrCreate(
                                 name, original -> ContentMapping.of(original, provider.generateFake()));
+                        String key = fold(name);
                         // Matcher#appendReplacement needs to have the `\` and `$` escaped.
                         replacementsMap.putIfAbsent(
-                                lowerCaseOriginal,
+                                key,
                                 mapping.getReplacement()
                                         .replaceAll("\\\\", "\\\\\\\\")
                                         .replaceAll("\\$", "\\\\\\$"));
-                        trie.add(lowerCaseOriginal);
+                        trie.add(key);
                     }
                 }));
         this.mappingsPattern.set(Pattern.compile(
