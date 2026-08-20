@@ -66,25 +66,66 @@ public class SensitiveContentFilter implements ContentFilter {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
     }
 
+    /**
+     * Normalize case per code point, replicating what {@code Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE}
+     * does internally when matching. This is <em>not</em> Unicode normalization (NFC/NFKC); it's a case-folding
+     * operation: {@code Character.toLowerCase(Character.toUpperCase(codePoint))}.
+     * <p>
+     * Includes an identity fast path: returns the input unchanged when no code point would be altered, so
+     * already-normalized strings share storage with their keys rather than duplicating the char array.
+     *
+     * @param value the input string
+     * @return a case-normalized copy, or the input itself if nothing changed
+     */
+    static String normalizeCase(String value) {
+        // Identity fast path: scan first, only allocate if something would change. Without this, every key
+        // duplicates its original even when they're identical, costing ~38 MB per 500k already-lowercase names.
+        boolean needsNormalization = false;
+        for (int i = 0, len = value.length(); i < len; ) {
+            int cp = value.codePointAt(i);
+            int normalized = Character.toLowerCase(Character.toUpperCase(cp));
+            if (cp != normalized) {
+                needsNormalization = true;
+                break;
+            }
+            i += Character.charCount(cp);
+        }
+        if (!needsNormalization) {
+            return value;
+        }
+
+        // Something differs; build the normalized copy.
+        StringBuilder sb = new StringBuilder(value.length());
+        for (int i = 0, len = value.length(); i < len; ) {
+            int cp = value.codePointAt(i);
+            sb.appendCodePoint(Character.toLowerCase(Character.toUpperCase(cp)));
+            i += Character.charCount(cp);
+        }
+        return sb.toString();
+    }
+
     @Override
     public @NonNull String filter(@NonNull String input) {
         // Snapshot once per call so a concurrent reload() can't be observed partway through.
         Snapshot current = snapshot.get();
-        return WordReplacer.replaceWords(
-                input, current.pattern(), match -> replacementFor(match, current.matched(), current.replacements()));
+        String normalized = normalizeCase(input);
+        return WordReplacer.replaceWordsByOffset(
+                input,
+                normalized,
+                current.pattern(),
+                match -> replacementFor(match, current.matched(), current.replacements()));
     }
 
     // An actual match in real content keeps this mapping alive even if the original item is gone -- see
     // ContentMappings#evictStale(). Deliberately not touched during the pre-fill loop in reload() below, only here,
-    // on a real match.
+    // on a real match. The match is already normalized (from the normalized input), so no derivation is needed.
     private static String replacementFor(
             String match, Map<String, ContentMapping> matched, Map<String, String> replacements) {
-        String lowerCase = match.toLowerCase(Locale.ENGLISH);
-        ContentMapping mapping = matched.get(lowerCase);
+        ContentMapping mapping = matched.get(match);
         if (mapping != null) {
             mapping.touch();
         }
-        return replacements.get(lowerCase);
+        return replacements.get(match);
     }
 
     @Override
@@ -103,43 +144,36 @@ public class SensitiveContentFilter implements ContentFilter {
                 // Filter out IP mappings
                 .filter(mapping -> !mapping.getReplacement().startsWith("ip_"))
                 .forEach(contentMapping -> {
-                    String lowerCaseOriginal = contentMapping.getOriginal().toLowerCase(Locale.ENGLISH);
-                    if (!stopWords.contains(lowerCaseOriginal)) {
-                        replacementsMap.put(
-                                lowerCaseOriginal,
-                                contentMapping
-                                        .getReplacement()
-                                        .replaceAll("\\\\", "\\\\\\\\")
-                                        .replaceAll("\\$", "\\\\\\$"));
-                        matchedMappings.put(lowerCaseOriginal, contentMapping);
-                        trie.add(lowerCaseOriginal);
+                    String normalizedOriginal = normalizeCase(contentMapping.getOriginal());
+                    // Stop-word comparison stays on toLowerCase(ENGLISH) because the stop-word set is populated
+                    // that way from multiple sources, and stop words are ASCII in practice so the two agree.
+                    if (!stopWords.contains(contentMapping.getOriginal().toLowerCase(Locale.ENGLISH))) {
+                        replacementsMap.put(normalizedOriginal, contentMapping.getReplacement());
+                        matchedMappings.put(normalizedOriginal, contentMapping);
+                        trie.add(normalizedOriginal);
                     }
                 });
 
         NameProvider.all()
                 .forEach(provider -> provider.names().filter(s -> !s.isBlank()).forEach(name -> {
-                    String lowerCaseOriginal = name.toLowerCase(Locale.ENGLISH);
+                    String normalizedOriginal = normalizeCase(name);
                     // NOTE: We could well create a WordTrie for the stop words and use it as a filter instead of the
                     // conditional here. Or find a better way to deal with insensitive key mapping in general.
                     // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
                     // container)
-                    if (!stopWords.contains(lowerCaseOriginal)) {
+                    // Stop-word comparison stays on toLowerCase(ENGLISH) because the stop-word set is populated
+                    // that way from multiple sources, and stop words are ASCII in practice so the two agree.
+                    if (!stopWords.contains(name.toLowerCase(Locale.ENGLISH))) {
                         // getMappingOrCreate touches the mapping (refreshes lastSeen) on every call, hit or miss --
                         // that's the "live" signal, since name is something a NameProvider currently reports.
                         ContentMapping mapping = mappings.getMappingOrCreate(
                                 name, original -> ContentMapping.of(original, provider.generateFake()));
-                        // Matcher#appendReplacement needs to have the `\` and `$` escaped.
-                        replacementsMap.putIfAbsent(
-                                lowerCaseOriginal,
-                                mapping.getReplacement()
-                                        .replaceAll("\\\\", "\\\\\\\\")
-                                        .replaceAll("\\$", "\\\\\\$"));
-                        matchedMappings.putIfAbsent(lowerCaseOriginal, mapping);
-                        trie.add(lowerCaseOriginal);
+                        replacementsMap.putIfAbsent(normalizedOriginal, mapping.getReplacement());
+                        matchedMappings.putIfAbsent(normalizedOriginal, mapping);
+                        trie.add(normalizedOriginal);
                     }
                 }));
-        Pattern pattern = Pattern.compile(
-                "(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        Pattern pattern = Pattern.compile("(?<!\\w)" + trie.getRegex() + "(?!\\w)");
         this.snapshot.set(new Snapshot(pattern, replacementsMap, matchedMappings));
         LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis() - startTime) + "ms to reload");
     }
