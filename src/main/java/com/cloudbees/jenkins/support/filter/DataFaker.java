@@ -28,6 +28,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.function.Function;
 import jenkins.security.HMACConfidentialKey;
@@ -40,16 +41,14 @@ import org.kohsuke.randname.Dictionary;
  *
  * <p>Derives stable pseudonyms from originals using HMAC-keyed word pairs and hex tails.
  * Same original always produces the same pseudonym within one installation (stable across
- * restarts and HA replicas sharing JENKINS_HOME). Deliberately differs across installations
+ * restarts and CloudBees CI HA replicas sharing JENKINS_HOME). Deliberately differs across installations
  * with different secret keys, preventing brute-force attacks on guessable originals.
- *
- * @since TODO
  */
 @Extension
 @Restricted(NoExternalUse.class)
 public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Function<String, String>> {
 
-    private static final HMACConfidentialKey PSEUDONYMS = new HMACConfidentialKey(DataFaker.class, "pseudonyms");
+    private static final HMACConfidentialKey PSEUDONYMS = new HMACConfidentialKey(DataFaker.class, "pseudonyms", 8);
     private static final Dictionary DICTIONARY = new Dictionary();
 
     /**
@@ -57,6 +56,21 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
      */
     public static DataFaker get() {
         return ExtensionList.lookupSingleton(DataFaker.class);
+    }
+
+    /**
+     * Maps MAC-derived bits to a dictionary word, guaranteed never to produce a negative index.
+     *
+     * <p>Uses {@code Math.floorMod} rather than {@code %} because Java's {@code %} operator
+     * takes the sign of the dividend, so a negative input yields a negative index.
+     * {@code floorMod} takes the sign of the divisor, guaranteeing a non-negative result
+     * for any input including {@code Long.MIN_VALUE}.
+     *
+     * @param macBits MAC-derived value to map to dictionary index
+     * @return dictionary word at the computed index
+     */
+    static String wordFor(long macBits) {
+        return DICTIONARY.word(Math.floorMod(macBits, DICTIONARY.size()));
     }
 
     /**
@@ -68,14 +82,16 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
     @Override
     public Function<String, String> apply(@NonNull Function<String, String> nameTransformer) {
         return original -> {
-            String hex = PSEUDONYMS.mac(original).toLowerCase(Locale.ROOT);
-            // Index Dictionary directly rather than RandomNameGenerator.next() because next()
-            // computes Math.abs(pos + prime) % size and Math.abs(Integer.MIN_VALUE) is negative.
-            int index = (int) (Long.parseLong(hex.substring(0, 8), 16) % DICTIONARY.size());
-            String tail = hex.substring(8, 16);
+            byte[] mac = PSEUDONYMS.mac(original.getBytes(StandardCharsets.UTF_8));
+            // First 4 bytes for dictionary index, next 4 for the 8-hex-character tail
+            long idx = ((long) (mac[0] & 0xFF) << 24)
+                    | ((long) (mac[1] & 0xFF) << 16)
+                    | ((long) (mac[2] & 0xFF) << 8)
+                    | (mac[3] & 0xFF);
+            String tail = String.format("%02x%02x%02x%02x", mac[4] & 0xFF, mac[5] & 0xFF, mac[6] & 0xFF, mac[7] & 0xFF);
 
             String name = nameTransformer
-                    .apply(DICTIONARY.word(index))
+                    .apply(wordFor(idx))
                     .toLowerCase(Locale.ENGLISH)
                     .replace(' ', '_');
             return name + "_" + tail;

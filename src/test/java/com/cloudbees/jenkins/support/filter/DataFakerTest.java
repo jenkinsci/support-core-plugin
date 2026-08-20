@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2026, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +25,24 @@ package com.cloudbees.jenkins.support.filter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import hudson.ExtensionList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
-import jenkins.security.HMACConfidentialKey;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 @WithJenkins
 class DataFakerTest {
 
     @Test
     void pseudonymsMatchExpectedFormat(JenkinsRule r) {
-        DataFaker faker = new DataFaker();
+        DataFaker faker = ExtensionList.lookupSingleton(DataFaker.class);
         Pattern expectedPattern = Pattern.compile("^[a-z]+_[a-z_-]+_[0-9a-f]{8}$");
 
         for (int i = 0; i < 100; i++) {
@@ -51,39 +55,47 @@ class DataFakerTest {
 
     @Test
     void tailIsExactlyEightHexChars(JenkinsRule r) {
-        DataFaker faker = new DataFaker();
+        DataFaker faker = ExtensionList.lookupSingleton(DataFaker.class);
 
         for (int i = 0; i < 100; i++) {
             String pseudonym = faker.apply(name -> "user_" + name).apply("test" + i);
-            assertTrue(pseudonym.matches("^.+_[0-9a-f]{8}$"), "Pseudonym should end with underscore and 8 hex chars");
-
             String tail = pseudonym.substring(pseudonym.lastIndexOf('_') + 1);
-            assertEquals(8, tail.length(), "Tail should be exactly 8 characters");
             assertTrue(tail.matches("[0-9a-f]{8}"), "Tail should be 8 lowercase hex characters");
         }
     }
 
-    @Test
-    void deterministicPseudonymGeneration(JenkinsRule r) {
-        DataFaker faker = new DataFaker();
-        String original = "testuser";
+    @Nested
+    class SessionTests {
+        @RegisterExtension
+        JenkinsSessionExtension session = new JenkinsSessionExtension();
 
-        String pseudonym1 = faker.apply(name -> "user_" + name).apply(original);
-        String pseudonym2 = faker.apply(name -> "user_" + name).apply(original);
+        @Test
+        void deterministicPseudonymGenerationAcrossRestarts() throws Throwable {
+            String[] holder = new String[1];
 
-        assertEquals(pseudonym1, pseudonym2, "Same original should produce identical pseudonym");
+            session.then(r -> {
+                DataFaker faker = ExtensionList.lookupSingleton(DataFaker.class);
+                holder[0] = faker.apply(name -> "user_" + name).apply("testuser");
+            });
+
+            session.then(r -> {
+                DataFaker faker = ExtensionList.lookupSingleton(DataFaker.class);
+                String pseudonym2 = faker.apply(name -> "user_" + name).apply("testuser");
+                assertEquals(holder[0], pseudonym2, "Same original should produce identical pseudonym across restarts");
+            });
+        }
     }
 
     @Test
     void orderIndependence(JenkinsRule r) {
-        DataFaker faker1 = new DataFaker();
+        DataFaker faker1 = ExtensionList.lookupSingleton(DataFaker.class);
         String original1 = "foo";
         String original2 = "bar";
 
         String foo1 = faker1.apply(name -> "user_" + name).apply(original1);
         String bar1 = faker1.apply(name -> "user_" + name).apply(original2);
 
-        DataFaker faker2 = new DataFaker();
+        DataFaker faker2 = ExtensionList.lookupSingleton(DataFaker.class);
         String bar2 = faker2.apply(name -> "user_" + name).apply(original2);
         String foo2 = faker2.apply(name -> "user_" + name).apply(original1);
 
@@ -93,7 +105,7 @@ class DataFakerTest {
 
     @Test
     void collisionSanityCheck(JenkinsRule r) {
-        DataFaker faker = new DataFaker();
+        DataFaker faker = ExtensionList.lookupSingleton(DataFaker.class);
         Set<String> pseudonyms = new HashSet<>();
         int iterations = 200000;
 
@@ -105,14 +117,12 @@ class DataFakerTest {
         assertEquals(iterations, pseudonyms.size(), "Expected zero collisions in " + iterations + " iterations");
     }
 
+    @LocalData
     @Test
     void legacyPseudonymPreservation(JenkinsRule r) {
         ContentMappings mappings = ContentMappings.get();
         String original = "testuser";
         String legacyPseudonym = "user_sad_cat";
-
-        ContentMapping legacyMapping = ContentMapping.of(original, legacyPseudonym);
-        mappings.getMappingOrCreate(original, o -> legacyMapping);
 
         ContentMapping retrieved = mappings.getMappingOrCreate(
                 original,
@@ -123,26 +133,12 @@ class DataFakerTest {
     }
 
     @Test
-    void keyedPseudonyms(JenkinsRule r) {
-        HMACConfidentialKey key1 = new HMACConfidentialKey(DataFaker.class, "pseudonyms");
-        HMACConfidentialKey key2 = new HMACConfidentialKey(DataFaker.class, "something-else");
-
-        String original = "testuser";
-        String mac1 = key1.mac(original);
-        String mac2 = key2.mac(original);
-
-        assertNotEquals(mac1, mac2, "Different keys should produce different MACs for same original");
-    }
-
-    @Test
-    void macLengthSufficient(JenkinsRule r) {
-        HMACConfidentialKey key = new HMACConfidentialKey(DataFaker.class, "pseudonyms");
-        String mac = key.mac("test");
-
-        assertTrue(
-                mac.length() >= 16,
-                "MAC must be at least 16 hex chars to safely extract seed (8 chars) and tail (8 chars). Got: "
-                        + mac.length());
-        assertEquals(64, mac.length(), "Full HMAC-SHA256 should be 64 hex chars (32 bytes)");
+    void floorModGuaranteesNonNegativeIndices(JenkinsRule r) {
+        // Guards against negative-index bugs: Java's % takes the sign of the dividend,
+        // so wordFor must use floorMod to guarantee non-negative results for any input.
+        for (long hostile : new long[] {Long.MIN_VALUE, -1L, Integer.MIN_VALUE, 0L, 0xFFFFFFFFL, Long.MAX_VALUE}) {
+            String word = DataFaker.wordFor(hostile); // must not throw
+            assertNotNull(word, "hostile input " + hostile);
+        }
     }
 }
