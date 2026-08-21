@@ -24,33 +24,24 @@
 
 package com.cloudbees.jenkins.support.filter;
 
-import com.cloudbees.jenkins.support.util.WordReplacer;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Functions;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * Represents a mapping from some original string to a replacement. Useful both as an individual ContentFilter as well
- * as a persistable class for consistent anonymization mappings.
+ * Represents a mapping from some original string to a replacement. A persistable class for consistent anonymization mappings.
  *
  * @see ContentMappings
  * @since TODO
  */
 @Restricted(NoExternalUse.class)
-public class ContentMapping implements ContentFilter {
-    private static final String ALT_SEPARATOR = " » ";
+public class ContentMapping {
 
     private final String original;
     private final String replacement;
     private final int hashCode;
-
-    private final String[] originals;
-    private final String[] replacements;
 
     // Mutable usage-tracking metadata, deliberately outside equals/hashCode/identity: when this mapping was last
     // known to be live (per a NameProvider) or actually matched during filtering. Drives grace-period eviction in
@@ -61,22 +52,6 @@ public class ContentMapping implements ContentFilter {
         this.original = original;
         this.replacement = replacement;
         this.lastSeen = Instant.now();
-
-        // add flavors of the original string to replace, avoid add when equals
-        String slashChangedInOriginal = original.replace("/", ALT_SEPARATOR);
-        Set<String> originalsSet = new HashSet<>(4);
-        originalsSet.add(original);
-        originalsSet.add(Functions.escape(original));
-        originalsSet.add(slashChangedInOriginal);
-        originalsSet.add(Functions.escape(slashChangedInOriginal));
-        originals = originalsSet.toArray(new String[0]);
-
-        // create the replacement array with the same length as the resulting originals
-        replacements = new String[originals.length];
-        for (int i = 0; i < replacements.length; i++) {
-            replacements[i] = replacement;
-        }
-
         this.hashCode = original.hashCode();
     }
 
@@ -120,11 +95,6 @@ public class ContentMapping implements ContentFilter {
      */
     Instant getLastSeen() {
         return lastSeen;
-    }
-
-    @Override
-    public @NonNull String filter(@NonNull String input) {
-        return WordReplacer.replaceWordsIgnoreCase(input, originals, replacements);
     }
 
     @Override
