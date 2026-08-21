@@ -52,8 +52,15 @@ public class SensitiveContentFilter implements ContentFilter {
 
     private static final Logger LOGGER = Logger.getLogger(SensitiveContentFilter.class.getName());
 
-    private final AtomicReference<Pattern> mappingsPattern = new AtomicReference<>();
-    private final AtomicReference<Map<String, String>> replacementsMap = new AtomicReference<>();
+    // A pattern and its two derived maps, published as one atomic unit so a concurrent reload() can never be
+    // observed as a torn mix of an old pattern with newer maps (or vice versa) -- see replacementFor(). Since
+    // the maps are always built from exactly the same names as the pattern, a match can never fail to resolve.
+    private record Snapshot(Pattern pattern, Map<String, String> replacements, Map<String, ContentMapping> matched) {
+        // Matches nothing, so filter() is a no-op before the first reload() rather than risking an NPE.
+        private static final Snapshot EMPTY = new Snapshot(Pattern.compile("(?!)"), Map.of(), Map.of());
+    }
+
+    private final AtomicReference<Snapshot> snapshot = new AtomicReference<>(Snapshot.EMPTY);
 
     public static SensitiveContentFilter get() {
         return ExtensionList.lookupSingleton(SensitiveContentFilter.class);
@@ -61,13 +68,30 @@ public class SensitiveContentFilter implements ContentFilter {
 
     @Override
     public @NonNull String filter(@NonNull String input) {
-        return WordReplacer.replaceWords(input, mappingsPattern.get(), replacementsMap.get());
+        // Snapshot once per call so a concurrent reload() can't be observed partway through.
+        Snapshot current = snapshot.get();
+        return WordReplacer.replaceWords(
+                input, current.pattern(), match -> replacementFor(match, current.matched(), current.replacements()));
+    }
+
+    // An actual match in real content keeps this mapping alive even if the original item is gone -- see
+    // ContentMappings#evictStale(). Deliberately not touched during the pre-fill loop in reload() below, only here,
+    // on a real match.
+    private static String replacementFor(
+            String match, Map<String, ContentMapping> matched, Map<String, String> replacements) {
+        String lowerCase = match.toLowerCase(Locale.ENGLISH);
+        ContentMapping mapping = matched.get(lowerCase);
+        if (mapping != null) {
+            mapping.touch();
+        }
+        return replacements.get(lowerCase);
     }
 
     @Override
     public synchronized void reload() {
         final long startTime = System.currentTimeMillis();
         final Map<String, String> replacementsMap = new HashMap<>();
+        final Map<String, ContentMapping> matchedMappings = new HashMap<>();
         final WordsTrie trie = new WordsTrie();
         final ContentMappings mappings = ContentMappings.get();
         Set<String> stopWords = mappings.getStopWords();
@@ -87,6 +111,7 @@ public class SensitiveContentFilter implements ContentFilter {
                                         .getReplacement()
                                         .replaceAll("\\\\", "\\\\\\\\")
                                         .replaceAll("\\$", "\\\\\\$"));
+                        matchedMappings.put(lowerCaseOriginal, contentMapping);
                         trie.add(lowerCaseOriginal);
                     }
                 });
@@ -99,6 +124,8 @@ public class SensitiveContentFilter implements ContentFilter {
                     // But the reload is already quite fast anyway. (~1s for 10^4 items with 1 CPU / 2 GB memory
                     // container)
                     if (!stopWords.contains(lowerCaseOriginal)) {
+                        // getMappingOrCreate touches the mapping (refreshes lastSeen) on every call, hit or miss --
+                        // that's the "live" signal, since name is something a NameProvider currently reports.
                         ContentMapping mapping = mappings.getMappingOrCreate(
                                 name, original -> ContentMapping.of(original, provider.generateFake()));
                         // Matcher#appendReplacement needs to have the `\` and `$` escaped.
@@ -107,12 +134,13 @@ public class SensitiveContentFilter implements ContentFilter {
                                 mapping.getReplacement()
                                         .replaceAll("\\\\", "\\\\\\\\")
                                         .replaceAll("\\$", "\\\\\\$"));
+                        matchedMappings.putIfAbsent(lowerCaseOriginal, mapping);
                         trie.add(lowerCaseOriginal);
                     }
                 }));
-        this.mappingsPattern.set(Pattern.compile(
-                "(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
-        this.replacementsMap.set(replacementsMap);
+        Pattern pattern = Pattern.compile(
+                "(?<!\\w)" + trie.getRegex() + "(?!\\w)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        this.snapshot.set(new Snapshot(pattern, replacementsMap, matchedMappings));
         LOGGER.log(Level.FINE, "Took " + (System.currentTimeMillis() - startTime) + "ms to reload");
     }
 }

@@ -29,6 +29,9 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.model.User;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -107,5 +110,60 @@ class SensitiveContentFilterTest {
         filter.reload();
         assertThat(filter.filter(os)).isEqualTo(os);
         assertThat(filter.filter(label)).startsWith("label_").isNotEqualTo(label);
+    }
+
+    @Test
+    void strayReferenceSurvivesGracePeriodAfterItemRemoval(JenkinsRule j) throws IOException {
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        FreeStyleProject project = j.createFreeStyleProject("strayproject");
+        filter.reload();
+        String name = project.getName();
+
+        String replacement = filter.filter(name);
+        assertThat(replacement).startsWith("item_").doesNotContain(name);
+
+        j.jenkins.remove(project);
+        filter.reload();
+
+        // The item is gone, but the pre-fill loop in reload() still loads every persisted mapping, so a
+        // stray reference to "strayproject" elsewhere in current content (build logs, SCM URLs, etc.) must
+        // keep getting anonymized within the grace period.
+        assertThat(filter.filter(name)).isEqualTo(replacement);
+    }
+
+    @Test
+    void matchRefreshesLastSeenPreventingEviction(JenkinsRule j) throws IOException {
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        FreeStyleProject kept = j.createFreeStyleProject("keptproject");
+        FreeStyleProject dropped = j.createFreeStyleProject("droppedproject");
+        filter.reload();
+
+        String keptName = kept.getName();
+        String droppedName = dropped.getName();
+
+        j.jenkins.remove(kept);
+        j.jenkins.remove(dropped);
+        filter.reload();
+
+        ContentMappings mappings = ContentMappings.get();
+        Instant staleTime = Instant.now().minus(Duration.ofDays(91));
+        backdate(mappings, keptName, staleTime);
+        backdate(mappings, droppedName, staleTime);
+
+        // A real match on "keptproject" (e.g. because its name still appears in old build logs) should
+        // refresh lastSeen back to "now" before the mapping is ever swept.
+        filter.filter(keptName);
+
+        mappings.evictStale();
+
+        assertThat(mappings.getMappings()).containsKey(keptName).doesNotContainKey(droppedName);
+    }
+
+    private static void backdate(ContentMappings mappings, String original, Instant lastSeen) {
+        StreamSupport.stream(mappings.spliterator(), false)
+                .filter(mapping -> mapping.getOriginal().equals(original))
+                .findFirst()
+                .orElseThrow()
+                .touch(lastSeen);
     }
 }
