@@ -35,6 +35,8 @@ import hudson.model.AbstractItem;
 import hudson.model.ManagementLink;
 import hudson.model.Saveable;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,6 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
+import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -130,6 +133,7 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             @NonNull String original, @NonNull Function<String, ContentMapping> generator) {
         boolean isNew = !mappings.containsKey(original);
         ContentMapping mapping = mappings.computeIfAbsent(original, generator);
+        mapping.touch();
         try {
             if (isNew) {
                 save();
@@ -145,6 +149,45 @@ public class ContentMappings extends ManagementLink implements Saveable, Iterabl
             stopWords.add(item.getTaskNoun().toLowerCase(Locale.ENGLISH));
             stopWords.add(item.getPronoun().toLowerCase(Locale.ENGLISH));
         });
+    }
+
+    // Read per-call rather than cached in a static field, so the value is picked up wherever it is supplied and
+    // so tests can override it.
+    private static Duration retention() {
+        return SystemProperties.getDuration(ContentMappings.class.getName() + ".RETENTION", Duration.ofDays(90));
+    }
+
+    /**
+     * Evicts mappings that have not been touched within the retention window. This method runs after all content
+     * has been filtered, so every currently-live and currently-matched mapping has been refreshed via {@code touch()}.
+     *
+     * <p>Uses {@code computeIfPresent} to express the remove-if-stale decision as one map operation. A concurrent
+     * {@code touch()} after the staleness check can still be lost, causing the mapping to be evicted and recreated
+     * on next use. This becomes benign once pseudonym derivation is deterministic (in-flight work), because the
+     * recreated mapping then receives the identical pseudonym.
+     *
+     * <p>Must be called from within a {@link BulkChange} so the eviction is persisted.
+     */
+    public void evictStale() {
+        Instant cutoff = Instant.now().minus(retention());
+        // Counter lives inside the lambda so it only increments when a removal actually happens.
+        // Concurrent bundle generation is possible (writeBundle is public static), so the count is
+        // approximate under contention. ConcurrentSkipListMap may also retry the lambda on CAS failure.
+        int[] removed = {0};
+        for (String key : mappings.keySet()) {
+            mappings.computeIfPresent(key, (k, v) -> {
+                if (v.getLastSeen().isBefore(cutoff)) {
+                    removed[0]++;
+                    return null;
+                }
+                return v;
+            });
+        }
+        if (removed[0] > 0) {
+            int count = removed[0];
+            LOGGER.fine(() -> "Evicted " + count + " stale content mapping" + (count == 1 ? "" : "s")
+                    + " (retention window: " + retention().toDays() + " days)");
+        }
     }
 
     protected void clear() {
