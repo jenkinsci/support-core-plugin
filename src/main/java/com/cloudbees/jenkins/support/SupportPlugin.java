@@ -36,6 +36,7 @@ import com.cloudbees.jenkins.support.api.UnfilteredStringContent;
 import com.cloudbees.jenkins.support.config.SupportAutomatedBundleConfiguration;
 import com.cloudbees.jenkins.support.filter.ContentFilter;
 import com.cloudbees.jenkins.support.filter.ContentFilters;
+import com.cloudbees.jenkins.support.filter.ContentMappings;
 import com.cloudbees.jenkins.support.filter.FilteredOutputStream;
 import com.cloudbees.jenkins.support.filter.PrefilteredContent;
 import com.cloudbees.jenkins.support.util.CallAsyncWrapper;
@@ -561,6 +562,7 @@ public class SupportPlugin extends Plugin {
                     }
                 }
                 binaryOut.flush();
+                ContentMappings.get().evictStale();
                 change.commit();
             }
         } finally {
