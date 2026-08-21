@@ -90,6 +90,6 @@ public class InetAddressContentFilter implements ContentFilter {
 
     private static ContentMapping newMapping(String original) {
         return ContentMapping.of(
-                original, DataFaker.get().apply(name -> "ip_" + name).get());
+                original, DataFaker.get().apply(name -> "ip_" + name).apply(original));
     }
 }

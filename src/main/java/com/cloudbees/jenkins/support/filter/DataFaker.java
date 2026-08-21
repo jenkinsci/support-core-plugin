@@ -28,21 +28,28 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import jenkins.security.HMACConfidentialKey;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.randname.RandomNameGenerator;
+import org.kohsuke.randname.Dictionary;
 
 /**
- * Provides a way to generate random names.
+ * Provides deterministic pseudonym generation for anonymization.
  *
- * @since TODO
+ * <p>Derives stable pseudonyms from originals using HMAC-keyed word pairs and hex tails.
+ * Same original always produces the same pseudonym within one installation (stable across
+ * restarts and CloudBees CI HA replicas sharing JENKINS_HOME). Deliberately differs across installations
+ * with different secret keys, preventing brute-force attacks on guessable originals.
  */
 @Extension
 @Restricted(NoExternalUse.class)
-public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Supplier<String>> {
+public class DataFaker implements ExtensionPoint, Function<Function<String, String>, Function<String, String>> {
+
+    private static final HMACConfidentialKey PSEUDONYMS = new HMACConfidentialKey(DataFaker.class, "pseudonyms", 8);
+    private static final Dictionary DICTIONARY = new Dictionary();
 
     /**
      * @return the singleton instance
@@ -51,16 +58,43 @@ public class DataFaker implements ExtensionPoint, Function<Function<String, Stri
         return ExtensionList.lookupSingleton(DataFaker.class);
     }
 
-    private final RandomNameGenerator generator = new RandomNameGenerator();
+    /**
+     * Maps MAC-derived bits to a dictionary word, guaranteed never to produce a negative index.
+     *
+     * <p>Uses {@code Math.floorMod} rather than {@code %} because Java's {@code %} operator
+     * takes the sign of the dividend, so a negative input yields a negative index.
+     * {@code floorMod} takes the sign of the divisor, guaranteeing a non-negative result
+     * for any input including {@code Long.MIN_VALUE}.
+     *
+     * @param macBits MAC-derived value to map to dictionary index
+     * @return dictionary word at the computed index
+     */
+    static String wordFor(long macBits) {
+        return DICTIONARY.word(Math.floorMod(macBits, DICTIONARY.size()));
+    }
 
     /**
-     * Applies the provided function to a random name and normalizes the result.
+     * Applies the provided function to a deterministic name derived from the original and normalizes the result.
+     *
+     * @param nameTransformer function to apply to the generated word pair (e.g., adds prefix like "user_")
+     * @return function that maps original strings to stable pseudonyms
      */
     @Override
-    public Supplier<String> apply(@NonNull Function<String, String> nameTransformer) {
-        return () -> nameTransformer
-                .apply(generator.next())
-                .toLowerCase(Locale.ENGLISH)
-                .replace(' ', '_');
+    public Function<String, String> apply(@NonNull Function<String, String> nameTransformer) {
+        return original -> {
+            byte[] mac = PSEUDONYMS.mac(original.getBytes(StandardCharsets.UTF_8));
+            // First 4 bytes for dictionary index, next 4 for the 8-hex-character tail
+            long idx = ((long) (mac[0] & 0xFF) << 24)
+                    | ((long) (mac[1] & 0xFF) << 16)
+                    | ((long) (mac[2] & 0xFF) << 8)
+                    | (mac[3] & 0xFF);
+            String tail = String.format("%02x%02x%02x%02x", mac[4] & 0xFF, mac[5] & 0xFF, mac[6] & 0xFF, mac[7] & 0xFF);
+
+            String name = nameTransformer
+                    .apply(wordFor(idx))
+                    .toLowerCase(Locale.ENGLISH)
+                    .replace(' ', '_');
+            return name + "_" + tail;
+        };
     }
 }
