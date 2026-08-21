@@ -27,10 +27,10 @@ package com.cloudbees.jenkins.support.filter;
 import com.cloudbees.jenkins.support.util.WordReplacer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import net.jcip.annotations.Immutable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -41,7 +41,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * @see ContentMappings
  * @since TODO
  */
-@Immutable
 @Restricted(NoExternalUse.class)
 public class ContentMapping implements ContentFilter {
     private static final String ALT_SEPARATOR = " » ";
@@ -53,9 +52,15 @@ public class ContentMapping implements ContentFilter {
     private final String[] originals;
     private final String[] replacements;
 
+    // Mutable usage-tracking metadata, deliberately outside equals/hashCode/identity: when this mapping was last
+    // known to be live (per a NameProvider) or actually matched during filtering. Drives grace-period eviction in
+    // ContentMappings#evictStale(); a mapping that stops being touched eventually gets swept.
+    private volatile Instant lastSeen;
+
     private ContentMapping(@NonNull String original, @NonNull String replacement) {
         this.original = original;
         this.replacement = replacement;
+        this.lastSeen = Instant.now();
 
         // add flavors of the original string to replace, avoid add when equals
         String slashChangedInOriginal = original.replace("/", ALT_SEPARATOR);
@@ -96,6 +101,27 @@ public class ContentMapping implements ContentFilter {
         return replacement;
     }
 
+    /**
+     * Marks this mapping as seen (live or actually matched) at the given time.
+     */
+    void touch(Instant at) {
+        lastSeen = at;
+    }
+
+    /**
+     * Marks this mapping as seen (live or actually matched) now.
+     */
+    void touch() {
+        touch(Instant.now());
+    }
+
+    /**
+     * @return the last time this mapping was known to be live or was actually matched during filtering
+     */
+    Instant getLastSeen() {
+        return lastSeen;
+    }
+
     @Override
     public @NonNull String filter(@NonNull String input) {
         return WordReplacer.replaceWordsIgnoreCase(input, originals, replacements);
@@ -118,15 +144,25 @@ public class ContentMapping implements ContentFilter {
         SerializationProxy proxy = new SerializationProxy();
         proxy.original = original;
         proxy.replacement = replacement;
+        proxy.lastSeen = lastSeen.toEpochMilli();
         return proxy;
     }
 
     private static class SerializationProxy {
         private String original;
         private String replacement;
+        // Absent in XML written before this field existed; XStream leaves it at 0 in that case. long epoch millis
+        // on the wire is fine here (unlike the in-memory field) since this is the serial form.
+        private long lastSeen;
 
         private Object readResolve() {
-            return ContentMapping.of(original, replacement);
+            ContentMapping mapping = ContentMapping.of(original, replacement);
+            // Treat "unknown" (0, i.e. pre-upgrade data) as "seen now" rather than "seen at the epoch" -- the
+            // latter would make every mapping that already existed look instantly stale and get swept on the
+            // very first reload after upgrading, defeating the "still catches stray references" property for
+            // everything that predates this field.
+            mapping.touch(lastSeen > 0 ? Instant.ofEpochMilli(lastSeen) : Instant.now());
+            return mapping;
         }
     }
 }
