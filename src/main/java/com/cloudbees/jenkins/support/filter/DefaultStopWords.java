@@ -49,6 +49,8 @@ public class DefaultStopWords implements StopWords {
                 "log",
                 "info",
                 "java",
-                "url");
+                "url",
+                "http",
+                "https");
     }
 }
