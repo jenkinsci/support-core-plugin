@@ -579,7 +579,8 @@ public class SupportPlugin extends Plugin {
      * @param filterableParameters filterableParameters in the name to be filtered. If null, no filter takes place to avoid corruption
      * @return the name filtered
      */
-    static String getNameFiltered(ContentFilter contentFilter, String name, String[] filterableParameters) {
+    @Restricted(NoExternalUse.class) // accessible for tests
+    public static String getNameFiltered(ContentFilter contentFilter, String name, String[] filterableParameters) {
         String filteredName;
 
         if (filterableParameters != null) {
