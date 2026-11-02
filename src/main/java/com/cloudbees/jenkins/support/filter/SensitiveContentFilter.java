@@ -75,12 +75,21 @@ public class SensitiveContentFilter implements ContentFilter {
     }
 
     /**
-     * Lowercase per code point. This is <em>not</em> Unicode normalization (NFC/NFKC), and deliberately not
-     * full Unicode case folding either: folding via {@code toLowerCase(toUpperCase(cp))} additionally maps
+     * Lowercase per code point, restricted to {@linkplain Character.UnicodeScript#LATIN Latin-script} letters;
+     * every other code point (Greek, Cyrillic, digits, punctuation, etc.) passes through unchanged even if it
+     * has its own upper/lower case pair. This is <em>not</em> Unicode normalization (NFC/NFKC), and deliberately
+     * not full Unicode case folding either: folding via {@code toLowerCase(toUpperCase(cp))} additionally maps
      * already-lowercase variants onto a different letter, which merges characters that are distinct letters
      * rather than case variants -- Turkish {@code ı} onto {@code i} being the clearest example. Because
      * {@link #reload()} keys the lookup by this value, such a merge makes two different originals share one
      * pseudonym. Plain lowercasing keeps them apart.
+     * <p>
+     * Narrowing to Latin script is a deliberate scope reduction on top of that: the realistic motivating case
+     * is a login or item name typed with inconsistent Latin-letter case (e.g. {@code Mike.Cirioli@CloudBees.com}
+     * vs. {@code mike.cirioli@cloudbees.com}), not a customer identifier that differs only by the case of a
+     * Greek or Cyrillic letter. Not touching non-Latin code points at all -- rather than lowercasing them too --
+     * removes the need to reason about case semantics (and any UTF-16 width quirks) for every script in Unicode;
+     * Latin is the only script this filter actually needs case-insensitivity for.
      * <p>
      * Operating per code point (rather than on the whole string) is what guarantees the result has the same
      * UTF-16 length as the input, which {@link WordReplacer#replaceWordsByOffset} relies on to splice
@@ -99,7 +108,7 @@ public class SensitiveContentFilter implements ContentFilter {
         boolean needsNormalization = false;
         for (int i = 0, len = value.length(); i < len; ) {
             int cp = value.codePointAt(i);
-            int normalized = Character.toLowerCase(cp);
+            int normalized = normalizeLatinCodePoint(cp);
             if (cp != normalized) {
                 needsNormalization = true;
                 break;
@@ -114,10 +123,14 @@ public class SensitiveContentFilter implements ContentFilter {
         StringBuilder sb = new StringBuilder(value.length());
         for (int i = 0, len = value.length(); i < len; ) {
             int cp = value.codePointAt(i);
-            sb.appendCodePoint(Character.toLowerCase(cp));
+            sb.appendCodePoint(normalizeLatinCodePoint(cp));
             i += Character.charCount(cp);
         }
         return sb.toString();
+    }
+
+    private static int normalizeLatinCodePoint(int cp) {
+        return Character.UnicodeScript.of(cp) == Character.UnicodeScript.LATIN ? Character.toLowerCase(cp) : cp;
     }
 
     @Override

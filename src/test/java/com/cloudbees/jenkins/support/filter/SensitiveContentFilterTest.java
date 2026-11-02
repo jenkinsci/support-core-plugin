@@ -262,6 +262,43 @@ class SensitiveContentFilterTest {
     }
 
     @Test
+    void nonLatinCaseVariantsAreNotNormalized(JenkinsRule j) throws IOException {
+        // normalizeCase restricts case folding to Latin-script letters; Greek and Cyrillic case variants
+        // are left exactly as-is. "ΑΘΗΝΑ" (all-caps Greek) and "αθηνα" (lowercase) are therefore different
+        // keys and do NOT share a mapping, even though full Unicode lowering would have merged them.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("ΑΘΗΝΑ", original -> ContentMapping.of(original, "replacement_athena"));
+        filter.reload();
+
+        assertThat(filter.filter("ΑΘΗΝΑ")).isEqualTo("replacement_athena");
+        // Lowercase Greek variant is a different key: no mapping exists for it, so it passes through unfiltered.
+        assertThat(filter.filter("αθηνα")).isEqualTo("αθηνα");
+
+        // Same for Cyrillic: "Иван" and "иван" stay distinct keys.
+        mappings.getMappingOrCreate("Иван", original -> ContentMapping.of(original, "replacement_ivan"));
+        filter.reload();
+
+        assertThat(filter.filter("Иван")).isEqualTo("replacement_ivan");
+        assertThat(filter.filter("иван")).isEqualTo("иван");
+    }
+
+    @Test
+    void latinCaseVariantsStillNormalizeAcrossScripts(JenkinsRule j) throws IOException {
+        // The motivating case for keeping any case-insensitivity at all: a Latin-letter login or email
+        // typed with inconsistent case must still match, exactly as it did before the Latin-only narrowing.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate(
+                "Mike.Cirioli@CloudBees.com", original -> ContentMapping.of(original, "replacement_mike"));
+        filter.reload();
+
+        String replacement = filter.filter("Mike.Cirioli@CloudBees.com");
+        assertThat(replacement).isEqualTo("replacement_mike");
+        assertThat(filter.filter("mike.cirioli@cloudbees.com")).isEqualTo(replacement);
+    }
+
+    @Test
     void normalizeCasePreservesUtf16WidthForEveryCodePoint() {
         // Offset splicing (replaceWordsByOffset) assumes folding a code point never changes how many
         // UTF-16 code units it needs; otherwise offsets between the original and normalized strings
