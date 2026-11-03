@@ -27,9 +27,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.nio.charset.Charset;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,11 +48,18 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 class DeadlockTest {
 
-    private static void sleep() {
+    private static final long TIMEOUT_SECONDS = 30;
+
+    /**
+     * Rendezvous while each thread holds its first monitor, so neither reaches for the second until both
+     * are held. Sleeping instead left the deadlock dependent on thread scheduling: the first thread could
+     * take, use and release both monitors before the second was ever scheduled, and no deadlock formed.
+     */
+    private static void awaitBarrier(CyclicBarrier barrier) {
         try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            barrier.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException | BrokenBarrierException | TimeoutException e) {
+            throw new AssertionError("Both threads never held their first monitor at once", e);
         }
     }
 
@@ -55,10 +69,11 @@ class DeadlockTest {
         int initialCount = files == null ? 0 : files.length;
         Object object1 = new Object();
         Object object2 = new Object();
+        CyclicBarrier bothHoldFirstMonitor = new CyclicBarrier(2);
         Thread t1 = new Thread(new Runnable() {
             public void run() {
                 synchronized (object1) {
-                    sleep();
+                    awaitBarrier(bothHoldFirstMonitor);
                     firstMethod();
                 }
             }
@@ -79,7 +94,7 @@ class DeadlockTest {
 
         Thread t2 = new Thread(() -> {
             synchronized (object2) {
-                sleep();
+                awaitBarrier(bothHoldFirstMonitor);
                 synchronized (object1) {
                 }
             }
@@ -89,8 +104,10 @@ class DeadlockTest {
         try {
             t2.start();
             try {
-
-                Thread.sleep(1000 * 5); // Wait 5 seconds, then execute deadlock checker.
+                // Passing the barrier only means both monitors are held; the threads still have to block on
+                // each other's before the JVM reports a deadlock. Poll for that rather than sleeping a fixed
+                // interval, which under CI load could elapse before the deadlock registered.
+                awaitDeadlockDetected();
 
                 // Force call deadlock checker
                 DeadlockTrackChecker dtc = new DeadlockTrackChecker();
@@ -114,6 +131,19 @@ class DeadlockTest {
             }
         } finally {
             t1.interrupt();
+        }
+    }
+
+    private static void awaitDeadlockDetected() throws InterruptedException {
+        ThreadMXBean mbean = ManagementFactory.getThreadMXBean();
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SECONDS);
+        long[] deadlocked = mbean.findDeadlockedThreads();
+        while (deadlocked == null || deadlocked.length == 0) {
+            if (System.nanoTime() - deadline >= 0) {
+                fail("JVM never reported a deadlock within " + TIMEOUT_SECONDS + "s");
+            }
+            Thread.sleep(50);
+            deadlocked = mbean.findDeadlockedThreads();
         }
     }
 }
