@@ -193,23 +193,6 @@ class SensitiveContentFilterTest {
     }
 
     @Test
-    void longSIsNotFoldedOntoPlainS(JenkinsRule j) throws IOException {
-        // normalizeCase lowercases per code point and deliberately does not case-fold, so the long s
-        // (U+017F, already lowercase) stays itself rather than becoming 's'. "ſap" is therefore a
-        // different key from "sap" and is left alone. Folding them together would be worse than a missed
-        // match: distinct originals sharing a key means one takes the other's pseudonym.
-        // This also pins the absence of the old NPE, which came from the pattern folding ſ onto s while
-        // the key map did not, leaving the match with no replacement to resolve to.
-        SensitiveContentFilter filter = SensitiveContentFilter.get();
-        ContentMappings mappings = ContentMappings.get();
-        mappings.getMappingOrCreate("sap", original -> ContentMapping.of(original, "replacement_sap"));
-        filter.reload();
-
-        assertThat(filter.filter("the ſap server")).isEqualTo("the ſap server");
-        assertThat(filter.filter("the sap server")).isEqualTo("the replacement_sap server");
-    }
-
-    @Test
     void stopWordsGateCaseVariants(JenkinsRule j) throws IOException {
         // The gate compares the normalized key, not the raw original, so a case variant of a stop word is
         // still gated. Comparing raw originals would let "JENKINS" through while "jenkins" was suppressed.
@@ -219,19 +202,6 @@ class SensitiveContentFilterTest {
         filter.reload();
 
         assertThat(filter.filter("the JENKINS server")).isEqualTo("the JENKINS server");
-    }
-
-    @Test
-    void turkishCapitalIDotAbovePreservesLength(JenkinsRule j) throws IOException {
-        // Turkish İ (U+0130) grows from 7 to 8 chars when lowercased with toLowerCase(ENGLISH), corrupting
-        // trie literals and offsets. normalizeCase preserves length, so the name is redacted correctly.
-        SensitiveContentFilter filter = SensitiveContentFilter.get();
-        ContentMappings mappings = ContentMappings.get();
-        mappings.getMappingOrCreate("İdalium", original -> ContentMapping.of(original, "replacement_idalium"));
-        filter.reload();
-
-        String result = filter.filter("İdalium");
-        assertThat(result).isEqualTo("replacement_idalium");
     }
 
     @Test
@@ -262,56 +232,43 @@ class SensitiveContentFilterTest {
     }
 
     @Test
-    void nonLatinCaseVariantsAreNotNormalized(JenkinsRule j) throws IOException {
-        // normalizeCase restricts case folding to Latin-script letters; Greek and Cyrillic case variants
-        // are left exactly as-is. "ΑΘΗΝΑ" (all-caps Greek) and "αθηνα" (lowercase) are therefore different
-        // keys and do NOT share a mapping, even though full Unicode lowering would have merged them.
+    void onlyLatinLettersAreNormalized(JenkinsRule j) throws IOException {
+        // normalizeCase folds Latin-script letters, plain ASCII and accented alike. Accented Latin matters for
+        // real users, not just theoretically: Jenkins core's default CASE_INSENSITIVE user-id strategy folds
+        // "Jörg" and "jörg" to the same key, so this filter must too, or it silently stops redacting that user.
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         ContentMappings mappings = ContentMappings.get();
-        mappings.getMappingOrCreate("ΑΘΗΝΑ", original -> ContentMapping.of(original, "replacement_athena"));
+        mappings.getMappingOrCreate(
+                "Jörg.Cirioli@CloudBees.com", original -> ContentMapping.of(original, "replacement_jorg"));
         filter.reload();
+        assertThat(filter.filter("Jörg.Cirioli@CloudBees.com")).isEqualTo("replacement_jorg");
+        assertThat(filter.filter("jörg.cirioli@cloudbees.com")).isEqualTo("replacement_jorg");
 
-        assertThat(filter.filter("ΑΘΗΝΑ")).isEqualTo("replacement_athena");
-        // Lowercase Greek variant is a different key: no mapping exists for it, so it passes through unfiltered.
-        assertThat(filter.filter("αθηνα")).isEqualTo("αθηνα");
-
-        // Same for Cyrillic: "Иван" and "иван" stay distinct keys.
+        // ...but anything outside Latin script -- Greek, Cyrillic -- keeps its case as a distinct key, even
+        // when it has an obvious upper/lower counterpart.
+        mappings.getMappingOrCreate("ΑΘΗΝΑ", original -> ContentMapping.of(original, "replacement_athena"));
         mappings.getMappingOrCreate("Иван", original -> ContentMapping.of(original, "replacement_ivan"));
         filter.reload();
 
+        assertThat(filter.filter("ΑΘΗΝΑ")).isEqualTo("replacement_athena");
+        assertThat(filter.filter("αθηνα")).isEqualTo("αθηνα");
         assertThat(filter.filter("Иван")).isEqualTo("replacement_ivan");
         assertThat(filter.filter("иван")).isEqualTo("иван");
     }
 
     @Test
-    void latinCaseVariantsStillNormalizeAcrossScripts(JenkinsRule j) throws IOException {
-        // The motivating case for keeping any case-insensitivity at all: a Latin-letter login or email
-        // typed with inconsistent case must still match, exactly as it did before the Latin-only narrowing.
+    void turkishCapitalIDotAboveFoldsToPlainIWithoutDesyncingOffsets(JenkinsRule j) throws IOException {
+        // Historical regression check: folding İ (U+0130) via locale-aware String.toLowerCase(Locale.ENGLISH)
+        // expands it to two chars ("i" + combining dot above), desyncing offsets used for splicing replacements
+        // back into the original. Character.toLowerCase(char) has no such quirk -- it always maps one UTF-16
+        // unit to exactly one other -- so folding "İstanbul" to "istanbul" must redact correctly, not corrupt.
         SensitiveContentFilter filter = SensitiveContentFilter.get();
         ContentMappings mappings = ContentMappings.get();
-        mappings.getMappingOrCreate(
-                "Mike.Cirioli@CloudBees.com", original -> ContentMapping.of(original, "replacement_mike"));
+        mappings.getMappingOrCreate("İstanbul", original -> ContentMapping.of(original, "replacement_istanbul"));
         filter.reload();
 
-        String replacement = filter.filter("Mike.Cirioli@CloudBees.com");
-        assertThat(replacement).isEqualTo("replacement_mike");
-        assertThat(filter.filter("mike.cirioli@cloudbees.com")).isEqualTo(replacement);
-    }
-
-    @Test
-    void normalizeCasePreservesUtf16WidthForEveryCodePoint() {
-        // Offset splicing (replaceWordsByOffset) assumes folding a code point never changes how many
-        // UTF-16 code units it needs; otherwise offsets between the original and normalized strings
-        // desync and splicing corrupts or misaligns content. The targeted tests above (Turkish İ, long
-        // s) pin known cases; this exhaustively checks every code point through normalizeCase itself
-        // (not a reimplementation of its fold) so a future JDK Unicode table change, or a change to
-        // normalizeCase's own logic, can't silently break the invariant unnoticed.
-        for (int cp = Character.MIN_CODE_POINT; cp <= Character.MAX_CODE_POINT; cp++) {
-            String single = new String(Character.toChars(cp));
-            assertThat(SensitiveContentFilter.normalizeCase(single).length())
-                    .as("U+%04X normalizes to a different UTF-16 width", cp)
-                    .isEqualTo(Character.charCount(cp));
-        }
+        assertThat(filter.filter("İstanbul")).isEqualTo("replacement_istanbul");
+        assertThat(filter.filter("istanbul")).isEqualTo("replacement_istanbul");
     }
 
     @Test

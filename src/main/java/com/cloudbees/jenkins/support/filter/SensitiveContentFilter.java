@@ -75,62 +75,49 @@ public class SensitiveContentFilter implements ContentFilter {
     }
 
     /**
-     * Lowercase per code point, restricted to {@linkplain Character.UnicodeScript#LATIN Latin-script} letters;
-     * every other code point (Greek, Cyrillic, digits, punctuation, etc.) passes through unchanged even if it
-     * has its own upper/lower case pair. This is <em>not</em> Unicode normalization (NFC/NFKC), and deliberately
-     * not full Unicode case folding either: folding via {@code toLowerCase(toUpperCase(cp))} additionally maps
-     * already-lowercase variants onto a different letter, which merges characters that are distinct letters
-     * rather than case variants -- Turkish {@code ı} onto {@code i} being the clearest example. Because
-     * {@link #reload()} keys the lookup by this value, such a merge makes two different originals share one
-     * pseudonym. Plain lowercasing keeps them apart.
+     * Lowercases Latin-script letters (plain ASCII through accented Latin, e.g. {@code É}); every other
+     * character -- including non-Latin letters with their own case, such as Greek or Cyrillic -- passes through
+     * unchanged. The filter's one motivating case for case-insensitivity is a login or item name typed with
+     * inconsistent case (e.g. {@code Jörg.Cirioli@CloudBees.com} vs. {@code jörg.cirioli@cloudbees.com});
+     * nothing else needs it, so nothing else is touched. Accented Latin letters are not optional here: Jenkins
+     * core's {@code IdStrategy.CaseInsensitive} (the default user-id strategy) keys users by
+     * {@code toLowerCase(Locale.ENGLISH)}, which folds them, so a narrower ASCII-only check would silently stop
+     * redacting a real user's name.
      * <p>
-     * Narrowing to Latin script is a deliberate scope reduction on top of that: the realistic motivating case
-     * is a login or item name typed with inconsistent Latin-letter case (e.g. {@code Mike.Cirioli@CloudBees.com}
-     * vs. {@code mike.cirioli@cloudbees.com}), not a customer identifier that differs only by the case of a
-     * Greek or Cyrillic letter. Not touching non-Latin code points at all -- rather than lowercasing them too --
-     * removes the need to reason about case semantics (and any UTF-16 width quirks) for every script in Unicode;
-     * Latin is the only script this filter actually needs case-insensitivity for.
-     * <p>
-     * Operating per code point (rather than on the whole string) is what guarantees the result has the same
-     * UTF-16 length as the input, which {@link WordReplacer#replaceWordsByOffset} relies on to splice
-     * replacements back into the un-normalized original. {@code "İ".toLowerCase(ENGLISH)} returns two chars
-     * and would desync those offsets; {@code Character.toLowerCase(cp)} cannot.
-     * <p>
-     * Includes an identity fast path: returns the input unchanged when no code point would be altered, so
-     * already-normalized strings share storage with their keys rather than duplicating the char array.
+     * No code point handling is needed: every {@code char}-level case mapping used here ({@link
+     * Character#isUpperCase(char)}, {@link Character#toLowerCase(char)}) maps one UTF-16 unit to exactly one
+     * other UTF-16 unit, which is also what keeps the result the same length as the input for {@link
+     * WordReplacer#replaceWordsByOffset}'s offset splicing. That holds even for Turkish {@code İ} (U+0130),
+     * historically the one case that corrupted offsets -- but only when folded via locale-aware
+     * {@code String.toLowerCase(Locale)}, which this does not use.
      *
      * @param value the input string
      * @return a case-normalized copy, or the input itself if nothing changed
      */
     static String normalizeCase(String value) {
-        // Identity fast path: scan first, only allocate if something would change. Without this, every key
-        // duplicates its original even when they're identical, costing ~38 MB per 500k already-lowercase names.
-        boolean needsNormalization = false;
-        for (int i = 0, len = value.length(); i < len; ) {
-            int cp = value.codePointAt(i);
-            int normalized = normalizeLatinCodePoint(cp);
-            if (cp != normalized) {
-                needsNormalization = true;
+        int len = value.length();
+        int firstUpper = -1;
+        for (int i = 0; i < len; i++) {
+            if (isUpperLatin(value.charAt(i))) {
+                firstUpper = i;
                 break;
             }
-            i += Character.charCount(cp);
         }
-        if (!needsNormalization) {
+        if (firstUpper == -1) {
             return value;
         }
 
-        // Something differs; build the normalized copy.
-        StringBuilder sb = new StringBuilder(value.length());
-        for (int i = 0, len = value.length(); i < len; ) {
-            int cp = value.codePointAt(i);
-            sb.appendCodePoint(normalizeLatinCodePoint(cp));
-            i += Character.charCount(cp);
+        char[] chars = value.toCharArray();
+        for (int i = firstUpper; i < len; i++) {
+            if (isUpperLatin(chars[i])) {
+                chars[i] = Character.toLowerCase(chars[i]);
+            }
         }
-        return sb.toString();
+        return new String(chars);
     }
 
-    private static int normalizeLatinCodePoint(int cp) {
-        return Character.UnicodeScript.of(cp) == Character.UnicodeScript.LATIN ? Character.toLowerCase(cp) : cp;
+    private static boolean isUpperLatin(char c) {
+        return Character.UnicodeScript.of(c) == Character.UnicodeScript.LATIN && Character.isUpperCase(c);
     }
 
     @Override
