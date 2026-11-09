@@ -257,6 +257,20 @@ class SensitiveContentFilterTest {
     }
 
     @Test
+    void latinTitlecaseFoldsToLowercaseEvenThoughItIsNotUpperCase(JenkinsRule j) throws IOException {
+        // ǅ (U+01C5, titlecase "Dž") is a Latin case variant but Character.isUpperCase returns false for it --
+        // titlecase is its own Unicode category, not uppercase. normalizeCase must still fold it to its
+        // lowercase form ǆ (U+01C6), or a name stored as "ǆuro" would never match input typed as "ǅuro".
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("ǆuro", original -> ContentMapping.of(original, "replacement_euro"));
+        filter.reload();
+
+        assertThat(filter.filter("ǆuro")).isEqualTo("replacement_euro");
+        assertThat(filter.filter("ǅuro")).isEqualTo("replacement_euro");
+    }
+
+    @Test
     void turkishCapitalIDotAboveFoldsToPlainIWithoutDesyncingOffsets(JenkinsRule j) throws IOException {
         // Historical regression check: folding İ (U+0130) via locale-aware String.toLowerCase(Locale.ENGLISH)
         // expands it to two chars ("i" + combining dot above), desyncing offsets used for splicing replacements

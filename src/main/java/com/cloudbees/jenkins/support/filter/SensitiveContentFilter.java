@@ -85,39 +85,44 @@ public class SensitiveContentFilter implements ContentFilter {
      * redacting a real user's name.
      * <p>
      * No code point handling is needed: every {@code char}-level case mapping used here ({@link
-     * Character#isUpperCase(char)}, {@link Character#toLowerCase(char)}) maps one UTF-16 unit to exactly one
-     * other UTF-16 unit, which is also what keeps the result the same length as the input for {@link
-     * WordReplacer#replaceWordsByOffset}'s offset splicing. That holds even for Turkish {@code İ} (U+0130),
-     * historically the one case that corrupted offsets -- but only when folded via locale-aware
-     * {@code String.toLowerCase(Locale)}, which this does not use.
+     * Character#toLowerCase(char)}) maps one UTF-16 unit to exactly one other UTF-16 unit, which is also what
+     * keeps the result the same length as the input for {@link WordReplacer#replaceWordsByOffset}'s offset
+     * splicing. That holds even for Turkish {@code İ} (U+0130), historically the one case that corrupted
+     * offsets -- but only when folded via locale-aware {@code String.toLowerCase(Locale)}, which this does not
+     * use.
+     * <p>
+     * The check is "does this Latin char have a different lowercase", not {@link Character#isUpperCase(char)}:
+     * Latin titlecase letters such as {@code ǅ} (U+01C5) are neither upper nor lower case by Unicode's
+     * category, so {@code isUpperCase} misses them even though {@code toLowerCase} folds them to {@code ǆ}
+     * (U+01C6) -- a real case variant this filter must still normalize.
      *
      * @param value the input string
      * @return a case-normalized copy, or the input itself if nothing changed
      */
     static String normalizeCase(String value) {
         int len = value.length();
-        int firstUpper = -1;
+        int firstCased = -1;
         for (int i = 0; i < len; i++) {
-            if (isUpperLatin(value.charAt(i))) {
-                firstUpper = i;
+            if (isLatinWithDifferentLowercase(value.charAt(i))) {
+                firstCased = i;
                 break;
             }
         }
-        if (firstUpper == -1) {
+        if (firstCased == -1) {
             return value;
         }
 
         char[] chars = value.toCharArray();
-        for (int i = firstUpper; i < len; i++) {
-            if (isUpperLatin(chars[i])) {
+        for (int i = firstCased; i < len; i++) {
+            if (isLatinWithDifferentLowercase(chars[i])) {
                 chars[i] = Character.toLowerCase(chars[i]);
             }
         }
         return new String(chars);
     }
 
-    private static boolean isUpperLatin(char c) {
-        return Character.UnicodeScript.of(c) == Character.UnicodeScript.LATIN && Character.isUpperCase(c);
+    private static boolean isLatinWithDifferentLowercase(char c) {
+        return Character.UnicodeScript.of(c) == Character.UnicodeScript.LATIN && Character.toLowerCase(c) != c;
     }
 
     @Override
