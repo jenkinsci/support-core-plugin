@@ -191,4 +191,156 @@ class SensitiveContentFilterTest {
                 .orElseThrow()
                 .touch(lastSeen);
     }
+
+    @Test
+    void stopWordsGateCaseVariants(JenkinsRule j) throws IOException {
+        // The gate compares the normalized key, not the raw original, so a case variant of a stop word is
+        // still gated. Comparing raw originals would let "JENKINS" through while "jenkins" was suppressed.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("JENKINS", original -> ContentMapping.of(original, "replacement_jenkins"));
+        filter.reload();
+
+        assertThat(filter.filter("the JENKINS server")).isEqualTo("the JENKINS server");
+    }
+
+    @Test
+    void caseVariantMatching(JenkinsRule j) throws IOException {
+        // Case-insensitive matching should still work: JDoe, jdoe, JDOE should all match key "jdoe".
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        FreeStyleProject project = j.createFreeStyleProject("JDoe");
+        filter.reload();
+
+        String replacement = filter.filter("JDoe");
+        assertThat(replacement).startsWith("item_").doesNotContain("JDoe");
+
+        assertThat(filter.filter("jdoe")).isEqualTo(replacement);
+        assertThat(filter.filter("JDOE")).isEqualTo(replacement);
+    }
+
+    @Test
+    void identityFastPathReturnsSameObject() {
+        // When normalizeCase encounters an already-normalized string, it must return the input object itself
+        // (not a copy) to avoid duplicating the char array for every key.
+        String alreadyLowercase = "alreadylowercase";
+        String normalized = SensitiveContentFilter.normalizeCase(alreadyLowercase);
+        assertThat(normalized).isSameAs(alreadyLowercase);
+
+        String mixed = "MixedCase";
+        String normalizedMixed = SensitiveContentFilter.normalizeCase(mixed);
+        assertThat(normalizedMixed).isNotSameAs(mixed);
+    }
+
+    @Test
+    void onlyLatinLettersAreNormalized(JenkinsRule j) throws IOException {
+        // normalizeCase folds Latin-script letters, plain ASCII and accented alike. Accented Latin matters for
+        // real users, not just theoretically: Jenkins core's default CASE_INSENSITIVE user-id strategy folds
+        // "Jörg" and "jörg" to the same key, so this filter must too, or it silently stops redacting that user.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate(
+                "Jörg.Cirioli@CloudBees.com", original -> ContentMapping.of(original, "replacement_jorg"));
+        filter.reload();
+        assertThat(filter.filter("Jörg.Cirioli@CloudBees.com")).isEqualTo("replacement_jorg");
+        assertThat(filter.filter("jörg.cirioli@cloudbees.com")).isEqualTo("replacement_jorg");
+
+        // ...but anything outside Latin script -- Greek, Cyrillic -- keeps its case as a distinct key, even
+        // when it has an obvious upper/lower counterpart.
+        mappings.getMappingOrCreate("ΑΘΗΝΑ", original -> ContentMapping.of(original, "replacement_athena"));
+        mappings.getMappingOrCreate("Иван", original -> ContentMapping.of(original, "replacement_ivan"));
+        filter.reload();
+
+        assertThat(filter.filter("ΑΘΗΝΑ")).isEqualTo("replacement_athena");
+        assertThat(filter.filter("αθηνα")).isEqualTo("αθηνα");
+        assertThat(filter.filter("Иван")).isEqualTo("replacement_ivan");
+        assertThat(filter.filter("иван")).isEqualTo("иван");
+    }
+
+    @Test
+    void latinTitlecaseFoldsToLowercaseEvenThoughItIsNotUpperCase(JenkinsRule j) throws IOException {
+        // ǅ (U+01C5, titlecase "Dž") is a Latin case variant but Character.isUpperCase returns false for it --
+        // titlecase is its own Unicode category, not uppercase. normalizeCase must still fold it to its
+        // lowercase form ǆ (U+01C6), or a name stored as "ǆuro" would never match input typed as "ǅuro".
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("ǆuro", original -> ContentMapping.of(original, "replacement_euro"));
+        filter.reload();
+
+        assertThat(filter.filter("ǆuro")).isEqualTo("replacement_euro");
+        assertThat(filter.filter("ǅuro")).isEqualTo("replacement_euro");
+    }
+
+    @Test
+    void turkishCapitalIDotAboveFoldsToPlainIWithoutDesyncingOffsets(JenkinsRule j) throws IOException {
+        // Historical regression check: folding İ (U+0130) via locale-aware String.toLowerCase(Locale.ENGLISH)
+        // expands it to two chars ("i" + combining dot above), desyncing offsets used for splicing replacements
+        // back into the original. Character.toLowerCase(char) has no such quirk -- it always maps one UTF-16
+        // unit to exactly one other -- so folding "İstanbul" to "istanbul" must redact correctly, not corrupt.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("İstanbul", original -> ContentMapping.of(original, "replacement_istanbul"));
+        filter.reload();
+
+        assertThat(filter.filter("İstanbul")).isEqualTo("replacement_istanbul");
+        assertThat(filter.filter("istanbul")).isEqualTo("replacement_istanbul");
+    }
+
+    @Test
+    void wordBoundarySemantics(JenkinsRule j) throws IOException {
+        // The pattern is wrapped in (?<!\w) ... (?!\w), so a name only matches as a whole word. Java's \w is
+        // ASCII-only by default, which is what decides whether a neighbouring character blocks a match.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+        mappings.getMappingOrCreate("sap", original -> ContentMapping.of(original, "replacement_sap"));
+        filter.reload();
+
+        // "ssap" must NOT match: the lookbehind sees the preceding 's', an ASCII word character.
+        assertThat(filter.filter("ssap")).isEqualTo("ssap");
+        // Trailing word characters block it too.
+        assertThat(filter.filter("sapling")).isEqualTo("sapling");
+
+        // " sap" should match (space is not \w).
+        String result2 = filter.filter(" sap");
+        assertThat(result2).isEqualTo(" replacement_sap");
+    }
+
+    @Test
+    void collidingOriginalsResolveToTheSameMappingAcrossReloads(JenkinsRule j) throws IOException {
+        // "sap" and "SAP" are distinct originals that normalize to the same key. The pre-fill loop and the
+        // provider loop must agree on one winner and keep agreeing on every later reload -- otherwise the
+        // same input resolves to a different pseudonym, and a different mapping gets touched/kept alive,
+        // depending on when the colliding mapping happened to get persisted relative to the reload.
+        SensitiveContentFilter filter = SensitiveContentFilter.get();
+        ContentMappings mappings = ContentMappings.get();
+
+        // "SAP" is the expected winner because the pre-fill loop iterates ContentMappings in its own
+        // comparator order (length descending, then natural order) and takes the first write, and "SAP"
+        // sorts before "sap". Picking the collider that sorts first is what makes the winner stable here;
+        // the policy keys off sort order rather than which original was persisted first.
+        mappings.getMappingOrCreate("SAP", original -> ContentMapping.of(original, "replacement_sap"));
+        filter.reload();
+        String replacement = filter.filter("sap");
+        assertThat(replacement).isEqualTo("replacement_sap");
+
+        // The second collider arrives through a NameProvider (an item named "sap"), persisted during this
+        // reload's provider loop -- too late to affect this reload's winner, but present for the next one.
+        j.createFreeStyleProject("sap");
+        filter.reload();
+        assertThat(filter.filter("sap")).isEqualTo(replacement);
+
+        // Third reload: the pre-fill loop now sees both persisted mappings. The winner must still be "SAP".
+        filter.reload();
+        assertThat(filter.filter("sap")).isEqualTo(replacement);
+
+        // The match must still be attributed to the "SAP" mapping, not the item's: back-date both, match
+        // once, then evict -- only the mapping actually matched should survive.
+        Instant staleTime = Instant.now().minus(Duration.ofDays(91));
+        backdate(mappings, "SAP", staleTime);
+        backdate(mappings, "sap", staleTime);
+
+        filter.filter("sap");
+        mappings.evictStale();
+
+        assertThat(mappings.getMappings()).containsKey("SAP").doesNotContainKey("sap");
+    }
 }
