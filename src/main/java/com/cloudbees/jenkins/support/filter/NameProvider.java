@@ -32,6 +32,7 @@ import hudson.model.Label;
 import hudson.model.User;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -48,9 +49,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 public class NameProvider implements ExtensionPoint {
     private final Supplier<Stream<String>> names;
-    private final Supplier<String> fakes;
+    private final Function<String, String> fakes;
 
-    private NameProvider(@NonNull Supplier<Stream<String>> names, @NonNull Supplier<String> fakes) {
+    private NameProvider(@NonNull Supplier<Stream<String>> names, @NonNull Function<String, String> fakes) {
         this.names = names;
         this.fakes = fakes;
     }
@@ -63,10 +64,13 @@ public class NameProvider implements ExtensionPoint {
     }
 
     /**
-     * @return a new fake name to use for anonymization
+     * Generates a stable pseudonym for the given original string.
+     *
+     * @param original the original string to anonymize
+     * @return a deterministic pseudonym derived from the original
      */
-    public @NonNull String generateFake() {
-        return fakes.get();
+    public @NonNull String generateFake(@NonNull String original) {
+        return fakes.apply(original);
     }
 
     /**
